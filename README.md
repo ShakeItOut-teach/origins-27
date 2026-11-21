@@ -11,10 +11,13 @@ Tout le jeu tient dans un seul fichier, `index.html` (HTML, CSS et JavaScript, s
 
 La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil utilisé.
 
-## Contenu du prototype 5
+## Contenu du prototype 6
 
 - **Cellule :** 4 canaux de production (ATP, protéines, lipides, nucléotides) et 8 emplacements d’organites autour du noyau.
-- **Armée :** troupes produites en masse (×1, ×5, ×10, Max), débloquées par l’évolution : collectrice, éclaireuse, porteuse, soldate, une troupe d’élite par voie offensive, puis Volvox gardien et Ver segmenté.
+- **Armée :** troupes produites en masse (×1, ×10, Max), débloquées par l’évolution : collectrice, éclaireuse, porteuse, soldate, une troupe d’élite par voie offensive, puis Volvox gardien et Ver segmenté. Les ribosomes fabriquent toutes les troupes, avec une chaîne de production de plus aux niveaux 3, 6 et 9 ; la production se lance aussi depuis le noyau.
+- **Envois :** mode « Auto » ou « Je choisis » pour composer soi-même chaque chasse, pillage ou récolte.
+- **Rapports :** tableau de force par type de troupe (voie, bonus, pertes), raison de la victoire ou de la défaite, détail du butin et des ressources volées, bilan cumulé des pillages.
+- **Retour de pause :** une seule fenêtre « Pendant votre absence » résume tout, au lieu d’une fenêtre par événement.
 - **Évolution :** arbre de gènes à 3 branches, 5 voies offensives en cycle, émergences cachées, et une mutation à choisir parmi 3 à chaque niveau de noyau (3 de la même famille ouvrent une lignée).
 - **Stades de vie :** Procaryote → Eucaryote → Colonie → Pluricellulaire → APEX (victoire : sortir de l’eau).
 - **Monde :** carte circulaire de 241 × 241 cases, événements de zone (éruption, plancton, zone anoxique, léviathan), 140 rivaux simulés qui s’adaptent à vos choix, 6 alliances.
