@@ -192,6 +192,17 @@ canvas{display:block;border-radius:12px;border:1px solid var(--line);background:
 #modal{position:fixed;inset:0;z-index:25;background:rgba(2,6,11,.78);display:none;align-items:center;justify-content:center;padding:20px}
 #modal.on{display:flex}
 .incw{color:var(--bad);cursor:pointer;font-weight:600}
+/* attaque en approche : l’écran scintille de rouge sur les bords */
+body.underatk::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9000;box-shadow:inset 0 0 0 3px rgba(255,70,70,.85),inset 0 0 110px 18px rgba(255,30,30,.42);animation:atkpulse 1.3s ease-in-out infinite}
+body.underatk.atknear::after{animation-duration:.7s}
+@keyframes atkpulse{0%,100%{opacity:.2}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){body.underatk::after{animation:none;opacity:.7}}
+.incch{display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap}
+.incch .btn{flex:1 1 150px;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2}
+.incch .btn small{font-size:11px;font-weight:500;opacity:.9;text-transform:none;letter-spacing:0}
+.incch .btn[aria-pressed="true"]{outline:2px solid var(--fg,#fff);outline-offset:1px}
+.inctut{text-align:left;display:grid;gap:6px;margin:8px 0}
+.inctut p{margin:0;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.05)}
 .incard{border-color:var(--bad)}
 table.rank{width:100%;border-collapse:collapse;font-size:13px}
 table.rank td,table.rank th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left}
@@ -216,7 +227,7 @@ table.rank tr.me td{background:rgba(94,230,208,.12);color:var(--lume);font-weigh
 .pop.adv>.btn{display:block;margin:14px auto 0}
 .pop.adv .row{margin-top:14px;gap:8px}
 
-.pop{background:var(--panel);border:1px solid var(--nuc);border-radius:16px;max-width:400px;width:100%;padding:18px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.pop{background:var(--panel);border:1px solid var(--nuc);border-radius:16px;max-width:400px;width:100%;padding:18px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain}
 .pop .kick{font:500 11px var(--font-mono);letter-spacing:.12em;color:var(--nuc);text-transform:uppercase}
 .pop h2{font-size:22px;margin:6px 0 4px}
 .pop svg{width:190px;height:190px;margin:4px auto 6px;display:block}
@@ -743,7 +754,7 @@ function mutListHTML(){
   h+=own.length?'<div class="mutrow">'+own.map(m=>mutCardHTML(m,false)).join("")+"</div>":'<p class="desc" style="text-align:center;margin-top:10px">Aucune mutation pour l’instant. Chaque niveau de noyau vous en proposera trois.</p>';
   return h+'<button class="btn" data-act="mclose">Fermer</button>';
 }
-const UPKEEP={atp:0.9,prot:0.45,lip:0.3,nuc:0.1};
+const UPKEEP={atp:0.6,prot:0.45,lip:0.3,nuc:0.1};
 const DIGEST=0.2; /* part de chaque récolte digérée en ATP au retour : les collectrices paient leur entretien */
 const CELL_COST={prot:30,atp:20};
 
@@ -906,7 +917,7 @@ const PROD_F=0.7;
 function rates(){
   const m=mods(),fp=1+m.fieldPct,o={},fil={atp:0,prot:0,lip:0,nuc:0};
   S.fils.forEach(f=>{const T=S.tiles[f.y*W+f.x];if(T.k)fil[T.k]+=filRate(T,m);});
-  const base={atp:6,prot:9,lip:6,nuc:3.5};
+  const base={atp:8.5,prot:9,lip:6,nuc:3.5};
   const ax=(S.events&&S.events.length&&anoxHere())?0.7:1;
   for(const k of RES){const fs=S.fields.reduce((a,f)=>f.k===k?a+fieldProd(f.l):a,0);o[k]=(Math.max(0,(base[k]+fs*fp)*prodMult(k,m))+fil[k])*ax*PROD_F;}
   o.fil=fil;
@@ -1105,9 +1116,9 @@ function botSync(b){const dt=S.t-(b.lastT||0);if(dt>0){b.res=Math.min(botCap(b),
 function nightAt(t){return (t%1440)<420;}
 function botPoints(b){return Math.round(botAtk(b)+botDef(b)+botStage(b)*60);}
 function playerAtk(){return Math.round(compAtk(armyAll(),null));}
-function defParts(){const P=[["Membrane (base)",20],["Troupes au repos : "+compText(S.army),compDef(S.army)],["Cytosquelette niv. "+blvl("cyto"),15*blvl("cyto")],["Noyau niv. "+S.noyau,6*S.noyau],["Canaux (niveaux cumulés)",6*S.fields.reduce((t,f)=>t+f.l,0)],["Stade de la base",12*baseStage()],[S.hero.busy?"Héros (en mission : absent)":"Héros présent",S.hero.busy?0:Math.round(heroBase()*0.6)]];
+function defParts(dodge){const P=[["Membrane (base)",20],dodge?["Troupes au repos : esquivées, hors de la cellule",0]:["Troupes au repos : "+compText(S.army),compDef(S.army)],["Cytosquelette niv. "+blvl("cyto"),15*blvl("cyto")],["Noyau niv. "+S.noyau,6*S.noyau],["Canaux (niveaux cumulés)",6*S.fields.reduce((t,f)=>t+f.l,0)],["Stade de la base",12*baseStage()],[S.hero.busy?"Héros (en mission : absent)":"Héros présent",S.hero.busy?0:Math.round(heroBase()*0.6)]];
   return {P,mult:Math.max(0.3,1+(has("PA")?0.25:0)+(hasEm("cuirasse")?0.3:0)+mods().defPct)};}
-function playerDef(){const D=defParts();return Math.round(D.P.reduce((a,p)=>a+p[1],0)*D.mult);}
+function playerDef(dodge){const D=defParts(dodge);return Math.round(D.P.reduce((a,p)=>a+p[1],0)*D.mult);}
 function playerPoints(){return Math.round(playerAtk()+playerDef()+baseStage()*60);}
 function botEst(b,exact){const d=botDef(b);if(exact)return fmt(d);return "≈ "+fmt(Math.round(d*0.8/10)*10)+" – "+fmt(Math.round(d*1.25/10)*10);}
 function botPanel(b,vis){botSync(b);const st=botStage(b),loot=Math.max(0,b.res-botProt(b)),ng=nightAt(S.t);
@@ -1160,8 +1171,10 @@ function botsStep(dm){
     if(days>=1&&d<=22&&!S.inc.some(a=>a.bot===b.id)&&!S.mig&&!(S.ally&&b.tag===S.ally)){
       const p=(b.aggr*0.02+b.anger*0.1)*k*(S.ally&&b.tag?1.5:1);
       if(Math.random()<p){const travel=Math.max(6,d*1.6),arr=S.t+travel;if(!nightAt(arr)&&!nightAt(S.t)){
-        const atk=Math.round(botAtk(b)*(0.75+Math.random()*0.4));S.inc.push({id:S.nextId++,bot:b.id,atk,arrive:arr,from:[b.x,b.y]});
-        log("⚠️ Attaque entrante : "+b.name+" arrive à "+fmtClock(arr).replace("Jour ","J")+".","bad");toast("⚠️ Attaque entrante de "+b.name);dirty=true;}}}
+        const atk=Math.round(botAtk(b)*(0.75+Math.random()*0.4)),A={id:S.nextId++,bot:b.id,atk,arrive:arr,from:[b.x,b.y]};S.inc.push(A);
+        log("⚠️ Attaque entrante : "+b.name+" arrive à "+fmtClock(arr).replace("Jour ","J")+".","bad");toast("⚠️ Attaque entrante de "+b.name);
+        if(!S.incTut){S.incTut=1;popup({kick:"⚠️ Attaque entrante",title:esc(b.name)+" vous attaque !",incTut:A.id,body:incTutHTML(A,b)});}
+        dirty=true;}}}
   }
   if(Math.random()<0.04*k){const a=pickA(S.bots),b=pickA(S.bots);if(a!==b){const ok=Math.random()<0.6;if(ok){a.lw=(a.lw||0)+Math.round(botAtk(a)*(1+Math.random()));a.g=Math.min(3,a.g+0.01);b.g=Math.max(0.4,b.g-0.01);}log("📣 "+a.name+" "+(ok?"a pillé":"s’est cassé les dents sur")+" "+b.name+".","muted");}}
   for(const b of S.bots)if(Math.random()<0.02*k*b.aggr)b.lw=(b.lw||0)+Math.round(botAtk(b)*(0.5+Math.random()));
@@ -1170,14 +1183,28 @@ function botsStep(dm){
   S.botMig=(S.botMig||0)+k*30;if(S.botMig>=1440){S.botMig=0;for(const b of S.bots){if(Math.random()<0.25){const r=rC(b.x,b.y),step=3+Math.floor(Math.random()*4),nx=Math.round(C0+(b.x-C0)*(r-step)/r),ny=Math.round(C0+(b.y-C0)*(r-step)/r);
     if(inWorld(nx,ny)&&!isLand(nx,ny)&&!botAt(nx,ny)&&(nx!==c[0]||ny!==c[1])){const T=S.tiles[ny*W+nx];if(!T.k&&!T.w){b.x=nx;b.y=ny;}}}}}
 }
+/* Attaque entrante : défendre (les troupes au repos se battent et peuvent tomber) ou esquiver (elles quittent la cellule, sans perte, mais ne défendent pas) */
+function incRange(A){return fmt(Math.round(A.atk*0.9/10)*10)+" – "+fmt(Math.round(A.atk*1.15/10)*10);}
+function incGuess(A){const h=allyHelp(),dd=playerDef()+h,dn=playerDef(true)+h,f=A.atk*ATK_ADV;return {dd,dn,hold:dd>f,holdN:dn>f};}
+function incChoiceHTML(A){const g=incGuess(A),dg=!!A.dodge,has=uSum(S.army)>0;
+  return '<div class="incch"><button class="btn sm'+(dg?" alt":"")+'" data-act="incst" data-id="'+A.id+'" data-s="def"'+(dg?"":' aria-pressed="true"')+'>🛡 Défendre<small>défense '+fmt(g.dd)+" · "+(g.hold?"✔ devrait tenir":"⚠ risque de céder")+'</small></button><button class="btn sm'+(dg?"":" alt")+'" data-act="incst" data-id="'+A.id+'" data-s="dodge"'+(dg?' aria-pressed="true"':"")+(has?"":" disabled")+'>💨 Esquiver<small>défense '+fmt(g.dn)+" · aucune perte</small></button></div>";}
+function incTutHTML(A,b){const g=incGuess(A);
+  return '<p><b>'+esc(b.name)+"</b> arrive dans <b><span data-end=\""+A.arrive+'"></span></b> avec une force estimée de <b>'+incRange(A)+"</b>.</p>"+
+  '<div class="inctut"><p><b>🛡 Défendre</b> : vos troupes au repos restent dans la cellule et se battent. Si la défense tient, il repart bredouille et votre héros gagne de l’expérience, mais quelques troupes tombent. Si elle cède, vous êtes pillé et vous perdez la moitié des troupes présentes.</p>'+
+  '<p><b>💨 Esquiver</b> : vos troupes quittent la cellule juste avant l’impact et reviennent ensuite. Aucune perte, mais seuls la membrane, les organites et le héros défendent : ce qui dépasse la part protégée par la vacuole risque d’être pillé.</p></div>'+
+  '<p class="desc">Votre défense : <b>'+fmt(g.dd)+"</b> avec les troupes, <b>"+fmt(g.dn)+"</b> sans elles. Défendez si vous pouvez tenir, esquivez sinon. Vous pourrez changer d’avis jusqu’à l’arrivée, dans Rapports › En route.</p>"+incChoiceHTML(A);}
+function loseHome(frac){const o={};for(const k in S.army){const n=Math.min(S.army[k]||0,Math.round((S.army[k]||0)*frac));if(n>0){o[k]=n;S.army[k]-=n;}}syncIdle();return o;}
 function incomingHit(A){
-  const b=S.bots.find(z=>z.id===A.bot);if(!b)return;const help=allyHelp(),def=playerDef()+help,win=A.atk*ATK_ADV>=def,D=defParts(),r=A.atk*ATK_ADV/Math.max(1,def);
+  const b=S.bots.find(z=>z.id===A.bot);if(!b)return;const dodge=!!A.dodge&&uSum(S.army)>0,help=allyHelp(),def=playerDef(dodge)+help,win=A.atk*ATK_ADV>=def,D=defParts(dodge),r=A.atk*ATK_ADV/Math.max(1,def);
   let tb='<table class="ftab"><thead><tr><th>Votre défense</th><th class="num">Points</th></tr></thead><tbody>'+D.P.filter(p=>p[1]>0||p[0].indexOf("Héros")===0).map(p=>"<tr><td>"+p[0]+'</td><td class="num">'+fmt(p[1])+"</td></tr>").join("");
   if(D.mult!==1)tb+='<tr><td>Bonus de défense (gènes, émergences, mutations)</td><td class="num">'+fmtF(D.mult)+"</td></tr>";
   if(help)tb+="<tr><td>Renforts de l’alliance "+S.ally+'</td><td class="num up">+'+fmt(help)+"</td></tr>";
   tb+='</tbody><tfoot><tr><td>Total</td><td class="num"><b>'+fmt(def)+"</b></td></tr></tfoot></table>";
   tb+='<div class="fbar def"><i style="width:'+Math.round(Math.min(100,def/(def+A.atk)*100))+'%"></i><span>Vous '+fmt(def)+"</span><span>"+esc(b.name)+" "+fmt(A.atk)+"</span></div>";
-  const lines=['<span class="'+(win?"neg":"up")+'">'+(win?"Votre défense a cédé":"Attaque repoussée")+"</span> : "+esc(b.name)+" ("+STAGE_NAME[botStage(b)]+", voie "+TYPES[b.type].name+") attaquait avec une force de <b>"+fmt(A.atk)+"</b>. Le défenseur ne perd aucune troupe.",tb];
+  const lines=['<span class="'+(win?"neg":"up")+'">'+(win?"Votre défense a cédé":"Attaque repoussée")+"</span> : "+esc(b.name)+" ("+STAGE_NAME[botStage(b)]+", voie "+TYPES[b.type].name+") attaquait avec une force de <b>"+fmt(A.atk)+"</b>."+(dodge?" Vous aviez choisi d’<b>esquiver</b> : vos troupes ont quitté la cellule.":""),tb];
+  if(dodge)lines.push('<p class="fwhy">💨 Esquive : vos troupes reviennent intactes, sans aucune perte.</p>');
+  else if(uSum(S.army)>0){const lost=loseHome(win?0.5:Math.min(0.3,0.06+0.22*r)),n=uSum(lost);
+    lines.push('<p class="fwhy">🛡 Pertes au combat : '+(n?'<span class="neg">'+compText(lost)+"</span>"+(win?" (la défense a cédé : la moitié des troupes présentes).":" (elles ont tenu la ligne)."):"aucune.")+"</p>");}
   if(win){const pa=protectedAmt(),carry=Math.round(A.atk*2.2);let pool=0;const ex={};RES.forEach(r=>{ex[r]=Math.max(0,S.res[r]-pa);pool+=ex[r];});
     const take=Math.min(carry,pool),got={},before={};RES.forEach(r=>{before[r]=Math.round(S.res[r]);got[r]=pool?Math.round(ex[r]/pool*take):0;S.res[r]-=got[r];stat("lootOut",r,got[r]);});b.res+=take;b.lw=(b.lw||0)+take;
     lines.push('<p class="fwhy">Il vous manquait <b>'+fmt(Math.ceil(A.atk*ATK_ADV-def))+"</b> de défense (vous en aviez "+Math.round(100/r)+" % de ce qu’il fallait).</p>");
@@ -1520,6 +1547,8 @@ function act(a,el){
   if(a==="close"){openRef=null;dirty=true;return;}
   if(a==="goto"){tab=el.dataset.tab;openRef=el.dataset.ref||null;if(el.dataset.sub)actSub=el.dataset.sub;if(openRef&&openRef.indexOf("node:")===0){const n=NODES[openRef.slice(5)];if(n)evoBr=n.br;}dirty=true;return;}
   if(a==="popok"){S.popups.shift();dirty=true;return;}
+  if(a==="incst"){const A=(S.inc||[]).find(x=>x.id===+el.dataset.id);if(A){A.dodge=el.dataset.s==="dodge";toast(A.dodge?"💨 Vos troupes esquiveront l’attaque":"🛡 Vos troupes défendront la cellule");}
+    const p=S.popups[0];if(p&&p.incTut)S.popups.shift();dirty=true;return;}
   if(a==="popall"){S.popups=[];dirty=true;return;}
   if(a==="rewards"){showModal(rewardsHTML());return;}
   if(a==="energy"){showModal(energyHTML());return;}
@@ -1908,7 +1937,7 @@ function activityHTML(){
   if(actSub==="farm")return h+'<div class="card"><h2>Récoltes et explorations</h2>'+reportCards("farm")+"</div></div>";
   if(actSub==="rank")return h+worldRankHTML()+nemesisHTML()+alliancesHTML()+"</div>";
   if(actSub==="log")return h+'<div class="card"><h2>Journal</h2><ul class="log">'+S.log.slice(0,80).map(e=>'<li class="'+e.cls+'"><time>'+fmtClock(e.t).replace("Jour ","J")+"</time><span>"+e.msg+"</span></li>").join("")+"</ul></div></div>";
-  if(S.inc&&S.inc.length){h+='<div class="card incard"><h2>⚠️ Attaques entrantes</h2>';S.inc.slice().sort((a,b)=>a.arrive-b.arrive).forEach(A=>{const b=S.bots.find(z=>z.id===A.bot);h+='<div class="mv"><span class="t"><b>'+esc(b?b.name:"?")+"</b> · force estimée "+fmt(Math.round(A.atk*0.9/10)*10)+" – "+fmt(Math.round(A.atk*1.15/10)*10)+'</span><span></span><span class="s">Arrivée '+fmtClock(A.arrive)+' (dans <span data-end="'+A.arrive+'"></span>) · votre défense '+fmt(playerDef())+"</span></div>";});h+='<p class="desc">Pour tenir : gardez des collectrices au repos, améliorez canaux, cytosquelette et noyau, laissez le héros à la maison. Ce qui dépasse la part protégée par la vacuole peut être pillé : dépensez-le avant l’arrivée !</p></div>';}
+  if(S.inc&&S.inc.length){h+='<div class="card incard"><h2>⚠️ Attaques entrantes</h2>';S.inc.slice().sort((a,b)=>a.arrive-b.arrive).forEach(A=>{const b=S.bots.find(z=>z.id===A.bot);h+='<div class="mv"><span class="t"><b>'+esc(b?b.name:"?")+"</b> · force estimée "+incRange(A)+'</span><span></span><span class="s">Arrivée '+fmtClock(A.arrive)+' (dans <span data-end="'+A.arrive+'"></span>)</span></div>'+incChoiceHTML(A);});h+='<p class="desc"><b>Défendre</b> : vos troupes au repos se battent ; quelques-unes tombent si la défense tient, la moitié si elle cède. <b>Esquiver</b> : elles quittent la cellule sans perte, mais ne défendent pas. Dans les deux cas, ce qui dépasse la part protégée par la vacuole peut être pillé si la défense cède : dépensez-le avant l’arrivée !</p></div>';}
   h+='<div class="card"><div class="chead"><h2>Mouvements de vos cellules</h2>'+(S.missions.some(M=>!M.arrived)?'<button class="btn sm alt" data-act="recallall">Rappeler tout</button>':"")+"</div>";
   if(!S.missions.length)h+='<p class="muted">Aucune collectrice en route. Ouvrez les abysses et touchez une case pour en envoyer.</p>';
   S.missions.slice().sort((a,b)=>(a.arrived?a.back:a.arrive)-(b.arrived?b.back:b.arrive)).forEach(M=>{
@@ -2344,6 +2373,7 @@ function renderModal(){
 }
 function live(){
   if(!S)return;
+  {const n=S.inc&&S.inc.length?Math.min(...S.inc.map(A=>A.arrive)):0,bc=document.body.classList;bc.toggle("underatk",!!n);bc.toggle("atknear",!!n&&n-S.t<15);}
   $("clock").textContent=isMobile()?fmtClock(S.t).replace("Jour ","J"):fmtClock(S.t);
   const cap=rates().cap;
   document.querySelectorAll("[data-endr]").forEach(e=>{const ms=+e.dataset.endr-Date.now();if(ms<=0)dirty=true;e.textContent=fmtDur(Math.max(0,ms/60000));});
