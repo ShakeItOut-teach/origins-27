@@ -379,6 +379,7 @@ body.pixel #tour .tbub,body.pixel #tour .hole{border-radius:0}
 .bqbox{margin:10px 0 4px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px}
 .bqi{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:4px}
 .bqn{color:#ffd166;font-weight:600}
+.stash{border:1px solid #ffd166;background:rgba(255,209,102,.08);border-radius:10px;padding:8px 10px;margin:6px 0 10px;font-size:13px}
 .enpill{cursor:pointer;color:#ffd166}.enpill b{font-family:var(--font-mono)}.enpill small{color:var(--muted);font-size:11px}.enpill.low{color:var(--bad);animation:rwglow 1.6s ease-in-out infinite}
 .accb{font:inherit;font-size:11px;margin-left:6px;padding:1px 6px;border-radius:6px;border:1px solid #ffd166;background:rgba(255,209,102,.1);color:#ffd166;cursor:pointer}
 .tiers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin:6px 0}.tiers span{border:1px solid var(--tc);color:var(--tc);border-radius:8px;padding:4px 8px;font-size:12px;display:flex;flex-direction:column;line-height:1.3}.tiers small{opacity:.85;font-size:11.5px}.tiers small b{font-size:13px}
@@ -942,8 +943,12 @@ function rwInit(){S.daily=S.daily||{last:"",streak:0};if(S.chestAt==null)S.chest
   if(!S.dq||S.dq.day!==dayKey()){const pool=DQ_POOL.slice(),list=[];while(list.length<3){const q=pool.splice(Math.floor(Math.random()*pool.length),1)[0];if(q[0]==="raid"&&S.t<1440)continue;list.push({id:q[0],txt:q[1],goal:q[2],got:0,done:false});}S.dq={day:dayKey(),list,bonus:false};}}
 function dqAdd(id,n){if(!S||!S.dq||catchUp)return;S.dq.list.forEach(q=>{if(q.id===id&&!q.done&&q.got<q.goal){q.got=Math.min(q.goal,q.got+(n||1));if(q.got>=q.goal)toast("🎯 Quête du jour : "+q.txt+" ✔");}});}
 function rwBase(){return (120+70*S.noyau+40*(S.stage||1))*PACE;}
-function giveRes(mult,ks){const cap=rates().cap,got=[];let lost=0;(ks||RES).forEach(r=>{const v=Math.round(rwBase()*mult*(r==="nuc"?0.4:1)),b=S.res[r];S.res[r]=Math.max(b,Math.min(cap,b+v));lost+=v-(S.res[r]-b);if(S.res[r]>b)got.push(fmt(S.res[r]-b)+" "+RES_NAME[r].toLowerCase());});
-  if(lost>1)got.push('<span class="neg">'+fmt(lost)+" perdu (entrepôts pleins)</span>");return got;}
+/* Ce qui ne rentre pas dans les entrepôts va en réserve : rien n’est perdu, la réserve se vide dès qu’il y a de la place. */
+function giveRes(mult,ks){const cap=rates().cap,got=[];let kept=0;S.stash=S.stash||{};(ks||RES).forEach(r=>{const v=Math.round(rwBase()*mult*(r==="nuc"?0.4:1)),b=S.res[r];S.res[r]=Math.max(b,Math.min(cap,b+v));const over=v-(S.res[r]-b);if(over>0){S.stash[r]=(S.stash[r]||0)+over;kept+=over;}got.push(fmt(v)+" "+RES_NAME[r].toLowerCase());});
+  if(kept>1)got.push(fmt(kept)+" mis en réserve (entrepôts pleins)");return got;}
+function stashTotal(){return S.stash?RES.reduce((a,r)=>a+(S.stash[r]||0),0):0;}
+function stashStep(){if(!S.stash)return;const cap=rates().cap;RES.forEach(r=>{const s=S.stash[r]||0;if(s<=0)return;const room=cap-S.res[r];if(room<=0)return;const m=Math.min(room,s);S.res[r]+=m;S.stash[r]=s-m;});}
+function stashHTML(){const t=stashTotal();if(t<1)return "";return '<div class="stash">🧺 Réserve des récompenses : '+RES.filter(r=>S.stash[r]>=1).map(r=>'<span class="c-'+r+'">'+fmt(S.stash[r])+" "+RES_NAME[r].toLowerCase()+"</span>").join(" · ")+'<br><span class="desc">Elle remplit vos entrepôts automatiquement dès qu’il y a de la place. Dépensez ou agrandissez la vacuole pour la vider plus vite.</span></div>';}
 function bestTroop(){const ks=["sold","coll"].filter(k=>uReq(k)||k==="coll");return ks[0];}
 function giveTroops(k,n){S.army[k]=(S.army[k]||0)+n;syncIdle();return n+" "+(n>1?UNITS[k].pl:UNITS[k].name).toLowerCase();}
 function dailyDay(){const d=S.daily;const next=d.last===dayKey(-1)?d.streak+1:1;return ((next-1)%7)+1;}
@@ -973,12 +978,12 @@ function claimDq(j){const q=S.dq.list[j];if(!q||q.done||q.got<q.goal)return;q.do
   if(S.dq.list.every(x=>x.done)&&!S.dq.bonus){S.dq.bonus=true;S.chestAt=Math.min(S.chestAt,Date.now());toast("Les 3 quêtes du jour : un coffre offert !");}}
 function rewardsHTML(){rwInit();const d=S.daily,can=d.last!==dayKey(),cur=can?dailyDay():((d.streak-1)%7)+1;
   let h='<div class="kick">Récompenses</div><h2>Chaque jour compte</h2>';enInit();
-  h+='<p class="desc">'+enPill()+" Les récompenses sont la seule façon de dépasser "+EN_MAX+" d’énergie (jusqu’à "+EN_CAP+").</p>";
+  h+=stashHTML();h+='<p class="desc">'+enPill()+" Les récompenses sont la seule façon de dépasser "+EN_MAX+" d’énergie (jusqu’à "+EN_CAP+").</p>";
   if(S.rkRew&&!S.rkRew.done)h+="<h3>Ligue du classement mondial</h3>"+leagueRewardHTML(true);
   {const sr=can&&d.last!==dayKey(-1)?0:d.streak;h+='<h3>Connexion quotidienne · '+(sr?"série de "+sr+" jour"+(sr>1?"s":""):"nouvelle série")+'</h3>';}h+='<div class="dtrack">'+[1,2,3,4,5,6,7].map(n=>{const st=n<cur||(!can&&n===cur)?"got":n===cur&&can?"now":"";return '<div class="dday '+st+'"><b>J'+n+"</b><span>"+DAILY_TXT[n]+"</span></div>";}).join("")+"</div>";
   h+=can?'<p class="desc">Aujourd’hui : '+DAILY_LONG[cur]+" et ⚡ "+(cur===7?30:10+2*cur)+' énergie.</p><button class="btn" data-act="rwdaily">Récupérer le jour '+cur+"</button>":'<p class="desc">Revenez demain pour le jour '+(cur%7+1)+". Manquer un jour remet la série à zéro.</p>";
   const ready=Date.now()>=S.chestAt;
-  h+='<h3>Coffre gratuit</h3><p class="desc">Un coffre toutes les 4 heures : ressources, énergie, et parfois de l’expérience pour le héros ou des troupes d’élite. Sa rareté multiplie tout son contenu, dans la limite de vos entrepôts.</p><div class="tiers">'+CHEST_TIERS.map(T=>'<span style="--tc:'+T.c+'">'+T.e+" "+T.n+"<small><b>×"+T.m+"</b> · "+Math.round(T.p*100)+" %</small></span>").join("")+"</div>"+(S.lastChest?'<p class="desc">Dernier coffre : <b style="color:'+S.lastChest.c+'">'+S.lastChest.e+" "+S.lastChest.n+" ×"+S.lastChest.m+"</b>.</p>":"")+(ready?'<button class="btn" data-act="rwchest">📦 Ouvrir le coffre</button>':'<p>Prochain coffre dans <b>'+fmtDur((S.chestAt-Date.now())/60000)+"</b> (temps réel).</p>");
+  h+='<h3>Coffre gratuit</h3><p class="desc">Un coffre toutes les 4 heures : ressources, énergie, et parfois de l’expérience pour le héros ou des troupes d’élite. Sa rareté multiplie tout son contenu. Rien n’est perdu : ce qui ne rentre pas dans vos entrepôts attend en réserve.</p><div class="tiers">'+CHEST_TIERS.map(T=>'<span style="--tc:'+T.c+'">'+T.e+" "+T.n+"<small><b>×"+T.m+"</b> · "+Math.round(T.p*100)+" %</small></span>").join("")+"</div>"+(S.lastChest?'<p class="desc">Dernier coffre : <b style="color:'+S.lastChest.c+'">'+S.lastChest.e+" "+S.lastChest.n+" ×"+S.lastChest.m+"</b>.</p>":"")+(ready?'<button class="btn" data-act="rwchest">📦 Ouvrir le coffre</button>':'<p>Prochain coffre dans <b>'+fmtDur((S.chestAt-Date.now())/60000)+"</b> (temps réel).</p>");
   h+="<h3>Quêtes du jour</h3>"+S.dq.list.map((q,j)=>'<div class="dq'+(q.done?" done":"")+'"><span>'+q.txt+'</span><span class="bar"><i style="width:'+Math.round(q.got/q.goal*100)+'%"></i></span><span class="num">'+q.got+"/"+q.goal+"</span>"+(q.done?"<span>✔</span>":q.got>=q.goal?'<button class="btn sm" data-act="rwdq" data-j="'+j+'">Prendre</button>':"<span></span>")+"</div>").join("");
   h+='<p class="desc">'+(S.dq.bonus?"Bonus du jour obtenu.":"Les trois quêtes terminées offrent un coffre de plus.")+" Nouvelles quêtes demain.</p>";
   return h+'<button class="btn alt" data-act="mclose">Fermer</button>';}
@@ -1209,7 +1214,7 @@ function frissonHTML(){const f=frissonInfo();let h="";
   return h;}
 
 function step(dm){
-  enStep();const r=rates(),u=upkeep(),m=mods();let short=null;
+  enStep();stashStep();const r=rates(),u=upkeep(),m=mods();let short=null;
   for(const k of RES){
     const net=r[k]-u[k];let v=S.res[k];
     if(net>0){if(v<r.cap)v=Math.min(r.cap,v+net*dm/60);}else v=Math.max(0,v+net*dm/60);
@@ -1590,6 +1595,7 @@ function stripHTML(){
   if(S.mig)h+='<span>Migration <b>vers '+S.mig.x+","+S.mig.y+'</b><span class="pb"><i data-ps="'+S.mig.start+'" data-pe="'+S.mig.end+'"></i></span><span data-end="'+S.mig.end+'"></span></span>';
   h+=S.research?'<span>Gène <b>'+NODES[S.research.id].name+(S.research.lvl?" niv. "+S.research.lvl:"")+'</b><span class="pb evo"><i data-ps="'+S.research.start+'" data-pe="'+S.research.end+'"></i></span><span data-end="'+S.research.end+'"></span>'+accelHTML("r")+'</span>':"<span>Aucun gène en cours</span>";
   h+=enPill();
+  {const st=stashTotal();if(st>=1)h+='<span class="rwpill" data-act="rewards">🧺 <b>'+fmt(st)+"</b> en réserve</span>";}
   {const n=rwCount();h+='<span class="rwpill'+(n?" on":"")+'" data-act="rewards">🎁 '+(n?"Récompenses <b>"+n+"</b>":"Coffre dans <span data-endr=\""+S.chestAt+"\"></span>")+"</span>";}
   {const r=myRank("pow"),L=leagueOf(r);h+='<span class="rkpill" data-act="goto" data-tab="act" data-sub="rank">'+L[1]+" <b>#"+r+"</b> mondial</span>";}
   h+=eventPill();
