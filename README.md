@@ -17,7 +17,7 @@ Tout le jeu tient dans un seul fichier, `index.html` (HTML, CSS et JavaScript, s
 
 ## Présentation
 
-- **Bande-annonce (26 s, 1080p) :** [presentation/origins27-bande-annonce.webm](presentation/origins27-bande-annonce.webm)
+- **Bande-annonce (28 s, 1080p) :** [presentation/origins27-bande-annonce.webm](presentation/origins27-bande-annonce.webm)
 - **Images légendées :** [paysage 1920 × 1080](presentation/paysage-1920x1080) et [mobile 1080 × 1920](presentation/mobile-1080x1920), plus l’[image clé sans texte](presentation/image-cle-sans-texte.png).
 
 | | |
