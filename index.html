@@ -545,7 +545,8 @@ const STAGE_NAME=["","Procaryote","Eucaryote","Colonie","Pluricellulaire","Pluri
 const RES=["atp","prot","lip","nuc"];
 const RES_NAME={atp:"ATP",prot:"Protéines",lip:"Lipides",nuc:"Nucléotides"};
 const SPEEDS=[{label:"×1",v:1/60,title:"Temps réel"},{label:"×60",v:1,title:"1 seconde = 1 minute de jeu"},{label:"×600",v:10,title:"1 seconde = 10 minutes de jeu"}];
-const SAVE_KEY="origins27-proto6";
+const SAVE_KEY="origins27-proto7";
+try{for(let i=1;i<7;i++)localStorage.removeItem("origins27-proto"+i);}catch(e){}
 
 const SOUCHES={
   varenne:{name:"Varenne-58",origin:"Isolée en 1958 dans une source thermale du Massif central par la Dr Hélène Varenne.",
