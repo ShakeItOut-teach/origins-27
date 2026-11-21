@@ -379,6 +379,9 @@ body.pixel #tour .tbub,body.pixel #tour .hole{border-radius:0}
 .bqbox{margin:10px 0 4px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px}
 .bqi{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:4px}
 .bqn{color:#ffd166;font-weight:600}
+.enpill{cursor:pointer;color:#ffd166}.enpill b{font-family:var(--font-mono)}.enpill small{color:var(--muted);font-size:11px}.enpill.low{color:var(--bad);animation:rwglow 1.6s ease-in-out infinite}
+.accb{font:inherit;font-size:11px;margin-left:6px;padding:1px 6px;border-radius:6px;border:1px solid #ffd166;background:rgba(255,209,102,.1);color:#ffd166;cursor:pointer}
+.tiers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin:6px 0}.tiers span{border:1px solid var(--tc);color:var(--tc);border-radius:8px;padding:4px 8px;font-size:12px;display:flex;flex-direction:column;line-height:1.3}.tiers small{opacity:.85;font-size:11.5px}.tiers small b{font-size:13px}
 .rkpill{cursor:pointer;color:var(--muted)}.rkpill b{color:var(--lume)}
 .rksum{display:flex;gap:14px;align-items:center;margin:4px 0 10px}
 .rkbig{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:84px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(94,230,208,.08)}
@@ -819,23 +822,25 @@ function hereLight(){const c=cpos();return depthLight(c[0],c[1]);}
 function photoF(){return 0.08+2.6*Math.pow(hereLight(),1.1);}
 function depthM(x,y){return Math.round(Math.max(0,(rC(x,y)-LAND_R)/(RW-LAND_R))*4000/10)*10;}
 function prodMult(k,m){const ph=(m.photoPct||0)*photoF();return k==="atp"?1+0.08*blvl("mito")+m.atpPct+ph:k==="prot"?1+0.08*blvl("reti")+m.protPct+ph*0.5:k==="lip"?1+0.08*blvl("golgi")+m.lipPct:1+0.05*S.noyau+m.nucPct;}
+const PROD_F=0.7;
 function rates(){
   const m=mods(),fp=1+m.fieldPct,o={},fil={atp:0,prot:0,lip:0,nuc:0};
   S.fils.forEach(f=>{const T=S.tiles[f.y*W+f.x];if(T.k)fil[T.k]+=filRate(T,m);});
   const base={atp:6,prot:9,lip:6,nuc:3.5};
   const ax=(S.events&&S.events.length&&anoxHere())?0.7:1;
-  for(const k of RES){const fs=S.fields.reduce((a,f)=>f.k===k?a+fieldProd(f.l):a,0);o[k]=(Math.max(0,(base[k]+fs*fp)*prodMult(k,m))+fil[k])*ax;}
+  for(const k of RES){const fs=S.fields.reduce((a,f)=>f.k===k?a+fieldProd(f.l):a,0);o[k]=(Math.max(0,(base[k]+fs*fp)*prodMult(k,m))+fil[k])*ax*PROD_F;}
   o.fil=fil;
-  o.cap=Math.round(520*Math.pow(1.3,blvl("vac"))*(1+m.capPct));
+  o.cap=Math.round(520*Math.pow(1.3,blvl("vac"))*costF(blvl("vac"))*(1+m.capPct));
   return o;
 }
 function cellCount(){return S.idle+S.missions.reduce((a,M)=>a+M.n,0);}
 function upkeep(){const A=armyAll();let n=0;for(const k in A)n+=(A[k]||0)*UNITS[k].upk;const f=Math.max(0.2,1+mods().upkeepPct),o={};for(const k in UPKEEP)o[k]=UPKEEP[k]*n*f;return o;}
 function speedUp(){return (1+0.06*S.noyau)*(1+mods().buildPct);}
-function fieldCost(L){const m=3.2*Math.pow(1.55,L),o={};for(const r in FIELD_BASE)o[r]=Math.round(FIELD_BASE[r]*m);return o;}
+let COST_K=0.15,PACE=1.7;function costF(L){return PACE*(1+COST_K*L);}
+function fieldCost(L){const m=3.2*Math.pow(1.55,L)*costF(L),o={};for(const r in FIELD_BASE)o[r]=Math.round(FIELD_BASE[r]*m);return o;}
 const TIME_F=0.87;
 function fieldTime(L){return TIME_F*9*Math.pow(1.5,L)/speedUp();}
-function bldCost(k,L){const b=BLD[k].base,m=Math.pow(1.5,L),o={};for(const r in b)if(b[r])o[r]=Math.round(b[r]*m);return o;}
+function bldCost(k,L){const b=BLD[k].base,m=Math.pow(1.5,L)*costF(L),o={};for(const r in b)if(b[r])o[r]=Math.round(b[r]*m);return o;}
 function bldTime(k,L){return TIME_F*BLD[k].t*Math.pow(1.5,L)/speedUp();}
 function capPer(){return Math.max(5,20*(1+mods().chargePct));}
 function cellTime(){return 10/(1+0.4*blvl("ribo"))*Math.max(0.2,1+mods().cellTime);}
@@ -855,7 +860,7 @@ function zoneIdx(){const c=cpos();return {abyss:0,deep:1,mid:2,shallow:3,land:3,
 const SPECIAL={cells:{name:"Troupes",cur:()=>cellCount(),tab:"hero"},zone:{name:"Base en zone",cur:()=>zoneIdx(),tab:"map",lbl:l=>["Abysses","Eaux profondes","Eaux moyennes","Hauts-fonds"][l]},lin:{name:"Lignées",cur:()=>lineages().length,tab:"evo"}};
 function reqMet(q){const t=q[0],k=q[1],l=q[2];if(t==="g")return has(k);if(t==="s")return SPECIAL[k].cur()>=l;return t==="b"?blvl(k)>=l:fmaxlvl(k)>=l;}
 function reqShort(q){if(q[0]==="g")return NODES[q[1]].name;if(q[0]==="s"){const s=SPECIAL[q[1]];return s.lbl?s.lbl(q[2]):s.name+" "+q[2];}return (q[0]==="b"?(SHORT[q[1]]||BLD[q[1]].name):FIELD[q[1]].name)+" "+q[2];}
-function nodeCost(id){const n=NODES[id],f=Math.max(0.3,1+mods().evoCost);let c=n.cost;if(NODES[id].type&&ownedTypes().length>=1)c*=2;return {nuc:Math.round(c*f),atp:Math.round(c*0.5)};}
+function nodeCost(id){const n=NODES[id],f=Math.max(0.3,1+mods().evoCost);let c=n.cost*costF((n.tier||0)*1.6);if(NODES[id].type&&ownedTypes().length>=1)c*=2;return {nuc:Math.round(c*f),atp:Math.round(c*0.5)};}
 function nodeTime(id){return TIME_F*NODES[id].time/(1+0.05*S.noyau);}
 function matchup(wtype){const own=ownedTypes();if(!own.length)return {f:0.6,t:null,lbl:"aucune voie offensive"};let best={f:0,t:null};own.forEach(t=>{const f=BEATS[t]===wtype?2:BEATS[wtype]===t?0.5:1;if(f>best.f)best={f,t};});best.lbl=TYPES[best.t].name+(best.f===2?" (fort contre lui)":best.f===0.5?" (faible contre lui)":" (neutre)");return best;}
 function huntPower(n,wtype){return compAtk(typeof n==="number"?pickUnits("hunt",n):n,wtype);}
@@ -905,12 +910,29 @@ function reqLink(q){const t=q[0],k=q[1],l=q[2];if(t==="g")return nodeLink(k);if(
 function nodeLink(id){const ok=has(id);return '<button class="lnk '+(ok?"ok":"no")+'" data-act="goto" data-ref="node:'+id+'" data-tab="evo">'+NODES[id].name+"</button>";}
 
 function log(msg,cls){S.log.unshift({t:S.t,msg,cls:cls||""});if(S.log.length>120)S.log.length=120;dirty=true;}
-function toast(msg){const d=document.createElement("div");d.className="toast";d.textContent=msg;const box=document.getElementById("toasts");if(!box)return;box.appendChild(d);while(box.children.length>3)box.removeChild(box.firstChild);setTimeout(()=>d.remove(),3500);}
+function toast(msg){const d=document.createElement("div");d.className="toast";d.textContent=String(msg).replace(/<[^>]+>/g,"");const box=document.getElementById("toasts");if(!box)return;box.appendChild(d);while(box.children.length>3)box.removeChild(box.firstChild);setTimeout(()=>d.remove(),3500);}
 let catchUp=null; /* pendant le rattrapage hors ligne, les fenêtres sont mises de côté puis résumées en une seule */
 function popup(p){if(catchUp){catchUp.push(p);return;}
   if(p.grp){const i=S.popups.findIndex(q=>q.grp===p.grp);if(i>=0){p.more=(S.popups[i].more||0)+1;S.popups.splice(i,1);}}
   S.popups.push(p);if(S.popups.length>5)S.popups.splice(0,S.popups.length-5);dirty=true;}
 function stat(k,r,v){S.stats=S.stats||{};const o=S.stats[k]=S.stats[k]||{};o[r]=(o[r]||0)+v;}
+/* ===== Énergie : chaque action la consomme ; seuls le temps, les coffres, les quêtes, les boss et les événements la rendent ===== */
+const EN_MAX=30,EN_REGEN=20,EN_CAP=120,EN_COST={collect:1,explore:1,hunt:2,raid:3,accel:5};
+function enInit(){if(S.en==null){S.en=EN_MAX;S.enT=S.t;}}
+function enStep(){enInit();if(S.en>=EN_MAX){S.enT=S.t;return;}const n=Math.floor((S.t-S.enT)/EN_REGEN);if(n>0){S.en=Math.min(EN_MAX,S.en+n);S.enT+=n*EN_REGEN;if(S.en>=EN_MAX)S.enT=S.t;}}
+function enGive(n,why){enInit();const b=S.en;S.en=Math.min(EN_CAP,S.en+n);const g=S.en-b;if(g>0&&why)log("⚡ +"+g+" énergie : "+why+".","good");return g;}
+function enCostFor(kind,T){if(kind==="collect"&&T&&T.ev)return 0;return EN_COST[kind]||0;}
+function enSpend(c,quiet){enInit();if(!c)return true;if(S.en<c){if(!quiet)showModal(energyHTML(c));return false;}if(S.en>=EN_MAX)S.enT=S.t;S.en-=c;return true;}
+function enNext(){return S.en>=EN_MAX?null:S.enT+EN_REGEN;}
+function energyHTML(need){enInit();const nx=enNext();
+  return '<div class="kick">Énergie</div><h2>'+(need?"Il vous faut ⚡ "+need:"⚡ "+S.en+" / "+EN_MAX)+"</h2>"+(need?"<p>Vous avez <b>"+S.en+"</b> énergie.</p>":"")+
+  "<p>Chaque action en consomme : récolter ou explorer <b>1</b>, chasser <b>2</b>, piller <b>3</b>, accélérer un chantier ou un gène <b>5</b>. Récolter un gisement d’événement est gratuit.</p>"+
+  '<h3>La regagner</h3><p class="desc">+1 toutes les '+EN_REGEN+" min de jeu, jusqu’à "+EN_MAX+(nx?' (prochaine dans <span data-end="'+nx+'"></span>)':" (jauge pleine : elle ne se recharge plus seule)")+".</p>"+
+  '<p class="desc">Au-delà de '+EN_MAX+" (jusqu’à "+EN_CAP+"), seules les récompenses en donnent : connexion du jour, coffres (plus ils sont rares, plus il y en a), quêtes du jour, ligue du classement, boss vaincus et gisements d’événement.</p>"+
+  '<div class="row" style="margin-top:10px"><button class="btn" data-act="rewards">🎁 Voir les récompenses</button><button class="btn alt" data-act="mclose">Fermer</button></div>';}
+function enPill(){enInit();const nx=enNext();return '<span class="enpill'+(S.en<3?" low":"")+'" data-act="energy">⚡ <b>'+S.en+"</b>/"+EN_MAX+(nx?' <small>+1 <span data-end="'+nx+'"></span></small>':"")+"</span>";}
+function accelHTML(w){const J=w==="r"?S.research:S.build;if(!J||J.end-S.t<1)return "";return '<button class="accb" data-act="accel" data-w="'+w+'" data-tip="'+esc("<b>Accélérer</b>−1 h sur "+(w==="r"?"le gène":"le chantier")+" en cours · ⚡ "+EN_COST.accel)+'">'+(J.end-S.t<=60?"⚡ Finir":"⚡−1h")+"</button>";}
+function doAccel(w){const J=w==="r"?S.research:S.build;if(!J||J.end-S.t<1)return;if(!enSpend(EN_COST.accel))return;const d=Math.min(60,J.end-S.t);J.end-=d;J.start-=d;toast("⚡ "+(w==="r"?"Gène":"Chantier")+" accéléré de "+fmtDur(d));}
 /* ===== Récompenses : connexion quotidienne, coffre toutes les 4 h, quêtes du jour (en temps réel) ===== */
 function dayKey(off){const d=new Date(Date.now()+(off||0)*86400e3);return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
 const DQ_POOL=[["hunt","Gagner 2 chasses",2],["raid","Réussir 1 pillage",1],["collect","Ramener 5 récoltes",5],["units","Produire 10 troupes",10],["build","Lancer 2 constructions",2],["def","Repousser 1 attaque",1],["gene","Lancer 1 gène",1]];
@@ -918,8 +940,9 @@ const CHEST_MS=4*3600e3;
 function rwInit(){S.daily=S.daily||{last:"",streak:0};if(S.chestAt==null)S.chestAt=Date.now();
   if(!S.dq||S.dq.day!==dayKey()){const pool=DQ_POOL.slice(),list=[];while(list.length<3){const q=pool.splice(Math.floor(Math.random()*pool.length),1)[0];if(q[0]==="raid"&&S.t<1440)continue;list.push({id:q[0],txt:q[1],goal:q[2],got:0,done:false});}S.dq={day:dayKey(),list,bonus:false};}}
 function dqAdd(id,n){if(!S||!S.dq||catchUp)return;S.dq.list.forEach(q=>{if(q.id===id&&!q.done&&q.got<q.goal){q.got=Math.min(q.goal,q.got+(n||1));if(q.got>=q.goal)toast("🎯 Quête du jour : "+q.txt+" ✔");}});}
-function rwBase(){return 120+70*S.noyau+40*(S.stage||1);}
-function giveRes(mult,ks){const cap=rates().cap,got=[];(ks||RES).forEach(r=>{const v=Math.round(rwBase()*mult*(r==="nuc"?0.4:1)),b=S.res[r];S.res[r]=Math.min(cap,b+v);if(S.res[r]>b)got.push(fmt(S.res[r]-b)+" "+RES_NAME[r].toLowerCase());});return got;}
+function rwBase(){return (120+70*S.noyau+40*(S.stage||1))*PACE;}
+function giveRes(mult,ks){const cap=rates().cap,got=[];let lost=0;(ks||RES).forEach(r=>{const v=Math.round(rwBase()*mult*(r==="nuc"?0.4:1)),b=S.res[r];S.res[r]=Math.max(b,Math.min(cap,b+v));lost+=v-(S.res[r]-b);if(S.res[r]>b)got.push(fmt(S.res[r]-b)+" "+RES_NAME[r].toLowerCase());});
+  if(lost>1)got.push('<span class="neg">'+fmt(lost)+" perdu (entrepôts pleins)</span>");return got;}
 function bestTroop(){const ks=["sold","coll"].filter(k=>uReq(k)||k==="coll");return ks[0];}
 function giveTroops(k,n){S.army[k]=(S.army[k]||0)+n;syncIdle();return n+" "+(n>1?UNITS[k].pl:UNITS[k].name).toLowerCase();}
 function dailyDay(){const d=S.daily;const next=d.last===dayKey(-1)?d.streak+1:1;return ((next-1)%7)+1;}
@@ -927,24 +950,34 @@ function rwCount(){rwInit();return (S.daily.last!==dayKey()?1:0)+(Date.now()>=S.
 const DAILY_TXT=["","🧪","🧪 ×1,5","🦠 ×5","🧪 ×2","⏩ 2 h","🧪 ×2,5","🧬 ×3"];
 const DAILY_LONG=["","des ressources","des ressources ×1,5","des troupes offertes","des ressources ×2","le chantier et le gène en cours accélérés de 2 h","des ressources ×2,5","une mutation à choisir et des ressources ×3"];
 function claimDaily(){rwInit();const d=S.daily;if(d.last===dayKey())return;d.streak=d.last===dayKey(-1)?d.streak+1:1;d.last=dayKey();const n=((d.streak-1)%7)+1;let got=[];
-  if(n===1)got=giveRes(1);else if(n===2)got=giveRes(1.5);else if(n===3)got=[giveTroops(bestTroop(),bestTroop()==="sold"?5:10)];else if(n===4)got=giveRes(2);
+  if(n===1)got=giveRes(0.5);else if(n===2)got=giveRes(0.75);else if(n===3)got=[giveTroops(bestTroop(),bestTroop()==="sold"?5:10)];else if(n===4)got=giveRes(1);
   else if(n===5){if(S.build)S.build.end=Math.max(S.t,S.build.end-120);if(S.research)S.research.end=Math.max(S.t,S.research.end-120);got=["−2 h sur le chantier et le gène en cours"];}
-  else if(n===6)got=giveRes(2.5);else{got=giveRes(3);if(!S.mutOffer)offerMut();got.push("une mutation à choisir");}
+  else if(n===6)got=giveRes(1.25);else{got=giveRes(1.5);if(!S.mutOffer)offerMut();got.push("une mutation à choisir");}
+  {const e=enGive(n===7?30:10+2*n);if(e)got.push("⚡ +"+e+" énergie");}
   log("🎁 Récompense du jour "+n+" (série de "+d.streak+" jours) : "+got.join(", ")+".","good");toast("🎁 Jour "+n+" : "+got.join(", "));}
-function claimChest(){rwInit();if(Date.now()<S.chestAt)return;S.chestAt=Date.now()+CHEST_MS;const r=Math.random();let got,rare=false;
-  if(r<0.1){rare=true;const el=UNIT_ORDER.filter(k=>UNITS[k].type&&uReq(k));got=el.length?[giveTroops(el[Math.floor(Math.random()*el.length)],3)]:giveRes(3);}
-  else if(r<0.25){const xp=Math.round(xpNeed(S.hero.lvl)*0.6);S.hero.xp+=xp;got=["+"+xp+" XP pour le héros"];const H=S.hero;while(H.xp>=xpNeed(H.lvl)){H.xp-=xpNeed(H.lvl);H.lvl++;}}
-  else{const ks=RES.slice().sort(()=>Math.random()-0.5).slice(0,2);got=giveRes(1.2+Math.random()*1.3,ks);}
-  log((rare?"✨ Coffre rare : ":"📦 Coffre : ")+got.join(", ")+".",rare?"rare":"good");toast((rare?"✨ Coffre RARE : ":"📦 ")+got.join(", "));}
-function claimDq(j){const q=S.dq.list[j];if(!q||q.done||q.got<q.goal)return;q.done=true;const got=giveRes(0.8);toast("🎯 "+got.join(", "));
+const CHEST_TIERS=[{n:"Commun",m:1,p:0.70,c:"#9fb3c8",e:"📦"},{n:"Rare",m:2,p:0.20,c:"#5ee6d0",e:"🎁"},{n:"Très rare",m:4,p:0.08,c:"#b28bff",e:"💎"},{n:"Extrêmement rare",m:8,p:0.02,c:"#ffd166",e:"👑"}];
+function rollTier(){let r=Math.random();for(const T of CHEST_TIERS){if(r<T.p)return T;r-=T.p;}return CHEST_TIERS[0];}
+function openChest(T){const m=T.m,got=[],ks=RES.slice().sort(()=>Math.random()-0.5).slice(0,m>=4?4:m>=2?3:2);
+  got.push(...giveRes((0.45+Math.random()*0.5)*m,ks));
+  const e=enGive(4*m);if(e)got.push("⚡ +"+e+" énergie");
+  const x=Math.random();
+  if(x<0.2){const el=UNIT_ORDER.filter(k=>UNITS[k].type&&uReq(k));if(el.length)got.push(giveTroops(el[Math.floor(Math.random()*el.length)],2*m));}
+  else if(x<0.4){const xp=Math.round(xpNeed(S.hero.lvl)*0.3*m);S.hero.xp+=xp;got.push("+"+xp+" XP pour le héros");const H=S.hero;while(H.xp>=xpNeed(H.lvl)){H.xp-=xpNeed(H.lvl);H.lvl++;}}
+  return got;}
+function claimChest(){rwInit();if(Date.now()<S.chestAt)return;S.chestAt=Date.now()+CHEST_MS;const T=rollTier(),got=openChest(T);
+  log(T.e+" Coffre "+T.n.toLowerCase()+" (×"+T.m+") : "+got.join(", ")+".",T.m>1?"rare":"good");toast(T.e+" "+T.n+" ×"+T.m+" : "+got.join(", "));
+  if(T.m>=4)popup({kick:"Coffre "+T.n.toLowerCase(),title:T.e+" ×"+T.m+" !",body:"<p>"+got.join("<br>")+"</p>"});
+  S.lastChest={n:T.n,m:T.m,e:T.e,c:T.c,got};}
+function claimDq(j){const q=S.dq.list[j];if(!q||q.done||q.got<q.goal)return;q.done=true;const got=giveRes(0.8);{const e=enGive(5);if(e)got.push("⚡ +"+e);}toast("🎯 "+got.join(", "));
   if(S.dq.list.every(x=>x.done)&&!S.dq.bonus){S.dq.bonus=true;S.chestAt=Math.min(S.chestAt,Date.now());toast("Les 3 quêtes du jour : un coffre offert !");}}
 function rewardsHTML(){rwInit();const d=S.daily,can=d.last!==dayKey(),cur=can?dailyDay():((d.streak-1)%7)+1;
-  let h='<div class="kick">Récompenses</div><h2>Chaque jour compte</h2>';
+  let h='<div class="kick">Récompenses</div><h2>Chaque jour compte</h2>';enInit();
+  h+='<p class="desc">'+enPill()+" Les récompenses sont la seule façon de dépasser "+EN_MAX+" d’énergie (jusqu’à "+EN_CAP+").</p>";
   if(S.rkRew&&!S.rkRew.done)h+="<h3>Ligue du classement mondial</h3>"+leagueRewardHTML(true);
   {const sr=can&&d.last!==dayKey(-1)?0:d.streak;h+='<h3>Connexion quotidienne · '+(sr?"série de "+sr+" jour"+(sr>1?"s":""):"nouvelle série")+'</h3>';}h+='<div class="dtrack">'+[1,2,3,4,5,6,7].map(n=>{const st=n<cur||(!can&&n===cur)?"got":n===cur&&can?"now":"";return '<div class="dday '+st+'"><b>J'+n+"</b><span>"+DAILY_TXT[n]+"</span></div>";}).join("")+"</div>";
-  h+=can?'<p class="desc">Aujourd’hui : '+DAILY_LONG[cur]+'.</p><button class="btn" data-act="rwdaily">Récupérer le jour '+cur+"</button>":'<p class="desc">Revenez demain pour le jour '+(cur%7+1)+". Manquer un jour remet la série à zéro.</p>";
+  h+=can?'<p class="desc">Aujourd’hui : '+DAILY_LONG[cur]+" et ⚡ "+(cur===7?30:10+2*cur)+' énergie.</p><button class="btn" data-act="rwdaily">Récupérer le jour '+cur+"</button>":'<p class="desc">Revenez demain pour le jour '+(cur%7+1)+". Manquer un jour remet la série à zéro.</p>";
   const ready=Date.now()>=S.chestAt;
-  h+='<h3>Coffre gratuit</h3><p class="desc">Un coffre toutes les 4 heures : ressources, expérience du héros, ou parfois des troupes d’élite.</p>'+(ready?'<button class="btn" data-act="rwchest">📦 Ouvrir le coffre</button>':'<p>Prochain coffre dans <b>'+fmtDur((S.chestAt-Date.now())/60000)+"</b> (temps réel).</p>");
+  h+='<h3>Coffre gratuit</h3><p class="desc">Un coffre toutes les 4 heures : ressources, énergie, et parfois de l’expérience pour le héros ou des troupes d’élite. Sa rareté multiplie tout son contenu, dans la limite de vos entrepôts.</p><div class="tiers">'+CHEST_TIERS.map(T=>'<span style="--tc:'+T.c+'">'+T.e+" "+T.n+"<small><b>×"+T.m+"</b> · "+Math.round(T.p*100)+" %</small></span>").join("")+"</div>"+(S.lastChest?'<p class="desc">Dernier coffre : <b style="color:'+S.lastChest.c+'">'+S.lastChest.e+" "+S.lastChest.n+" ×"+S.lastChest.m+"</b>.</p>":"")+(ready?'<button class="btn" data-act="rwchest">📦 Ouvrir le coffre</button>':'<p>Prochain coffre dans <b>'+fmtDur((S.chestAt-Date.now())/60000)+"</b> (temps réel).</p>");
   h+="<h3>Quêtes du jour</h3>"+S.dq.list.map((q,j)=>'<div class="dq'+(q.done?" done":"")+'"><span>'+q.txt+'</span><span class="bar"><i style="width:'+Math.round(q.got/q.goal*100)+'%"></i></span><span class="num">'+q.got+"/"+q.goal+"</span>"+(q.done?"<span>✔</span>":q.got>=q.goal?'<button class="btn sm" data-act="rwdq" data-j="'+j+'">Prendre</button>':"<span></span>")+"</div>").join("");
   h+='<p class="desc">'+(S.dq.bonus?"Bonus du jour obtenu.":"Les trois quêtes terminées offrent un coffre de plus.")+" Nouvelles quêtes demain.</p>";
   return h+'<button class="btn alt" data-act="mclose">Fermer</button>';}
@@ -1101,7 +1134,7 @@ function rkTick(){if(!S.bots)return;{const raw=playerPowRaw();S.rkPow=S.rkPow==n
     popup({grp:"league",kick:"Classement mondial",title:L[1]+" Ligue "+L[2],body:"<p>Vous montez au rang <b>#"+r+"</b> sur "+(S.bots.length+1)+".</p><p class=\"desc\">À la fin de chaque jour de jeu, votre ligue vous rapporte une récompense : ×"+String(L[3]).replace(".",",")+" en ligue "+L[2]+".</p>"});}
   else if(S.rkLg!=null&&li>S.rkLg)log("📉 Vous redescendez en ligue "+LEAGUES[li][2]+" (rang #"+r+").","bad");
   S.rkLg=li;}
-function claimLeague(){const R=S.rkRew;if(!R||R.done)return;R.done=true;const L=LEAGUES[R.lg],got=giveRes(L[3]);
+function claimLeague(){const R=S.rkRew;if(!R||R.done)return;R.done=true;const L=LEAGUES[R.lg],got=giveRes(L[3]);{const e=enGive(Math.round(6*L[3]));if(e)got.push("⚡ +"+e+" énergie");}
   if(R.lg===0){const el=UNIT_ORDER.filter(k=>UNITS[k].type&&uReq(k));if(el.length)got.push(giveTroops(el[Math.floor(Math.random()*el.length)],5));}
   log(L[1]+" Récompense de ligue "+L[2]+" : "+got.join(", ")+".","good");toast(L[1]+" Ligue "+L[2]+" : "+got.join(", "));}
 function leagueRewardHTML(inModal){const R=S.rkRew;if(!R||R.done)return inModal?"":'<p class="desc">Chaque fin de jour de jeu, votre ligue vous rapporte des ressources (de ×0,5 en Plancton à ×3 en Souverain).</p>';const L=LEAGUES[R.lg];
@@ -1149,7 +1182,7 @@ function migRange(){return 4+2*blvl("flag")+Math.max(0,mods().rangeAdd);}
 function migCost(d){return {atp:Math.round(60*d),lip:Math.round(40*d),prot:Math.round(30*d)};}
 function migTime(d){return TIME_F*20*d/(1+0.3*blvl("flag"))/Math.max(0.3,1+mods().speedPct);}
 function migBlock(x,y){const T=S.tiles[y*W+x],d=dist(x,y);if(!inWorld(x,y))return "C’est de la roche.";if(isLand(x,y))return "Terre ferme : votre lignée devra évoluer avant d’y vivre.";if(botAt(x,y))return "Case occupée par un rival.";if(S.mig)return "Une migration est déjà en cours.";if(!T.s)return "Case inconnue : explorez-la d’abord.";if(T.k||T.w)return "Il faut une case d’eau libre.";if(d>migRange())return "Trop loin pour migrer (portée "+migRange()+" cases, augmentez le flagelle).";if(S.missions.length)return "Rappelez d’abord vos collectrices en mission.";return capBlock(migCost(d));}
-function lvlCost(id,L){const n=NODES[id],f=Math.max(0.3,1+mods().evoCost),g=Math.pow(1.45,L-1);return {nuc:Math.round(n.cost*0.8*g*f),atp:Math.round(n.cost*0.4*g)};}
+function lvlCost(id,L){const n=NODES[id],f=Math.max(0.3,1+mods().evoCost),g=Math.pow(1.45,L-1)*costF(L+(n.tier||0));return {nuc:Math.round(n.cost*0.8*g*f),atp:Math.round(n.cost*0.4*g)};}
 function lvlTime(id,L){return TIME_F*NODES[id].time*0.6*Math.pow(1.35,L-1)/(1+0.05*S.noyau);}
 function lvlBlock(id){if(!has(id))return "Gène non exprimé.";const L=glvl(id);if(L>=maxLvl(id))return "Niveau maximum atteint.";if(S.research)return "Un gène est déjà en cours d’expression.";return capBlock(lvlCost(id,L));}
 function fmt(n){return Math.floor(n).toLocaleString("fr-FR");}
@@ -1175,7 +1208,7 @@ function frissonHTML(){const f=frissonInfo();let h="";
   return h;}
 
 function step(dm){
-  const r=rates(),u=upkeep(),m=mods();let short=null;
+  enStep();const r=rates(),u=upkeep(),m=mods();let short=null;
   for(const k of RES){
     const net=r[k]-u[k];let v=S.res[k];
     if(net>0){if(v<r.cap)v=Math.min(r.cap,v+net*dm/60);}else v=Math.max(0,v+net*dm/60);
@@ -1241,7 +1274,7 @@ function step(dm){
             '<p class="desc" style="margin-top:8px">'+(win?"Plus l’écart de force est grand, moins vous perdez de collectrices. À force égale, les deux camps saignent.":"Il vous manquait de la force. Le jeu vous rend vos collectrices cette fois-ci.")+"</p>"+
             (adv.length?'<ul class="advice">'+adv.map(a=>"<li>"+a+"</li>").join("")+"</ul>":"")});}
         report("combat",(win?"Victoire":"Défaite")+" · "+WILD_NAME[w.type],lines,win);
-      } else if(T.k&&T.a>0){const take=Math.min(T.a,compCarry(M.u)),bl=inEvent("bloom",M.x,M.y)?1.5:1;T.a-=take;T.m=T.a;M.cargo={};M.cargo[T.k]=Math.round(take*bl*(1+m.extractPct)*(T.rich?1+m.richMult:1));M.cargo.atp=Math.round(take*DIGEST);}
+      } else if(T.k&&T.a>0){const take=Math.min(T.a,compCarry(M.u)),bl=inEvent("bloom",M.x,M.y)?1.5:1;T.a-=take;T.m=T.a;M.cargo={};M.cargo[T.k]=Math.round(take*bl*(1+m.extractPct)*(T.rich?1+m.richMult:1));M.cargo.atp=Math.round(take*DIGEST);if(T.ev)M.en=2;}
       if(T.rich&&!S.foundSrc){S.foundSrc=1;log("Vos collectrices ont trouvé une source hydrothermale. Les eaux y sont très riches.","good");popup({kick:"Découverte",title:"Source hydrothermale",body:"<p>Personne ne l’avait annoncée. Ses gisements sont dix fois plus riches que les autres. Reliez-la par un filament si vous le pouvez.</p>"});}
       dirty=true;
     }
@@ -1249,6 +1282,7 @@ function step(dm){
       for(const k in (M.u||{coll:M.n}))S.army[k]=(S.army[k]||0)+(M.u?M.u[k]:M.n);syncIdle();
       const cap=rates().cap;let parts=[],lostCap=[];
       if(M.cargo){for(const k in M.cargo){const before=S.res[k];S.res[k]=Math.max(before,Math.min(cap,before+M.cargo[k]));const got=Math.round(S.res[k]-before);if(got>0)parts.push(fmt(got)+" "+RES_NAME[k].toLowerCase());if(M.cargo[k]-got>1)lostCap.push(fmt(M.cargo[k]-got)+" "+RES_NAME[k].toLowerCase());if(M.kind==="raid"||M.kind==="hunt")stat(M.kind==="raid"?"lootIn":"huntIn",k,got);}}
+      if(M.en){const g=enGive(M.en);if(g)parts.push("⚡ +"+g+" énergie");}
 
       if(M.hero)S.hero.busy=false;
       if(M.n>0){const tp=parts.filter(p=>p[0]!=="<");log(compText(M.u)+" de retour"+(M.cancelled?" (ordre annulé)":"")+(tp.length?" : "+tp.join(", "):" les mains vides")+".");}
@@ -1296,11 +1330,12 @@ function sendMission(kind,quiet,auto){
   const p=openRef&&openRef.split(":");if(!p||p[0]!=="tile"||S.mig)return;
   const x=+p[1],y=+p[2],d=dist(x,y);if(d<0.5||d>range()||S.idle<1||!inWorld(x,y)||isLand(x,y))return;
   const T0=S.tiles[y*W+x],kk=kind==="collect"&&!T0.s?"explore":kind,u=auto?pickUnits(kk,Math.max(1,Math.min(S.idle,S.selN||1))):selComp(kk),n=uSum(u);
-  if(n<1){if(!quiet)toast("Choisissez au moins une troupe");return;}S.sentOnce=1;
+  if(n<1){if(!quiet)toast("Choisissez au moins une troupe");return;}
+  if(!enSpend(enCostFor(kk,T0),quiet))return false;S.sentOnce=1;
   for(const k in u)S.army[k]-=u[k];syncIdle();const dur=d*tileTime()/compSpd(u);
   const hero=(kind==="hunt"||kind==="raid")&&S.heroWith&&!S.hero.busy;if(hero)S.hero.busy=true;
   S.missions.push({id:S.nextId++,kind,x,y,n,u,hero,depart:S.t,arrive:S.t+dur,back:S.t+2*dur,arrived:false,cargo:null});
-  if(!quiet)toast(compText(u)+" en route");dirty=true;
+  if(!quiet)toast(compText(u)+" en route");dirty=true;return true;
 }
 /* ===== Événements de zone : des raisons de bouger ===== */
 const EVENTS={
@@ -1325,7 +1360,7 @@ function spawnEvent(force){
   log(E.ic+" "+E.name+" à "+d+" case"+(d>1?"s":"")+" (case "+x+","+y+").","rare");toast(E.ic+" "+E.name+(d<=E.r?" sur votre base":" à "+d+" cases"));
   popup({grp:"ev",kick:"Événement",title:E.ic+" "+E.name,body:"<p>"+E.desc+"</p><p class=\"desc\">À "+d+" cases de votre base, pour "+fmtDur(E.dur)+". Ouvrez les abysses pour la voir.</p>"});
 }
-function bossDown(x,y,w){const ev=S.events.find(e=>e.id===w.boss);if(ev)ev.end=S.t;log("🦑 Le léviathan est vaincu !","rare");S.hero.xp+=Math.round(w.def*0.5);popup({kick:"Exploit",title:"Léviathan vaincu",body:"<p>Les abysses respirent. Votre héros gagne "+Math.round(w.def*0.5)+" XP, et le butin est énorme.</p>"});}
+function bossDown(x,y,w){const ev=S.events.find(e=>e.id===w.boss);if(ev)ev.end=S.t;enGive(20,"léviathan vaincu");log("🦑 Le léviathan est vaincu !","rare");S.hero.xp+=Math.round(w.def*0.5);popup({kick:"Exploit",title:"Léviathan vaincu",body:"<p>Les abysses respirent. Votre héros gagne "+Math.round(w.def*0.5)+" XP, et le butin est énorme.</p>"});}
 function eventsStep(dm){
   if(!S.events)S.events=[];
   S.evT=(S.evT||0)+dm;const every=S.evEvery||480;
@@ -1373,11 +1408,12 @@ function autoTargets(){
 }
 function autoCollect(){
   if(!S||S.mig||S.idle<1){toast(S&&S.mig?"Migration en cours":"Aucune collectrice libre");return 0;}
-  const {dep,unk}=autoTargets(),keep=openRef,keepN=S.selN;let sent=0,trips=0;
-  for(const t of dep){if(S.idle<1||trips>=4)break;const n=Math.max(1,Math.min(S.idle,Math.ceil(t[3]/capPer())));S.selN=n;openRef="tile:"+t[0]+":"+t[1];sendMission("collect",true,true);sent+=n;trips++;}
-  for(let i=0;S.idle>0&&trips<3&&i<unk.length;i+=Math.max(1,Math.floor(unk.length/3))){const t=unk[i];S.selN=1;openRef="tile:"+t[0]+":"+t[1];sendMission("collect",true,true);sent++;trips++;}
+  enInit();if(S.en<1){showModal(energyHTML(1));return 0;}
+  const {dep,unk}=autoTargets(),keep=openRef,keepN=S.selN;let sent=0,trips=0,noEn=false;
+  for(const t of dep){if(S.idle<1||trips>=4)break;const n=Math.max(1,Math.min(S.idle,Math.ceil(t[3]/capPer())));S.selN=n;openRef="tile:"+t[0]+":"+t[1];if(!sendMission("collect",true,true)){if(S.en<1){noEn=true;break;}continue;}sent+=n;trips++;}
+  for(let i=0;!noEn&&S.idle>0&&trips<3&&i<unk.length;i+=Math.max(1,Math.floor(unk.length/3))){const t=unk[i];S.selN=1;openRef="tile:"+t[0]+":"+t[1];if(!sendMission("collect",true,true)){if(S.en<1){noEn=true;break;}continue;}sent++;trips++;}
   openRef=keep;S.selN=keepN;
-  if(sent){S.autoUsed=1;toast(sent+" collectrice"+(sent>1?"s":"")+" envoyée"+(sent>1?"s":"")+" ("+trips+" trajet"+(trips>1?"s":"")+")");}else toast("Rien à récolter à portée : explorez ou améliorez le flagelle");
+  if(sent&&noEn)toast("⚡ Plus d’énergie : "+trips+" trajet"+(trips>1?"s":"")+" seulement");else if(sent){S.autoUsed=1;toast(sent+" collectrice"+(sent>1?"s":"")+" envoyée"+(sent>1?"s":"")+" ("+trips+" trajet"+(trips>1?"s":"")+")");}else toast("Rien à récolter à portée : explorez ou améliorez le flagelle");
   dirty=true;return sent;
 }
 function act(a,el){
@@ -1399,6 +1435,8 @@ function act(a,el){
   if(a==="popok"){S.popups.shift();dirty=true;return;}
   if(a==="popall"){S.popups=[];dirty=true;return;}
   if(a==="rewards"){showModal(rewardsHTML());return;}
+  if(a==="energy"){showModal(energyHTML());return;}
+  if(a==="accel"){doAccel(el.dataset.w);dirty=true;return;}
   if(a==="rkcat"){S.rkCat=el.dataset.c;dirty=true;return;}
   if(a==="rkall"){S.rkAll=!S.rkAll;dirty=true;return;}
   if(a==="rwleague"){claimLeague();dirty=true;if(modalExtra)showModal(rewardsHTML());return;}
@@ -1547,9 +1585,10 @@ function nextHint(){
 function hintHTML(){const H=nextHint();if(!H)return "";return '<button class="hint'+(H.wait?" wait":"")+'" data-act="hint">'+H.ic+" "+H.t+" →</button>";}
 function stripHTML(){
   let h=goalHTML()||hintHTML();
-  h+=S.build?'<span>Construction <b>'+S.build.label+'</b><span class="pb"><i data-ps="'+S.build.start+'" data-pe="'+S.build.end+'"></i></span><span data-end="'+S.build.end+'"></span>'+((S.bq||[]).length?' <b class="bqn">+'+S.bq.length+' en file</b>':"")+'</span>':(S.q<QUESTS.length?'<button class="lnk ok" data-act="hint">Aucune construction : que faire ?</button>':"<span>Aucune construction</span>");
+  h+=S.build?'<span>Construction <b>'+S.build.label+'</b><span class="pb"><i data-ps="'+S.build.start+'" data-pe="'+S.build.end+'"></i></span><span data-end="'+S.build.end+'"></span>'+accelHTML("b")+((S.bq||[]).length?' <b class="bqn">+'+S.bq.length+' en file</b>':"")+'</span>':(S.q<QUESTS.length?'<button class="lnk ok" data-act="hint">Aucune construction : que faire ?</button>':"<span>Aucune construction</span>");
   if(S.mig)h+='<span>Migration <b>vers '+S.mig.x+","+S.mig.y+'</b><span class="pb"><i data-ps="'+S.mig.start+'" data-pe="'+S.mig.end+'"></i></span><span data-end="'+S.mig.end+'"></span></span>';
-  h+=S.research?'<span>Gène <b>'+NODES[S.research.id].name+(S.research.lvl?" niv. "+S.research.lvl:"")+'</b><span class="pb evo"><i data-ps="'+S.research.start+'" data-pe="'+S.research.end+'"></i></span><span data-end="'+S.research.end+'"></span></span>':"<span>Aucun gène en cours</span>";
+  h+=S.research?'<span>Gène <b>'+NODES[S.research.id].name+(S.research.lvl?" niv. "+S.research.lvl:"")+'</b><span class="pb evo"><i data-ps="'+S.research.start+'" data-pe="'+S.research.end+'"></i></span><span data-end="'+S.research.end+'"></span>'+accelHTML("r")+'</span>':"<span>Aucun gène en cours</span>";
+  h+=enPill();
   {const n=rwCount();h+='<span class="rwpill'+(n?" on":"")+'" data-act="rewards">🎁 '+(n?"Récompenses <b>"+n+"</b>":"Coffre dans <span data-endr=\""+S.chestAt+"\"></span>")+"</span>";}
   {const r=myRank("pow"),L=leagueOf(r);h+='<span class="rkpill" data-act="goto" data-tab="act" data-sub="rank">'+L[1]+" <b>#"+r+"</b> mondial</span>";}
   h+=eventPill();
@@ -1616,7 +1655,7 @@ function orgArt(k,x,y){
 }
 function bldEffectText(k,L){
   const m=mods();
-  if(k==="vac")return "Stockage "+fmt(520*Math.pow(1.3,L)*(1+m.capPct))+", "+fmt(100*Math.pow(1.4,L))+" à l’abri";
+  if(k==="vac")return "Stockage "+fmt(520*Math.pow(1.3,L)*costF(L)*(1+m.capPct))+", "+fmt(100*Math.pow(1.4,L))+" à l’abri";
   if(k==="ribo")return fmtDur(10/(1+0.4*L)*Math.max(0.2,1+m.cellTime))+" par collectrice · "+(1+Math.floor(L/3))+" chaîne"+(L>=3?"s":"")+" en parallèle";
   if(k==="photo")return "Vision "+(1+L+m.visionAdd)+" cases";
   if(k==="flag")return "Portée "+(5+2*L+m.rangeAdd)+" cases, vitesse +"+Math.round(30*L)+" %";
@@ -2050,8 +2089,8 @@ function tileHTML(x,y){
   if(T.w&&T.s){const pw=compAtk(cu,T.w.type)+(withHero?heroPower(T.w.type):0),lf=lossFrac(pw,T.w.def),ok=pw*ATK_ADV>=T.w.def;fc='force '+fmt(pw)+" / "+T.w.def+(ok?' <span class="up">gagnable</span>':' <span class="neg">trop faible</span>')+" · pertes ≈ "+Math.round(lf*100)+" %";}
   h+='<p class="desc" style="margin:2px 0 6px">'+(man?"":"Choix auto : ")+compText(cu)+(cn?" · charge "+fmt(compCarry(cu))+" · vitesse ×"+compSpd(cu):"")+(fc?" · "+fc:"")+"</p>";
   const evs=(S.events||[]).filter(e=>Math.hypot(x-e.x,y-e.y)<=e.r+0.5);if(evs.length)h=h.replace("</h2>","</h2>"+evs.map(e=>'<p class="evline" style="--ec:'+EVENTS[e.type].col+'">'+EVENTS[e.type].ic+" "+EVENTS[e.type].name+' · encore <span data-end="'+e.end+'"></span></p>').join(""));
-  h+='<div class="row">'+(B?(S.ally&&B.tag===S.ally?'<span class="up" style="font-size:12.5px">Allié '+B.tag+" : on ne pille pas les siens.</span>":'<button class="btn sm" data-act="raid" style="background:var(--bad);border-color:var(--bad)"'+(block||nightAt(S.t)?" disabled":"")+">Piller</button>"):'<button class="btn sm" data-act="collect"'+(block?" disabled":"")+">"+(T.s?"Collecter":"Explorer")+"</button>");
-  if(T.w&&T.s)h+='<button class="btn sm alt" data-act="hunt"'+(block?" disabled":"")+">Chasser</button>";
+  h+='<div class="row">'+(B?(S.ally&&B.tag===S.ally?'<span class="up" style="font-size:12.5px">Allié '+B.tag+" : on ne pille pas les siens.</span>":'<button class="btn sm" data-act="raid" style="background:var(--bad);border-color:var(--bad)"'+(block||nightAt(S.t)?" disabled":"")+">Piller <small>⚡"+EN_COST.raid+"</small></button>"):'<button class="btn sm" data-act="collect"'+(block?" disabled":"")+">"+(T.s?"Collecter":"Explorer")+" <small>"+(enCostFor("collect",T)?"⚡1":"⚡ gratuit")+"</small></button>");
+  if(T.w&&T.s)h+='<button class="btn sm alt" data-act="hunt"'+(block?" disabled":"")+">Chasser <small>⚡"+EN_COST.hunt+"</small></button>";
   h+=fil;
   let mig="";if(T.s&&!T.k&&!T.w&&!B){const mb=migBlock(x,y),mc=migCost(d);if(mb.indexOf("Trop loin")!==0&&mb.indexOf("Rappelez")!==0&&mb.indexOf("Une migration")!==0)mig='<button class="btn sm alt" data-act="migrate"'+need(mc)+(mb?' data-block="1"':"")+' data-tip="'+esc("<b>Migrer ici</b>"+Object.keys(mc).map(r=>fmt(mc[r])+" "+RES_NAME[r]).join(", ")+" · "+fmtDur(migTime(d))+(S.fils.length?"<br>Vos filaments seront coupés.":""))+'">Migrer ici</button>';h+=mig;
     if(mb&&(mb.indexOf("Trop loin")===0||mb.indexOf("Rappelez")===0))h+='</div><p class="desc">Migration : '+mb+(mb.indexOf("Rappelez")===0?' <button class="lnk ok" data-act="recallall">Rappeler tout</button> · retour dans <span data-end="'+Math.max(...S.missions.map(M=>M.back))+'"></span>':"")+"</p><div>";}
@@ -2658,7 +2697,7 @@ function frame(now){
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save();else lastFrame=performance.now();});
 let wasMob=null;window.addEventListener("resize",()=>{if(tourI>=0)showTour(tourI);if(cv)resize();sizeStage();const m=isMobile();if(m!==wasMob){wasMob=m;dirty=true;}});
 requestAnimationFrame(frame);
-window.__o27={get S(){return S;},setStyle,camZoom,heroSVG,heroForm,act,advance,newGame,renderAll,setTab:t=>{tab=t;dirty=true;},setOpen:r=>{openRef=r;dirty=true;},dbg:{rates,upkeep,upgradeInfo,upgradeBlock,newBlock,bldCost,nodeCost,nodeState,nodeBlock,questTick,lvlCost,lvlBlock,spawnEvent,joinAlly,playerAtk,armyAll,pickUnits,uReq,zoneIdx,huntPower,heroPower,playerDef,botDef,botAtk,mods,playerPoints,botPoints,botPow,myRank,rkRows,leagueOf}};
+window.__o27={get S(){return S;},setStyle,camZoom,heroSVG,heroForm,act,advance,newGame,renderAll,setTab:t=>{tab=t;dirty=true;},setOpen:r=>{openRef=r;dirty=true;},dbg:{rates,upkeep,upgradeInfo,upgradeBlock,newBlock,bldCost,nodeCost,nodeState,nodeBlock,questTick,lvlCost,lvlBlock,spawnEvent,joinAlly,playerAtk,armyAll,pickUnits,uReq,zoneIdx,huntPower,heroPower,playerDef,botDef,botAtk,mods,setCostK:(v,p)=>{COST_K=v;if(p)PACE=p;},enGive,openChest,rollTier,giveRes,playerPoints,botPoints,botPow,myRank,rkRows,leagueOf}};
 })();
 </script>
 </body>

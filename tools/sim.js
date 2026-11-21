@@ -4,7 +4,7 @@ window.runSim = function (opts) {
   const G = window.__o27, X = G.dbg, souche = opts.souche || "varenne", days = opts.days || 5, step = opts.step || 5;
   const order = opts.order || ["P1", "E1", "M1", "P2", "E2b", "M2a", "PT", "PH", "E3b", "M3a", "ENDO", "COLO", "PLURI", "APEX"];
   opts.mutTag = opts.mutTag || { atp: "E", chap: "E", repl: "E", plas: "E" };
-  G.newGame(opts.seed || 12345, souche);
+  G.newGame(opts.seed || 12345, souche); window.__nextChest = 0; window.__nextDay = 0;
   let S = G.S; S.tourDone = true;
   const ms = {}, mark = (k) => { if (ms[k] == null) ms[k] = Math.round(S.t); };
   const D = (o) => ({ dataset: o }), W = 241;
@@ -23,7 +23,9 @@ window.runSim = function (opts) {
       S.fields.forEach((f, i) => { const u = X.upgradeInfo("field:" + i); if (!X.upgradeBlock(u)) { const r = X.rates(), up = X.upkeep(); const scarce = (r[f.k] - up[f.k]) < 6 ? 0.5 : 1; cands.push(["upgrade", { ref: "field:" + i }, u.cost, scarce * (f.k === "nuc" ? 1.3 : 1)]); } });
       S.slots.forEach((s, i) => { if (s) { const u = X.upgradeInfo("slot:" + i); if (!X.upgradeBlock(u)) cands.push(["upgrade", { ref: "slot:" + i }, u.cost, (prio[s.k] || 1) * (1 + s.l * 0.15)]); } });
       ["ribo", "vac", "flag", "photo", "mito", "golgi", "reti", "cyto"].forEach((k) => { if (!S.slots.some((s) => s && s.k === k) && !X.newBlock(k)) { const i = S.slots.findIndex((s, j) => !s && (j < 6 || blvl("cyto") >= j - 5)); if (i >= 0) cands.push(["buildnew", { i: String(i), k }, X.bldCost(k, 0), prio[k] * 0.6]); } });
-      const fl = S.fields.reduce((a, f) => a + f.l, 0) / 12;
+      const fl = S.fields.reduce((a, f) => a + f.l, 0) / 12, capNow = X.rates().cap;
+      const tooBig = cands.some((c) => Object.values(c[2]).some((v) => v > capNow * 0.9));
+      cands.forEach((c) => { if (tooBig && c[1].ref && S.slots[+String(c[1].ref).split(":")[1]] && S.slots[+String(c[1].ref).split(":")[1]].k === "vac" && String(c[1].ref).startsWith("slot")) c[3] = 0.02; });
       cands.forEach((c) => { let p = c[3]; if (c[1].ref === "noyau" && S.noyau <= fl + 1.5) p *= 0.12; if (c[1].k === "ribo" || c[1].k === "vac") p *= 0.2; c.push((tta(c[2]) + 30) * p); });
       cands.sort((a, b) => a[4] - b[4]);
       const best = cands[0];
@@ -55,6 +57,8 @@ window.runSim = function (opts) {
       }
       if (best) { S.selN = S.idle; G.setOpen("tile:" + best[0] + ":" + best[1]); G.act(best[2], D({})); sends++; }
     }
+    if (opts.rewards && S.t >= (window.__nextChest || 0)) { window.__nextChest = (window.__nextChest || 0) + (opts.chestEvery || 360); X.openChest(X.rollTier()); }
+    if (opts.rewards && S.t >= (window.__nextDay || 0)) { window.__nextDay = (window.__nextDay || 0) + 1440; X.giveRes(0.9); X.enGive(16); }
     G.advance(step); S = G.S;
     if (S.idle < lastIdle && !S.missions.length) starved++; lastIdle = S.idle;
     if (S.fields.some((f) => f.l > 0)) mark("canal1"); if (S.noyau >= 2) mark("noyau2"); if (blvl("ribo") >= 1) mark("ribo"); if (S.noyau >= 3) mark("noyau3"); if (S.noyau >= 5) mark("noyau5");
