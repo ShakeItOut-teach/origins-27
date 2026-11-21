@@ -379,6 +379,21 @@ body.pixel #tour .tbub,body.pixel #tour .hole{border-radius:0}
 .bqbox{margin:10px 0 4px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px}
 .bqi{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:4px}
 .bqn{color:#ffd166;font-weight:600}
+.rkpill{cursor:pointer;color:var(--muted)}.rkpill b{color:var(--lume)}
+.rksum{display:flex;gap:14px;align-items:center;margin:4px 0 10px}
+.rkbig{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:84px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(94,230,208,.08)}
+.rkbig b{font-size:28px;font-family:var(--font-mono);color:var(--lume);line-height:1.1}.rkbig span{font-size:11.5px;color:var(--muted)}
+.rkinfo{min-width:0}.rkinfo .rklg{font-weight:700;font-size:15px;margin-bottom:2px}.rkinfo .desc{margin:1px 0}
+.lgrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-bottom:8px}
+.lgrow span{display:flex;flex-direction:column;align-items:center;font-size:11px;padding:5px 2px;border:1px solid var(--line);border-radius:8px;color:var(--muted);text-align:center}
+.lgrow span i{font-style:normal;font-size:17px}.lgrow span small{font-size:9.5px;opacity:.8}
+.lgrow span.on{border-color:var(--lume);color:var(--ink,#fff);background:rgba(94,230,208,.12);font-weight:600}
+.lgrew{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;margin:6px 0;border:1px solid #ffd166;border-radius:10px;background:rgba(255,209,102,.08);font-size:13px}
+.rkchips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.rkchips button{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.rkchips button[aria-pressed="true"]{border-color:var(--lume);color:var(--lume);background:rgba(94,230,208,.1)}
+table.rank tr.go{cursor:pointer}table.rank tr.go:hover td{background:rgba(255,255,255,.04)}
+table.rank td:nth-child(2){width:34px;font-size:11.5px;font-family:var(--font-mono)}
 .nem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
 .revrow{margin:6px 0;align-items:center;gap:8px}
 .prodl{display:grid;grid-template-columns:auto 1fr auto;gap:6px 8px;align-items:center;margin-top:6px}
@@ -908,7 +923,7 @@ function giveRes(mult,ks){const cap=rates().cap,got=[];(ks||RES).forEach(r=>{con
 function bestTroop(){const ks=["sold","coll"].filter(k=>uReq(k)||k==="coll");return ks[0];}
 function giveTroops(k,n){S.army[k]=(S.army[k]||0)+n;syncIdle();return n+" "+(n>1?UNITS[k].pl:UNITS[k].name).toLowerCase();}
 function dailyDay(){const d=S.daily;const next=d.last===dayKey(-1)?d.streak+1:1;return ((next-1)%7)+1;}
-function rwCount(){rwInit();return (S.daily.last!==dayKey()?1:0)+(Date.now()>=S.chestAt?1:0)+S.dq.list.filter(q=>q.got>=q.goal&&!q.done).length+(S.dq.list.every(q=>q.done)&&!S.dq.bonus?1:0);}
+function rwCount(){rwInit();return (S.daily.last!==dayKey()?1:0)+(Date.now()>=S.chestAt?1:0)+S.dq.list.filter(q=>q.got>=q.goal&&!q.done).length+(S.dq.list.every(q=>q.done)&&!S.dq.bonus?1:0)+(S.rkRew&&!S.rkRew.done?1:0);}
 const DAILY_TXT=["","🧪","🧪 ×1,5","🦠 ×5","🧪 ×2","⏩ 2 h","🧪 ×2,5","🧬 ×3"];
 const DAILY_LONG=["","des ressources","des ressources ×1,5","des troupes offertes","des ressources ×2","le chantier et le gène en cours accélérés de 2 h","des ressources ×2,5","une mutation à choisir et des ressources ×3"];
 function claimDaily(){rwInit();const d=S.daily;if(d.last===dayKey())return;d.streak=d.last===dayKey(-1)?d.streak+1:1;d.last=dayKey();const n=((d.streak-1)%7)+1;let got=[];
@@ -925,6 +940,7 @@ function claimDq(j){const q=S.dq.list[j];if(!q||q.done||q.got<q.goal)return;q.do
   if(S.dq.list.every(x=>x.done)&&!S.dq.bonus){S.dq.bonus=true;S.chestAt=Math.min(S.chestAt,Date.now());toast("Les 3 quêtes du jour : un coffre offert !");}}
 function rewardsHTML(){rwInit();const d=S.daily,can=d.last!==dayKey(),cur=can?dailyDay():((d.streak-1)%7)+1;
   let h='<div class="kick">Récompenses</div><h2>Chaque jour compte</h2>';
+  if(S.rkRew&&!S.rkRew.done)h+="<h3>Ligue du classement mondial</h3>"+leagueRewardHTML(true);
   {const sr=can&&d.last!==dayKey(-1)?0:d.streak;h+='<h3>Connexion quotidienne · '+(sr?"série de "+sr+" jour"+(sr>1?"s":""):"nouvelle série")+'</h3>';}h+='<div class="dtrack">'+[1,2,3,4,5,6,7].map(n=>{const st=n<cur||(!can&&n===cur)?"got":n===cur&&can?"now":"";return '<div class="dday '+st+'"><b>J'+n+"</b><span>"+DAILY_TXT[n]+"</span></div>";}).join("")+"</div>";
   h+=can?'<p class="desc">Aujourd’hui : '+DAILY_LONG[cur]+'.</p><button class="btn" data-act="rwdaily">Récupérer le jour '+cur+"</button>":'<p class="desc">Revenez demain pour le jour '+(cur%7+1)+". Manquer un jour remet la série à zéro.</p>";
   const ready=Date.now()>=S.chestAt;
@@ -979,6 +995,7 @@ function botPanel(b,vis){botSync(b);const st=botStage(b),loot=Math.max(0,b.res-b
   let h='<p class="wildic" style="margin-top:6px">'+sprImg(STAGE_SPR[st],2)+'<span><b>'+esc(b.name)+"</b> "+(b.tag?'<span class="muted">'+b.tag+"</span>":"")+'<br><span class="muted" style="font-size:12px">'+(S.ally&&b.tag===S.ally?'<span class="up">Allié</span>':"Rival")+" · "+STAGE_NAME[st]+"</span></span></p>";
   h+='<div class="stat"><span>Défense estimée</span><b>'+botEst(b,vis)+'</b></div><div class="stat"><span>Voie offensive</span><b style="color:var(--t-'+b.type+')">'+TYPES[b.type].name+"</b></div>";
   h+='<div class="stat"><span>Butin pillable</span><b>'+(vis?fmt(loot):"inconnu")+'</b></div><div class="stat"><span>Humeur</span><b>'+(b.anger>0.3?"😡 rancunier":b.aggr>0.6?"😈 agressif":"😐 calme")+"</b></div>";
+  {const rk=rkRows("pow").findIndex(x=>x.b===b)+1;h+='<div class="stat"><span>Classement mondial</span><b>'+leagueOf(rk)[1]+" #"+rk+" · "+fmt(botPow(b))+" pts</b></div>";}
   if(b.nem)h+='<div class="stat"><span>🎯 Ennemi juré</span><b class="neg">vous a pillé '+b.nem+" fois"+(b.avenged?" · vengé "+b.avenged+" fois":"")+"</b></div>"+(b.nemT&&S.t-b.nemT<1440?'<p class="up" style="font-size:12.5px">🔥 Vengeance possible encore <span data-end="'+(b.nemT+1440)+'"></span> : butin +50 %.</p>':"");
   if(ng)h+='<p class="desc">🌙 Enkysté pour la nuit jusqu’à 07:00 : impossible de l’attaquer.</p>';
   if(!vis)h+='<p class="desc">Hors de votre vision : ses chiffres sont des estimations.</p>';
@@ -1009,7 +1026,7 @@ function raidArrive(M){
     lines.push("Le butin arrive avec vos troupes, dans "+fmtDur(M.back-S.t)+".");dqAdd("raid");}
   else{M.result="lose";}
   if(M.hero)lines.push(heroGain({def,type:B.type},win,true));
-  B.anger=Math.min(1,B.anger+0.7);const em=pickA(win?EMO.hit:EMO.win);lines.push("💬 "+esc(B.name)+" : "+em);
+  if(win)B.g=Math.max(0.4,B.g-0.01);B.anger=Math.min(1,B.anger+0.7);const em=pickA(win?EMO.hit:EMO.win);lines.push("💬 "+esc(B.name)+" : "+em);
   log((win?"Vous avez pillé ":"Raid repoussé par ")+B.name+". 💬 "+em,win?"good":"bad");toast(win?"Pillage réussi":"Raid repoussé");
   report("combat",(win?"Pillage":"Échec")+" · "+B.name,lines,win);
 }
@@ -1027,7 +1044,9 @@ function botsStep(dm){
         const atk=Math.round(botAtk(b)*(0.75+Math.random()*0.4));S.inc.push({id:S.nextId++,bot:b.id,atk,arrive:arr,from:[b.x,b.y]});
         log("⚠️ Attaque entrante : "+b.name+" arrive à "+fmtClock(arr).replace("Jour ","J")+".","bad");toast("⚠️ Attaque entrante de "+b.name);dirty=true;}}}
   }
-  if(Math.random()<0.04*k){const a=pickA(S.bots),b=pickA(S.bots);if(a!==b)log("📣 "+a.name+" "+(Math.random()<0.6?"a pillé":"s’est cassé les dents sur")+" "+b.name+".","muted");}
+  if(Math.random()<0.04*k){const a=pickA(S.bots),b=pickA(S.bots);if(a!==b){const ok=Math.random()<0.6;if(ok){a.lw=(a.lw||0)+Math.round(botAtk(a)*(1+Math.random()));a.g=Math.min(3,a.g+0.01);b.g=Math.max(0.4,b.g-0.01);}log("📣 "+a.name+" "+(ok?"a pillé":"s’est cassé les dents sur")+" "+b.name+".","muted");}}
+  for(const b of S.bots)if(Math.random()<0.02*k*b.aggr)b.lw=(b.lw||0)+Math.round(botAtk(b)*(0.5+Math.random()));
+  rkTick();
   S.botAd=(S.botAd||0)+k*30;if(S.botAd>=720){S.botAd=0;botsAdapt();}
   S.botMig=(S.botMig||0)+k*30;if(S.botMig>=1440){S.botMig=0;for(const b of S.bots){if(Math.random()<0.25){const r=rC(b.x,b.y),step=3+Math.floor(Math.random()*4),nx=Math.round(C0+(b.x-C0)*(r-step)/r),ny=Math.round(C0+(b.y-C0)*(r-step)/r);
     if(inWorld(nx,ny)&&!isLand(nx,ny)&&!botAt(nx,ny)&&(nx!==c[0]||ny!==c[1])){const T=S.tiles[ny*W+nx];if(!T.k&&!T.w){b.x=nx;b.y=ny;}}}}}
@@ -1041,7 +1060,7 @@ function incomingHit(A){
   tb+='<div class="fbar def"><i style="width:'+Math.round(Math.min(100,def/(def+A.atk)*100))+'%"></i><span>Vous '+fmt(def)+"</span><span>"+esc(b.name)+" "+fmt(A.atk)+"</span></div>";
   const lines=['<span class="'+(win?"neg":"up")+'">'+(win?"Votre défense a cédé":"Attaque repoussée")+"</span> : "+esc(b.name)+" ("+STAGE_NAME[botStage(b)]+", voie "+TYPES[b.type].name+") attaquait avec une force de <b>"+fmt(A.atk)+"</b>. Le défenseur ne perd aucune troupe.",tb];
   if(win){const pa=protectedAmt(),carry=Math.round(A.atk*2.2);let pool=0;const ex={};RES.forEach(r=>{ex[r]=Math.max(0,S.res[r]-pa);pool+=ex[r];});
-    const take=Math.min(carry,pool),got={},before={};RES.forEach(r=>{before[r]=Math.round(S.res[r]);got[r]=pool?Math.round(ex[r]/pool*take):0;S.res[r]-=got[r];stat("lootOut",r,got[r]);});b.res+=take;
+    const take=Math.min(carry,pool),got={},before={};RES.forEach(r=>{before[r]=Math.round(S.res[r]);got[r]=pool?Math.round(ex[r]/pool*take):0;S.res[r]-=got[r];stat("lootOut",r,got[r]);});b.res+=take;b.lw=(b.lw||0)+take;
     lines.push('<p class="fwhy">Il vous manquait <b>'+fmt(Math.ceil(A.atk*ATK_ADV-def))+"</b> de défense (vous en aviez "+Math.round(100/r)+" % de ce qu’il fallait).</p>");
     lines.push('<table class="ftab loot"><thead><tr><th>Pillé</th><th class="num">Avant</th><th class="num">À l’abri</th><th class="num">Volé</th><th class="num">Reste</th></tr></thead><tbody>'+RES.map(k=>'<tr><td><span class="c-'+k+'">'+RES_NAME[k]+'</span></td><td class="num">'+fmt(before[k])+'</td><td class="num">'+fmt(Math.min(before[k],pa))+'</td><td class="num neg">'+(got[k]?"−"+fmt(got[k]):"0")+'</td><td class="num">'+fmt(Math.round(S.res[k]))+"</td></tr>").join("")+"</tbody></table>");
     lines.push(take<1?"Rien de volé : tout était à l’abri dans votre vacuole.":"Il pouvait emporter "+fmt(carry)+" et a pris "+fmt(take)+". Votre vacuole met "+fmt(pa)+" de chaque ressource à l’abri : améliorez-la, dépensez vos réserves avant de partir, ou renforcez la défense (soldates au repos, cytosquelette, héros présent).");
@@ -1055,13 +1074,64 @@ function incomingHit(A){
 }
 function nemesisHTML(){const L=S.bots.filter(b=>b.nem).sort((a,b)=>(b.nem-(b.avenged||0))-(a.nem-(a.avenged||0)));if(!L.length)return "";
   return '<div class="card"><h2>🎯 Ennemis jurés</h2>'+L.slice(0,8).map(b=>{const hot=b.nemT&&S.t-b.nemT<1440;return '<div class="nem"><span><b>'+esc(b.name)+"</b> "+(b.tag||"")+'<br><span class="muted" style="font-size:12px">vous a pillé '+b.nem+" fois"+(b.avenged?" · vengé "+b.avenged+" fois":"")+(hot?' · <span class="up">🔥 vengeance +50 %</span>':"")+'</span></span><button class="btn sm'+(hot?"":" alt")+'" data-act="revenge" data-id="'+b.id+'">Riposter</button></div>';}).join("")+"</div>";}
-function rankHTML(){
-  const rows=S.bots.map(b=>({n:(b.tag?b.tag+" ":"")+b.name,p:botPoints(b),st:botStage(b),me:false}));rows.push({n:"Vous ("+SOUCHES[S.souche].name+")",p:playerPoints(),st:baseStage(),me:true});
-  rows.sort((a,b)=>b.p-a.p);const me=rows.findIndex(r=>r.me);
-  const line=(r,i)=>'<tr'+(r.me?' class="me"':"")+'><td>'+(i+1)+"</td><td>"+sprImg(STAGE_SPR[r.st],1)+" "+esc(r.n)+'</td><td class="num">'+fmt(r.p)+"</td></tr>";
-  let h='<table class="rank"><thead><tr><th>#</th><th>Organisme</th><th class="num">Points</th></tr></thead><tbody>'+rows.slice(0,15).map(line).join("");
-  if(me>=15)h+='<tr><td colspan="3" class="muted">…</td></tr>'+line(rows[me],me);
-  return h+'</tbody></table><p class="desc" style="margin-top:8px">Points = force d’attaque + défense + stade de la base. '+S.bots.length+" rivaux simulés sur ce serveur de test.</p>";
+/* ===== Classement mondial : 5 catégories, tendances jour après jour, ligues et récompense quotidienne ===== */
+const RK_CATS=[["pow","🏆 Puissance","Points"],["atk","⚔ Attaque","Attaque"],["def","🛡 Défense","Défense"],["loot","💰 Pillards","Butin"],["ally","🏳 Alliances","Points"]];
+const LEAGUES=[[0.01,"👑","Souverain",3],[0.05,"💎","Diamant",2],[0.15,"🥇","Or",1.5],[0.35,"🥈","Argent",1.1],[0.65,"🥉","Bronze",0.8],[1,"🦠","Plancton",0.5]];
+function sumRes(o){return o?RES.reduce((a,k)=>a+(o[k]||0),0):0;}
+function playerDefFull(){const D=defParts();let s=0;D.P.forEach((p,i)=>{s+=i===1?compDef(armyAll()):i===6?Math.round(heroBase()*0.6):p[1];});return Math.round(s*D.mult);}
+function playerPowRaw(){return playerAtk()+playerDefFull()+baseStage()*60;}
+function playerPow(){return Math.round(S.rkPow!=null?S.rkPow:playerPowRaw());}
+function rkVal(cat,b){if(!b)return cat==="pow"?playerPow():cat==="atk"?playerAtk():cat==="def"?playerDefFull():Math.round(sumRes((S.stats||{}).lootIn));
+  const p=botPow(b);return cat==="pow"?p:cat==="atk"?Math.round(p*(0.3+0.3*b.aggr)):cat==="def"?Math.round(p*(0.55-0.25*b.aggr)):Math.round(b.lw||0);}
+function botPow(b){if(b.age==null)b.age=((b.id*7919)%997)/997*1.5;return Math.round(130+600*(bDays()+b.age)*b.g+botStage(b)*60);}
+function rkRows(cat){
+  if(cat==="ally"){const pp=playerPow();return Object.keys(ALLY_INFO).map(t=>{const bs=allyBots(t);return {id:t,n:t+" "+ALLY_INFO[t],v:bs.reduce((a,b)=>a+botPow(b),0)+(S.ally===t?pp:0),m:bs.length+(S.ally===t?1:0),me:S.ally===t};}).sort((a,b)=>b.v-a.v);}
+  const rows=S.bots.map(b=>({id:b.id,b,v:rkVal(cat,b)}));rows.push({id:"me",me:true,v:rkVal(cat,null)});
+  return rows.sort((a,b)=>b.v-a.v||(a.me?-1:b.me?1:0));}
+function myRank(cat){return rkRows(cat||"pow").findIndex(r=>r.me)+1;}
+function leagueCut(L){return Math.max(1,Math.round(L[0]*(S.bots.length+1)));}
+function leagueOf(rank){return LEAGUES.find(L=>rank<=leagueCut(L))||LEAGUES[LEAGUES.length-1];}
+function rkSnap(){const p={};RK_CATS.forEach(c=>{const o={};rkRows(c[0]).forEach((r,i)=>{o[r.id]=i+1;});p[c[0]]=o;});S.rk={day:Math.floor(S.t/1440),prev:p};}
+function rkTick(){if(!S.bots)return;{const raw=playerPowRaw();S.rkPow=S.rkPow==null?raw:S.rkPow+(raw-S.rkPow)*0.08;}if(S.t<360)return;const dn=Math.floor(S.t/1440);
+  if(!S.rk){rkSnap();}
+  else if(S.rk.day!==dn){const r=myRank("pow"),L=leagueOf(r);S.rkRew={lg:LEAGUES.indexOf(L),rank:r,day:S.rk.day+1,done:false};rkSnap();
+    log(L[1]+" Fin du jour "+S.rkRew.day+" : vous finissez #"+r+" du classement mondial, ligue "+L[2]+". Récompense de ligue à récupérer (🎁).","good");}
+  const r=myRank("pow"),li=LEAGUES.indexOf(leagueOf(r));S.rkBest=Math.min(S.rkBest||999,r);
+  if(S.rkLg!=null&&li<S.rkLg){const L=LEAGUES[li];log(L[1]+" Promotion : ligue "+L[2]+" (rang #"+r+").","rare");
+    popup({grp:"league",kick:"Classement mondial",title:L[1]+" Ligue "+L[2],body:"<p>Vous montez au rang <b>#"+r+"</b> sur "+(S.bots.length+1)+".</p><p class=\"desc\">À la fin de chaque jour de jeu, votre ligue vous rapporte une récompense : ×"+String(L[3]).replace(".",",")+" en ligue "+L[2]+".</p>"});}
+  else if(S.rkLg!=null&&li>S.rkLg)log("📉 Vous redescendez en ligue "+LEAGUES[li][2]+" (rang #"+r+").","bad");
+  S.rkLg=li;}
+function claimLeague(){const R=S.rkRew;if(!R||R.done)return;R.done=true;const L=LEAGUES[R.lg],got=giveRes(L[3]);
+  if(R.lg===0){const el=UNIT_ORDER.filter(k=>UNITS[k].type&&uReq(k));if(el.length)got.push(giveTroops(el[Math.floor(Math.random()*el.length)],5));}
+  log(L[1]+" Récompense de ligue "+L[2]+" : "+got.join(", ")+".","good");toast(L[1]+" Ligue "+L[2]+" : "+got.join(", "));}
+function leagueRewardHTML(inModal){const R=S.rkRew;if(!R||R.done)return inModal?"":'<p class="desc">Chaque fin de jour de jeu, votre ligue vous rapporte des ressources (de ×0,5 en Plancton à ×3 en Souverain).</p>';const L=LEAGUES[R.lg];
+  return '<div class="lgrew"><span>'+L[1]+" Jour "+R.day+" terminé #"+R.rank+", ligue <b>"+L[2]+"</b> : ressources ×"+String(L[3]).replace(".",",")+(R.lg===0?" + 5 troupes d’élite":"")+'</span><button class="btn sm" data-act="rwleague">Récupérer</button></div>';}
+function rkTrend(prev,id,i){const p=prev[id];if(!p)return '<span class="muted">·</span>';const d=p-(i+1);return d>0?'<span class="up">▲'+d+"</span>":d<0?'<span class="neg">▼'+(-d)+"</span>":'<span class="muted">=</span>';}
+function worldRankHTML(){
+  const cat=S.rkCat||"pow",C=RK_CATS.find(c=>c[0]===cat),n=S.bots.length+1,rows=rkRows(cat),prev=(S.rk&&S.rk.prev&&S.rk.prev[cat])||{};
+  const pw=cat==="pow"?rows:rkRows("pow"),r=pw.findIndex(x=>x.me)+1,L=leagueOf(r),li=LEAGUES.indexOf(L),above=pw[r-2],nextL=li>0?LEAGUES[li-1]:null;
+  let h='<div class="card wrk"><h2>🌍 Classement mondial</h2>';
+  h+='<div class="rksum"><div class="rkbig"><b>#'+r+"</b><span>sur "+n+'</span></div><div class="rkinfo"><div class="rklg">'+L[1]+" Ligue "+L[2]+" "+rkTrend((S.rk&&S.rk.prev&&S.rk.prev.pow)||{},"me",r-1)+'</div>';
+  h+='<div class="desc">'+(above?"Encore <b>"+fmt(above.v-pw[r-1].v+1)+"</b> points pour dépasser "+esc(above.b.name)+" (#"+(r-1)+")":'<span class="up">Vous dominez le monde.</span>')+"</div>";
+  if(nextL){const cut=leagueCut(nextL);h+='<div class="desc">'+nextL[1]+" "+nextL[2]+" à partir du rang #"+cut+" : encore "+(r-cut)+" place"+(r-cut>1?"s":"")+"</div>";}
+  {const raw=playerPowRaw(),cur=pw[r-1].v;if(Math.abs(raw-cur)>cur*0.05)h+='<div class="desc">Puissance réelle '+fmt(raw)+' '+(raw>cur?'<span class="up">↗</span>':'<span class="neg">↘</span>')+" : le classement la rattrape en quelques heures.</div>";}
+  h+='<div class="desc">Puissance '+fmt(pw[r-1].v)+" · meilleur rang #"+(S.rkBest||r)+"</div></div></div>";
+  h+='<div class="lgrow">'+LEAGUES.slice().reverse().map(x=>'<span class="'+(x===L?"on":"")+'"><i>'+x[1]+"</i>"+x[2]+"<small>"+(x[0]<1?"top "+leagueCut(x):"tous")+"</small></span>").join("")+"</div>";
+  h+=leagueRewardHTML(false);
+  h+='<div class="rkchips">'+RK_CATS.map(c=>'<button data-act="rkcat" data-c="'+c[0]+'" aria-pressed="'+(c[0]===cat)+'">'+c[1]+"</button>").join("")+"</div>";
+  if(cat==="ally"){
+    h+='<table class="rank"><thead><tr><th>#</th><th></th><th>Alliance</th><th class="num">Membres</th><th class="num">Points</th></tr></thead><tbody>'+rows.map((x,i)=>'<tr'+(x.me?' class="me"':"")+"><td>"+(i+1)+"</td><td>"+rkTrend(prev,x.id,i)+"</td><td>"+esc(x.n)+(x.me?" (vous)":"")+'</td><td class="num">'+x.m+'</td><td class="num">'+fmt(x.v)+"</td></tr>").join("")+"</tbody></table>";
+    return h+'<p class="desc" style="margin-top:8px">Somme des points de tous les membres. Rejoindre une alliance y ajoute les vôtres.</p></div>';}
+  const me=rows.findIndex(x=>x.me),show=new Set();
+  if(S.rkAll)rows.forEach((x,i)=>show.add(i));else{for(let i=0;i<10;i++)show.add(i);for(let i=me-2;i<=me+2;i++)if(i>=0&&i<rows.length)show.add(i);}
+  const line=(x,i)=>{if(x.me)return '<tr class="me"><td>'+(i+1)+"</td><td>"+rkTrend(prev,"me",i)+"</td><td>"+sprImg(STAGE_SPR[baseStage()],1)+" Vous ("+esc(SOUCHES[S.souche].name)+")"+(S.ally?' <span class="muted">'+S.ally+"</span>":"")+'</td><td class="num">'+fmt(x.v)+"</td></tr>";
+    const b=x.b,seen=S.tiles[b.y*W+b.x].s,ic=(S.ally&&b.tag===S.ally?" 🤝":"")+(b.nem?" 🎯":"");
+    return "<tr"+(seen?' class="go" data-act="goto" data-tab="map" data-ref="tile:'+b.x+":"+b.y+'"':"")+"><td>"+(i+1)+"</td><td>"+rkTrend(prev,b.id,i)+"</td><td>"+sprImg(STAGE_SPR[botStage(b)],1)+" "+(b.tag?'<span class="muted">'+b.tag+"</span> ":"")+esc(b.name)+ic+(seen?" 📍":"")+'</td><td class="num">'+fmt(x.v)+"</td></tr>";};
+  h+='<table class="rank"><thead><tr><th>#</th><th></th><th>Organisme</th><th class="num">'+C[2]+"</th></tr></thead><tbody>";let last=-1;
+  rows.forEach((x,i)=>{if(!show.has(i))return;if(last>=0&&i>last+1)h+='<tr><td colspan="4" class="muted">…</td></tr>';h+=line(x,i);last=i;});
+  h+="</tbody></table>";
+  h+='<div class="row" style="margin-top:8px;justify-content:space-between"><span class="desc">'+({pow:"Puissance de tout l’organisme : attaque de l’armée + défense + stade × 60.",atk:"Force d’attaque de toute l’armée.",def:"Défense de la base, toute l’armée rentrée et le héros présent.",loot:"Ressources pillées depuis le début de la partie."}[cat])+" ▲▼ : évolution depuis le début du jour. 📍 : position connue, touchez pour la voir.</span>"+'<button class="btn sm alt" data-act="rkall">'+(S.rkAll?"Réduire":"Voir les "+n)+"</button></div>";
+  return h+"</div>";
 }
 
 function heroGain(w,win,pvp){
@@ -1278,7 +1348,7 @@ function allyHelp(){if(!S.ally)return 0;const c=cpos();return Math.round(allyBot
 function alliancesHTML(){
   let h='<div class="card"><h2>Alliances</h2><p class="desc">Une alliance ne vous attaque jamais, vous envoie des renforts quand on vous attaque (alliés à moins de 25 cases), partage sa vision et donne +5 % de production. Ses ennemis, eux, vous prennent pour cible.</p>';
   const c=cpos();
-  Object.keys(ALLY_INFO).forEach(t=>{const bs=allyBots(t),pts=bs.reduce((a,b)=>a+botPoints(b),0),near=bs.filter(b=>Math.hypot(b.x-c[0],b.y-c[1])<=25).length,me=S.ally===t;
+  Object.keys(ALLY_INFO).forEach(t=>{const bs=allyBots(t),pts=bs.reduce((a,b)=>a+botPow(b),0),near=bs.filter(b=>Math.hypot(b.x-c[0],b.y-c[1])<=25).length,me=S.ally===t;
     h+='<div class="allyrow'+(me?" me":"")+'"><div><b>'+t+" "+ALLY_INFO[t]+"</b><span class=\"desc\">"+bs.length+" membres · "+fmt(pts)+" points · "+near+" près de vous</span></div>"+(me?'<button class="btn sm danger" data-act="allyleave">Quitter</button>':'<button class="btn sm alt" data-act="allyjoin" data-tag="'+t+'"'+(S.ally?" disabled":"")+">Rejoindre</button>")+"</div>";});
   return h+(S.ally?'<p class="desc" style="margin-top:6px">Renforts possibles maintenant : +'+fmt(allyHelp())+" de défense.</p>":"")+"</div>";
 }
@@ -1329,6 +1399,9 @@ function act(a,el){
   if(a==="popok"){S.popups.shift();dirty=true;return;}
   if(a==="popall"){S.popups=[];dirty=true;return;}
   if(a==="rewards"){showModal(rewardsHTML());return;}
+  if(a==="rkcat"){S.rkCat=el.dataset.c;dirty=true;return;}
+  if(a==="rkall"){S.rkAll=!S.rkAll;dirty=true;return;}
+  if(a==="rwleague"){claimLeague();dirty=true;if(modalExtra)showModal(rewardsHTML());return;}
   if(a==="rwdaily"||a==="rwchest"||a==="rwdq"){if(a==="rwdaily")claimDaily();else if(a==="rwchest")claimChest();else claimDq(+el.dataset.j);dirty=true;if(S.mutOffer){closeModal();return;}showModal(rewardsHTML());return;}
   if(a==="revenge"){const B=S.bots.find(z=>z.id===+el.dataset.id);if(!B)return;S.tiles[B.y*W+B.x].s=1;tab="map";openRef="tile:"+B.x+":"+B.y;S.compMode="man";S.comp=pickUnits("raid",S.idle);dirty=true;return;}
   if(a==="reset"){if(Date.now()<resetArmUntil){resetArmUntil=0;S=null;try{localStorage.removeItem(SAVE_KEY);}catch(e){}showIntro(0);}else resetArmUntil=Date.now()+4000;if(S)dirty=true;else renderReset();return;}
@@ -1478,6 +1551,7 @@ function stripHTML(){
   if(S.mig)h+='<span>Migration <b>vers '+S.mig.x+","+S.mig.y+'</b><span class="pb"><i data-ps="'+S.mig.start+'" data-pe="'+S.mig.end+'"></i></span><span data-end="'+S.mig.end+'"></span></span>';
   h+=S.research?'<span>Gène <b>'+NODES[S.research.id].name+(S.research.lvl?" niv. "+S.research.lvl:"")+'</b><span class="pb evo"><i data-ps="'+S.research.start+'" data-pe="'+S.research.end+'"></i></span><span data-end="'+S.research.end+'"></span></span>':"<span>Aucun gène en cours</span>";
   {const n=rwCount();h+='<span class="rwpill'+(n?" on":"")+'" data-act="rewards">🎁 '+(n?"Récompenses <b>"+n+"</b>":"Coffre dans <span data-endr=\""+S.chestAt+"\"></span>")+"</span>";}
+  {const r=myRank("pow"),L=leagueOf(r);h+='<span class="rkpill" data-act="goto" data-tab="act" data-sub="rank">'+L[1]+" <b>#"+r+"</b> mondial</span>";}
   h+=eventPill();
   if(S.inc&&S.inc.length){const A=S.inc.slice().sort((a,b)=>a.arrive-b.arrive)[0],b=S.bots.find(z=>z.id===A.bot);h+='<span class="incw" data-act="goto" data-tab="act" data-sub="move">⚠️ Attaque de <b>'+esc(b?b.name:"?")+'</b> dans <span data-end="'+A.arrive+'"></span>'+(S.inc.length>1?" (+"+(S.inc.length-1)+")":"")+"</span>";}
   h+='<span data-act="tab" data-t="hero">'+sprImg("u_coll",1)+" Troupes <b>"+S.idle+" libres / "+cellCount()+"</b>"+(S.queue.length?" · "+S.queue.length+" en production":"")+"</span>";
@@ -1701,7 +1775,7 @@ function activityHTML(){
   if(actSub==="combat"){const st=S.stats||{},row=(lbl,o,cls)=>'<div class="stat"><span>'+lbl+"</span><b>"+(o&&RES.some(k=>o[k])?RES.filter(k=>o[k]).map(k=>'<span class="'+cls+'">'+fmt(o[k])+"</span> "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k]).join(" · "):"—")+"</b></div>",cb=S.reports.filter(r=>r.cat==="combat");
     return h+'<div class="card"><h2>Bilan</h2>'+row("Pillé chez les rivaux",st.lootIn,"up")+row("Rapporté de vos chasses",st.huntIn,"up")+row("Volé par les rivaux",st.lootOut,"neg")+'<div class="stat"><span>Rapports récents</span><b>'+cb.filter(r=>r.win===true).length+" victoires · "+cb.filter(r=>r.win===false).length+" défaites</b></div></div>"+'<div class="card"><h2>Rapports de combat</h2>'+reportCards("combat")+"</div></div>";}
   if(actSub==="farm")return h+'<div class="card"><h2>Récoltes et explorations</h2>'+reportCards("farm")+"</div></div>";
-  if(actSub==="rank")return h+nemesisHTML()+alliancesHTML()+'<div class="card"><h2>Classement du serveur</h2>'+rankHTML()+"</div></div>";
+  if(actSub==="rank")return h+worldRankHTML()+nemesisHTML()+alliancesHTML()+"</div>";
   if(actSub==="log")return h+'<div class="card"><h2>Journal</h2><ul class="log">'+S.log.slice(0,80).map(e=>'<li class="'+e.cls+'"><time>'+fmtClock(e.t).replace("Jour ","J")+"</time><span>"+e.msg+"</span></li>").join("")+"</ul></div></div>";
   if(S.inc&&S.inc.length){h+='<div class="card incard"><h2>⚠️ Attaques entrantes</h2>';S.inc.slice().sort((a,b)=>a.arrive-b.arrive).forEach(A=>{const b=S.bots.find(z=>z.id===A.bot);h+='<div class="mv"><span class="t"><b>'+esc(b?b.name:"?")+"</b> · force estimée "+fmt(Math.round(A.atk*0.9/10)*10)+" – "+fmt(Math.round(A.atk*1.15/10)*10)+'</span><span></span><span class="s">Arrivée '+fmtClock(A.arrive)+' (dans <span data-end="'+A.arrive+'"></span>) · votre défense '+fmt(playerDef())+"</span></div>";});h+='<p class="desc">Pour tenir : gardez des collectrices au repos, améliorez canaux, cytosquelette et noyau, laissez le héros à la maison. Ce qui dépasse la part protégée par la vacuole peut être pillé : dépensez-le avant l’arrivée !</p></div>';}
   h+='<div class="card"><div class="chead"><h2>Mouvements de vos cellules</h2>'+(S.missions.some(M=>!M.arrived)?'<button class="btn sm alt" data-act="recallall">Rappeler tout</button>':"")+"</div>";
@@ -2584,7 +2658,7 @@ function frame(now){
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save();else lastFrame=performance.now();});
 let wasMob=null;window.addEventListener("resize",()=>{if(tourI>=0)showTour(tourI);if(cv)resize();sizeStage();const m=isMobile();if(m!==wasMob){wasMob=m;dirty=true;}});
 requestAnimationFrame(frame);
-window.__o27={get S(){return S;},setStyle,camZoom,heroSVG,heroForm,act,advance,newGame,renderAll,setTab:t=>{tab=t;dirty=true;},setOpen:r=>{openRef=r;dirty=true;},dbg:{rates,upkeep,upgradeInfo,upgradeBlock,newBlock,bldCost,nodeCost,nodeState,nodeBlock,questTick,lvlCost,lvlBlock,spawnEvent,joinAlly,playerAtk,armyAll,pickUnits,uReq,zoneIdx,huntPower,heroPower,playerDef,botDef,botAtk,mods}};
+window.__o27={get S(){return S;},setStyle,camZoom,heroSVG,heroForm,act,advance,newGame,renderAll,setTab:t=>{tab=t;dirty=true;},setOpen:r=>{openRef=r;dirty=true;},dbg:{rates,upkeep,upgradeInfo,upgradeBlock,newBlock,bldCost,nodeCost,nodeState,nodeBlock,questTick,lvlCost,lvlBlock,spawnEvent,joinAlly,playerAtk,armyAll,pickUnits,uReq,zoneIdx,huntPower,heroPower,playerDef,botDef,botAtk,mods,playerPoints,botPoints,botPow,myRank,rkRows,leagueOf}};
 })();
 </script>
 </body>
