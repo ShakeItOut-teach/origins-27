@@ -928,7 +928,8 @@ function cellCount(){return S.idle+S.missions.reduce((a,M)=>a+M.n,0);}
 function upkeep(){const A=armyAll();let n=0;for(const k in A)n+=(A[k]||0)*UNITS[k].upk;const f=Math.max(0.2,1+mods().upkeepPct),o={};for(const k in UPKEEP)o[k]=UPKEEP[k]*n*f;return o;}
 function speedUp(){return (1+0.06*S.noyau)*(1+mods().buildPct);}
 let COST_K=0.15,PACE=1.7;function costF(L){return PACE*(1+COST_K*L);}
-function fieldCost(L){const m=3.2*Math.pow(1.55,L)*costF(L),o={};for(const r in FIELD_BASE)o[r]=Math.round(FIELD_BASE[r]*m);return o;}
+/* un canal demande peu de la ressource qu’il produit (35 %) et un peu plus des autres (110 %) */
+function fieldCost(L,k){const m=3.2*Math.pow(1.55,L)*costF(L),o={};for(const r in FIELD_BASE)o[r]=Math.round(FIELD_BASE[r]*m*(!k?1:r===k?0.35:1.1));return o;}
 const TIME_F=0.87;
 function fieldTime(L){return TIME_F*9*Math.pow(1.5,L)/speedUp();}
 function bldCost(k,L){const b=BLD[k].base,m=Math.pow(1.5,L)*costF(L),o={};for(const r in b)if(b[r])o[r]=Math.round(b[r]*m);return o;}
@@ -1412,7 +1413,7 @@ function advance(dm){let g=0;while(dm>0&&g<3000){const s=Math.min(1,dm);step(s);
 
 function upgradeInfo(ref){
   const p=ref.split(":");
-  if(p[0]==="field"){const i=+p[1],f=S.fields[i],L=f.l+bqPending("field",i);return {type:"field",i,name:FIELD[f.k].name,level:L,max:FIELD_MAX,cost:fieldCost(L),time:fieldTime(L)};}
+  if(p[0]==="field"){const i=+p[1],f=S.fields[i],L=f.l+bqPending("field",i);return {type:"field",i,name:FIELD[f.k].name,level:L,max:FIELD_MAX,cost:fieldCost(L,f.k),time:fieldTime(L)};}
   if(p[0]==="noyau"){const L=S.noyau+bqPending("noyau");return {type:"noyau",name:"Noyau",level:L,max:BLD.noyau.max,cost:bldCost("noyau",L),time:bldTime("noyau",L)};}
   if(p[0]==="slot"){const i=+p[1],s=S.slots[i];if(!s)return null;const L=s.l+bqPending("slot",i);return {type:"slot",i,k:s.k,name:BLD[s.k].name,level:L,max:BLD[s.k].max,cost:bldCost(s.k,L),time:bldTime(s.k,L)};}
   return null;
