@@ -1,15 +1,29 @@
 # Origins 27
 
-**Vous naissez bactérie au fond de l’océan. Dans 30 jours, un seul organisme sortira de l’eau.**
+**Vous naissez bactérie dans un monde hostile. Irez-vous au bout du chemin pour devenir l’APEX légendaire ?**
 
-Origins 27 est un jeu de stratégie en temps réel, gratuit et jouable dans le navigateur. Sur un serveur de 30 jours, vous partez d’une cellule perdue dans les abysses et vous affrontez 140 rivaux qui grandissent, pillent et s’allient comme vous. Le premier à remonter jusqu’à la terre ferme devient l’APEX.
+**FREE TO PLAY · NO PAY TO WIN** : le jeu est entièrement gratuit, et aucun achat ne donne d’avantage.
 
-- **Évoluez :** 5 stades de vie, de la bactérie au pluricellulaire, 3 branches de gènes et une mutation à choisir à chaque niveau. Aucune partie ne ressemble à une autre.
-- **Pillez :** volez les réserves de vos rivaux, espionnez-les, ripostez avec +50 % de butin.
-- **Commandez :** des troupes classées du rang T1 au rang T5. Les formes légendaires n’apparaissent que la dernière semaine.
-- **Dominez :** classement mondial, 6 ligues de Plancton à Souverain, récompenses chaque jour et coffres jusqu’à ×8.
+Évoluez au détriment de vos rivaux, formez une colonie avec vos alliés, gérez vos troupes et vos ressources : soyez celui qui façonnera le monde de demain… ou pas. Origins 27 est un jeu de stratégie en temps réel, jouable dans le navigateur, sur un serveur de 30 jours peuplé de 500 organismes.
+
+- **Évoluez :** aucune partie ne ressemble à la précédente. Les chemins de l’évolution changent et se tirent au hasard ; réflexion et analyse feront votre domination.
+- **Pillez :** 499 autres organismes convoitent votre place. Le meilleur moyen de la garder ? Ne pas leur laisser le choix.
+- **Commandez :** vos troupes évoluent au fil des semaines, du rang T1 au légendaire T5. Combinez vos gènes pour forger les meilleures.
+- **Dominez :** classement mondial, ligues et compétitions : des récompenses chaque jour pour creuser votre avance.
 
 Tout le jeu tient dans un seul fichier, `index.html` (HTML, CSS et JavaScript, sans dépendance à installer). Il suffit de l’ouvrir dans un navigateur.
+
+![Origins 27](presentation/paysage-1920x1080/00-accueil.png)
+
+## Présentation
+
+- **Bande-annonce (26 s, 1080p) :** [presentation/origins27-bande-annonce.webm](presentation/origins27-bande-annonce.webm)
+- **Images légendées :** [paysage 1920 × 1080](presentation/paysage-1920x1080) et [mobile 1080 × 1920](presentation/mobile-1080x1920), plus l’[image clé sans texte](presentation/image-cle-sans-texte.png).
+
+| | |
+|---|---|
+| ![Pillage](presentation/paysage-1920x1080/03-pillage.png) | ![Armée](presentation/paysage-1920x1080/04-armee.png) |
+| ![Coffre](presentation/paysage-1920x1080/05-coffre.png) | ![Classement](presentation/paysage-1920x1080/06-classement.png) |
 
 ## Jouer
 
@@ -32,11 +46,11 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 - **Rythme d’un serveur de 30 jours :** production passive réduite de 30 %, coûts qui montent avec les niveaux, capacité des entrepôts ajustée en conséquence. En simulation, un joueur qui ouvre ses coffres atteint l’APEX vers le jour 20 ; sans coffres, il n’y arrive pas en 30 jours.
 - **File de constructions :** jusqu’à 2 constructions programmées derrière celle en cours, annulables avec remboursement.
 - **Riposte :** chaque pillage subi propose « Riposter » ; dans les 24 h de jeu, la vengeance rapporte +50 % de butin. Les ennemis jurés sont listés dans le Classement.
-- **Classement mondial :** votre rang parmi les 141 organismes du monde en 5 catégories (puissance, attaque, défense, pillards, alliances), avec la progression ▲▼ depuis le début du jour. 6 ligues (Plancton → Souverain) donnent une récompense à chaque fin de jour de jeu. Une ligne dont la position est connue s’ouvre sur la carte.
+- **Classement mondial :** votre rang parmi les 500 organismes du monde en 5 catégories (puissance, attaque, défense, pillards, alliances), avec la progression ▲▼ depuis le début du jour. 6 ligues (Plancton → Souverain) donnent une récompense à chaque fin de jour de jeu. Une ligne dont la position est connue s’ouvre sur la carte.
 - **Retour de pause :** une seule fenêtre « Pendant votre absence » résume tout, au lieu d’une fenêtre par événement.
 - **Évolution :** arbre de gènes à 3 branches, 5 voies offensives en cycle, émergences cachées, et une mutation à choisir parmi 3 à chaque niveau de noyau (3 de la même famille ouvrent une lignée).
 - **Stades de vie :** Procaryote → Eucaryote → Colonie → Pluricellulaire → APEX (victoire : sortir de l’eau).
-- **Monde :** carte circulaire de 241 × 241 cases, événements de zone (éruption, plancton, zone anoxique, léviathan), 140 rivaux simulés qui s’adaptent à vos choix, 6 alliances.
+- **Monde :** carte circulaire de 241 × 241 cases, événements de zone (éruption, plancton, zone anoxique, léviathan), 499 rivaux simulés qui s’adaptent à vos choix, 6 alliances.
 - **Mobile :** navigation en bas d’écran, zoom à deux doigts sur la carte, récolte automatique (⛏), conseiller « que faire ? ».
 
 ## Outils

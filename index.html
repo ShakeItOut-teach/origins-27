@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Origins 27 · De la bactérie à l’APEX</title>
-<meta name="description" content="Vous naissez bactérie au fond de l’océan. Dans 30 jours, un seul organisme sortira de l’eau. Stratégie en temps réel gratuite, dans le navigateur : évoluez, pillez 140 rivaux, menez vos troupes du rang T1 au T5.">
+<meta name="description" content="Vous naissez bactérie dans un monde hostile. Irez-vous au bout du chemin pour devenir l’APEX légendaire ? Stratégie en temps réel dans le navigateur, free to play et no pay to win : évoluez, pillez 499 rivaux, formez une colonie.">
 <meta property="og:title" content="Origins 27 · De la bactérie à l’APEX">
-<meta property="og:description" content="Vous naissez bactérie. Dans 30 jours, un seul organisme sortira de l’eau. Évoluez, pillez, dominez le classement mondial.">
+<meta property="og:description" content="Vous naissez bactérie dans un monde hostile. 500 organismes, un seul APEX. Free to play, no pay to win.">
 <meta name="theme-color" content="#02060b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -251,6 +251,12 @@ table.rank tr.me td{background:rgba(94,230,208,.12);color:var(--lume);font-weigh
 .tlogo{font:700 clamp(58px,10vw,128px)/.86 var(--font-display);letter-spacing:-.035em;margin:0;white-space:normal;background:linear-gradient(180deg,#f2fffc 0%,#8ff3e2 45%,#2bb3a3 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 28px rgba(94,230,208,.35))}
 .tlogo span{font-size:.56em;margin-left:.12em;vertical-align:.62em;background:linear-gradient(180deg,#fff3c4,#ffd166 55%,#e08a2a);-webkit-background-clip:text;background-clip:text;color:transparent}
 .thook{font:600 clamp(19px,2.3vw,26px)/1.3 var(--font-display);max-width:30ch;color:#eef8fa}.thook b{color:var(--atp)}
+.tbadges{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.tbadges span{font:700 14px var(--font-mono);letter-spacing:.12em;padding:7px 12px;border-radius:999px;white-space:nowrap}
+.tbadges .tb1{background:linear-gradient(180deg,#8ff3e2,#3cc9b6);color:#02060b;box-shadow:0 0 22px rgba(94,230,208,.45)}
+.tbadges .tb2{background:linear-gradient(180deg,#fff3c4,#ffd166 55%,#e8a23a);color:#2a1800;box-shadow:0 0 22px rgba(255,209,102,.45)}
+.tbadges small{font-size:13px;color:#b9cdd6;flex-basis:100%}
+body.pixel .tbadges span{border-radius:0}
 .tsub{font-size:15.5px;line-height:1.55;max-width:52ch;color:#b9cdd6}
 .tcta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .tcta .btn{padding:11px 18px;font-size:15px}.tcta .tbig{font-size:17px;padding:14px 28px;box-shadow:0 0 0 1px rgba(94,230,208,.5),0 0 32px rgba(94,230,208,.45);animation:tpulse 2.6s ease-in-out infinite}
@@ -272,7 +278,7 @@ table.rank tr.me td{background:rgba(94,230,208,.12);color:var(--lume);font-weigh
 @keyframes tbob{50%{translate:0 -7px}}
 @media (prefers-reduced-motion:reduce){.title .snow,.title .ray,.title .trail,.title .bob,.tcta .tbig{animation:none}}
 @media (max-width:900px){.tfeats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:760px){.title .tscrim{background:linear-gradient(180deg,rgba(2,6,11,.35) 0%,rgba(2,6,11,.78) 30%,rgba(2,6,11,.95) 60%)}.title .tin{justify-content:flex-start;padding:38vh 18px 22px;gap:14px}.title .tlogo{font-size:13vw;white-space:nowrap}.tleague{font-size:16px;gap:2px}.tleague span:last-child{font-size:21px}.ticons .uic{width:24px;height:24px}.tfeat{padding:11px}.tfeat p{font-size:12.5px}.tcta .btn{flex:1 1 auto}}
+@media (max-width:760px){.title .tscrim{background:linear-gradient(180deg,rgba(2,6,11,.35) 0%,rgba(2,6,11,.78) 30%,rgba(2,6,11,.95) 60%)}.title .tin{justify-content:flex-start;padding:27vh 18px 22px;gap:12px}.title .tlogo{font-size:13vw;white-space:nowrap}.tleague{font-size:16px;gap:2px}.tleague span:last-child{font-size:21px}.ticons .uic{width:24px;height:24px}.tfeat{padding:11px}.tfeat p{font-size:12.5px}.tcta .btn{flex:1 1 auto}}
 .intro{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px;min-height:100%;justify-content:center}
 .intro .kicker{font:500 12px var(--font-mono);letter-spacing:.14em;color:var(--lume);text-transform:uppercase}
 .intro h2{font-size:30px;margin:0;line-height:1.1}
@@ -543,7 +549,7 @@ body.pixel .mut,body.pixel .mutbar,body.pixel .linrow,body.pixel .quick,body.pix
 </head>
 <body>
 <header>
-  <h1>Origins 27<small>PROTOTYPE 6 · SOLO</small></h1>
+  <h1>Origins 27<small>SERVEUR DE 30 JOURS</small></h1>
   <div class="controls">
     <span class="souche-chip" id="soucheChip"></span>
     <span class="clock" id="clock">Jour 1 · 00:00</span>
@@ -1070,19 +1076,21 @@ function heroPower(wtype){return Math.round(heroBase()*formMult(wtype));}
 function xpNeed(L){return Math.round(20*Math.pow(L,1.5));}
 
 /* ===== Rivaux simulés (bots) : un simulacre de PvP pour tester le prototype seul ===== */
-const BOT_A=["Krill","Nocti","Plancto","Abyss","Siphon","Medus","Corail","Vortex","Spiro","Lumi","Nacre","Kelp","Murex","Bathy","Anemo","Cyano","Zoé","Diatom","Ventr","Oxy"];
-const BOT_B=["_Gang","Lord","ix","42","-Tox","Rex","Dark","_FR","Queen","Prime","_Rouge","Flux","88","Noir","ette","_KO","Zen","Max"];
+const BOT_A=["Krill","Nocti","Plancto","Abyss","Siphon","Medus","Corail","Vortex","Spiro","Lumi","Nacre","Kelp","Murex","Bathy","Anemo","Cyano","Zoé","Diatom","Ventr","Oxy","Hydro","Proto","Nautil","Chitin","Benthi","Radio","Krak","Sargas"];
+const BOT_B=["_Gang","Lord","ix","42","-Tox","Rex","Dark","_FR","Queen","Prime","_Rouge","Flux","88","Noir","ette","_KO","Zen","Max","_BE","Storm","oïde","Fang","_QC","Venom","07"];
+const BOT_N=499;
 const ALLY_TAGS=["[ABY]","[KRK]","[MER]","[TOX]","[LUM]","[NOX]","",""];
 const EMO={win:["😈🍖","😎💪","🍽️😋","👋😏"],lose:["😤💢","🤬","😒🛡️"],hit:["😡⚔️","🔥🔥","👀🗡️","🏳️"]};
 function pickA(a){return a[Math.floor(Math.random()*a.length)];}
 function botsInit(rng,stx,sty,tiles){
-  const bots=[],used=new Set(),free=(x,y)=>inWorld(x,y)&&!isLand(x,y)&&!used.has(y*W+x)&&Math.hypot(x-stx,y-sty)>=6;
+  const bots=[],used=new Set(),names=new Set(),free=(x,y)=>inWorld(x,y)&&!isLand(x,y)&&!used.has(y*W+x)&&Math.hypot(x-stx,y-sty)>=6;
   const place=(x,y,inner)=>{x=Math.round(x);y=Math.round(y);if(!free(x,y))return false;used.add(y*W+x);const t=tiles[y*W+x];t.k=null;t.a=0;t.max=0;t.m=0;t.w=null;
     const g=(inner?1.1:0.6)+rng()*0.7;
-    bots.push({id:bots.length+1,name:BOT_A[Math.floor(rng()*BOT_A.length)]+BOT_B[Math.floor(rng()*BOT_B.length)],tag:ALLY_TAGS[Math.floor(rng()*ALLY_TAGS.length)],
+    let nm=BOT_A[Math.floor(rng()*BOT_A.length)]+BOT_B[Math.floor(rng()*BOT_B.length)];if(names.has(nm))nm+=String(2+Math.floor(rng()*8));while(names.has(nm))nm+="x";names.add(nm);
+    bots.push({id:bots.length+1,name:nm,tag:ALLY_TAGS[Math.floor(rng()*ALLY_TAGS.length)],
       x,y,g,type:TYPE_ORDER[Math.floor(rng()*5)],aggr:rng()<0.4?0.6+rng()*0.4:rng()*0.35,res:200,lastT:0,anger:0,busy:0});return true;};
   let n=0,g=0;while(n<12&&g<2000){g++;const a=rng()*Math.PI*2,r=7+rng()*15;if(place(stx+Math.cos(a)*r,sty+Math.sin(a)*r,false))n++;}
-  g=0;while(bots.length<140&&g<20000){g++;const inner=rng()<0.3,a=rng()*Math.PI*2,r=inner?ZB.mid+rng()*(RW-20-ZB.mid):RW-19+rng()*17;place(C0+Math.cos(a)*r,C0+Math.sin(a)*r,inner);}
+  g=0;while(bots.length<BOT_N&&g<60000){g++;const inner=rng()<0.3,a=rng()*Math.PI*2,r=inner?ZB.mid+rng()*(RW-20-ZB.mid):RW-19+rng()*17;place(C0+Math.cos(a)*r,C0+Math.sin(a)*r,inner);}
   return bots;
 }
 function botAt(x,y){if(!S||!S.bots)return null;for(const b of S.bots)if(b.x===x&&b.y===y)return b;return null;}
@@ -2410,7 +2418,7 @@ function showPicker(){
 function cellBlob(x,y,r,fill,stroke,extra){return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.8"/>'+(extra||"");}
 const INTRO=[
   {k:"Il y a 4 milliards d’années",t:"Au fond de l’océan, dans le noir",
-   p:["Vous êtes une bactérie née au bord du monde, dans les abysses, parmi 140 autres organismes. Le monde est un immense cercle : plus on avance vers le centre, plus les eaux remontent, jusqu’à la terre ferme.","La nourriture est rare et chaque action coûte de l’énergie. Pour grandir, il faudra récolter, explorer… puis piller les autres avant qu’ils ne vous pillent."],
+   p:["Vous êtes une bactérie née au bord du monde, dans les abysses, parmi 499 autres organismes. Le monde est un immense cercle : plus on avance vers le centre, plus les eaux remontent, jusqu’à la terre ferme.","La nourriture est rare et chaque action coûte de l’énergie. Pour grandir, il faudra récolter, explorer… puis piller les autres avant qu’ils ne vous pillent."],
    art:()=>{let s='<rect width="360" height="220" fill="#02060b"/>';const rr=mulberry32(27);for(let i=0;i<50;i++)s+='<circle cx="'+(rr()*360)+'" cy="'+(rr()*220)+'" r="'+(0.6+(i%3)*0.5)+'" fill="#9fc3d3" fill-opacity="'+(0.15+(i%4)*0.08)+'"/>';
      s+='<polygon points="250,220 275,150 300,220" fill="#1c120e" stroke="#4a3024"/><path d="M275 150 q-14 -26 6 -50 q14 -18 -4 -44" fill="none" stroke="#7e97a7" stroke-opacity=".3" stroke-width="12" stroke-linecap="round"/>';
      s+='<circle cx="120" cy="120" r="34" fill="#5ee6d0" fill-opacity=".12"/>'+cellBlob(120,120,16,"#123a3a","#5ee6d0",'<circle cx="120" cy="120" r="5" fill="#a99bff"/>');
@@ -2579,7 +2587,7 @@ function titleArt(narrow){
     '<circle cx="96" cy="-36" r="2.8" fill="#ffd166"/><path d="M-50 -10 C-20 -24 20 -26 44 -14" stroke="#ffe0a8" stroke-opacity=".35" stroke-width="5" fill="none" stroke-linecap="round"/></g>';
   s+='<ellipse cx="890" cy="178" rx="60" ry="4" fill="none" stroke="#e8fff8" stroke-opacity=".5"/><ellipse cx="890" cy="178" rx="96" ry="7" fill="none" stroke="#e8fff8" stroke-opacity=".22"/>';
   // jalons
-  [["J1 · PROCARYOTE",720,640,40,40],["J3 · EUCARYOTE",830,555,52,6],["J7 · COLONIE",925,440,74,6],["J12 · PLURICELLULAIRE",990,315,180,50,1],["J30 · APEX",1010,150,-6,84]].forEach(l=>{s+='<text x="'+(l[1]+l[3])+'" y="'+(l[2]+l[4])+'"'+(l[5]?' text-anchor="end"':"")+' font-family="IBM Plex Mono,monospace" font-size="15" letter-spacing="2" fill="#d9f6f1" fill-opacity=".78">'+l[0]+'</text>';});
+  [["J1 · PROCARYOTE",720,640,40,40],["J3 · EUCARYOTE",830,555,52,6],["J7 · COLONIE",925,440,74,6],["J12 · PLURICELLULAIRE",990,315,180,50,1],["J30 · APEX",1010,150,-20,-82,"middle"]].forEach(l=>{s+='<text x="'+(l[1]+l[3])+'" y="'+(l[2]+l[4])+'"'+(l[5]?' text-anchor="'+(l[5]===1?"end":l[5])+'"':"")+' font-family="IBM Plex Mono,monospace" font-size="15" letter-spacing="2" fill="#d9f6f1" fill-opacity=".78">'+l[0]+'</text>';});
   // des rivaux tapis dans le noir
   [[420,660,7],[300,560,6],[640,690,5],[180,640,8],[760,640,6]].forEach(e=>{s+='<circle cx="'+e[0]+'" cy="'+e[1]+'" r="'+e[2]+'" fill="#2a1414" stroke="#ff8a7a" stroke-width="1.6" stroke-opacity=".8"/><circle cx="'+e[0]+'" cy="'+e[1]+'" r="'+(e[2]*2.4)+'" fill="#ff8a7a" fill-opacity=".06"/>';});
   return s+"</svg>";
@@ -2587,19 +2595,20 @@ function titleArt(narrow){
 function showTitle(){
   const narrow=window.innerWidth<760;
   let h='<div class="picker title"><div class="tbg">'+titleArt(narrow)+'</div><div class="tscrim"></div><div class="tin">';
-  h+='<div class="tkick">Stratégie en temps réel · Serveur de 30 jours · 140 rivaux</div>';
+  h+='<div class="tkick">Stratégie en temps réel · Serveur de 30 jours · 500 organismes</div>';
   h+='<h1 class="tlogo">ORIGINS<span>27</span></h1>';
-  h+='<p class="thook">Vous naissez bactérie au fond de l’océan.<br>Dans 30 jours, <b>un seul organisme</b> sortira de l’eau.</p>';
-  h+='<p class="tsub">Évoluez, pillez vos rivaux, formez une colonie et menez vos troupes du rang T1 au rang légendaire T5. Ce sera vous… ou celui qui vous aura mangé.</p>';
+  h+='<div class="tbadges"><span class="tb1">FREE TO PLAY</span><span class="tb2">NO PAY TO WIN</span><small>100 % gratuit : aucun achat ne donne d’avantage.</small></div>';
+  h+='<p class="thook">Vous naissez bactérie dans un monde hostile.<br>Irez-vous au bout du chemin pour devenir <b>l’APEX légendaire</b> ?</p>';
+  h+='<p class="tsub">Évoluez au détriment de vos rivaux, formez une colonie avec vos alliés, gérez vos troupes et vos ressources : soyez celui qui façonnera le monde de demain… ou pas.</p>';
   h+='<div class="tcta">'+(S?'<button class="btn tbig" data-act="closeintro">Reprendre ma partie</button><button class="btn alt" data-act="slide" data-i="0">L’histoire</button>':'<button class="btn tbig" data-act="quickstart">Jouer maintenant</button><button class="btn alt" data-act="tostrains">Choisir ma souche</button><button class="btn alt" data-act="slide" data-i="0">L’histoire</button>')+'</div>';
   const st=["#5ee6d0","#a99bff","#4fc3f7","#ffd166","#ff9e6b"];
   const F=[
-    ["Évoluez","5 stades de vie, 3 branches de gènes, une mutation à choisir à chaque niveau. Aucune partie ne ressemble à une autre.",'<div class="tstages">'+st.map((c,i)=>'<i style="--c:'+c+';--s:'+(8+i*3)+'px"></i>').join("")+"</div>"],
-    ["Pillez","140 organismes grandissent et pillent aussi. Volez leurs réserves, espionnez-les, ripostez avec +50 % de butin.",'<div class="ticons">'+["tox","pha","par","enz","har"].map(k=>unitIcon(k)).join("")+"</div>"],
-    ["Commandez","Des troupes classées du rang T1 au T5. Les formes légendaires n’apparaissent que la dernière semaine.",'<div class="ticons">'+["sold","tox","colo","pluri","anom"].map(k=>unitIcon(k)).join("")+"</div>"],
-    ["Dominez","Classement mondial, 6 ligues et des récompenses chaque jour. Coffres rares, très rares, extrêmement rares ×8.",'<div class="tleague">'+LEAGUES.slice().reverse().map(l=>"<span>"+l[1]+"</span>").join("")+"</div>"]];
+    ["Évoluez","Aucune partie ne ressemble à la précédente : les chemins de l’évolution changent et se tirent au hasard. Réflexion et analyse feront votre domination.",'<div class="tstages">'+st.map((c,i)=>'<i style="--c:'+c+';--s:'+(8+i*3)+'px"></i>').join("")+"</div>"],
+    ["Pillez","499 autres organismes convoitent votre place. Le meilleur moyen de la garder ? Ne pas leur laisser le choix.",'<div class="ticons">'+["tox","pha","par","enz","har"].map(k=>unitIcon(k)).join("")+"</div>"],
+    ["Commandez","Vos troupes évoluent au fil des semaines, du rang T1 au légendaire T5. Combinez vos gènes pour forger les meilleures.",'<div class="ticons">'+["sold","tox","colo","pluri","anom"].map(k=>unitIcon(k)).join("")+"</div>"],
+    ["Dominez","Classement mondial, ligues et compétitions : des récompenses chaque jour pour creuser votre avance.",'<div class="tleague">'+LEAGUES.slice().reverse().map(l=>"<span>"+l[1]+"</span>").join("")+"</div>"]];
   h+='<div class="tfeats">'+F.map(f=>'<div class="tfeat">'+f[2]+"<h3>"+f[0]+"</h3><p>"+f[1]+"</p></div>").join("")+"</div>";
-  h+='<div class="tfoot">Gratuit · Sans installation · Jouable sur mobile · Sauvegarde automatique</div>';
+  h+='<div class="tfoot">Free to play · No pay to win · Sans installation · Jouable sur mobile</div>';
   h+="</div></div>";
   $("picker").innerHTML=h;
 }
