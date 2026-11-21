@@ -1,6 +1,13 @@
 # Origins 27
 
-Prototype solo d’un jeu de stratégie en temps réel : une bactérie née au bord d’un océan circulaire grandit, évolue et remonte vers la terre ferme pour devenir l’APEX.
+**Vous naissez bactérie au fond de l’océan. Dans 30 jours, un seul organisme sortira de l’eau.**
+
+Origins 27 est un jeu de stratégie en temps réel, gratuit et jouable dans le navigateur. Sur un serveur de 30 jours, vous partez d’une cellule perdue dans les abysses et vous affrontez 140 rivaux qui grandissent, pillent et s’allient comme vous. Le premier à remonter jusqu’à la terre ferme devient l’APEX.
+
+- **Évoluez :** 5 stades de vie, de la bactérie au pluricellulaire, 3 branches de gènes et une mutation à choisir à chaque niveau. Aucune partie ne ressemble à une autre.
+- **Pillez :** volez les réserves de vos rivaux, espionnez-les, ripostez avec +50 % de butin.
+- **Commandez :** des troupes classées du rang T1 au rang T5. Les formes légendaires n’apparaissent que la dernière semaine.
+- **Dominez :** classement mondial, 6 ligues de Plancton à Souverain, récompenses chaque jour et coffres jusqu’à ×8.
 
 Tout le jeu tient dans un seul fichier, `index.html` (HTML, CSS et JavaScript, sans dépendance à installer). Il suffit de l’ouvrir dans un navigateur.
 
@@ -11,8 +18,9 @@ Tout le jeu tient dans un seul fichier, `index.html` (HTML, CSS et JavaScript, s
 
 La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil utilisé.
 
-## Contenu du prototype 6
+## Contenu détaillé
 
+- **Écran d’accueil :** image animée de l’ascension (procaryote, eucaryote, colonie, pluricellulaire, APEX sortant de l’eau), accroche, « Jouer maintenant » en un clic, et l’histoire en 7 étapes pour qui veut lire.
 - **Cellule :** 4 canaux de production (ATP, protéines, lipides, nucléotides) et 8 emplacements d’organites autour du noyau.
 - **Armée en rangs T1 à T5 :** deux branches, 🔍 récolte et espionnage (collectrice → éclaireuse et porteuse → diatomée de verre → siphonophore → cténophore spectral) et ⚔ attaque (soldate → une troupe par voie offensive → Volvox gardien → Ver segmenté → Anomalocaride). Chaque rang se débloque par une recherche militaire aux coûts et durées exponentiels (2 h, 8 h, 24 h, 48 h de jeu) : T2 vers le jour 3, T3 vers le jour 10, T4 vers le jour 18, T5 dans la dernière semaine. Plus le rang est haut, plus l’icône de la troupe est aboutie : membrane simple, organites, armure, colonie, puis forme légendaire dorée et animée.
 - **Espionnage :** les troupes de la branche récolte et espionnage peuvent espionner un rival (⚡1). Réussite selon la force d’espionnage contre sa vigilance ; un succès affiche ses chiffres exacts pendant 24 h, un échec coûte la moitié des espionnes.
