@@ -37,8 +37,11 @@ window.runSim = function (opts) {
       if (!S.research && opts.levelGenes !== false) { for (const id of S.nodes) { G.act("glevel", D({ id })); if (S.research) break; } }
       if (!S.research) idleRes++;
     }
+    // recherche militaire : un rang dès que possible, l'attaque d'abord
+    if (opts.ranks !== false && !S.mres) { for (const br of ["atk", "eco"]) { G.act("mres", D({ br })); if (S.mres) { mark("rech_" + br + S.mres.L); break; } } }
+    if (S.rank) { for (const br of ["atk", "eco"]) for (let L = 2; L <= 5; L++) if ((S.rank[br] || 1) >= L) mark(br + "T" + L); }
     // armée : soldates et porteuses dès que possible, géants aux stades avancés
-    if (opts.army && blvl("ribo") >= 1 && !S.queue.length) { const r = X.rates(), u = X.upkeep(); if (r.atp - u.atp > 15) { for (const k of ["pluri", "colo", "sold", "port"]) { if (X.uReq(k) && S.idle + S.missions.reduce((a, m) => a + m.n, 0) < (opts.maxCells || 6) + 30) { G.act("cell", D({ k, n: "2" })); if (S.queue.length) break; } } } }
+    if (opts.army && blvl("ribo") >= 1 && !S.queue.length) { const r = X.rates(), u = X.upkeep(); if (r.atp - u.atp > 15) { for (const k of ["anom", "pluri", "colo", "sold", "siph", "diat", "port"]) { if (X.uReq(k) && S.idle + S.missions.reduce((a, m) => a + m.n, 0) < (opts.maxCells || 6) + 30) { G.act("cell", D({ k, n: "2" })); if (S.queue.length) break; } } } }
     // migration vers le centre quand un stade l'exige
     window.__needMig = opts.migrate && (S.nodes.includes("COLO") || S.noyau >= 7) && X.zoneIdx() < (S.nodes.includes("PLURI") ? 3 : 2);
     if (window.__needMig && S.missions.length) G.act("recallall", D({}));

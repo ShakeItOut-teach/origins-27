@@ -379,6 +379,19 @@ body.pixel #tour .tbub,body.pixel #tour .hole{border-radius:0}
 .bqbox{margin:10px 0 4px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px}
 .bqi{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:4px}
 .bqn{color:#ffd166;font-weight:600}
+.uic{width:34px;height:34px;flex:none;overflow:visible}.uic.big{width:46px;height:46px}
+.uic.t3{filter:drop-shadow(0 0 2px rgba(79,195,247,.55))}.uic.t4{filter:drop-shadow(0 0 4px rgba(199,125,255,.7))}.uic.t5{filter:drop-shadow(0 0 6px rgba(255,209,102,.85))}
+.uic .aura{transform-origin:20px 20px;animation:uspin 9s linear infinite}.uic .comb{animation:ucomb 1.2s linear infinite}
+@keyframes uspin{to{transform:rotate(360deg)}}@keyframes ucomb{to{stroke-dashoffset:-5.6}}
+@media (prefers-reduced-motion:reduce){.uic .aura,.uic .comb{animation:none}}
+.mres .mrun,.mres .mrow2{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;border:1px solid var(--rc,var(--line));border-left-width:4px;border-radius:10px;padding:8px 10px;margin-top:8px}
+.mres .mrun .pb{flex:1;min-width:80px}
+.tbranch h2{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.rkbadge{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--rc);color:var(--rc)}
+.tier{border-left:4px solid var(--rc);padding:6px 0 6px 10px;margin:10px 0;border-radius:4px}
+.tier .thead{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}.tier .thead b{font-family:var(--font-mono);font-size:16px;color:var(--rc)}.tier .thead span{font-size:12.5px;color:var(--muted)}.tier .thead .tl{margin-left:auto}
+.tier.lock{opacity:.85}.tlocked{display:flex;flex-wrap:wrap;gap:8px}.tl1{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px dashed var(--line);border-radius:10px;font-size:12.5px;flex:1 1 220px}
+.tl1 .uic{filter:grayscale(.5) brightness(.85)}.tl1 b{display:block}.tl1 small{color:var(--muted);display:block}
+.tierpop{display:grid;gap:10px;margin:8px 0}.tierpop div{display:flex;align-items:center;gap:10px}.tierpop small{display:block;color:var(--muted);font-size:12px}
 .stash{border:1px solid #ffd166;background:rgba(255,209,102,.08);border-radius:10px;padding:8px 10px;margin:6px 0 10px;font-size:13px}
 .enpill{cursor:pointer;color:#ffd166}.enpill b{font-family:var(--font-mono)}.enpill small{color:var(--muted);font-size:11px}.enpill.low{color:var(--bad);animation:rwglow 1.6s ease-in-out infinite}
 .accb{font:inherit;font-size:11px;margin-left:6px;padding:1px 6px;border-radius:6px;border:1px solid #ffd166;background:rgba(255,209,102,.1);color:#ffd166;cursor:pointer}
@@ -623,7 +636,7 @@ const NODES={
   APEX:{br:"X",tier:7,name:"Sortie des eaux",hint:"Respirer l’air. Marcher.",eff:{},mal:{},req:[["b","noyau",10],["s","zone",3]],cost:6000,time:1440,parents:["PLURI"]}
 };
 const STAGE_NODES={ENDO:2,COLO:3,PLURI:4,APEX:5};
-const STAGE_TXT={2:"Vous êtes eucaryote : un noyau protégé, des mitochondries domestiquées. Prochaine étape : rester groupées pour former une colonie.",3:"Vos cellules ne se séparent plus : une colonie. Le Volvox gardien est disponible. Prochaine étape : se différencier, en remontant vers les eaux moyennes.",4:"Muscles, bouche, tube digestif : vous êtes pluricellulaire. Le Ver segmenté est disponible. Dernière étape : atteindre les hauts-fonds et sortir de l’eau.",5:"Vous respirez l’air. Votre lignée a quitté l’océan : elle peut devenir l’APEX de la terre ferme."};
+const STAGE_TXT={2:"Vous êtes eucaryote : un noyau protégé, des mitochondries domestiquées. La recherche militaire T3 devient possible. Prochaine étape : rester groupées pour former une colonie.",3:"Vos cellules ne se séparent plus : une colonie. La recherche militaire T4 devient possible. Prochaine étape : se différencier, en remontant vers les eaux moyennes.",4:"Muscles, bouche, tube digestif : vous êtes pluricellulaire. La recherche militaire T5 devient possible. Dernière étape : atteindre les hauts-fonds et sortir de l’eau.",5:"Vous respirez l’air. Votre lignée a quitté l’océan : elle peut devenir l’APEX de la terre ferme."};
 const BRANCH={E:"Énergie",P:"Prédation",M:"Perception"};
 const TRAITS={venin:{name:"Venin",from:"tox",col:"#7fd04a"},bras:{name:"Bras",from:"pha",col:"#4fa8e0"},carapace:{name:"Carapace",from:"par",col:"#a58a64"},crochets:{name:"Crochets",from:"enz",col:"#e08a3a"},pattes:{name:"Pattes",from:"har",col:"#cbb27c"}};
 const TYPE_TRAIT={};for(const k in TRAITS)TYPE_TRAIT[TRAITS[k].from]=k;
@@ -695,19 +708,43 @@ const CELL_COST={prot:30,atp:20};
 
 /* Armée : des troupes produites en masse ; l’évolution débloque des troupes plus puissantes.
    req : ["b",organite,niv], ["g",gène], ["s",spécial,valeur]. type : voie offensive propre à l’unité. */
+/* Rangs des troupes : deux branches (récolte et espionnage, attaque), T1 à T5, chaque rang débloqué par une recherche militaire
+   de plus en plus longue et chère. tier : rang ; br : "eco" ou "atk" ; spy : force d’espionnage. */
 const UNITS={
-  coll:{name:"Collectrice",pl:"Collectrices",col:"#5ee6d0",cost:{prot:30,atp:20},t:10,atk:10,def:9,carry:20,spd:1,upk:1,req:[["b","ribo",1]],role:"La base de tout : récolte, explore, se bat un peu."},
-  ecl:{name:"Éclaireuse",pl:"Éclaireuses",col:"#9fd8ff",cost:{lip:25,atp:15},t:6,atk:3,def:2,carry:8,spd:2.4,upk:.5,req:[["b","flag",1],["g","M1"]],role:"Très rapide. À l’arrivée, elle cartographie tout autour de sa cible."},
-  port:{name:"Porteuse",pl:"Porteuses",col:"#f3b562",cost:{prot:45,lip:30,atp:15},t:14,atk:2,def:4,carry:70,spd:.8,upk:1.2,req:[["b","vac",2],["g","P1"]],role:"Une poche géante : rapporte trois fois plus qu’une collectrice, mais lente."},
-  sold:{name:"Soldate",pl:"Soldates",col:"#ff8a7a",cost:{prot:60,lip:25,atp:40},t:18,atk:28,def:30,carry:6,spd:1,upk:2,req:[["b","ribo",3],["g","P2"]],role:"Faite pour se battre : attaque fort et garde la base."},
-  tox:{name:"Dinoflagellé venimeux",pl:"Dinoflagellés venimeux",col:"#b8e05a",type:"tox",cost:{prot:80,lip:90,atp:60,nuc:25},t:30,atk:72,def:20,carry:10,spd:1.1,upk:3,req:[["g","PT"],["b","noyau",4]],role:"Toxines : écrase les phagocytes."},
-  pha:{name:"Macrophage",pl:"Macrophages",col:"#4fc3f7",type:"pha",cost:{prot:110,lip:60,atp:60,nuc:25},t:30,atk:55,def:55,carry:35,spd:.9,upk:3,req:[["g","PH"],["b","noyau",4]],role:"Phagocytose : avale les parasites, tient la ligne."},
-  par:{name:"Phage dompté",pl:"Phages domptés",col:"#c77dff",type:"par",cost:{prot:70,lip:70,atp:50,nuc:40},t:30,atk:60,def:15,carry:45,spd:1.2,upk:3,req:[["g","PP"],["b","noyau",4]],role:"Parasitisme : détourne les enzymes, rapporte gros."},
-  enz:{name:"Lysobactérie",pl:"Lysobactéries",col:"#ff9e6b",type:"enz",cost:{prot:90,lip:60,atp:80,nuc:25},t:30,atk:66,def:30,carry:12,spd:1,upk:3,req:[["g","PE"],["b","noyau",4]],role:"Enzymes lytiques : dissout les harpons."},
-  har:{name:"Harponneur",pl:"Harponneurs",col:"#e3e9ee",type:"har",cost:{prot:90,lip:50,atp:90,nuc:25},t:30,atk:82,def:15,carry:10,spd:1.6,upk:3,req:[["g","PA"],["b","noyau",4]],role:"Harpon : perce les poches à toxines, frappe vite."},
-  colo:{name:"Volvox gardien",pl:"Volvox gardiens",col:"#7fd36b",cost:{prot:300,lip:250,atp:250,nuc:80},t:60,atk:120,def:240,carry:60,spd:.7,upk:6,req:[["g","COLO"]],role:"Stade Colonie : une sphère de cellules, un rempart vivant."},
-  pluri:{name:"Ver segmenté",pl:"Vers segmentés",col:"#ef7fa6",cost:{prot:600,lip:400,atp:500,nuc:150},t:90,atk:330,def:180,carry:150,spd:1.3,upk:10,req:[["g","PLURI"]],role:"Stade Pluricellulaire : muscles, bouche, tube digestif."}
+  coll:{tier:1,br:"eco",name:"Collectrice",pl:"Collectrices",col:"#5ee6d0",cost:{prot:30,atp:20},t:10,atk:10,def:9,carry:20,spd:1,upk:1,spy:0,req:[["b","ribo",1]],role:"La base de tout : récolte, explore, se bat un peu."},
+  ecl:{tier:2,br:"eco",name:"Éclaireuse",pl:"Éclaireuses",col:"#9fd8ff",cost:{lip:25,atp:15},t:6,atk:3,def:2,carry:8,spd:2.4,upk:.5,spy:3,req:[["s","rs",2],["b","flag",1]],role:"Très rapide. Cartographie autour de sa cible et peut espionner un rival."},
+  port:{tier:2,br:"eco",name:"Porteuse",pl:"Porteuses",col:"#f3b562",cost:{prot:45,lip:30,atp:15},t:14,atk:2,def:4,carry:70,spd:.8,upk:1.2,spy:0,req:[["s","rs",2],["b","vac",2]],role:"Une poche géante : rapporte trois fois plus qu’une collectrice, mais lente."},
+  diat:{tier:3,br:"eco",name:"Diatomée de verre",pl:"Diatomées de verre",col:"#7fe0ff",cost:{prot:160,lip:120,atp:90,nuc:40},t:40,atk:8,def:40,carry:180,spd:1.3,upk:3,spy:7,req:[["s","rs",3]],role:"Une coque de silice : transporte beaucoup et observe à travers le verre."},
+  siph:{tier:4,br:"eco",name:"Siphonophore",pl:"Siphonophores",col:"#b28bff",cost:{prot:420,lip:320,atp:260,nuc:120},t:70,atk:20,def:90,carry:450,spd:1.6,upk:6,spy:18,req:[["s","rs",4]],role:"Une colonie-convoi : des dizaines de poches et d’yeux reliés."},
+  cten:{tier:5,br:"eco",name:"Cténophore spectral",pl:"Cténophores spectraux",col:"#ffd166",cost:{prot:1100,lip:900,atp:800,nuc:400},t:120,atk:40,def:150,carry:1000,spd:2.4,upk:12,spy:50,req:[["s","rs",5]],role:"Presque invisible, irisé : rapporte des fortunes et voit tout."},
+  sold:{tier:1,br:"atk",name:"Soldate",pl:"Soldates",col:"#ff8a7a",cost:{prot:60,lip:25,atp:40},t:18,atk:28,def:30,carry:6,spd:1,upk:2,spy:0,req:[["b","ribo",2]],role:"Faite pour se battre : attaque et garde la base."},
+  tox:{tier:2,br:"atk",name:"Dinoflagellé venimeux",pl:"Dinoflagellés venimeux",col:"#b8e05a",type:"tox",cost:{prot:80,lip:90,atp:60,nuc:25},t:30,atk:72,def:20,carry:10,spd:1.1,upk:3,spy:0,req:[["s","ra",2],["g","PT"]],role:"Toxines : écrase les phagocytes."},
+  pha:{tier:2,br:"atk",name:"Macrophage",pl:"Macrophages",col:"#4fc3f7",type:"pha",cost:{prot:110,lip:60,atp:60,nuc:25},t:30,atk:55,def:55,carry:35,spd:.9,upk:3,spy:0,req:[["s","ra",2],["g","PH"]],role:"Phagocytose : avale les parasites, tient la ligne."},
+  par:{tier:2,br:"atk",name:"Phage dompté",pl:"Phages domptés",col:"#c77dff",type:"par",cost:{prot:70,lip:70,atp:50,nuc:40},t:30,atk:60,def:15,carry:45,spd:1.2,upk:3,spy:0,req:[["s","ra",2],["g","PP"]],role:"Parasitisme : détourne les enzymes, rapporte gros."},
+  enz:{tier:2,br:"atk",name:"Lysobactérie",pl:"Lysobactéries",col:"#ff9e6b",type:"enz",cost:{prot:90,lip:60,atp:80,nuc:25},t:30,atk:66,def:30,carry:12,spd:1,upk:3,spy:0,req:[["s","ra",2],["g","PE"]],role:"Enzymes lytiques : dissout les harpons."},
+  har:{tier:2,br:"atk",name:"Harponneur",pl:"Harponneurs",col:"#e3e9ee",type:"har",cost:{prot:90,lip:50,atp:90,nuc:25},t:30,atk:82,def:15,carry:10,spd:1.6,upk:3,spy:0,req:[["s","ra",2],["g","PA"]],role:"Harpon : perce les poches à toxines, frappe vite."},
+  colo:{tier:3,br:"atk",name:"Volvox gardien",pl:"Volvox gardiens",col:"#7fd36b",cost:{prot:300,lip:250,atp:250,nuc:80},t:60,atk:140,def:240,carry:60,spd:.7,upk:6,spy:0,req:[["s","ra",3]],role:"Une sphère de cellules soudées : un rempart vivant qui frappe fort."},
+  pluri:{tier:4,br:"atk",name:"Ver segmenté",pl:"Vers segmentés",col:"#ef7fa6",cost:{prot:600,lip:400,atp:500,nuc:150},t:90,atk:360,def:180,carry:150,spd:1.3,upk:10,spy:0,req:[["s","ra",4]],role:"Muscles, mâchoires, tube digestif : un chasseur complet."},
+  anom:{tier:5,br:"atk",name:"Anomalocaride",pl:"Anomalocarides",col:"#ffd166",cost:{prot:2400,lip:1600,atp:2000,nuc:700},t:180,atk:1150,def:600,carry:300,spd:1.8,upk:25,spy:0,req:[["s","ra",5]],role:"Le grand prédateur : yeux à facettes, bras préhensiles, bouche en couronne."}
 };
+const RANK_COL=["","#9fb3c8","#7fd36b","#4fc3f7","#c77dff","#ffd166"];
+const RANK_LBL=["","Rang commun","Rang avancé","Rang supérieur","Rang élite","Rang légendaire"];
+const RBR={eco:{name:"Récolte et espionnage",e:"🔍",col:"#5ee6d0",sp:"rs"},atk:{name:"Attaque",e:"⚔",col:"#ff8a7a",sp:"ra"}};
+/* Recherche militaire : coûts et durées exponentiels. Le T5 arrive dans la dernière semaine du serveur. */
+const RANK_RES={
+  2:{req:[["b","noyau",3]],cost:{nuc:400,atp:350,prot:350},time:120},
+  3:{req:[["g","ENDO"],["b","noyau",6]],cost:{nuc:2500,atp:2000,prot:2000,lip:1400},time:480},
+  4:{req:[["g","COLO"],["b","noyau",8]],cost:{nuc:8000,atp:6000,prot:6000,lip:4500},time:1440},
+  5:{req:[["g","PLURI"],["b","noyau",10]],cost:{nuc:20000,atp:16000,prot:16000,lip:12000},time:2880}
+};
+function rankOf(br){S.rank=S.rank||{eco:1,atk:1};return S.rank[br]||1;}
+function mresTime(L){return TIME_F*RANK_RES[L].time/(1+0.05*S.noyau);}
+function mresBlock(br){const L=rankOf(br)+1;if(L>5)return "Rang maximum atteint.";if(S.mres)return "Une recherche militaire est déjà en cours.";if(!RANK_RES[L].req.every(reqMet))return "Conditions non remplies.";return capBlock(RANK_RES[L].cost);}
+function mresStart(br){const L=rankOf(br)+1;if(mresBlock(br))return;const c=RANK_RES[L].cost;if(!afford(c))return;pay(c);S.mres={br,L,start:S.t,end:S.t+mresTime(L)};toast("Recherche "+RBR[br].e+" T"+L+" lancée");}
+function mresStep(){const R=S.mres;if(!R||S.t<R.end)return;S.mres=null;S.rank=S.rank||{eco:1,atk:1};S.rank[R.br]=Math.max(rankOf(R.br),R.L);
+  const us=UNIT_ORDER.filter(k=>UNITS[k].br===R.br&&UNITS[k].tier===R.L);
+  log(RBR[R.br].e+" Rang T"+R.L+" débloqué ("+RBR[R.br].name+") : "+us.map(k=>UNITS[k].name).join(", ")+".","rare");
+  popup({kick:"Recherche militaire · "+RBR[R.br].name,title:"Rang T"+R.L+" débloqué",body:'<div class="tierpop">'+us.map(k=>'<div>'+unitIcon(k,true)+"<b>"+UNITS[k].name+"</b><small>"+UNITS[k].role+"</small></div>").join("")+"</div>"+(R.L===2&&R.br==="atk"?'<p class="desc">Les troupes T2 d’attaque demandent aussi le gène de leur voie offensive.</p>':"")});dirty=true;}
 const UNIT_ORDER=Object.keys(UNITS);
 const LIFE=["","Procaryote","Eucaryote","Colonie","Pluricellulaire","APEX"];
 function uReq(k){return UNITS[k].req.every(reqMet);}
@@ -725,7 +762,7 @@ function prodHTML(){if(blvl("ribo")<1)return '<p class="reason">Pour produire de
   UNIT_ORDER.forEach(k=>{if(!uReq(k))return;const U=UNITS[k],mx=maxAfford(U.cost,200);
     h+=unitIcon(k)+'<div class="pn"><b>'+U.name+'</b> <span class="muted">'+(S.army[k]||0)+(qby[k]?" +"+qby[k]:"")+"</span><small>⚔"+U.atk+" 🛡"+U.def+" 🎒"+U.carry+" · "+Object.keys(U.cost).map(r=>fmt(U.cost[r])+" "+{atp:"ATP",prot:"P",lip:"L",nuc:"N"}[r]).join(" ")+" · "+fmtDur(unitTime(k))+'</small></div><div class="pb">'+[1,10].map(n=>'<button class="btn sm" data-act="cell" data-k="'+k+'" data-n="'+n+'"'+need(Object.fromEntries(Object.entries(U.cost).map(e=>[e[0],e[1]*n])))+">×"+n+"</button>").join("")+'<button class="btn sm alt" data-act="cell" data-k="'+k+'" data-n="max"'+(mx<1?" disabled":"")+">Max "+mx+"</button></div>";});
   return h+'</div><div class="row" style="margin-top:6px"><button class="btn sm alt" data-act="goto" data-tab="hero">Toute l’armée →</button></div>';}
-function pickUnits(kind,n){const key=kind==="hunt"||kind==="raid"?"atk":kind==="explore"?"spd":"carry";const ks=UNIT_ORDER.filter(k=>(S.army[k]||0)>0).sort((a,b)=>UNITS[b][key]-UNITS[a][key]);const o={};let left=n;for(const k of ks){if(left<=0)break;const t=Math.min(left,S.army[k]);o[k]=t;left-=t;}return o;}
+function pickUnits(kind,n){const key=kind==="hunt"||kind==="raid"?"atk":kind==="explore"?"spd":kind==="spy"?"spy":"carry";const ks=UNIT_ORDER.filter(k=>(S.army[k]||0)>0&&(kind!=="spy"||UNITS[k].spy>0)).sort((a,b)=>UNITS[b][key]-UNITS[a][key]);const o={};let left=n;for(const k of ks){if(left<=0)break;const t=Math.min(left,S.army[k]);o[k]=t;left-=t;}return o;}
 /* Composition choisie : en mode manuel, le joueur dit combien de chaque troupe part */
 function selComp(kind){if(S.compMode!=="man")return pickUnits(kind,shownN());const o={};for(const k in (S.comp||{})){const v=Math.min(S.comp[k]||0,S.army[k]||0);if(v>0)o[k]=v;}return o;}
 function compEditor(){let h='<div class="comp">';UNIT_ORDER.forEach(k=>{const have=S.army[k]||0;if(!have)return;const v=Math.min((S.comp||{})[k]||0,have),U=UNITS[k];
@@ -859,7 +896,7 @@ function afford(need){for(const r in need)if(S.res[r]<need[r])return false;retur
 function pay(need){for(const r in need)S.res[r]-=need[r];}
 function capBlock(need){const cap=rates().cap;for(const r in need)if(need[r]>cap)return "Stockage trop petit : agrandissez la vacuole.";return "";}
 function zoneIdx(){const c=cpos();return {abyss:0,deep:1,mid:2,shallow:3,land:3,void:0}[zoneOf(c[0],c[1])];}
-const SPECIAL={cells:{name:"Troupes",cur:()=>cellCount(),tab:"hero"},zone:{name:"Base en zone",cur:()=>zoneIdx(),tab:"map",lbl:l=>["Abysses","Eaux profondes","Eaux moyennes","Hauts-fonds"][l]},lin:{name:"Lignées",cur:()=>lineages().length,tab:"evo"}};
+const SPECIAL={cells:{name:"Troupes",cur:()=>cellCount(),tab:"hero"},zone:{name:"Base en zone",cur:()=>zoneIdx(),tab:"map",lbl:l=>["Abysses","Eaux profondes","Eaux moyennes","Hauts-fonds"][l]},lin:{name:"Lignées",cur:()=>lineages().length,tab:"evo"},rs:{name:"Rang récolte",cur:()=>rankOf("eco"),tab:"hero",lbl:l=>"🔍 Rang T"+l},ra:{name:"Rang attaque",cur:()=>rankOf("atk"),tab:"hero",lbl:l=>"⚔ Rang T"+l}};
 function reqMet(q){const t=q[0],k=q[1],l=q[2];if(t==="g")return has(k);if(t==="s")return SPECIAL[k].cur()>=l;return t==="b"?blvl(k)>=l:fmaxlvl(k)>=l;}
 function reqShort(q){if(q[0]==="g")return NODES[q[1]].name;if(q[0]==="s"){const s=SPECIAL[q[1]];return s.lbl?s.lbl(q[2]):s.name+" "+q[2];}return (q[0]==="b"?(SHORT[q[1]]||BLD[q[1]].name):FIELD[q[1]].name)+" "+q[2];}
 function nodeCost(id){const n=NODES[id],f=Math.max(0.3,1+mods().evoCost);let c=n.cost*costF((n.tier||0)*1.6);if(NODES[id].type&&ownedTypes().length>=1)c*=2;return {nuc:Math.round(c*f),atp:Math.round(c*0.5)};}
@@ -919,7 +956,7 @@ function popup(p){if(catchUp){catchUp.push(p);return;}
   S.popups.push(p);if(S.popups.length>5)S.popups.splice(0,S.popups.length-5);dirty=true;}
 function stat(k,r,v){S.stats=S.stats||{};const o=S.stats[k]=S.stats[k]||{};o[r]=(o[r]||0)+v;}
 /* ===== Énergie : chaque action la consomme ; seuls le temps, les coffres, les quêtes, les boss et les événements la rendent ===== */
-const EN_MAX=30,EN_REGEN=20,EN_CAP=120,EN_COST={collect:1,explore:1,hunt:2,raid:3,accel:5};
+const EN_MAX=30,EN_REGEN=20,EN_CAP=120,EN_COST={collect:1,explore:1,spy:1,hunt:2,raid:3,accel:5};
 function enInit(){if(S.en==null){S.en=EN_MAX;S.enT=S.t;}}
 function enStep(){enInit();if(S.en>=EN_MAX){S.enT=S.t;return;}const n=Math.floor((S.t-S.enT)/EN_REGEN);if(n>0){S.en=Math.min(EN_MAX,S.en+n);S.enT+=n*EN_REGEN;if(S.en>=EN_MAX)S.enT=S.t;}}
 function enGive(n,why){enInit();const b=S.en;S.en=Math.min(EN_CAP,S.en+n);const g=S.en-b;if(g>0&&why)log("⚡ +"+g+" énergie : "+why+".","good");return g;}
@@ -933,8 +970,8 @@ function energyHTML(need){enInit();const nx=enNext();
   '<p class="desc">Au-delà de '+EN_MAX+" (jusqu’à "+EN_CAP+"), seules les récompenses en donnent : connexion du jour, coffres (plus ils sont rares, plus il y en a), quêtes du jour, ligue du classement, boss vaincus et gisements d’événement.</p>"+
   '<div class="row" style="margin-top:10px"><button class="btn" data-act="rewards">🎁 Voir les récompenses</button><button class="btn alt" data-act="mclose">Fermer</button></div>';}
 function enPill(){enInit();const nx=enNext();return '<span class="enpill'+(S.en<3?" low":"")+'" data-act="energy">⚡ <b>'+S.en+"</b>/"+EN_MAX+(nx?' <small>+1 <span data-end="'+nx+'"></span></small>':"")+"</span>";}
-function accelHTML(w){const J=w==="r"?S.research:S.build;if(!J||J.end-S.t<1)return "";return '<button class="accb" data-act="accel" data-w="'+w+'" data-tip="'+esc("<b>Accélérer</b>−1 h sur "+(w==="r"?"le gène":"le chantier")+" en cours · ⚡ "+EN_COST.accel)+'">'+(J.end-S.t<=60?"⚡ Finir":"⚡−1h")+"</button>";}
-function doAccel(w){const J=w==="r"?S.research:S.build;if(!J||J.end-S.t<1)return;if(!enSpend(EN_COST.accel))return;const d=Math.min(60,J.end-S.t);J.end-=d;J.start-=d;toast("⚡ "+(w==="r"?"Gène":"Chantier")+" accéléré de "+fmtDur(d));}
+function accelHTML(w){const J=w==="r"?S.research:w==="m"?S.mres:S.build;if(!J||J.end-S.t<1)return "";return '<button class="accb" data-act="accel" data-w="'+w+'" data-tip="'+esc("<b>Accélérer</b>−1 h sur "+(w==="r"?"le gène":w==="m"?"la recherche militaire":"le chantier")+" en cours · ⚡ "+EN_COST.accel)+'">'+(J.end-S.t<=60?"⚡ Finir":"⚡−1h")+"</button>";}
+function doAccel(w){const J=w==="r"?S.research:w==="m"?S.mres:S.build;if(!J||J.end-S.t<1)return;if(!enSpend(EN_COST.accel))return;const d=Math.min(60,J.end-S.t);J.end-=d;J.start-=d;toast("⚡ "+(w==="r"?"Gène":w==="m"?"Recherche":"Chantier")+" accéléré de "+fmtDur(d));}
 /* ===== Récompenses : connexion quotidienne, coffre toutes les 4 h, quêtes du jour (en temps réel) ===== */
 function dayKey(off){const d=new Date(Date.now()+(off||0)*86400e3);return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
 const DQ_POOL=[["hunt","Gagner 2 chasses",2],["raid","Réussir 1 pillage",1],["collect","Ramener 5 récoltes",5],["units","Produire 10 troupes",10],["build","Lancer 2 constructions",2],["def","Repousser 1 attaque",1],["gene","Lancer 1 gène",1]];
@@ -1214,7 +1251,7 @@ function frissonHTML(){const f=frissonInfo();let h="";
   return h;}
 
 function step(dm){
-  enStep();stashStep();const r=rates(),u=upkeep(),m=mods();let short=null;
+  enStep();stashStep();mresStep();const r=rates(),u=upkeep(),m=mods();let short=null;
   for(const k of RES){
     const net=r[k]-u[k];let v=S.res[k];
     if(net>0){if(v<r.cap)v=Math.min(r.cap,v+net*dm/60);}else v=Math.max(0,v+net*dm/60);
@@ -1259,7 +1296,8 @@ function step(dm){
     if(!M.arrived&&S.t>=M.arrive){
       M.arrived=true;const T=S.tiles[M.y*W+M.x];reveal(M.x,M.y);if(!M.u)M.u={coll:M.n};
       if(M.u.ecl){for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const xx=M.x+dx,yy=M.y+dy;if(xx>=0&&yy>=0&&xx<W&&yy<H&&dx*dx+dy*dy<=10)reveal(xx,yy);}}
-      if(M.kind==="raid")raidArrive(M);
+      if(M.kind==="spy")spyArrive(M);
+      else if(M.kind==="raid")raidArrive(M);
       else if(M.kind==="hunt"&&!T.w){M.result="none";report("combat","Proie disparue · case "+M.x+","+M.y,["Il n’y avait plus rien à chasser à l’arrivée : un autre raid l’avait déjà dévorée."],null);}
       else if(M.kind==="hunt"&&T.w){
         const w=T.w,mt=matchup(w.type),hp=M.hero?heroPower(w.type):0,pw=huntPower(M.u,w.type)+hp,win=pw*ATK_ADV>=w.def,lf=lossFrac(pw,w.def),n0=M.n,u0=Object.assign({},M.u),tut=!!w.tut;
@@ -1292,7 +1330,7 @@ function step(dm){
 
       if(M.hero)S.hero.busy=false;
       if(M.n>0){const tp=parts.filter(p=>p[0]!=="<");log(compText(M.u)+" de retour"+(M.cancelled?" (ordre annulé)":"")+(tp.length?" : "+tp.join(", "):" les mains vides")+".");}
-      if(M.kind!=="hunt"&&M.kind!=="raid"||parts.length||lostCap.length)report("farm",(M.kind==="hunt"?"Butin de chasse":M.kind==="raid"?"Butin de pillage":M.cancelled?"Retour (ordre annulé)":parts.length?"Récolte":"Exploration")+" · case "+M.x+","+M.y,[compText(M.u)+" de retour.",parts.length?"Rapporté : "+parts.join(", ")+".":"Rien rapporté."+(S.tiles[M.y*W+M.x].k||M.cargo?"":" La zone autour est maintenant cartographiée.")].concat(lostCap.length?['<span class="neg">Perdu, entrepôt plein : '+lostCap.join(", ")+".</span> Agrandissez la vacuole ou dépensez avant le retour."]:[]),null);
+      if(M.kind!=="spy"&&(M.kind!=="hunt"&&M.kind!=="raid"||parts.length||lostCap.length))report("farm",(M.kind==="hunt"?"Butin de chasse":M.kind==="raid"?"Butin de pillage":M.cancelled?"Retour (ordre annulé)":parts.length?"Récolte":"Exploration")+" · case "+M.x+","+M.y,[compText(M.u)+" de retour.",parts.length?"Rapporté : "+parts.join(", ")+".":"Rien rapporté."+(S.tiles[M.y*W+M.x].k||M.cargo?"":" La zone autour est maintenant cartographiée.")].concat(lostCap.length?['<span class="neg">Perdu, entrepôt plein : '+lostCap.join(", ")+".</span> Agrandissez la vacuole ou dépensez avant le retour."]:[]),null);
       {const tp=parts.filter(p=>p[0]!=="<");if(tp.length&&M.kind==="collect")dqAdd("collect");if(tp.length)toast("+"+tp.join(", +"));}
       S.missions.splice(i,1);dirty=true;
     }
@@ -1335,8 +1373,8 @@ function riboHint(){const q=["b","noyau",2];return reqMet(q)?'<button class="lnk
 function sendMission(kind,quiet,auto){
   const p=openRef&&openRef.split(":");if(!p||p[0]!=="tile"||S.mig)return;
   const x=+p[1],y=+p[2],d=dist(x,y);if(d<0.5||d>range()||S.idle<1||!inWorld(x,y)||isLand(x,y))return;
-  const T0=S.tiles[y*W+x],kk=kind==="collect"&&!T0.s?"explore":kind,u=auto?pickUnits(kk,Math.max(1,Math.min(S.idle,S.selN||1))):selComp(kk),n=uSum(u);
-  if(n<1){if(!quiet)toast("Choisissez au moins une troupe");return;}
+  const T0=S.tiles[y*W+x],kk=kind==="collect"&&!T0.s?"explore":kind,u0=auto?pickUnits(kk,Math.max(1,Math.min(S.idle,S.selN||1))):selComp(kk),u=kk==="spy"?Object.fromEntries(Object.entries(u0).filter(e=>UNITS[e[0]].spy>0)):u0,n=uSum(u);
+  if(n<1){if(!quiet)toast(kk==="spy"?"Il faut des troupes d’espionnage (éclaireuses ou mieux)":"Choisissez au moins une troupe");return;}
   if(!enSpend(enCostFor(kk,T0),quiet))return false;S.sentOnce=1;
   for(const k in u)S.army[k]-=u[k];syncIdle();const dur=d*tileTime()/compSpd(u);
   const hero=(kind==="hunt"||kind==="raid")&&S.heroWith&&!S.hero.busy;if(hero)S.hero.busy=true;
@@ -1442,6 +1480,8 @@ function act(a,el){
   if(a==="popall"){S.popups=[];dirty=true;return;}
   if(a==="rewards"){showModal(rewardsHTML());return;}
   if(a==="energy"){showModal(energyHTML());return;}
+  if(a==="mres"){mresStart(el.dataset.br);dirty=true;return;}
+  if(a==="spy"){sendMission("spy");return;}
   if(a==="accel"){doAccel(el.dataset.w);dirty=true;return;}
   if(a==="rkcat"){S.rkCat=el.dataset.c;dirty=true;return;}
   if(a==="rkall"){S.rkAll=!S.rkAll;dirty=true;return;}
@@ -1594,6 +1634,7 @@ function stripHTML(){
   h+=S.build?'<span>Construction <b>'+S.build.label+'</b><span class="pb"><i data-ps="'+S.build.start+'" data-pe="'+S.build.end+'"></i></span><span data-end="'+S.build.end+'"></span>'+accelHTML("b")+((S.bq||[]).length?' <b class="bqn">+'+S.bq.length+' en file</b>':"")+'</span>':(S.q<QUESTS.length?'<button class="lnk ok" data-act="hint">Aucune construction : que faire ?</button>':"<span>Aucune construction</span>");
   if(S.mig)h+='<span>Migration <b>vers '+S.mig.x+","+S.mig.y+'</b><span class="pb"><i data-ps="'+S.mig.start+'" data-pe="'+S.mig.end+'"></i></span><span data-end="'+S.mig.end+'"></span></span>';
   h+=S.research?'<span>Gène <b>'+NODES[S.research.id].name+(S.research.lvl?" niv. "+S.research.lvl:"")+'</b><span class="pb evo"><i data-ps="'+S.research.start+'" data-pe="'+S.research.end+'"></i></span><span data-end="'+S.research.end+'"></span>'+accelHTML("r")+'</span>':"<span>Aucun gène en cours</span>";
+  if(S.mres)h+='<span>Recherche <b>'+RBR[S.mres.br].e+" T"+S.mres.L+'</b><span class="pb evo"><i data-ps="'+S.mres.start+'" data-pe="'+S.mres.end+'"></i></span><span data-end="'+S.mres.end+'"></span>'+accelHTML("m")+"</span>";
   h+=enPill();
   {const st=stashTotal();if(st>=1)h+='<span class="rwpill" data-act="rewards">🧺 <b>'+fmt(st)+"</b> en réserve</span>";}
   {const n=rwCount();h+='<span class="rwpill'+(n?" on":"")+'" data-act="rewards">🎁 '+(n?"Récompenses <b>"+n+"</b>":"Coffre dans <span data-endr=\""+S.chestAt+"\"></span>")+"</span>";}
@@ -1808,7 +1849,7 @@ function treeHTML(){
 }
 
 /* Mouvements */
-function missionLabel(M){return (M.kind==="raid"?"Pillage":M.kind==="hunt"?"Chasse":S.tiles[M.y*W+M.x].k?"Collecte":"Exploration")+" · case "+M.x+","+M.y;}
+function missionLabel(M){return (M.kind==="spy"?"Espionnage":M.kind==="raid"?"Pillage":M.kind==="hunt"?"Chasse":S.tiles[M.y*W+M.x].k?"Collecte":"Exploration")+" · case "+M.x+","+M.y;}
 let freshIds=new Set();
 function reportCards(cat){
   const list=S.reports.filter(r=>r.cat===cat);
@@ -1876,24 +1917,87 @@ function heroGrid(formOverride){
   return O;
 }
 function heroSVG(cls,form){const G=heroGrid(form);let s='<svg class="herosprite '+(cls||"")+'" viewBox="0 0 24 24" shape-rendering="crispEdges" role="img" aria-label="Votre héros : '+esc(S.hero.form)+'">';G.forEach((r,y)=>r.forEach((c,x)=>{if(c)s+='<rect x="'+x+'" y="'+y+'" width="1.02" height="1.02" fill="'+c+'"/>';}));return s+"</svg>";}
-function unitIcon(k){const U=UNITS[k],sz=k==="colo"||k==="pluri"?14:U.type?11:k==="sold"?10:k==="port"?10:8;return '<svg class="uic" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="'+sz+'" fill="'+U.col+'" fill-opacity=".22" stroke="'+U.col+'" stroke-width="2"/>'+(U.type?'<circle cx="16" cy="16" r="4" fill="'+U.col+'"/>':"")+(k==="ecl"?'<path d="M6 16h-4M8 12l-4-2M8 20l-4 2" stroke="'+U.col+'" stroke-width="2"/>':"")+(k==="sold"?'<path d="M16 4v6M16 22v6M4 16h6M22 16h6" stroke="'+U.col+'" stroke-width="2"/>':"")+(k==="port"?'<circle cx="16" cy="16" r="5" fill="none" stroke="'+U.col+'" stroke-width="2"/>':"")+(k==="colo"?[0,1,2,3,4,5].map(i=>'<circle cx="'+(16+Math.cos(i*1.047)*8)+'" cy="'+(16+Math.sin(i*1.047)*8)+'" r="3" fill="'+U.col+'"/>').join(""):"")+(k==="pluri"?'<path d="M5 18q5-8 11-2t11-2" stroke="'+U.col+'" stroke-width="3" fill="none"/>':"")+"</svg>";}
+/* Icône de troupe : plus le rang est haut, plus la forme est aboutie (membrane, organites, armure, colonie, puis prédateur ou convoi légendaire) */
+function unitIcon(k,big){const U=UNITS[k],c=U.col,T=U.tier||1,eco=U.br==="eco",id="ug"+k;
+  let s='<svg class="uic t'+T+(big?" big":"")+'" viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="'+id+'" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity="'+(T>=3?.55:.15)+'"/><stop offset=".45" stop-color="'+c+'" stop-opacity="'+(.25+T*.1)+'"/><stop offset="1" stop-color="'+c+'" stop-opacity=".15"/></radialGradient></defs>';
+  const ring=(r,w,o,d)=>'<circle cx="20" cy="20" r="'+r+'" fill="none" stroke="'+c+'" stroke-width="'+w+'" stroke-opacity="'+o+'"'+(d?' stroke-dasharray="'+d+'"':"")+"/>";
+  const body=r=>'<circle cx="20" cy="20" r="'+r+'" fill="url(#'+id+')" stroke="'+c+'" stroke-width="'+(T>=4?2.2:1.8)+'"/>';
+  const spikes=(n,r1,r2,w)=>{let p="";for(let i=0;i<n;i++){const a=i/n*Math.PI*2-Math.PI/2;p+='<line x1="'+(20+Math.cos(a)*r1).toFixed(1)+'" y1="'+(20+Math.sin(a)*r1).toFixed(1)+'" x2="'+(20+Math.cos(a)*r2).toFixed(1)+'" y2="'+(20+Math.sin(a)*r2).toFixed(1)+'" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round"/>';}return p;};
+  if(T===5)s+='<g class="aura">'+ring(18.5,1.2,.9,"3 2.5")+"</g>"+ring(16.8,.6,.4);
+  if(T===4)s+=ring(18,1,.35);
+  if(eco){
+    if(T===1)s+=body(9)+'<circle cx="20" cy="20" r="2.5" fill="'+c+'"/>';
+    if(T===2){if(k==="ecl")s+='<path d="M12 20Q6 16 3 20Q6 24 2 27" stroke="'+c+'" stroke-width="1.6" fill="none"/>'+body(8)+'<circle cx="23" cy="18" r="2.2" fill="#fff"/><circle cx="23.5" cy="18" r="1" fill="#06131d"/>';
+      else s+=body(10.5)+'<circle cx="20" cy="21.5" r="5.5" fill="'+c+'" fill-opacity=".35" stroke="'+c+'" stroke-width="1.6"/><circle cx="20" cy="15" r="2" fill="'+c+'"/>';}
+    if(T===3)s+='<path d="M20 5L32 12.5V27.5L20 35L8 27.5V12.5Z" fill="url(#'+id+')" stroke="'+c+'" stroke-width="1.8"/><path d="M20 5V35M8 12.5L32 27.5M32 12.5L8 27.5" stroke="'+c+'" stroke-width=".7" stroke-opacity=".7"/><circle cx="20" cy="20" r="3.2" fill="#fff" fill-opacity=".9"/><circle cx="20" cy="20" r="1.5" fill="'+c+'"/>';
+    if(T===4){[[20,8,5],[20,17,6],[20,27,7]].forEach(b=>{s+='<ellipse cx="'+b[0]+'" cy="'+b[1]+'" rx="'+b[2]+'" ry="'+(b[2]*.75)+'" fill="url(#'+id+')" stroke="'+c+'" stroke-width="1.6"/>';});
+      s+='<path d="M14 31q-2 5-5 6M20 33v5M26 31q2 5 5 6" stroke="'+c+'" stroke-width="1.2" fill="none"/><circle cx="18" cy="16" r="1.3" fill="#fff"/><circle cx="22" cy="16" r="1.3" fill="#fff"/><circle cx="20" cy="26" r="1.3" fill="#fff"/>';}
+    if(T===5){s+='<ellipse cx="20" cy="20" rx="9.5" ry="13.5" fill="url(#'+id+')" stroke="'+c+'" stroke-width="2"/>';
+      ["#ff6b8b","#ffd166","#5ee6d0","#7fb0ff","#c77dff"].forEach((col,i)=>{const x=13+i*3.5,o=Math.abs(2-i)*1.6;s+='<line class="comb" x1="'+x+'" y1="'+(9+o)+'" x2="'+x+'" y2="'+(31-o)+'" stroke="'+col+'" stroke-width="1.3" stroke-dasharray="1.6 1.2"/>';});
+      s+='<circle cx="20" cy="14" r="2.4" fill="#fff"/><path d="M14 33q-1 4-4 5M26 33q1 4 4 5" stroke="'+c+'" stroke-width="1" fill="none"/>';}
+  }else{
+    if(T===1)s+=spikes(4,9,13,2)+body(9)+'<circle cx="20" cy="20" r="2.5" fill="'+c+'"/>';
+    if(T===2)s+=spikes(6,10,14.5,2)+body(10)+ring(6.5,1,.7)+'<circle cx="20" cy="20" r="3.6" fill="'+c+'"/>';
+    if(T===3){s+=spikes(10,11,16.5,2.2)+body(11.5)+ring(8.2,1.4,.75,"2 1.5");[[16,17],[24,17],[20,24]].forEach(p=>{s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2.6" fill="'+c+'"/>';});}
+    if(T===4){[[9,28,4.6],[15,23.5,5.6],[22,19,6.2],[29,14,6]].forEach(b=>{s+='<circle cx="'+b[0]+'" cy="'+b[1]+'" r="'+b[2]+'" fill="url(#'+id+')" stroke="'+c+'" stroke-width="1.8"/>';});
+      s+='<path d="M33 9l5-3M34.5 13.5l5 0" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><circle cx="30.5" cy="12" r="1.5" fill="#fff"/><path d="M6 33l-3 3M11 33l-1 4M17 29l0 4" stroke="'+c+'" stroke-width="1.2"/>';}
+    if(T===5){s+='<path d="M10 11Q2 19 8 28M30 11Q38 19 32 28" stroke="'+c+'" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M6 25l-3 1M6 28l-2 3M34 25l3 1M34 28l2 3" stroke="'+c+'" stroke-width="1.4" stroke-linecap="round"/>';
+      s+='<ellipse cx="20" cy="22" rx="9.5" ry="12.5" fill="url(#'+id+')" stroke="'+c+'" stroke-width="2.2"/>';
+      for(let i=0;i<5;i++)s+='<path d="M'+(12+i*4)+' 29l2 4 2-4" fill="'+c+'" fill-opacity=".75"/>';
+      s+='<circle cx="14.5" cy="13.5" r="3.4" fill="#1a0f00" stroke="#fff" stroke-width="1"/><circle cx="25.5" cy="13.5" r="3.4" fill="#1a0f00" stroke="#fff" stroke-width="1"/><circle cx="14.5" cy="13.5" r="1.2" fill="#ffd166"/><circle cx="25.5" cy="13.5" r="1.2" fill="#ffd166"/><circle cx="20" cy="23" r="3.6" fill="none" stroke="#fff" stroke-width="1" stroke-dasharray="1.5 1"/>';}
+  }
+  s+='<g class="tb"><rect x="0" y="30" width="13" height="10" rx="3" fill="'+RANK_COL[T]+'"/><text x="6.5" y="37.6" text-anchor="middle" font-size="7.5" font-weight="700" fill="#06131d">T'+T+"</text></g>";
+  return s+"</svg>";}
+/* Recherche militaire, dans l’onglet Armée */
+function mresHTML(){let h='<div class="card mres"><h2>Recherche militaire</h2><p class="desc">Chaque rang débloque des troupes plus puissantes. Les coûts et les durées montent très vite : le T5 est la récompense de la dernière semaine. Une recherche militaire à la fois, en parallèle des gènes.</p>';
+  if(S.mres){const R=S.mres;h+='<div class="mrun" style="--rc:'+RANK_COL[R.L]+'"><span>'+RBR[R.br].e+" <b>T"+R.L+"</b> "+RBR[R.br].name+'</span><span class="pb"><i data-ps="'+R.start+'" data-pe="'+R.end+'"></i></span><span data-end="'+R.end+'"></span>'+accelHTML("m")+"</div>";}
+  ["atk","eco"].forEach(br=>{const L=rankOf(br)+1,B=RBR[br];
+    if(L>5){h+='<div class="mrow2"><span>'+B.e+" "+B.name+' : <b style="color:'+RANK_COL[5]+'">T5 atteint</b></span></div>';return;}
+    if(S.mres&&S.mres.br===br)return;
+    const R=RANK_RES[L],bl=mresBlock(br),ok=R.req.every(reqMet);
+    h+='<div class="mrow2" style="--rc:'+RANK_COL[L]+'"><div><b>'+B.e+" "+B.name+" → T"+L+'</b><span class="desc"> · '+fmtDur(mresTime(L))+"</span>"+(ok?costHTML(R.cost):'<div class="req">Requis : '+R.req.map(reqLink).join(" · ")+"</div>")+(ok&&bl&&bl!=="Une recherche militaire est déjà en cours."?'<p class="reason">'+bl+"</p>":"")+"</div>"+(ok?'<button class="btn sm" data-act="mres" data-br="'+br+'"'+need(R.cost)+(bl?' data-block="1"':"")+(S.mres?" disabled":"")+">Rechercher</button>":"")+"</div>";});
+  return h+"</div>";}
+function unitCard(k,A,qby){const U=UNITS[k],ok=uReq(k),own=A[k]||0;
+  let h='<div class="unit'+(ok?"":" off")+'" style="--uc:'+U.col+'">'+unitIcon(k,true)+'<div class="ubody"><div class="uh"><b>'+U.name+"</b><span>"+(S.army[k]||0)+" / "+own+(qby[k]?" · +"+qby[k]:"")+'</span></div><p class="desc">'+U.role+(U.type?' <span class="typechip" style="color:var(--t-'+U.type+')">'+TYPES[U.type].name+"</span>":"")+"</p>";
+  h+='<div class="ustats"><span title="Attaque">⚔ '+U.atk+'</span><span title="Défense">🛡 '+U.def+'</span><span title="Charge">🎒 '+U.carry+"</span>"+(U.spy?'<span title="Espionnage">👁 '+U.spy+"</span>":"")+'<span title="Vitesse">» '+U.spd+"</span><span>"+fmtDur(unitTime(k))+"</span></div>";
+  if(ok)h+=costHTML(U.cost)+'<div class="row ubtn">'+[1,5,10].map(n=>'<button class="btn sm" data-act="cell" data-k="'+k+'" data-n="'+n+'"'+need(Object.fromEntries(Object.entries(U.cost).map(e=>[e[0],e[1]*n])))+">×"+n+"</button>").join("")+'<button class="btn sm alt" data-act="cell" data-k="'+k+'" data-n="max">Max ('+maxAfford(U.cost,200)+")</button></div>";
+  else h+='<div class="req">Requis : '+U.req.map(reqLink).join(" · ")+"</div>";
+  return h+"</div></div>";}
 function armyHTML(){
   const A=armyAll(),u=upkeep(),qby={};S.queue.forEach(q=>qby[q.k]=(qby[q.k]||0)+1);
   let h='<div class="card armycard"><div class="chead"><h2>Armée</h2><span class="lifechip">Stade de vie : '+LIFE[S.stage||1]+"</span></div>";
   h+='<div class="armystats"><div><b>'+S.idle+"</b><span>au repos</span></div><div><b>"+(cellCount()-S.idle)+"</b><span>en mission</span></div><div><b>"+fmt(playerAtk())+"</b><span>attaque</span></div><div><b>"+fmt(playerDef())+"</b><span>défense</span></div></div>";
-  h+='<p class="desc">Entretien : '+RES.map(k=>fmt(u[k])+" "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k]).join(" · ")+" par heure. Sur la carte, « Auto » choisit les troupes à votre place (les plus fortes pour chasser, les plus grosses poches pour récolter) ; « Je choisis » vous laisse composer chaque envoi.</p>";
+  h+='<p class="desc">Entretien : '+RES.map(k=>fmt(u[k])+" "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k]).join(" · ")+" par heure. Sur la carte, « Auto » choisit les troupes à votre place ; « Je choisis » vous laisse composer chaque envoi.</p>";
   if(S.queue.length)h+='<p class="desc" style="margin-top:4px">En production sur '+laneCount()+" chaîne"+(laneCount()>1?"s":"")+" : "+compText(qby)+' · fin dans <span data-end="'+queueEnd()+'"></span></p>';
   if(blvl("ribo")<1)h+='<p class="reason" style="margin-top:6px">Pour produire des troupes : '+riboHint()+"</p>";
-  h+='<div class="units">';
-  UNIT_ORDER.forEach(k=>{const U=UNITS[k],ok=uReq(k),own=A[k]||0;
-    if(!ok&&!own&&U.req.some(q=>q[0]==="g"&&nodeState(q[1])==="closed"))return;
-    h+='<div class="unit'+(ok?"":" off")+'" style="--uc:'+U.col+'">'+unitIcon(k)+'<div class="ubody"><div class="uh"><b>'+U.name+"</b><span>"+(S.army[k]||0)+" / "+own+(qby[k]?" · +"+qby[k]:"")+'</span></div><p class="desc">'+U.role+(U.type?' <span class="typechip" style="color:var(--t-'+U.type+')">'+TYPES[U.type].name+"</span>":"")+"</p>";
-    h+='<div class="ustats"><span title="Attaque">⚔ '+U.atk+'</span><span title="Défense">🛡 '+U.def+'</span><span title="Charge">🎒 '+U.carry+'</span><span title="Vitesse">» '+U.spd+"</span><span>"+fmtDur(unitTime(k))+"</span></div>";
-    if(ok)h+=costHTML(U.cost)+'<div class="row ubtn">'+[1,5,10].map(n=>'<button class="btn sm" data-act="cell" data-k="'+k+'" data-n="'+n+'"'+need(Object.fromEntries(Object.entries(U.cost).map(e=>[e[0],e[1]*n])))+">×"+n+"</button>").join("")+'<button class="btn sm alt" data-act="cell" data-k="'+k+'" data-n="max">Max ('+maxAfford(U.cost,200)+")</button></div>";
-    else h+='<div class="req">Requis : '+U.req.map(reqLink).join(" · ")+"</div>";
-    h+="</div></div>";});
-  return h+"</div></div>";
+  h+="</div>"+mresHTML();
+  ["atk","eco"].forEach(br=>{const B=RBR[br],R=rankOf(br);
+    h+='<div class="card tbranch" style="--bc:'+B.col+'"><h2>'+B.e+" "+B.name+' <span class="rkbadge" style="--rc:'+RANK_COL[R]+'">T'+R+" / T5</span></h2>";
+    for(let T=1;T<=5;T++){const open=R>=T,us=UNIT_ORDER.filter(k=>{const U=UNITS[k];if(U.br!==br||U.tier!==T)return false;return (A[k]||0)>0||!U.req.some(q=>q[0]==="g"&&nodeState(q[1])==="closed");});
+      h+='<div class="tier'+(open?"":" lock")+'" style="--rc:'+RANK_COL[T]+'"><div class="thead"><b>T'+T+"</b><span>"+RANK_LBL[T]+"</span>"+(open?"":'<span class="tl">🔒 '+(T===R+1?"Recherche militaire T"+T:"Après le T"+(T-1))+"</span>")+"</div>";
+      if(open)h+='<div class="units">'+us.map(k=>unitCard(k,A,qby)).join("")+"</div>";
+      else h+='<div class="tlocked">'+us.map(k=>'<div class="tl1">'+unitIcon(k,true)+"<b>"+UNITS[k].name+"</b><small>⚔ "+UNITS[k].atk+" · 🛡 "+UNITS[k].def+" · 🎒 "+UNITS[k].carry+(UNITS[k].spy?" · 👁 "+UNITS[k].spy:"")+"</small></div>").join("")+"</div>";
+      h+="</div>";}
+    h+="</div>";});
+  return h;
 }
+/* Espionnage : des troupes discrètes vont compter les défenses d’un rival */
+function spyPow(u){let s=0;for(const k in u)s+=(u[k]||0)*(UNITS[k].spy||0);return Math.round(s*(1+0.15*(rankOf("eco")-1)));}
+function botVig(b){return Math.round(4+bDays()*b.g*1.6+botStage(b)*3);}
+function spied(b){return !!(b&&b.spyT!=null&&S.t-b.spyT<1440);}
+function spyIdle(){return UNIT_ORDER.reduce((a,k)=>a+(UNITS[k].spy?(S.army[k]||0):0),0);}
+function spyArrive(M){const B=botAt(M.x,M.y);M.result="none";
+  if(!B){report("combat","Espionnage · case "+M.x+","+M.y,["Plus personne ici : le rival a migré."],null);return;}
+  botSync(B);const pw=spyPow(M.u),vg=botVig(B),p=pw/(pw+vg),ok=Math.random()<p;
+  const lines=["Force d’espionnage <b>"+fmt(pw)+"</b> contre vigilance <b>"+fmt(vg)+"</b> : "+Math.round(p*100)+" % de chances."];
+  if(ok){B.spyT=S.t;const loot=Math.max(0,B.res-botProt(B)),rk=rkRows("pow").findIndex(x=>x.b===B)+1,mine=compAtk(S.army,B.type);
+    lines.push('<span class="up">Réussi.</span> Pendant 24 h, ses chiffres exacts restent affichés sur la carte.');
+    lines.push('<table class="ftab"><tbody><tr><td>Défense de la base</td><td class="num"><b>'+fmt(botDef(B))+'</b></td></tr><tr><td>Force d’attaque</td><td class="num">'+fmt(botAtk(B))+'</td></tr><tr><td>Butin pillable</td><td class="num">'+fmt(loot)+'</td></tr><tr><td>Voie offensive</td><td class="num">'+TYPES[B.type].name+'</td></tr><tr><td>Stade</td><td class="num">'+STAGE_NAME[botStage(B)]+'</td></tr><tr><td>Classement mondial</td><td class="num">#'+rk+'</td></tr><tr><td>Vos troupes au repos</td><td class="num">force '+fmt(mine)+"</td></tr></tbody></table>");
+    log("👁 "+B.name+" espionné : défense "+fmt(botDef(B))+", butin "+fmt(loot)+".","good");}
+  else{const lost=Math.max(1,Math.ceil(M.n*0.5)),rm=applyLoss(M,lost);B.anger=Math.min(1,B.anger+0.3);
+    lines.push('<span class="neg">Repérées.</span> '+compText(rm)+" dévorée"+(lost>1?"s":"")+". "+esc(B.name)+" est maintenant sur ses gardes.","Envoyez plus d’espionnes, ou des troupes de rang supérieur : chaque rang de la branche récolte et espionnage ajoute aussi 15 % de force d’espionnage.");
+    log("👁 Espionnage raté chez "+B.name+".","bad");}
+  report("combat",(ok?"Espionnage réussi":"Espionnage raté")+" · "+B.name,lines,ok);}
 function heroHTML(){
   const H=S.hero,need=xpNeed(H.lvl),pr=heroPair();
   let h='<div class="herobox"><div class="heroart">'+heroSVG()+'<p class="heroform">'+H.form+'</p><p class="muted" style="text-align:center;font-size:12.5px">'+(H.busy?"En mission":"Disponible")+"</p></div>";
@@ -1989,7 +2093,7 @@ function detailHTML(){
       map:"<h2>Hors de la cellule</h2><p class=\"muted\">Les abysses autour de vous. Touchez une case pour y envoyer des collectrices, chasser un organisme sauvage ou y étendre un filament. Les cases voilées sont inconnues : y aller les explore. L’eau s’éclaircit vers le centre, où vous attend la terre ferme ; la flèche dorée au bord de la carte vous y guide.</p>",
       evo:"<h2>Évolution</h2><p class=\"muted\">L’arbre se lit de bas en haut. Énergie et Perception ont une fourche : un choix ferme l’autre voie. La Prédation offre cinq voies offensives, deux au maximum, qui se battent en cycle. Avant d’exprimer un gène, vous n’en lisez qu’un indice ; ses effets et ses revers se révèlent ensuite.</p>",
       act:"<h2>Rapports</h2><p class=\"muted\">Vos collectrices en route, les rapports de combat et de récolte, et le journal. La pastille rouge compte les rapports non lus.</p>",
-      hero:"<h2>Votre armée</h2><p class=\"muted\">Produisez vos troupes par paquets. Chaque évolution en débloque de nouvelles : éclaireuses, porteuses, soldates, puis une troupe d’élite par voie offensive, et des géants aux stades Colonie et Pluricellulaire. Le héros accompagne vos chasses et ne meurt jamais.</p>"};
+      hero:"<h2>Votre armée</h2><p class=\"muted\">Produisez vos troupes par paquets. Deux branches, cinq rangs : 🔍 récolte et espionnage, ⚔ attaque. Chaque rang, de T1 à T5, se débloque par une recherche militaire de plus en plus longue ; le T5 arrive dans la dernière semaine. Le héros accompagne vos chasses et ne meurt jamais.</p>"};
     return help[tab];
   }
   const p=openRef.split(":");
@@ -2076,7 +2180,7 @@ function tileHTML(x,y){
       h+='<div class="stat"><span>Robustesse · biomasse</span><b>'+w.def+" · "+fmt(vis?w.bio:w.mb)+'</b></div><div class="stat"><span>Votre meilleure voie</span><b>'+mt.lbl+"</b></div>";
       h+='<p class="desc">Battu par '+TYPES[LOSES_TO[w.type]].name+", bat "+TYPES[BEATS[w.type]].name+".</p>";}
     if(T.k){const amt=vis?T.a:T.m;h+='<p style="margin-top:6px">'+(amt<=0?"Gisement vide, il se régénère lentement.":(T.rich?"Source hydrothermale · ":"")+RES_NAME[T.k]+" : "+fmt(amt)+" / "+fmt(T.max)+(vis?"":" (souvenir)"))+"</p>";}
-    if(B)h+=botPanel(B,vis);
+    if(B)h+=botPanel(B,vis||spied(B));
     if(!T.w&&!T.k&&!B)h+="<p>Eau vide.</p>";
   }
   const kind=(T.w||B)&&T.s?"hunt":T.s?"collect":"explore",man=S.compMode==="man",cu=selComp(kind),cn=uSum(cu);
@@ -2092,11 +2196,11 @@ function tileHTML(x,y){
   if(man)h+=compEditor();else h+='<div class="stepper"><button data-act="n-" aria-label="Moins">−</button><b>'+n+'</b><button data-act="n+" aria-label="Plus">+</button><button data-act="nmax" style="width:auto;padding:0 10px">max</button></div>';
   let fc="";
   const withHero=(T.w||B)&&T.s&&S.heroWith&&!S.hero.busy;
-  if(B){const pw=compAtk(cu,B.type)+(withHero?heroPower(B.type):0);fc='force '+fmt(pw)+" / défense "+botEst(B,vis);}
+  if(B){const pw=compAtk(cu,B.type)+(withHero?heroPower(B.type):0);fc='force '+fmt(pw)+" / défense "+botEst(B,vis||spied(B));}
   if(T.w&&T.s){const pw=compAtk(cu,T.w.type)+(withHero?heroPower(T.w.type):0),lf=lossFrac(pw,T.w.def),ok=pw*ATK_ADV>=T.w.def;fc='force '+fmt(pw)+" / "+T.w.def+(ok?' <span class="up">gagnable</span>':' <span class="neg">trop faible</span>')+" · pertes ≈ "+Math.round(lf*100)+" %";}
   h+='<p class="desc" style="margin:2px 0 6px">'+(man?"":"Choix auto : ")+compText(cu)+(cn?" · charge "+fmt(compCarry(cu))+" · vitesse ×"+compSpd(cu):"")+(fc?" · "+fc:"")+"</p>";
   const evs=(S.events||[]).filter(e=>Math.hypot(x-e.x,y-e.y)<=e.r+0.5);if(evs.length)h=h.replace("</h2>","</h2>"+evs.map(e=>'<p class="evline" style="--ec:'+EVENTS[e.type].col+'">'+EVENTS[e.type].ic+" "+EVENTS[e.type].name+' · encore <span data-end="'+e.end+'"></span></p>').join(""));
-  h+='<div class="row">'+(B?(S.ally&&B.tag===S.ally?'<span class="up" style="font-size:12.5px">Allié '+B.tag+" : on ne pille pas les siens.</span>":'<button class="btn sm" data-act="raid" style="background:var(--bad);border-color:var(--bad)"'+(block||nightAt(S.t)?" disabled":"")+">Piller <small>⚡"+EN_COST.raid+"</small></button>"):'<button class="btn sm" data-act="collect"'+(block?" disabled":"")+">"+(T.s?"Collecter":"Explorer")+" <small>"+(enCostFor("collect",T)?"⚡1":"⚡ gratuit")+"</small></button>");
+  h+='<div class="row">'+(B?(S.ally&&B.tag===S.ally?'<span class="up" style="font-size:12.5px">Allié '+B.tag+" : on ne pille pas les siens.</span>":'<button class="btn sm" data-act="raid" style="background:var(--bad);border-color:var(--bad)"'+(block||nightAt(S.t)?" disabled":"")+">Piller <small>⚡"+EN_COST.raid+"</small></button>"+'<button class="btn sm alt" data-act="spy"'+(S.mig||d>range()||spyIdle()<1?" disabled":"")+' data-tip="'+esc("<b>Espionner</b>"+(spyIdle()?"Envoie vos troupes d’espionnage ("+spyIdle()+" au repos). Vigilance estimée : "+fmt(botVig(B))+".":"Il faut des éclaireuses ou mieux (recherche militaire 🔍 T2)."))+'">Espionner <small>⚡1</small></button>'):'<button class="btn sm" data-act="collect"'+(block?" disabled":"")+">"+(T.s?"Collecter":"Explorer")+" <small>"+(enCostFor("collect",T)?"⚡1":"⚡ gratuit")+"</small></button>");
   if(T.w&&T.s)h+='<button class="btn sm alt" data-act="hunt"'+(block?" disabled":"")+">Chasser <small>⚡"+EN_COST.hunt+"</small></button>";
   h+=fil;
   let mig="";if(T.s&&!T.k&&!T.w&&!B){const mb=migBlock(x,y),mc=migCost(d);if(mb.indexOf("Trop loin")!==0&&mb.indexOf("Rappelez")!==0&&mb.indexOf("Une migration")!==0)mig='<button class="btn sm alt" data-act="migrate"'+need(mc)+(mb?' data-block="1"':"")+' data-tip="'+esc("<b>Migrer ici</b>"+Object.keys(mc).map(r=>fmt(mc[r])+" "+RES_NAME[r]).join(", ")+" · "+fmtDur(migTime(d))+(S.fils.length?"<br>Vos filaments seront coupés.":""))+'">Migrer ici</button>';h+=mig;
