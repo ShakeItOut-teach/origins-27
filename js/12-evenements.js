@@ -4,10 +4,10 @@
 "use strict";
 /* ===== Événements de zone : des raisons de bouger ===== */
 const EVENTS={
-  erupt:{name:tr("Éruption hydrothermale","Hydrothermal eruption"),ic:"🌋",col:"#ff9e6b",dur:1440,r:2,desc:tr("Une faille s’ouvre : des gisements très riches apparaissent pour un jour. Envoyez des porteuses, ou migrez à côté.","A rift opens: very rich deposits appear for a day. Send carriers, or migrate next to it.")},
-  bloom:{name:tr("Efflorescence de plancton","Plankton bloom"),ic:"🌿",col:"#8fd36b",dur:1080,r:4,desc:tr("Le plancton explose : les gisements de la zone se remplissent sans cesse et la récolte y rapporte 50 % de plus.","Plankton explodes: deposits in the area keep refilling and harvesting there yields 50% more.")},
-  levi:{name:tr("Léviathan","Leviathan"),ic:"🦑",col:"#ff4d6d",dur:2160,r:8,desc:tr("Un prédateur géant rôde. Il attaque les bases à moins de 8 cases. Le vaincre rapporte un butin énorme et beaucoup d’expérience au héros.","A giant predator prowls. It attacks bases within 8 tiles. Defeating it brings huge loot and a lot of hero experience.")},
-  anox:{name:tr("Zone anoxique","Anoxic zone"),ic:"☠️",col:"#a99bff",dur:1440,r:6,desc:tr("L’oxygène disparaît : une base dans la zone produit 30 % de moins. Migrez hors du cercle ou attendez.","Oxygen disappears: a base in the area produces 30% less. Migrate out of the circle or wait.")}
+  erupt:{name:tr("Éruption hydrothermale","Hydrothermal eruption"),ic:"🌋",col:"#ff9e6b",dur:2880,r:2,desc:tr("Une faille s’ouvre : des gisements très riches apparaissent pour deux jours. Envoyez des porteuses, ou migrez à côté.","A rift opens: very rich deposits appear for two days. Send carriers, or migrate next to it.")},
+  bloom:{name:tr("Efflorescence de plancton","Plankton bloom"),ic:"🌿",col:"#8fd36b",dur:2880,r:4,desc:tr("Le plancton explose : les gisements de la zone se remplissent sans cesse et la récolte y rapporte 50 % de plus.","Plankton explodes: deposits in the area keep refilling and harvesting there yields 50% more.")},
+  levi:{name:tr("Léviathan","Leviathan"),ic:"🦑",col:"#ff4d6d",dur:2160,r:5,desc:tr("Un prédateur géant rôde. Il attaque les bases à moins de 5 cases. Le vaincre rapporte un butin énorme et beaucoup d’expérience au héros.","A giant predator prowls. It attacks bases within 5 tiles. Defeating it brings huge loot and a lot of hero experience.")},
+  anox:{name:tr("Zone anoxique","Anoxic zone"),ic:"☠️",col:"#a99bff",dur:960,r:3,desc:tr("L’oxygène disparaît : une base dans la zone produit 30 % de moins. La zone est petite : quelques cases de migration suffisent pour en sortir.","Oxygen disappears: a base in the area produces 30% less. The area is small: a few tiles of migration are enough to get out.")}
 };
 function inEvent(type,x,y){return (S.events||[]).some(e=>e.type===type&&Math.hypot(x-e.x,y-e.y)<=e.r+0.5);}
 function anoxHere(){const c=cpos();return inEvent("anox",c[0],c[1]);}
