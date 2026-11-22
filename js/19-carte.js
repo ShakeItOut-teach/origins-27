@@ -61,6 +61,28 @@ let mapU=1;
 function resize(){if(!cv)return;const va=$("viewarea"),w=va.clientWidth-12,h=va.clientHeight-30,s=Math.max(200,Math.min(w,h,900)),dpr=window.devicePixelRatio||1,N=camVT*TS;mapU=Math.max(1,Math.floor(s*dpr/N));const D=N*mapU;if(cv.width!==D){cv.width=D;cv.height=D;}cv.style.width=D/dpr+"px";cv.style.height=D/dpr+"px";ctx.imageSmoothingEnabled=false;}
 function sprite(rows,x0,y0,map,alpha){ctx.globalAlpha=alpha==null?1:alpha;rows.forEach((r,y)=>{for(let x=0;x<r.length;x++){const c=map[r[x]];if(c){ctx.fillStyle=c;ctx.fillRect(x0+x,y0+y,1,1);}}});ctx.globalAlpha=1;}
 function pxLine(x0,y0,x1,y1,c,w,k){const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))||1,m=Math.round(n*(k==null?1:k));ctx.fillStyle=c;for(let i=0;i<=m;i++)ctx.fillRect(Math.round(x0+(x1-x0)*i/n),Math.round(y0+(y1-y0)*i/n),w,w);}
+/* Mini-skins des troupes en trajet (5 × 5 pixels de carte) : vos troupes se reconnaissent d’un coup d’œil ;
+   les troupes ennemies, elles, n’apparaissent que comme une troupe basique rouge. o : contour, c : couleur, l : reflet */
+const TROOP_PX={
+  coll:[" ooo ","occco","oclco","occco"," ooo "],
+  ecl:["oo   ","occo ","oclco","occo ","oo   "],
+  port:["ooooo","ocllo","ocllo","occco","ooooo"],
+  diat:["  o  "," oco ","oclco"," oco ","  o  "],
+  siph:[" oco "," olo "," oco "," olo "," oco "],
+  cten:[" ooo ","olclo","olclo","olclo"," ooo "],
+  sold:["o o o"," ccc ","oclco"," ccc ","o o o"],
+  tox:[" oo  ","occo ","oclco"," occo","   oo"],
+  pha:[" o o ","occco"," clc ","occco"," o o "],
+  par:[" ooo "," olo "," ooo ","  c  "," c c "],
+  enz:["     ","ooooo","occlo","ooooo","     "],
+  har:["    o","   co","  c  "," c   ","l    "],
+  colo:[" lcl ","l   l","c   c","l   l"," lcl "],
+  pluri:["     ","ococo","clclc","ococo","     "],
+  anom:["o   o","oc co"," ccc "," clc ","o c o"]
+};
+const TROOP_ENEMY={rows:TROOP_PX.coll,map:{o:"#5a0f14",c:"#ff4d4d",l:"#ffb3b3"}};
+function troopMain(u){let best=null,bn=0;for(const k in u||{}){const n=u[k]||0;if(!n||!UNITS[k])continue;if(n>bn||(n===bn&&UNITS[k].tier>UNITS[best].tier)){best=k;bn=n;}}return best||"coll";}
+function troopDraw(k,X,Y){const U=UNITS[k]||UNITS.coll,rows=TROOP_PX[k]||TROOP_PX.coll;sprite(rows,X-2,Y-2,{o:shade(U.col,-0.55),c:U.col,l:shade(U.col,0.5)});}
 let snowPx=[];
 function draw(now,dtReal){
   if(tab!=="map"||!cv||!document.body.contains(cv))return;
@@ -92,7 +114,7 @@ function draw(now,dtReal){
     const bx=PX(b.x)+4,by=PY(b.y)+4,st=botStage(b),R=Math.ceil(SPR[STAGE_SPR[st]][0]/2)+2,col=nightAt(S.t)?"#7aa8ff":b.anger>0.3?"#ff4d4d":b.aggr>0.6?"#ff8a3d":"#e8c46a";
     ctx.globalAlpha=v?1:0.55;ctx.fillStyle=col;for(let a=0;a<360;a+=10){ctx.fillRect(Math.round(bx+Math.cos(a*Math.PI/180)*R),Math.round(by+Math.sin(a*Math.PI/180)*R),1,1);}ctx.globalAlpha=1;sprDraw(STAGE_SPR[st],bx,by,v?1:0.55);}
   if(S.inc)for(const A of S.inc){const b=S.bots.find(z=>z.id===A.bot);if(!b)continue;const f=Math.min(1,Math.max(0,1-(A.arrive-S.t)/Math.max(6,Math.hypot(b.x-c[0],b.y-c[1])*1.6))),sx=PX(A.from[0])+4,sy=PY(A.from[1])+4,tx=PX(c[0])+4,ty=PY(c[1])+4;
-    ctx.fillStyle="rgba(255,77,77,.45)";for(let i=0;i<=24;i+=2)ctx.fillRect(Math.round(sx+(tx-sx)*i/24),Math.round(sy+(ty-sy)*i/24),1,1);ctx.fillStyle="#ff4d4d";ctx.fillRect(Math.round(sx+(tx-sx)*f)-1,Math.round(sy+(ty-sy)*f)-1,3,3);}
+    ctx.fillStyle="rgba(255,77,77,.45)";for(let i=0;i<=24;i+=2)ctx.fillRect(Math.round(sx+(tx-sx)*i/24),Math.round(sy+(ty-sy)*i/24),1,1);sprite(TROOP_ENEMY.rows,Math.round(sx+(tx-sx)*f)-2,Math.round(sy+(ty-sy)*f)-2,TROOP_ENEMY.map);}
   { const vx=C0+0.5-cam.x,vy=C0+0.5-cam.y,dd=Math.hypot(vx,vy);if(dd>camVT/2-1){const ux=vx/dd,uy=vy/dd,h=N/2-10,k=Math.min(h/Math.max(Math.abs(ux),1e-3),h/Math.max(Math.abs(uy),1e-3)),ax=Math.round(N/2+ux*k),ay=Math.round(N/2+uy*k),pulse=reduce?1:0.65+0.35*Math.sin(t*3);
       const q=Math.max(1,Math.round(camVT/16));ctx.globalAlpha=pulse;ctx.fillStyle="#ffe9a8";for(let i=0;i<7;i++){const w=7-i;for(let j=-Math.floor(w/2);j<=Math.floor(w/2);j++)ctx.fillRect(Math.round(ax+(ux*(i-3)-uy*j)*q),Math.round(ay+(uy*(i-3)+ux*j)*q),q,q);}
       for(let i=4;i<14;i+=2)ctx.fillRect(Math.round(ax-ux*i*q),Math.round(ay-uy*i*q),q,q);ctx.globalAlpha=1;}}
@@ -125,8 +147,9 @@ function draw(now,dtReal){
   S.missions.forEach(M=>{const tx=PX(M.x)+3,ty=PY(M.y)+3;let f=!M.arrived?(S.t-M.depart)/Math.max(0.001,M.arrive-M.depart):(M.cancelled?(M.back-S.t)/Math.max(0.001,M.back-M.arrive)*((M.arrive-M.depart)/Math.max(0.001,dist(M.x,M.y)*tileTime())):1-(S.t-M.arrive)/Math.max(0.001,M.back-M.arrive));f=Math.max(0,Math.min(1,f));
     ctx.fillStyle=M.kind!=="collect"?"rgba(255,138,122,.35)":"rgba(94,230,208,.25)";for(let i=0;i<=20;i+=2){ctx.fillRect(Math.round(cx0+(tx-cx0)*i/20),Math.round(cy0+(ty-cy0)*i/20),1,1);}
     const ck=M.cargo&&Object.keys(M.cargo)[0],X=Math.round(cx0+(tx-cx0)*f),Y=Math.round(cy0+(ty-cy0)*f);
-    ctx.fillStyle=M.arrived&&ck&&HEX[ck]?HEX[ck]:M.kind==="hunt"?"#ff8a7a":"#5ee6d0";ctx.fillRect(X-1,Y-1,2,2);
-    if(M.hero){ctx.fillStyle="#ffe07a";ctx.fillRect(X+1,Y-2,2,2);}});
+    troopDraw(troopMain(M.u||{coll:M.n}),X,Y);
+    if(M.arrived&&ck&&HEX[ck]){ctx.fillStyle=HEX[ck];ctx.fillRect(X+2,Y+1,2,2);}
+    if(M.hero){ctx.fillStyle="#ffe07a";ctx.fillRect(X+2,Y-3,2,2);}});
   // cellule
   let ccx=cx0,ccy=cy0;
   if(S.mig){const k=Math.max(0,Math.min(1,(S.t-S.mig.start)/(S.mig.end-S.mig.start)));ccx=Math.round(PX(S.mig.fx)+3+(PX(S.mig.x)-PX(S.mig.fx))*k);ccy=Math.round(PY(S.mig.fy)+3+(PY(S.mig.y)-PY(S.mig.fy))*k);ctx.fillStyle="rgba(255,224,122,.6)";for(let i=0;i<=20;i+=2)ctx.fillRect(Math.round(ccx+(PX(S.mig.x)+3-ccx)*i/20),Math.round(ccy+(PY(S.mig.y)+3-ccy)*i/20),1,1);}
