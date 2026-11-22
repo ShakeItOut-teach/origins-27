@@ -38,6 +38,10 @@ Le jeu est écrit en HTML, CSS et JavaScript, sans dépendance à installer ni �
 
 La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil utilisé.
 
+## Mettre une nouvelle version en ligne
+
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261122c`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+
 ## Langues
 
 Le jeu existe en **français** et en **anglais**. Il s’ouvre dans la langue du navigateur (français si le navigateur est en français, anglais sinon) ; le bouton **FR / EN** en haut de l’écran, ou **🌐** en bas de l’écran d’accueil, change de langue et garde ce choix. L’adresse peut aussi forcer la langue : `?lang=en` ou `?lang=fr`.
