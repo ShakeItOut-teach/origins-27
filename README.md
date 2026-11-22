@@ -4,6 +4,8 @@
 
 ### ▶ [Jouer maintenant : shakeitout-teach.github.io/origins-27](https://shakeitout-teach.github.io/origins-27/)
 
+*English version available: the game opens in English when your browser isn’t set to French ([play in English](https://shakeitout-teach.github.io/origins-27/?lang=en)).*
+
 **FREE TO PLAY · NO PAY TO WIN** : le jeu est entièrement gratuit, et aucun achat ne donne d’avantage.
 
 Évoluez au détriment de vos rivaux, formez une colonie avec vos alliés, gérez vos troupes et vos ressources : soyez celui qui façonnera le monde de demain… ou pas. Origins 27 est un jeu de stratégie en temps réel, jouable dans le navigateur, sur un serveur de 30 jours peuplé de 500 organismes.
@@ -31,9 +33,16 @@ Le jeu est écrit en HTML, CSS et JavaScript, sans dépendance à installer ni �
 
 - **En ligne :** https://shakeitout-teach.github.io/origins-27/ (GitHub Pages, mis à jour automatiquement à chaque modification de la branche `main`).
 - **En local :** double-cliquez sur `index.html`.
+- **Sur itch.io :** le paquet et la page sont prêts dans [itch/](itch/README.md) (zip fabriqué par `tools/itch-zip.ps1`, couverture, captures en anglais, textes à copier-coller).
 - **Sur votre propre copie du dépôt :** *Settings → Pages → Branch : `main` / `(root)` → Save*. Le jeu est ensuite servi à `https://<votre-compte>.github.io/<nom-du-depot>/`.
 
 La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil utilisé.
+
+## Langues
+
+Le jeu existe en **français** et en **anglais**. Il s’ouvre dans la langue du navigateur (français si le navigateur est en français, anglais sinon) ; le bouton **FR / EN** en haut de l’écran, ou **🌐** en bas de l’écran d’accueil, change de langue et garde ce choix. L’adresse peut aussi forcer la langue : `?lang=en` ou `?lang=fr`.
+
+Dans le code, chaque texte s’écrit avec ses deux langues côte à côte : `tr("Construire","Build")`. Pour corriger une traduction, cherchez la phrase française dans `js/` et modifiez le texte anglais juste à côté. Les textes déjà enregistrés dans une partie (journal, rapports) restent dans la langue où ils ont été écrits.
 
 ## Avis des joueurs
 
@@ -74,7 +83,7 @@ Le texte tapé est gardé si la fenêtre est fermée. Un seul rappel discret app
 ```
 index.html          la page : en-tête, zones de l’écran, et la liste des scripts à charger
 css/style.css       toute l’apparence (couleurs, mise en page, animations)
-js/01-monde.js … js/22-avis.js   le jeu, découpé par thème
+js/00-langue.js … js/23-premiers-pas.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas)
 apercu.jpg          l’image affichée quand on partage le lien (1200 × 630)
 ```
 
@@ -85,6 +94,7 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | Je veux changer… | Fichier |
 |---|---|
 | Les couleurs, la mise en page, une animation | `css/style.css` |
+| Le choix de la langue, les petits outils de traduction | `js/00-langue.js` |
 | Le monde, les zones, la taille de la carte | `js/01-monde.js` |
 | Les ressources, souches, canaux, organites, gènes | `js/03-regles.js` |
 | Les mutations et lignées | `js/04-mutations.js` |
@@ -103,6 +113,7 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | La carte | `js/19-carte.js` |
 | La sauvegarde, le démarrage | `js/21-demarrage.js` |
 | La fenêtre « Mon avis », le compteur de visites | `js/22-avis.js` |
+| Le guide des premiers pas (étapes, textes, flèche), le pillage d’entraînement | `js/23-premiers-pas.js` |
 
 Pour ajouter un fichier : créez-le dans `js/`, en commençant par `"use strict";`, puis ajoutez sa ligne `<script src="js/…"></script>` dans `index.html`, après les fichiers dont il utilise les fonctions au chargement.
 

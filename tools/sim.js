@@ -4,7 +4,7 @@ window.runSim = function (opts) {
   const G = window.__o27, X = G.dbg, souche = opts.souche || "varenne", days = opts.days || 5, step = opts.step || 5;
   const order = opts.order || ["P1", "E1", "M1", "P2", "E2b", "M2a", "PT", "PH", "E3b", "M3a", "ENDO", "COLO", "PLURI", "APEX"];
   opts.mutTag = opts.mutTag || { atp: "E", chap: "E", repl: "E", plas: "E" };
-  G.newGame(opts.seed || 12345, souche); window.__nextChest = 0; window.__nextDay = 0;
+  G.newGame(opts.seed || 12345, souche); G.S.tut = null; window.__nextChest = 0; window.__nextDay = 0;
   let S = G.S; S.tourDone = true;
   const ms = {}, mark = (k) => { if (ms[k] == null) ms[k] = Math.round(S.t); };
   const D = (o) => ({ dataset: o }), W = 241;
@@ -73,5 +73,5 @@ window.runSim = function (opts) {
   const fmtT = (m) => m == null ? "—" : "J" + (Math.floor(m / 1440) + 1) + " " + String(Math.floor((m % 1440) / 60)).padStart(2, "0") + "h";
   const out = {}; for (const k in ms) out[k] = fmtT(ms[k]);
   const r = X.rates(), u = X.upkeep();
-  return { souche, t: fmtT(S.t), jalons: out, quete: S.q, noyau: S.noyau, champs: S.fields.map((f) => f.l).join(""), orgs: S.slots.filter(Boolean).map((s) => s.k + s.l).join(" "), genes: S.nodes.map((n) => n + (S.glv[n] || 1)).join(","), coll: S.idle + S.missions.reduce((a, m) => a + m.n, 0), heros: S.hero.lvl + " " + S.hero.form, pillé: S.reports.filter((r) => r.title.startsWith("Pillage subi")).length, defOk: S.reports.filter((r) => r.title.startsWith("Défense réussie")).length, chasses: S.reports.filter((r) => /^(Victoire|Défaite) ·/.test(r.title)).length, sends, hSansConstruction: Math.round(idleBuild * step / 60), hSansGene: Math.round(idleRes * step / 60), net: Object.fromEntries(["atp", "prot", "lip", "nuc"].map((k) => [k, Math.round(r[k] - u[k])])), cap: r.cap };
+  return { souche, t: fmtT(S.t), jalons: out, quete: S.q, noyau: S.noyau, champs: S.fields.map((f) => f.l).join(""), orgs: S.slots.filter(Boolean).map((s) => s.k + s.l).join(" "), genes: S.nodes.map((n) => n + (S.glv[n] || 1)).join(","), coll: S.idle + S.missions.reduce((a, m) => a + m.n, 0), heros: S.hero.lvl + " " + S.hero.form, pillé: S.reports.filter((r) => (r.title.startsWith("Pillage subi")||r.title.startsWith("Raided"))).length, defOk: S.reports.filter((r) => (r.title.startsWith("Défense réussie")||r.title.startsWith("Successful defense"))).length, chasses: S.reports.filter((r) => /^(Victoire|Défaite) ·/.test(r.title)).length, sends, hSansConstruction: Math.round(idleBuild * step / 60), hSansGene: Math.round(idleRes * step / 60), net: Object.fromEntries(["atp", "prot", "lip", "nuc"].map((k) => [k, Math.round(r[k] - u[k])])), cap: r.cap };
 };

@@ -35,19 +35,19 @@ function migrate(d){
 }
 function save(){if(!S)return;const T=S.tiles;try{S.realAt=Date.now();S.tiles=packTiles(T);localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(err){}finally{S.tiles=T;}}
 function load(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;const d=JSON.parse(raw);if(!d||d.v!==6||!d.fields)return false;if(d.tiles&&!Array.isArray(d.tiles))d.tiles=unpackTiles(d.tiles);migrate(d);S=d;  /* anciennes sauvegardes : ne garder que la dernière fenêtre de chaque sorte */
-  {const seen=new Set(),keep=[];for(let i=S.popups.length-1;i>=0;i--){const p=S.popups[i],g=p.grp||(p.kick==="Événement"?"ev":p.kick+p.title);if(seen.has(g))continue;seen.add(g);keep.unshift(p);}S.popups=keep.slice(-3);}
+  {const seen=new Set(),keep=[];for(let i=S.popups.length-1;i>=0;i--){const p=S.popups[i],g=p.grp||(p.kick==="Événement"||p.kick==="Event"?"ev":p.kick+p.title);if(seen.has(g))continue;seen.add(g);keep.unshift(p);}S.popups=keep.slice(-3);}
   const away=Math.min(1440,(Date.now()-(d.realAt||Date.now()))/1000*S.speed);
   if(away>0.5){const r0=Object.assign({},S.res),n0=S.reports.length,id0=S.nextId;cuMap={t0:S.t,t1:S.t+away,r0:d.realAt||Date.now(),r1:Date.now()};catchUp=[];advance(away);const got=catchUp;catchUp=null;cuMap=null;
-    log("Pendant votre absence : "+fmtDur(away)+" de jeu se sont écoulées.");
+    log(tr("Pendant votre absence : ","While you were away: ")+fmtDur(away)+tr(" de jeu se sont écoulées."," of game time went by."));
     const newRep=S.reports.filter(r=>r.id>=id0),cb=newRep.filter(r=>r.cat==="combat");
     if(away>=30&&(got.length||cb.length)){const evs=got.filter(p=>p.grp==="ev"),other=got.filter(p=>p.grp!=="ev");
-      let b='<div class="stat"><span>Temps de jeu écoulé</span><b>'+fmtDur(away)+"</b></div>";
-      b+='<div class="stat"><span>Ressources</span><b>'+RES.map(k=>{const dv=Math.round(S.res[k]-r0[k]);return '<span class="'+(dv>=0?"up":"neg")+'">'+(dv>=0?"+":"")+fmt(dv)+"</span> "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k];}).join(" · ")+"</b></div>";
-      if(cb.length)b+='<div class="stat"><span>Combats</span><b>'+cb.filter(r=>r.win===true).length+" ✔ · "+cb.filter(r=>r.win===false).length+" ✘</b></div>";
-      if(other.length)b+="<h3>Nouveautés</h3><ul class=\"advice\">"+other.map(p=>"<li><b>"+p.kick+"</b> · "+p.title+"</li>").join("")+"</ul>";
-      if(evs.length){const last=evs[evs.length-1];b+="<h3>Dernier événement</h3><p><b>"+last.title+"</b></p>"+last.body+(evs.length>1?'<p class="desc">'+(evs.length-1)+" autre"+(evs.length>2?"s":"")+" événement"+(evs.length>2?"s":"")+" pendant votre absence : voir le journal.</p>":"");}
+      let b='<div class="stat"><span>'+tr("Temps de jeu écoulé","Game time elapsed")+"</span><b>"+fmtDur(away)+"</b></div>";
+      b+='<div class="stat"><span>'+tr("Ressources","Resources")+"</span><b>"+RES.map(k=>{const dv=Math.round(S.res[k]-r0[k]);return '<span class="'+(dv>=0?"up":"neg")+'">'+(dv>=0?"+":"")+fmt(dv)+"</span> "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k];}).join(" · ")+"</b></div>";
+      if(cb.length)b+='<div class="stat"><span>'+tr("Combats","Fights")+"</span><b>"+cb.filter(r=>r.win===true).length+" ✔ · "+cb.filter(r=>r.win===false).length+" ✘</b></div>";
+      if(other.length)b+="<h3>"+tr("Nouveautés","What’s new")+"</h3><ul class=\"advice\">"+other.map(p=>"<li><b>"+p.kick+"</b> · "+p.title+"</li>").join("")+"</ul>";
+      if(evs.length){const last=evs[evs.length-1];b+="<h3>"+tr("Dernier événement","Latest event")+"</h3><p><b>"+last.title+"</b></p>"+last.body+(evs.length>1?'<p class="desc">'+(evs.length-1)+(EN?" other event"+(evs.length>2?"s":"")+" while you were away: see the log.":" autre"+(evs.length>2?"s":"")+" événement"+(evs.length>2?"s":"")+" pendant votre absence : voir le journal.")+"</p>":"");}
       if(evs.length)S.popups=S.popups.filter(p=>p.grp!=="ev");
-      S.popups.unshift({kick:"Pendant votre absence",title:"Bon retour !",body:b});}
+      S.popups.unshift({kick:tr("Pendant votre absence","While you were away"),title:tr("Bon retour !","Welcome back!"),body:b});}
     else if(got.length)S.popups.push(got[got.length-1]);}
   return true;}catch(err){catchUp=null;return false;}}
 

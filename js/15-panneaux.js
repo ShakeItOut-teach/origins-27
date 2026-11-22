@@ -3,40 +3,40 @@
    Chargé dans l’ordre par index.html ; tous les fichiers partagent les mêmes variables globales. */
 "use strict";
 /* Mouvements */
-function missionLabel(M){return (M.kind==="spy"?"Espionnage":M.kind==="raid"?"Pillage":M.kind==="hunt"?"Chasse":S.tiles[M.y*W+M.x].k?"Collecte":"Exploration")+" · case "+M.x+","+M.y;}
+function missionLabel(M){return (M.kind==="spy"?tr("Espionnage","Spying"):M.kind==="raid"?tr("Pillage","Raid"):M.kind==="hunt"?tr("Chasse","Hunt"):S.tiles[M.y*W+M.x].k?tr("Collecte","Harvest"):"Exploration")+tr(" · case "," · tile ")+M.x+","+M.y;}
 let freshIds=new Set();
 function reportCards(cat){
   const list=S.reports.filter(r=>r.cat===cat);
-  if(!list.length)return '<p class="muted">'+(cat==="combat"?"Aucun combat pour l’instant. Chassez un organisme sauvage depuis les abysses.":"Aucune récolte pour l’instant.")+"</p>";
+  if(!list.length)return '<p class="muted">'+(cat==="combat"?tr("Aucun combat pour l’instant. Chassez un organisme sauvage depuis les abysses.","No fights yet. Hunt a wild organism from the abyss."):tr("Aucune récolte pour l’instant.","No harvests yet."))+"</p>";
   return list.slice(0,60).map(r=>'<div class="rep'+(freshIds.has(r.id)?" fresh":"")+(r.win===true?" win":r.win===false?" lose":"")+'"><div class="rh"><b>'+r.title+"</b><time>"+fmtClock(r.t)+"</time></div>"+r.lines.map(l=>/^<(table|div|p)/.test(l)?l:"<p>"+l+"</p>").join("")+"</div>").join("");
 }
 function activityHTML(){
-  const subs=[["move","En route",S.missions.length+(S.inc?S.inc.length:0)],["combat","Combats",unread("combat")],["farm","Récoltes",unread("farm")],["rank","Classement",0],["log","Journal",0]];
+  const subs=[["move",tr("En route","On the way"),S.missions.length+(S.inc?S.inc.length:0)],["combat",tr("Combats","Fights"),unread("combat")],["farm",tr("Récoltes","Harvests"),unread("farm")],["rank",tr("Classement","Ranking"),0],["log",tr("Journal","Log"),0]];
   let h='<div class="activity"><div class="subtabs">'+subs.map(t=>'<button data-act="sub" data-s="'+t[0]+'" aria-pressed="'+(actSub===t[0])+'">'+t[1]+(t[2]?'<i class="'+(t[0]==="move"?"live":"red")+'">'+t[2]+"</i>":"")+"</button>").join("")+"</div>";
   if(actSub==="combat"){const st=S.stats||{},row=(lbl,o,cls)=>'<div class="stat"><span>'+lbl+"</span><b>"+(o&&RES.some(k=>o[k])?RES.filter(k=>o[k]).map(k=>'<span class="'+cls+'">'+fmt(o[k])+"</span> "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k]).join(" · "):"—")+"</b></div>",cb=S.reports.filter(r=>r.cat==="combat");
-    return h+'<div class="card"><h2>Bilan</h2>'+row("Pillé chez les rivaux",st.lootIn,"up")+row("Rapporté de vos chasses",st.huntIn,"up")+row("Volé par les rivaux",st.lootOut,"neg")+'<div class="stat"><span>Rapports récents</span><b>'+cb.filter(r=>r.win===true).length+" victoires · "+cb.filter(r=>r.win===false).length+" défaites</b></div></div>"+'<div class="card"><h2>Rapports de combat</h2>'+reportCards("combat")+"</div></div>";}
-  if(actSub==="farm")return h+'<div class="card"><h2>Récoltes et explorations</h2>'+reportCards("farm")+"</div></div>";
+    return h+'<div class="card"><h2>'+tr("Bilan","Summary")+"</h2>"+row(tr("Pillé chez les rivaux","Raided from rivals"),st.lootIn,"up")+row(tr("Rapporté de vos chasses","Brought back from hunts"),st.huntIn,"up")+row(tr("Volé par les rivaux","Stolen by rivals"),st.lootOut,"neg")+'<div class="stat"><span>'+tr("Rapports récents","Recent reports")+"</span><b>"+cb.filter(r=>r.win===true).length+tr(" victoires · "," victories · ")+cb.filter(r=>r.win===false).length+tr(" défaites"," defeats")+"</b></div></div>"+'<div class="card"><h2>'+tr("Rapports de combat","Combat reports")+"</h2>"+reportCards("combat")+"</div></div>";}
+  if(actSub==="farm")return h+'<div class="card"><h2>'+tr("Récoltes et explorations","Harvests and explorations")+"</h2>"+reportCards("farm")+"</div></div>";
   if(actSub==="rank")return h+worldRankHTML()+nemesisHTML()+alliancesHTML()+"</div>";
-  if(actSub==="log")return h+'<div class="card"><h2>Journal</h2><ul class="log">'+S.log.slice(0,80).map(e=>'<li class="'+e.cls+'"><time>'+fmtClock(e.t).replace("Jour ","J")+"</time><span>"+e.msg+"</span></li>").join("")+"</ul></div></div>";
-  if(S.inc&&S.inc.length){h+='<div class="card incard"><h2>⚠️ Attaques entrantes</h2>';S.inc.slice().sort((a,b)=>a.arrive-b.arrive).forEach(A=>{const b=S.bots.find(z=>z.id===A.bot);h+='<div class="mv"><span class="t"><b>'+esc(b?b.name:"?")+"</b> · force estimée "+incRange(A)+'</span><span></span><span class="s">Arrivée '+fmtClock(A.arrive)+' (dans <span data-end="'+A.arrive+'"></span>)</span></div>'+incChoiceHTML(A);});h+='<p class="desc"><b>Défendre</b> : vos troupes au repos se battent ; quelques-unes tombent si la défense tient, la moitié si elle cède. <b>Esquiver</b> : elles quittent la cellule sans perte, mais ne défendent pas. Dans les deux cas, ce qui dépasse la part protégée par la vacuole peut être pillé si la défense cède : dépensez-le avant l’arrivée !</p></div>';}
-  h+='<div class="card"><div class="chead"><h2>Mouvements de vos cellules</h2>'+(S.missions.some(M=>!M.arrived)?'<button class="btn sm alt" data-act="recallall">Rappeler tout</button>':"")+"</div>";
-  if(!S.missions.length)h+='<p class="muted">Aucune collectrice en route. Ouvrez les abysses et touchez une case pour en envoyer.</p>';
+  if(actSub==="log")return h+'<div class="card"><h2>'+tr("Journal","Log")+'</h2><ul class="log">'+S.log.slice(0,80).map(e=>'<li class="'+e.cls+'"><time>'+fmtClockShort(e.t)+"</time><span>"+e.msg+"</span></li>").join("")+"</ul></div></div>";
+  if(S.inc&&S.inc.length){h+='<div class="card incard"><h2>'+tr("⚠️ Attaques entrantes","⚠️ Incoming attacks")+"</h2>";S.inc.slice().sort((a,b)=>a.arrive-b.arrive).forEach(A=>{const b=S.bots.find(z=>z.id===A.bot);h+='<div class="mv"><span class="t"><b>'+esc(b?b.name:"?")+"</b>"+tr(" · force estimée "," · estimated strength ")+incRange(A)+'</span><span></span><span class="s">'+tr("Arrivée ","Arrival ")+fmtClock(A.arrive)+tr(" (dans "," (in ")+'<span data-end="'+A.arrive+'"></span>)</span></div>'+incChoiceHTML(A);});h+='<p class="desc">'+tr("<b>Défendre</b> : vos troupes au repos se battent ; quelques-unes tombent si la défense tient, la moitié si elle cède. <b>Esquiver</b> : elles quittent la cellule sans perte, mais ne défendent pas. Dans les deux cas, ce qui dépasse la part protégée par la vacuole peut être pillé si la défense cède : dépensez-le avant l’arrivée !","<b>Defend</b>: your resting troops fight; a few fall if the defense holds, half if it gives way. <b>Dodge</b>: they leave the cell with no losses, but do not defend. Either way, anything above the share protected by the vacuole can be raided if the defense gives way: spend it before arrival!")+"</p></div>";}
+  h+='<div class="card"><div class="chead"><h2>'+tr("Mouvements de vos cellules","Your cells’ movements")+"</h2>"+(S.missions.some(M=>!M.arrived)?'<button class="btn sm alt" data-act="recallall">'+tr("Rappeler tout","Recall all")+"</button>":"")+"</div>";
+  if(!S.missions.length)h+='<p class="muted">'+tr("Aucune collectrice en route. Ouvrez les abysses et touchez une case pour en envoyer.","No troops on the way. Open the abyss and tap a tile to send some.")+"</p>";
   S.missions.slice().sort((a,b)=>(a.arrived?a.back:a.arrive)-(b.arrived?b.back:b.arrive)).forEach(M=>{
-    h+='<div class="mv"><span class="t">'+compText(M.u||{coll:M.n})+(M.hero?" + héros":"")+" · "+missionLabel(M)+"</span>";
-    h+=!M.arrived?'<button class="btn sm danger" data-act="cancel" data-id="'+M.id+'">Annuler</button>':"<span></span>";
-    if(!M.arrived)h+='<span class="s">Arrivée '+fmtClock(M.arrive)+' (dans <span data-end="'+M.arrive+'"></span>) · retour '+fmtClock(M.back)+"</span>";
-    else h+='<span class="s">'+(M.cancelled?"Ordre annulé · ":"")+"Retour "+fmtClock(M.back)+' (dans <span data-end="'+M.back+'"></span>)'+(M.result==="win"?" · chasse réussie":M.result==="lose"?" · chasse ratée":"")+"</span>";
+    h+='<div class="mv"><span class="t">'+compText(M.u||{coll:M.n})+(M.hero?tr(" + héros"," + hero"):"")+" · "+missionLabel(M)+"</span>";
+    h+=!M.arrived?'<button class="btn sm danger" data-act="cancel" data-id="'+M.id+'">'+tr("Annuler","Cancel")+"</button>":"<span></span>";
+    if(!M.arrived)h+='<span class="s">'+tr("Arrivée ","Arrival ")+fmtClock(M.arrive)+tr(" (dans "," (in ")+'<span data-end="'+M.arrive+'"></span>)'+tr(" · retour "," · return ")+fmtClock(M.back)+"</span>";
+    else h+='<span class="s">'+(M.cancelled?tr("Ordre annulé · ","Order cancelled · "):"")+tr("Retour ","Return ")+fmtClock(M.back)+tr(" (dans "," (in ")+'<span data-end="'+M.back+'"></span>)'+(M.result==="win"?tr(" · chasse réussie"," · successful hunt"):M.result==="lose"?tr(" · chasse ratée"," · failed hunt"):"")+"</span>";
     h+="</div>";
   });
   h+="</div>";
   const u=upkeep();
-  h+='<div class="card"><h2>Troupes</h2><div class="stat"><span>Disponibles</span><b>'+S.idle+'</b></div><div class="stat"><span>En mission</span><b>'+S.missions.reduce((a,M)=>a+M.n,0)+'</b></div><div class="stat"><span>Entretien total</span><b>'+RES.map(k=>fmt(u[k])+" "+RES_NAME[k].slice(0,4)+".").join(" · ")+" / h</b></div>";
-  h+='<p class="desc" style="margin-top:6px">Une collectrice consomme '+UPKEEP.atp+" ATP, "+UPKEEP.prot+" protéines, "+UPKEEP.lip+" lipides et "+UPKEEP.nuc+" nucléotides par heure ; les troupes plus grosses, davantage. Si une ressource tombe à zéro, elles meurent une à une. <button class=\"lnk ok\" data-act=\"tab\" data-t=\"hero\">Voir l’armée</button></p>";
-  h+='<div class="row" style="margin-top:8px"><button class="btn sm alt" data-act="dissolve" data-n="1"'+(S.idle<1?" disabled":"")+'>Dissoudre 1</button><button class="btn sm alt" data-act="dissolve" data-n="5"'+(S.idle<5?" disabled":"")+'>Dissoudre 5</button><span class="muted" style="font-size:12px">rend la moitié du coût</span></div>';
-  if(blvl("ribo")>=1)h+='<h3>Produire</h3>'+costHTML(CELL_COST)+'<div class="row"><button class="btn sm" data-act="cell" data-n="1"'+need(CELL_COST)+'>Produire 1</button><button class="btn sm" data-act="cell" data-n="5"'+need({prot:150,atp:100})+'>Produire 5</button><span class="muted" style="font-size:12px">'+fmtDur(cellTime())+" chacune</span></div>";
-  else h+='<p class="desc" style="margin-top:8px">Pour en produire : '+riboHint()+"</p>";
+  h+='<div class="card"><h2>'+tr("Troupes","Troops")+'</h2><div class="stat"><span>'+tr("Disponibles","Available")+"</span><b>"+S.idle+'</b></div><div class="stat"><span>'+tr("En mission","On missions")+"</span><b>"+S.missions.reduce((a,M)=>a+M.n,0)+'</b></div><div class="stat"><span>'+tr("Entretien total","Total upkeep")+"</span><b>"+RES.map(k=>fmt(u[k])+" "+RES_NAME[k].slice(0,4)+".").join(" · ")+" / h</b></div>";
+  h+='<p class="desc" style="margin-top:6px">'+tr("Une collectrice consomme ","A gatherer uses ")+UPKEEP.atp+" ATP, "+UPKEEP.prot+tr(" protéines, "," proteins, ")+UPKEEP.lip+tr(" lipides et "," lipids and ")+UPKEEP.nuc+tr(" nucléotides par heure ; les troupes plus grosses, davantage. Si une ressource tombe à zéro, elles meurent une à une. "," nucleotides per hour; bigger troops use more. If a resource drops to zero, they die one by one. ")+'<button class="lnk ok" data-act="tab" data-t="hero">'+tr("Voir l’armée","See the army")+"</button></p>";
+  h+='<div class="row" style="margin-top:8px"><button class="btn sm alt" data-act="dissolve" data-n="1"'+(S.idle<1?" disabled":"")+">"+tr("Dissoudre 1","Dissolve 1")+'</button><button class="btn sm alt" data-act="dissolve" data-n="5"'+(S.idle<5?" disabled":"")+">"+tr("Dissoudre 5","Dissolve 5")+'</button><span class="muted" style="font-size:12px">'+tr("rend la moitié du coût","refunds half the cost")+"</span></div>";
+  if(blvl("ribo")>=1)h+="<h3>"+tr("Produire","Produce")+"</h3>"+costHTML(CELL_COST)+'<div class="row"><button class="btn sm" data-act="cell" data-n="1"'+need(CELL_COST)+">"+tr("Produire 1","Produce 1")+'</button><button class="btn sm" data-act="cell" data-n="5"'+need({prot:150,atp:100})+">"+tr("Produire 5","Produce 5")+'</button><span class="muted" style="font-size:12px">'+fmtDur(cellTime())+tr(" chacune"," each")+"</span></div>";
+  else h+='<p class="desc" style="margin-top:8px">'+tr("Pour en produire : ","To produce some: ")+riboHint()+"</p>";
   h+="</div>";
-  if(S.fils.length){const m=mods();h+='<div class="card"><h2>Filaments</h2>'+S.fils.map(f=>{const T=S.tiles[f.y*W+f.x];return '<div class="stat"><span>Case '+f.x+","+f.y+" · "+RES_NAME[T.k]+(T.rich?" (source)":"")+"</span><b>"+fmt(filRate(T,m))+" / h · stock "+fmt(T.a)+"</b></div>";}).join("")+'<p class="desc">'+S.fils.length+" sur "+filMax()+" possibles.</p></div>";}
+  if(S.fils.length){const m=mods();h+='<div class="card"><h2>Filaments</h2>'+S.fils.map(f=>{const T=S.tiles[f.y*W+f.x];return '<div class="stat"><span>'+tr("Case ","Tile ")+f.x+","+f.y+" · "+RES_NAME[T.k]+(T.rich?tr(" (source)"," (vent)"):"")+"</span><b>"+fmt(filRate(T,m))+" / h · stock "+fmt(T.a)+"</b></div>";}).join("")+'<p class="desc">'+S.fils.length+tr(" sur "," of ")+filMax()+tr(" possibles."," possible.")+"</p></div>";}
   return h+"</div>";
 }
 
@@ -70,7 +70,7 @@ function heroGrid(formOverride){
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){if(G[y][x])continue;if([[1,0],[-1,0],[0,1],[0,-1]].some(q=>{const yy=y+q[1],xx=x+q[0];return yy>=0&&yy<N&&xx>=0&&xx<N&&G[yy][xx];}))O[y][x]="#06111a";}
   return O;
 }
-function heroSVG(cls,form){const G=heroGrid(form);let s='<svg class="herosprite '+(cls||"")+'" viewBox="0 0 24 24" shape-rendering="crispEdges" role="img" aria-label="Votre héros : '+esc(S.hero.form)+'">';G.forEach((r,y)=>r.forEach((c,x)=>{if(c)s+='<rect x="'+x+'" y="'+y+'" width="1.02" height="1.02" fill="'+c+'"/>';}));return s+"</svg>";}
+function heroSVG(cls,form){const G=heroGrid(form);let s='<svg class="herosprite '+(cls||"")+'" viewBox="0 0 24 24" shape-rendering="crispEdges" role="img" aria-label="'+tr("Votre héros : ","Your hero: ")+esc(formName(S.hero.form))+'">';G.forEach((r,y)=>r.forEach((c,x)=>{if(c)s+='<rect x="'+x+'" y="'+y+'" width="1.02" height="1.02" fill="'+c+'"/>';}));return s+"</svg>";}
 /* Icône de troupe : plus le rang est haut, plus la forme est aboutie (membrane, organites, armure, colonie, puis prédateur ou convoi légendaire) */
 function unitIcon(k,big){const U=UNITS[k],c=U.col,T=U.tier||1,eco=U.br==="eco",id="ug"+k;
   let s='<svg class="uic t'+T+(big?" big":"")+'" viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="'+id+'" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity="'+(T>=3?.55:.15)+'"/><stop offset=".45" stop-color="'+c+'" stop-opacity="'+(.25+T*.1)+'"/><stop offset="1" stop-color="'+c+'" stop-opacity=".15"/></radialGradient></defs>';
@@ -103,32 +103,32 @@ function unitIcon(k,big){const U=UNITS[k],c=U.col,T=U.tier||1,eco=U.br==="eco",i
   s+='<g class="tb"><rect x="0" y="30" width="13" height="10" rx="3" fill="'+RANK_COL[T]+'"/><text x="6.5" y="37.6" text-anchor="middle" font-size="7.5" font-weight="700" fill="#06131d">T'+T+"</text></g>";
   return s+"</svg>";}
 /* Recherche militaire, dans l’onglet Armée */
-function mresHTML(){let h='<div class="card mres"><h2>Recherche militaire</h2><p class="desc">Chaque rang débloque des troupes plus puissantes. Les coûts et les durées montent très vite : le T5 est la récompense de la dernière semaine. Une recherche militaire à la fois, en parallèle des gènes.</p>';
+function mresHTML(){let h='<div class="card mres"><h2>'+tr("Recherche militaire","Military research")+'</h2><p class="desc">'+tr("Chaque rang débloque des troupes plus puissantes. Les coûts et les durées montent très vite : le T5 est la récompense de la dernière semaine. Une recherche militaire à la fois, en parallèle des gènes.","Each rank unlocks stronger troops. Costs and durations rise very fast: T5 is the reward of the last week. One military research at a time, alongside genes.")+"</p>";
   if(S.mres){const R=S.mres;h+='<div class="mrun" style="--rc:'+RANK_COL[R.L]+'"><span>'+RBR[R.br].e+" <b>T"+R.L+"</b> "+RBR[R.br].name+'</span><span class="pb"><i data-ps="'+R.start+'" data-pe="'+R.end+'"></i></span><span data-end="'+R.end+'"></span>'+accelHTML("m")+"</div>";}
   ["atk","eco"].forEach(br=>{const L=rankOf(br)+1,B=RBR[br];
-    if(L>5){h+='<div class="mrow2"><span>'+B.e+" "+B.name+' : <b style="color:'+RANK_COL[5]+'">T5 atteint</b></span></div>';return;}
+    if(L>5){h+='<div class="mrow2"><span>'+B.e+" "+B.name+'</span> <b style="color:'+RANK_COL[5]+'">'+tr("T5 atteint","T5 reached")+"</b></div>";return;}
     if(S.mres&&S.mres.br===br)return;
     const R=RANK_RES[L],bl=mresBlock(br),ok=R.req.every(reqMet);
-    h+='<div class="mrow2" style="--rc:'+RANK_COL[L]+'"><div><b>'+B.e+" "+B.name+" → T"+L+'</b><span class="desc"> · '+fmtDur(mresTime(L))+"</span>"+(ok?costHTML(R.cost):'<div class="req">Requis : '+R.req.map(reqLink).join(" · ")+"</div>")+(ok&&bl&&bl!=="Une recherche militaire est déjà en cours."?'<p class="reason">'+bl+"</p>":"")+"</div>"+(ok?'<button class="btn sm" data-act="mres" data-br="'+br+'"'+need(R.cost)+(bl?' data-block="1"':"")+(S.mres?" disabled":"")+">Rechercher</button>":"")+"</div>";});
+    h+='<div class="mrow2" style="--rc:'+RANK_COL[L]+'"><div><b>'+B.e+" "+B.name+" → T"+L+'</b><span class="desc"> · '+fmtDur(mresTime(L))+"</span>"+(ok?costHTML(R.cost):'<div class="req">'+tr("Requis : ","Requires: ")+R.req.map(reqLink).join(" · ")+"</div>")+(ok&&bl&&bl!==tr("Une recherche militaire est déjà en cours.","Military research is already in progress.")?'<p class="reason">'+bl+"</p>":"")+"</div>"+(ok?'<button class="btn sm" data-act="mres" data-br="'+br+'"'+need(R.cost)+(bl?' data-block="1"':"")+(S.mres?" disabled":"")+">"+tr("Rechercher","Research")+"</button>":"")+"</div>";});
   return h+"</div>";}
 function unitCard(k,A,qby){const U=UNITS[k],ok=uReq(k),own=A[k]||0;
   let h='<div class="unit'+(ok?"":" off")+'" style="--uc:'+U.col+'">'+unitIcon(k,true)+'<div class="ubody"><div class="uh"><b>'+U.name+"</b><span>"+(S.army[k]||0)+" / "+own+(qby[k]?" · +"+qby[k]:"")+'</span></div><p class="desc">'+U.role+(U.type?' <span class="typechip" style="color:var(--t-'+U.type+')">'+TYPES[U.type].name+"</span>":"")+"</p>";
-  h+='<div class="ustats"><span title="Attaque">⚔ '+U.atk+'</span><span title="Défense">🛡 '+U.def+'</span><span title="Charge">🎒 '+U.carry+"</span>"+(U.spy?'<span title="Espionnage">👁 '+U.spy+"</span>":"")+'<span title="Vitesse">» '+U.spd+"</span><span>"+fmtDur(unitTime(k))+"</span></div>";
+  h+='<div class="ustats"><span title="'+tr("Attaque","Attack")+'">⚔ '+U.atk+'</span><span title="'+tr("Défense","Defense")+'">🛡 '+U.def+'</span><span title="'+tr("Charge","Load")+'">🎒 '+U.carry+"</span>"+(U.spy?'<span title="'+tr("Espionnage","Spying")+'">👁 '+U.spy+"</span>":"")+'<span title="'+tr("Vitesse","Speed")+'">» '+U.spd+"</span><span>"+fmtDur(unitTime(k))+"</span></div>";
   if(ok)h+=costHTML(U.cost)+'<div class="row ubtn">'+[1,5,10].map(n=>'<button class="btn sm" data-act="cell" data-k="'+k+'" data-n="'+n+'"'+need(Object.fromEntries(Object.entries(U.cost).map(e=>[e[0],e[1]*n])))+">×"+n+"</button>").join("")+'<button class="btn sm alt" data-act="cell" data-k="'+k+'" data-n="max">Max ('+maxAfford(U.cost,200)+")</button></div>";
-  else h+='<div class="req">Requis : '+U.req.map(reqLink).join(" · ")+"</div>";
+  else h+='<div class="req">'+tr("Requis : ","Requires: ")+U.req.map(reqLink).join(" · ")+"</div>";
   return h+"</div></div>";}
 function armyHTML(){
   const A=armyAll(),u=upkeep(),qby={};S.queue.forEach(q=>qby[q.k]=(qby[q.k]||0)+1);
-  let h='<div class="card armycard"><div class="chead"><h2>Armée</h2><span class="lifechip">Stade de vie : '+LIFE[S.stage||1]+"</span></div>";
-  h+='<div class="armystats"><div><b>'+S.idle+"</b><span>au repos</span></div><div><b>"+(cellCount()-S.idle)+"</b><span>en mission</span></div><div><b>"+fmt(playerAtk())+"</b><span>attaque</span></div><div><b>"+fmt(playerDef())+"</b><span>défense</span></div></div>";
-  h+='<p class="desc">Entretien : '+RES.map(k=>fmt(u[k])+" "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k]).join(" · ")+" par heure. Sur la carte, « Auto » choisit les troupes à votre place ; « Je choisis » vous laisse composer chaque envoi.</p>";
-  if(S.queue.length)h+='<p class="desc" style="margin-top:4px">En production sur '+laneCount()+" chaîne"+(laneCount()>1?"s":"")+" : "+compText(qby)+' · fin dans <span data-end="'+queueEnd()+'"></span></p>';
-  if(blvl("ribo")<1)h+='<p class="reason" style="margin-top:6px">Pour produire des troupes : '+riboHint()+"</p>";
-  h+="</div>"+mresHTML();
+  let h='<div class="card armycard"><div class="chead"><h2>'+tr("Armée","Army")+'</h2><span class="lifechip">'+tr("Stade de vie : ","Life stage: ")+LIFE[S.stage||1]+"</span></div>";
+  h+='<div class="armystats"><div><b>'+S.idle+"</b><span>"+tr("au repos","resting")+"</span></div><div><b>"+(cellCount()-S.idle)+"</b><span>"+tr("en mission","on missions")+"</span></div><div><b>"+fmt(playerAtk())+"</b><span>"+tr("attaque","attack")+"</span></div><div><b>"+fmt(playerDef())+"</b><span>"+tr("défense","defense")+"</span></div></div>";
+  h+='<p class="desc">'+tr("Entretien : ","Upkeep: ")+RES.map(k=>fmt(u[k])+" "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k]).join(" · ")+tr(" par heure. Sur la carte, « Auto » choisit les troupes à votre place ; « Je choisis » vous laisse composer chaque envoi."," per hour. On the map, “Auto” picks troops for you; “I choose” lets you compose each dispatch.")+"</p>";
+  if(S.queue.length)h+='<p class="desc" style="margin-top:4px">'+(EN?"In production on "+laneCount()+" line"+(laneCount()>1?"s":"")+": ":"En production sur "+laneCount()+" chaîne"+(laneCount()>1?"s":"")+" : ")+compText(qby)+tr(" · fin dans "," · done in ")+'<span data-end="'+queueEnd()+'"></span></p>';
+  if(blvl("ribo")<1)h+='<p class="reason" style="margin-top:6px">'+tr("Pour produire des troupes : ","To produce troops: ")+riboHint()+"</p>";
+  h+="</div>"+(S.tut!=null?"":mresHTML());
   ["atk","eco"].forEach(br=>{const B=RBR[br],R=rankOf(br);
     h+='<div class="card tbranch" style="--bc:'+B.col+'"><h2>'+B.e+" "+B.name+' <span class="rkbadge" style="--rc:'+RANK_COL[R]+'">T'+R+" / T5</span></h2>";
     for(let T=1;T<=5;T++){const open=R>=T,us=UNIT_ORDER.filter(k=>{const U=UNITS[k];if(U.br!==br||U.tier!==T)return false;return (A[k]||0)>0||!U.req.some(q=>q[0]==="g"&&nodeState(q[1])==="closed");});
-      h+='<div class="tier'+(open?"":" lock")+'" style="--rc:'+RANK_COL[T]+'"><div class="thead"><b>T'+T+"</b><span>"+RANK_LBL[T]+"</span>"+(open?"":'<span class="tl">🔒 '+(T===R+1?"Recherche militaire T"+T:"Après le T"+(T-1))+"</span>")+"</div>";
+      h+='<div class="tier'+(open?"":" lock")+'" style="--rc:'+RANK_COL[T]+'"><div class="thead"><b>T'+T+"</b><span>"+RANK_LBL[T]+"</span>"+(open?"":'<span class="tl">🔒 '+(T===R+1?tr("Recherche militaire T","Military research T")+T:tr("Après le T","After T")+(T-1))+"</span>")+"</div>";
       if(open)h+='<div class="units">'+us.map(k=>unitCard(k,A,qby)).join("")+"</div>";
       else h+='<div class="tlocked">'+us.map(k=>'<div class="tl1">'+unitIcon(k,true)+"<b>"+UNITS[k].name+"</b><small>⚔ "+UNITS[k].atk+" · 🛡 "+UNITS[k].def+" · 🎒 "+UNITS[k].carry+(UNITS[k].spy?" · 👁 "+UNITS[k].spy:"")+"</small></div>").join("")+"</div>";
       h+="</div>";}
@@ -141,29 +141,29 @@ function botVig(b){return Math.round(4+bDays()*b.g*1.6+botStage(b)*3);}
 function spied(b){return !!(b&&b.spyT!=null&&S.t-b.spyT<1440);}
 function spyIdle(){return UNIT_ORDER.reduce((a,k)=>a+(UNITS[k].spy?(S.army[k]||0):0),0);}
 function spyArrive(M){const B=botAt(M.x,M.y);M.result="none";
-  if(!B){report("combat","Espionnage · case "+M.x+","+M.y,["Plus personne ici : le rival a migré."],null);return;}
+  if(!B){report("combat",tr("Espionnage · case ","Spying · tile ")+M.x+","+M.y,[tr("Plus personne ici : le rival a migré.","Nobody here anymore: the rival has moved.")],null);return;}
   botSync(B);const pw=spyPow(M.u),vg=botVig(B),p=pw/(pw+vg),ok=Math.random()<p;
-  const lines=["Force d’espionnage <b>"+fmt(pw)+"</b> contre vigilance <b>"+fmt(vg)+"</b> : "+Math.round(p*100)+" % de chances."];
+  const lines=[tr("Force d’espionnage <b>","Spy strength <b>")+fmt(pw)+tr("</b> contre vigilance <b>","</b> against vigilance <b>")+fmt(vg)+"</b> : "+Math.round(p*100)+PCT+tr(" de chances."," chance.")];
   if(ok){B.spyT=S.t;const loot=Math.max(0,B.res-botProt(B)),rk=rkRows("pow").findIndex(x=>x.b===B)+1,mine=compAtk(S.army,B.type);
-    lines.push('<span class="up">Réussi.</span> Pendant 24 h, ses chiffres exacts restent affichés sur la carte.');
-    lines.push('<table class="ftab"><tbody><tr><td>Défense de la base</td><td class="num"><b>'+fmt(botDef(B))+'</b></td></tr><tr><td>Force d’attaque</td><td class="num">'+fmt(botAtk(B))+'</td></tr><tr><td>Butin pillable</td><td class="num">'+fmt(loot)+'</td></tr><tr><td>Voie offensive</td><td class="num">'+TYPES[B.type].name+'</td></tr><tr><td>Stade</td><td class="num">'+STAGE_NAME[botStage(B)]+'</td></tr><tr><td>Classement mondial</td><td class="num">#'+rk+'</td></tr><tr><td>Vos troupes au repos</td><td class="num">force '+fmt(mine)+"</td></tr></tbody></table>");
-    log("👁 "+B.name+" espionné : défense "+fmt(botDef(B))+", butin "+fmt(loot)+".","good");}
+    lines.push('<span class="up">'+tr("Réussi.","Success.")+"</span> "+tr("Pendant 24 h, ses chiffres exacts restent affichés sur la carte.","For 24 h, its exact numbers stay shown on the map."));
+    lines.push('<table class="ftab"><tbody><tr><td>'+tr("Défense de la base","Base defense")+'</td><td class="num"><b>'+fmt(botDef(B))+"</b></td></tr><tr><td>"+tr("Force d’attaque","Attack strength")+'</td><td class="num">'+fmt(botAtk(B))+"</td></tr><tr><td>"+tr("Butin pillable","Raidable loot")+'</td><td class="num">'+fmt(loot)+"</td></tr><tr><td>"+tr("Voie offensive","Offensive path")+'</td><td class="num">'+TYPES[B.type].name+"</td></tr><tr><td>"+tr("Stade","Stage")+'</td><td class="num">'+STAGE_NAME[botStage(B)]+"</td></tr><tr><td>"+tr("Classement mondial","World ranking")+'</td><td class="num">#'+rk+"</td></tr><tr><td>"+tr("Vos troupes au repos","Your resting troops")+'</td><td class="num">'+tr("force ","strength ")+fmt(mine)+"</td></tr></tbody></table>");
+    log("👁 "+B.name+tr(" espionné : défense "," spied: defense ")+fmt(botDef(B))+tr(", butin ",", loot ")+fmt(loot)+".","good");}
   else{const lost=Math.max(1,Math.ceil(M.n*0.5)),rm=applyLoss(M,lost);B.anger=Math.min(1,B.anger+0.3);
-    lines.push('<span class="neg">Repérées.</span> '+compText(rm)+" dévorée"+(lost>1?"s":"")+". "+esc(B.name)+" est maintenant sur ses gardes.","Envoyez plus d’espionnes, ou des troupes de rang supérieur : chaque rang de la branche récolte et espionnage ajoute aussi 15 % de force d’espionnage.");
-    log("👁 Espionnage raté chez "+B.name+".","bad");}
-  report("combat",(ok?"Espionnage réussi":"Espionnage raté")+" · "+B.name,lines,ok);}
+    lines.push('<span class="neg">'+tr("Repérées.","Spotted.")+"</span> "+compText(rm)+tr(" dévorée"+(lost>1?"s":"")," devoured")+". "+esc(B.name)+tr(" est maintenant sur ses gardes."," is now on its guard."),tr("Envoyez plus d’espionnes, ou des troupes de rang supérieur : chaque rang de la branche récolte et espionnage ajoute aussi 15 % de force d’espionnage.","Send more spies, or higher-rank troops: each rank of the gathering and spying branch also adds 15% spy strength."));
+    log(tr("👁 Espionnage raté chez ","👁 Failed spying on ")+B.name+".","bad");}
+  report("combat",(ok?tr("Espionnage réussi","Successful spying"):tr("Espionnage raté","Failed spying"))+" · "+B.name,lines,ok);}
 function heroHTML(){
   const H=S.hero,need=xpNeed(H.lvl),pr=heroPair();
-  let h='<div class="herobox"><div class="heroart">'+heroSVG()+'<p class="heroform">'+H.form+'</p><p class="muted" style="text-align:center;font-size:12.5px">'+(H.busy?"En mission":"Disponible")+"</p></div>";
-  h+='<div class="card herocard"><h2>Héros de la souche '+SOUCHES[S.souche].name+"</h2>";
-  h+='<div class="stat"><span>Niveau '+H.lvl+'</span><b>'+fmt(H.xp)+" / "+fmt(need)+' XP</b></div><div class="xpbar"><i style="width:'+Math.min(100,H.xp/need*100)+'%"></i></div>';
-  h+='<div class="stat"><span>Force de base au combat</span><b>'+heroBase()+"</b></div>"+formStrengthHTML();
+  let h='<div class="herobox"><div class="heroart">'+heroSVG()+'<p class="heroform">'+formName(H.form)+'</p><p class="muted" style="text-align:center;font-size:12.5px">'+(H.busy?tr("En mission","On a mission"):tr("Disponible","Available"))+"</p></div>";
+  h+='<div class="card herocard"><h2>'+tr("Héros de la souche ","Hero of strain ")+SOUCHES[S.souche].name+"</h2>";
+  h+='<div class="stat"><span>'+tr("Niveau ","Level ")+H.lvl+'</span><b>'+fmt(H.xp)+" / "+fmt(need)+' XP</b></div><div class="xpbar"><i style="width:'+Math.min(100,H.xp/need*100)+'%"></i></div>';
+  h+='<div class="stat"><span>'+tr("Force de base au combat","Base combat strength")+"</span><b>"+heroBase()+"</b></div>"+formStrengthHTML();
   h+="<h3>Traits</h3>";
-  Object.keys(TRAITS).forEach(k=>{const lv=traitLevel(k);h+='<div class="trait"><span class="tn"><i style="background:'+TRAITS[k].col+'"></i>'+TRAITS[k].name+'</span><span class="bar"><i style="width:'+(lv*10)+"%;background:"+TRAITS[k].col+'"></i></span><b>'+lv+'</b><span class="tsrc">en combattant : '+WILD_NAME[TRAITS[k].from]+"</span></div>";});
-  h+='<p class="desc" style="margin-top:6px">Les deux traits dominants donnent sa forme au héros, avec leurs forces et leurs faiblesses.'+(pr.length?"":" Il reste une larve jusqu’au niveau 3.")+"</p>";
-  h+='<div class="stat" style="margin-top:8px"><span>Combats · victoires</span><b>'+H.fights+" · "+H.wins+"</b></div>";
-  h+='<label class="herotog"><input type="checkbox" data-act="herowith"'+(S.heroWith?" checked":"")+"> L’emmener dans mes chasses</label>";
-  h+="<h3>Formes découvertes · "+H.seen.length+" / 11</h3><p class=\"desc\">"+H.seen.join(", ")+'</p><p class="desc" style="margin-top:8px">Le héros ne meurt jamais. Contre les organismes sauvages, il ne gagne qu’un dixième de l’expérience et des traits d’un combat contre un autre joueur.</p>';
+  Object.keys(TRAITS).forEach(k=>{const lv=traitLevel(k);h+='<div class="trait"><span class="tn"><i style="background:'+TRAITS[k].col+'"></i>'+TRAITS[k].name+'</span><span class="bar"><i style="width:'+(lv*10)+"%;background:"+TRAITS[k].col+'"></i></span><b>'+lv+'</b><span class="tsrc">'+tr("en combattant : ","by fighting: ")+WILD_NAME[TRAITS[k].from]+"</span></div>";});
+  h+='<p class="desc" style="margin-top:6px">'+tr("Les deux traits dominants donnent sa forme au héros, avec leurs forces et leurs faiblesses.","The two dominant traits give the hero its form, with their strengths and weaknesses.")+(pr.length?"":tr(" Il reste une larve jusqu’au niveau 3."," It stays a larva until level 3."))+"</p>";
+  h+='<div class="stat" style="margin-top:8px"><span>'+tr("Combats · victoires","Fights · victories")+"</span><b>"+H.fights+" · "+H.wins+"</b></div>";
+  h+='<label class="herotog"><input type="checkbox" data-act="herowith"'+(S.heroWith?" checked":"")+"> "+tr("L’emmener dans mes chasses","Bring it on my hunts")+"</label>";
+  h+="<h3>"+tr("Formes découvertes · ","Forms discovered · ")+H.seen.length+" / 11</h3><p class=\"desc\">"+H.seen.map(formName).join(", ")+'</p><p class="desc" style="margin-top:8px">'+tr("Le héros ne meurt jamais. Contre les organismes sauvages, il ne gagne qu’un dixième de l’expérience et des traits d’un combat contre un autre joueur.","The hero never dies. Against wild organisms, it gains only a tenth of the experience and traits of a fight against another player.")+"</p>";
   return h+"</div></div>";
 }
 

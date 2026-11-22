@@ -12,4 +12,4 @@ function rC(x,y){return Math.hypot(x-C0,y-C0);}
 function inWorld(x,y){return rC(x,y)<=RW;}
 function isLand(x,y){return rC(x,y)<=LAND_R;}
 function zoneOf(x,y){const r=rC(x,y);return r>RW?"void":r>ZB.deep?"abyss":r>ZB.mid?"deep":r>ZB.shallow?"mid":r>LAND_R?"shallow":"land";}
-const ZONE_NAME={abyss:"Abysses",deep:"Eaux profondes",mid:"Eaux moyennes",shallow:"Hauts-fonds",land:"Terre ferme",void:"Roche"};
+const ZONE_NAME={abyss:tr("Abysses","Abyss"),deep:tr("Eaux profondes","Deep waters"),mid:tr("Eaux moyennes","Middle waters"),shallow:tr("Hauts-fonds","Shallows"),land:tr("Terre ferme","Dry land"),void:tr("Roche","Rock")};

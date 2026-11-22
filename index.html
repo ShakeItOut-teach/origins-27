@@ -23,15 +23,16 @@
 </head>
 <body>
 <header>
-  <h1>Origins 27<small>SERVEUR DE 30 JOURS</small></h1>
+  <h1>Origins 27<small data-en="30-DAY SERVER">SERVEUR DE 30 JOURS</small></h1>
   <div class="controls">
     <span class="souche-chip" id="soucheChip"></span>
-    <span class="clock" id="clock">Jour 1 · 00:00</span>
-    <div class="seg" role="group" aria-label="Vitesse du temps" id="speeds"></div>
-    <button class="ghost" data-act="style" title="Basculer entre pixel art et style lisse" aria-label="Changer de style"><span class="lg">Style</span><span class="sm">▦</span></button>
-    <button class="ghost" data-act="feedback" title="Donner mon avis sur le jeu" aria-label="Donner mon avis"><span class="lg">Mon avis</span><span class="sm">✉</span></button>
-    <button class="ghost" data-act="intro" title="Revoir l’introduction" aria-label="Le but du jeu"><span class="lg">Le but du jeu</span><span class="sm">?</span></button>
-    <button class="ghost" id="reset" data-act="reset">Nouvelle partie</button>
+    <span class="clock" id="clock">00:00</span>
+    <div class="seg" role="group" aria-label="Vitesse du temps" data-en-aria="Time speed" id="speeds"></div>
+    <button class="ghost" data-act="style" title="Basculer entre pixel art et style lisse" data-en-title="Switch between pixel art and smooth style" aria-label="Changer de style" data-en-aria="Change style"><span class="lg">Style</span><span class="sm">▦</span></button>
+    <button class="ghost" data-act="lang" title="Play in English" data-en-title="Jouer en français" aria-label="English" data-en-aria="Français"><span class="lg" data-en="FR">EN</span><span class="sm" data-en="FR">EN</span></button>
+    <button class="ghost" data-act="feedback" title="Donner mon avis sur le jeu" data-en-title="Give feedback on the game" aria-label="Donner mon avis" data-en-aria="Give feedback"><span class="lg" data-en="Feedback">Mon avis</span><span class="sm">✉</span></button>
+    <button class="ghost" data-act="intro" title="Revoir l’introduction" data-en-title="See the introduction again" aria-label="Le but du jeu" data-en-aria="Game goal"><span class="lg" data-en="Game goal">Le but du jeu</span><span class="sm">?</span></button>
+    <button class="ghost" id="reset" data-act="reset" data-en="New game">Nouvelle partie</button>
   </div>
 </header>
 <div class="resbar" id="resbar"></div>
@@ -46,6 +47,7 @@
 <div id="toasts" aria-live="polite"></div>
 <div id="picker"></div>
 <div id="tour"></div>
+<script src="js/00-langue.js"></script>
 <script src="js/01-monde.js"></script>
 <script src="js/02-sprites.js"></script>
 <script src="js/03-regles.js"></script>
@@ -68,5 +70,6 @@
 <script src="js/20-pixel.js"></script>
 <script src="js/21-demarrage.js"></script>
 <script src="js/22-avis.js"></script>
+<script src="js/23-premiers-pas.js"></script>
 </body>
 </html>

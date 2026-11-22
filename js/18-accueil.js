@@ -3,11 +3,11 @@
    Chargé dans l’ordre par index.html ; tous les fichiers partagent les mêmes variables globales. */
 "use strict";
 const STATS={
-  "Énergie":{e:"⚡",d:"ATP : le carburant de toutes vos actions, construire, évoluer, nourrir vos collectrices."},
-  "Croissance":{e:"🌱",d:"Protéines : grandir, construire vos organites et produire des collectrices."},
-  "Génome":{e:"🧬",d:"Nucléotides : le prix et la vitesse de l’évolution. C’est le chemin vers l’APEX."},
-  "Mobilité":{e:"🌀",d:"Vitesse et portée de vos collectrices et de vos filaments."},
-  "Perception":{e:"👁️",d:"Ce que vous voyez dans le noir : proies, dangers, gisements, failles."}
+  [ST_EN]:{e:"⚡",d:tr("ATP : le carburant de toutes vos actions, construire, évoluer, nourrir vos collectrices.","ATP: the fuel for all your actions, building, evolving, feeding your gatherers.")},
+  [ST_CR]:{e:"🌱",d:tr("Protéines : grandir, construire vos organites et produire des collectrices.","Proteins: growing, building your organelles and producing gatherers.")},
+  [ST_GE]:{e:"🧬",d:tr("Nucléotides : le prix et la vitesse de l’évolution. C’est le chemin vers l’APEX.","Nucleotides: the price and speed of evolution. It is the road to the APEX.")},
+  [ST_MO]:{e:"🌀",d:tr("Vitesse et portée de vos collectrices et de vos filaments.","Speed and range of your gatherers and filaments.")},
+  [ST_PE]:{e:"👁️",d:tr("Ce que vous voyez dans le noir : proies, dangers, gisements, failles.","What you see in the dark: prey, dangers, deposits, rifts.")}
 };
 function portrait(id){
   const b='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" aria-hidden="true"><defs><radialGradient id="pg-'+id+'" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#0d2a3a"/><stop offset="1" stop-color="#02060b"/></radialGradient></defs><rect width="240" height="120" fill="url(#pg-'+id+')"/>';
@@ -36,11 +36,11 @@ function portrait(id){
   return b+s+"</svg>";
 }
 const TOUR=[
-  {sel:"#resbar",t:"Vos ressources",d:"ATP, protéines, lipides et nucléotides : leur production par heure, moins l’entretien de vos collectrices. Gardez le doigt appuyé, ou survolez, pour le détail."},
-  {sel:"#strip",t:"Suivez la quête",d:"Elle vous dit toujours quoi faire ensuite : touchez-la, le jeu vous emmène au bon endroit. Une fois les quêtes finies, le conseiller prend le relais."},
-  {sel:'nav [data-t="cell"]',t:"Cellule : construire",d:"Touchez un canal de la membrane ou un emplacement pour l’améliorer. Une seule construction à la fois."},
-  {sel:'nav [data-t="map"]',t:"Abysses : récolter",d:"Votre cellule ne bouge pas, vos collectrices si. Le bouton ⛏ les envoie toutes récolter en un geste. Pincez pour zoomer."},
-  {sel:'nav [data-t="evo"]',t:"Évolution : se transformer",d:"Des gènes à exprimer et, à chaque niveau de noyau, une mutation à choisir. Le but : l’Endosymbiose. Héros et rapports se découvriront en route."}
+  {sel:"#resbar",t:tr("Vos ressources","Your resources"),d:tr("ATP, protéines, lipides et nucléotides : leur production par heure, moins l’entretien de vos collectrices. Gardez le doigt appuyé, ou survolez, pour le détail.","ATP, proteins, lipids and nucleotides: their production per hour, minus your troops’ upkeep. Keep your finger pressed, or hover, for details.")},
+  {sel:"#strip",t:tr("Suivez la quête","Follow the quest"),d:tr("Elle vous dit toujours quoi faire ensuite : touchez-la, le jeu vous emmène au bon endroit. Une fois les quêtes finies, le conseiller prend le relais.","It always tells you what to do next: tap it and the game takes you to the right place. Once the quests are done, the advisor takes over.")},
+  {sel:'nav [data-t="cell"]',t:tr("Cellule : construire","Cell: build"),d:tr("Touchez un canal de la membrane ou un emplacement pour l’améliorer. Une seule construction à la fois.","Tap a membrane channel or a slot to upgrade it. One build at a time.")},
+  {sel:'nav [data-t="map"]',t:tr("Abysses : récolter","Abyss: harvest"),d:tr("Votre cellule ne bouge pas, vos collectrices si. Le bouton ⛏ les envoie toutes récolter en un geste. Pincez pour zoomer.","Your cell doesn’t move, your gatherers do. The ⛏ button sends them all harvesting in one tap. Pinch to zoom.")},
+  {sel:'nav [data-t="evo"]',t:tr("Évolution : se transformer","Evolution: transform"),d:tr("Des gènes à exprimer et, à chaque niveau de noyau, une mutation à choisir. Le but : l’Endosymbiose. Héros et rapports se découvriront en route.","Genes to express and, at each nucleus level, a mutation to choose. The goal: Endosymbiosis. Hero and reports will reveal themselves along the way.")}
 ];
 let tourI=-1;
 function showTour(i){
@@ -49,52 +49,52 @@ function showTour(i){
   const st=TOUR[i],el=document.querySelector(st.sel);if(!el){showTour(i+1);return;}
   const r=el.getBoundingClientRect(),pad=4,below=r.bottom+190<window.innerHeight;
   const left=Math.max(8,Math.min(window.innerWidth-308,r.left+r.width/2-150));
-  box.innerHTML='<div class="hole" style="left:'+(r.left-pad)+"px;top:"+(r.top-pad)+"px;width:"+(r.width+pad*2)+"px;height:"+(r.height+pad*2)+'px"></div><div class="tbub" style="left:'+left+"px;"+(below?"top:"+(r.bottom+12)+"px":"top:"+(r.top-12)+"px;transform:translateY(-100%)")+'"><div class="kick">Visite · '+(i+1)+" / "+TOUR.length+"</div><h2>"+st.t+"</h2><p>"+st.d+'</p><div class="row" style="justify-content:space-between;margin-top:10px"><button class="ghost" data-act="tourskip">Passer</button><button class="btn" data-act="tournext">'+(i===TOUR.length-1?"Terminer":"Suivant")+"</button></div></div>";
+  box.innerHTML='<div class="hole" style="left:'+(r.left-pad)+"px;top:"+(r.top-pad)+"px;width:"+(r.width+pad*2)+"px;height:"+(r.height+pad*2)+'px"></div><div class="tbub" style="left:'+left+"px;"+(below?"top:"+(r.bottom+12)+"px":"top:"+(r.top-12)+"px;transform:translateY(-100%)")+'"><div class="kick">'+tr("Visite · ","Tour · ")+(i+1)+" / "+TOUR.length+"</div><h2>"+st.t+"</h2><p>"+st.d+'</p><div class="row" style="justify-content:space-between;margin-top:10px"><button class="ghost" data-act="tourskip">'+tr("Passer","Skip")+'</button><button class="btn" data-act="tournext">'+(i===TOUR.length-1?tr("Terminer","Finish"):tr("Suivant","Next"))+"</button></div></div>";
   box.classList.add("on");
 }
 function showPicker(){
-  let h='<div class="picker"><div class="picker-in"><h2>Choisissez votre souche</h2><p class="lead">Votre cellule de départ fixe vos forces et vos faiblesses pour tout le serveur. Plus tard, elle deviendra le héros de votre lignée. <button class="lnk ok" data-act="slide" data-i="0">Revoir le but du jeu</button></p>';
+  let h='<div class="picker"><div class="picker-in"><h2>'+tr("Choisissez votre souche","Choose your strain")+'</h2><p class="lead">'+tr("Votre cellule de départ fixe vos forces et vos faiblesses pour tout le serveur. Plus tard, elle deviendra le héros de votre lignée. ","Your starting cell sets your strengths and weaknesses for the whole server. Later, it will become the hero of your lineage. ")+'<button class="lnk ok" data-act="slide" data-i="0">'+tr("Revoir le but du jeu","See the game goal again")+"</button></p>";
   h+='<div class="statlegend">'+Object.keys(STATS).map(k=>"<div><b>"+STATS[k].e+" "+k+"</b><span>"+STATS[k].d+"</span></div>").join("")+"</div>";
   h+='<div class="strains">';
   for(const id in SOUCHES){const o=SOUCHES[id];
-    h+='<div class="strain"><div class="portrait">'+artBox("por",portrait(id),120,60)+'</div><h3>Souche '+o.name+'</h3><p class="origin">'+o.origin+'</p><div class="bars">';
+    h+='<div class="strain"><div class="portrait">'+artBox("por",portrait(id),120,60)+'</div><h3>'+tr("Souche ","Strain ")+o.name+'</h3><p class="origin">'+o.origin+'</p><div class="bars">';
     for(const k in o.stats)h+='<span class="lbl" data-tip="'+esc("<b>"+STATS[k].e+" "+k+"</b>"+STATS[k].d)+'">'+STATS[k].e+" "+k+'</span><span class="bar"><i style="width:'+(o.stats[k]*20)+'%"></i></span>';
-    h+="</div><ul>"+o.bonus.map(b=>'<li class="b">'+b+"</li>").join("")+o.malus.map(b=>'<li class="m">'+b+"</li>").join("")+'<li class="t">'+o.trait+'</li></ul><button class="btn" data-act="pick" data-s="'+id+'">Choisir cette souche</button></div>';}
-  h+='</div><p class="fictif">Souches, lieux de prélèvement et chercheurs sont imaginaires.</p></div></div>';
+    h+="</div><ul>"+o.bonus.map(b=>'<li class="b">'+b+"</li>").join("")+o.malus.map(b=>'<li class="m">'+b+"</li>").join("")+'<li class="t">'+o.trait+'</li></ul><button class="btn" data-act="pick" data-s="'+id+'">'+tr("Choisir cette souche","Choose this strain")+"</button></div>";}
+  h+='</div><p class="fictif">'+tr("Souches, lieux de prélèvement et chercheurs sont imaginaires.","Strains, sampling sites and researchers are fictional.")+"</p></div></div>";
   $("picker").innerHTML=h;$("picker").firstChild.scrollTop=0;pxify($("picker"));
 }
 /* Introduction : le but du jeu, étape par étape */
 function cellBlob(x,y,r,fill,stroke,extra){return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.8"/>'+(extra||"");}
 const INTRO=[
-  {k:"Il y a 4 milliards d’années",t:"Au fond de l’océan, dans le noir",
-   p:["Vous êtes une bactérie née au bord du monde, dans les abysses, parmi 499 autres organismes. Le monde est un immense cercle : plus on avance vers le centre, plus les eaux remontent, jusqu’à la terre ferme.","La nourriture est rare et chaque action coûte de l’énergie. Pour grandir, il faudra récolter, explorer… puis piller les autres avant qu’ils ne vous pillent."],
+  {k:tr("Il y a 4 milliards d’années","4 billion years ago"),t:tr("Au fond de l’océan, dans le noir","At the bottom of the ocean, in the dark"),
+   p:EN?["You are a bacterium born at the edge of the world, in the abyss, among 499 other organisms. The world is a vast circle: the closer you get to the center, the shallower the water, all the way to dry land.","Food is scarce and every action costs energy. To grow, you will have to harvest, explore… then raid the others before they raid you."]:["Vous êtes une bactérie née au bord du monde, dans les abysses, parmi 499 autres organismes. Le monde est un immense cercle : plus on avance vers le centre, plus les eaux remontent, jusqu’à la terre ferme.","La nourriture est rare et chaque action coûte de l’énergie. Pour grandir, il faudra récolter, explorer… puis piller les autres avant qu’ils ne vous pillent."],
    art:()=>{let s='<rect width="360" height="220" fill="#02060b"/>';const rr=mulberry32(27);for(let i=0;i<50;i++)s+='<circle cx="'+(rr()*360)+'" cy="'+(rr()*220)+'" r="'+(0.6+(i%3)*0.5)+'" fill="#9fc3d3" fill-opacity="'+(0.15+(i%4)*0.08)+'"/>';
      s+='<polygon points="250,220 275,150 300,220" fill="#1c120e" stroke="#4a3024"/><path d="M275 150 q-14 -26 6 -50 q14 -18 -4 -44" fill="none" stroke="#7e97a7" stroke-opacity=".3" stroke-width="12" stroke-linecap="round"/>';
      s+='<circle cx="120" cy="120" r="34" fill="#5ee6d0" fill-opacity=".12"/>'+cellBlob(120,120,16,"#123a3a","#5ee6d0",'<circle cx="120" cy="120" r="5" fill="#a99bff"/>');
      s+=cellBlob(40,60,7,"#2a1414","#ff8a7a")+cellBlob(330,40,6,"#2a1414","#ff8a7a")+cellBlob(200,190,5,"#2a1414","#ff8a7a");return s;}},
-  {k:"Jours 1 à 3 · Procaryote",t:"Grandir dans le noir",
-   p:["Vous bâtissez votre cellule comme une forteresse : des canaux sur la membrane pour produire, des organites pour construire, entraîner vos troupes et stocker.","Vos premières troupes, rang T1, récoltent et chassent. Toutes les 4 heures, un coffre gratuit : un coup de chance peut multiplier son contenu par 8."],
+  {k:tr("Jours 1 à 3 · Procaryote","Days 1 to 3 · Prokaryote"),t:tr("Grandir dans le noir","Growing in the dark"),
+   p:EN?["You build your cell like a fortress: channels on the membrane to produce, organelles to build, train your troops and store.","Your first troops, rank T1, harvest and hunt. Every 4 hours, a free chest: a stroke of luck can multiply its contents by 8."]:["Vous bâtissez votre cellule comme une forteresse : des canaux sur la membrane pour produire, des organites pour construire, entraîner vos troupes et stocker.","Vos premières troupes, rang T1, récoltent et chassent. Toutes les 4 heures, un coffre gratuit : un coup de chance peut multiplier son contenu par 8."],
    art:()=>{let s='<rect width="360" height="220" fill="#02060b"/>';s+='<rect x="110" y="80" width="140" height="60" rx="30" fill="#123a3a" stroke="#5ee6d0" stroke-width="2"/>';for(let i=0;i<30;i++){const t=i/29,x=125+t*110;s+='<line x1="'+x+'" y1="80" x2="'+(x-2)+'" y2="70" stroke="#9fd8cf" stroke-opacity=".6"/><line x1="'+x+'" y1="140" x2="'+(x-2)+'" y2="150" stroke="#9fd8cf" stroke-opacity=".6"/>';}
      s+='<path d="M140 110 q10 -12 20 0 t20 0 t20 0 t20 0" fill="none" stroke="#a99bff" stroke-width="2.2"/>';[[50,60,"#f3b562"],[70,170,"#ef7fa6"],[300,60,"#a99bff"],[310,180,"#f3b562"]].forEach(d=>{s+='<circle cx="'+d[0]+'" cy="'+d[1]+'" r="7" fill="'+d[2]+'"/>';});
      s+='<line x1="250" y1="110" x2="296" y2="68" stroke="#5ee6d0" stroke-dasharray="3 4"/><circle cx="282" cy="81" r="4" fill="#5ee6d0"/>';return s;}},
-  {k:"Jours 3 à 7 · Eucaryote",t:"Avaler une autre vie",
-   p:["Le premier grand saut : l’endosymbiose. Votre cellule en avale une autre sans la digérer. Elle devient une partie de vous.","Vous voilà eucaryote, avec un vrai noyau : la seule voie vers les grands êtres vivants. La recherche militaire T3 s’ouvre, et les vrais pillages commencent."],
+  {k:tr("Jours 3 à 7 · Eucaryote","Days 3 to 7 · Eukaryote"),t:tr("Avaler une autre vie","Swallowing another life"),
+   p:EN?["The first great leap: endosymbiosis. Your cell swallows another without digesting it. It becomes part of you.","You are now a eukaryote, with a true nucleus: the only road to large living beings. T3 military research opens, and the real raids begin."]:["Le premier grand saut : l’endosymbiose. Votre cellule en avale une autre sans la digérer. Elle devient une partie de vous.","Vous voilà eucaryote, avec un vrai noyau : la seule voie vers les grands êtres vivants. La recherche militaire T3 s’ouvre, et les vrais pillages commencent."],
    art:()=>{let s='<rect width="360" height="220" fill="#02060b"/>'+cellBlob(170,110,72,"#0f3238","#5ee6d0")+'<circle cx="170" cy="110" r="66" fill="none" stroke="#a99bff" stroke-opacity=".5" stroke-dasharray="3 4"/>';
      s+='<circle cx="160" cy="105" r="26" fill="#2a2150" stroke="#a99bff" stroke-width="2"/><circle cx="168" cy="98" r="8" fill="#5a4fb0"/>';
      s+='<ellipse cx="238" cy="110" rx="22" ry="13" fill="#1d3b2c" stroke="#7fd36b" stroke-width="2"/><path d="M222 110 q4 -8 8 0 t8 0 t8 0 t8 0" fill="none" stroke="#7fd36b"/>';
      s+='<ellipse cx="200" cy="150" rx="14" ry="8" fill="#2b2411" stroke="#ffe07a"/>';return s;}},
-  {k:"Jours 7 à 12 · Colonie",t:"Ne plus être seul",
-   p:["Les alliances s’ouvrent : six colonies se disputent le monde. Celui qui attaque un membre s’attaque, avec le temps, à toute la colonie.","Chaque jour, le classement mondial vous range dans une ligue, de Plancton à Souverain. Plus vous montez, plus la récompense du soir est grosse."],
+  {k:tr("Jours 7 à 12 · Colonie","Days 7 to 12 · Colony"),t:tr("Ne plus être seul","No longer alone"),
+   p:EN?["Alliances open up: six colonies fight over the world. Whoever attacks one member takes on, in time, the whole colony.","Every day, the world ranking places you in a league, from Plankton to Sovereign. The higher you climb, the bigger the evening reward."]:["Les alliances s’ouvrent : six colonies se disputent le monde. Celui qui attaque un membre s’attaque, avec le temps, à toute la colonie.","Chaque jour, le classement mondial vous range dans une ligue, de Plancton à Souverain. Plus vous montez, plus la récompense du soir est grosse."],
    art:()=>{let s='<rect width="360" height="220" fill="#02060b"/>';const pts=[[180,110],[140,90],[220,90],[140,135],[220,135],[180,68],[180,152]];
      pts.slice(1).forEach(p=>{s+='<line x1="180" y1="110" x2="'+p[0]+'" y2="'+p[1]+'" stroke="#5ee6d0" stroke-width="3" stroke-opacity=".5"/>';});
      const cols=["#5ee6d0","#ffe07a","#ef7fa6","#a99bff","#f3b562","#4fc3f7","#b8e05a"];pts.forEach((p,i)=>{s+=cellBlob(p[0],p[1],19,"#0f3238",cols[i],'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="6" fill="'+cols[i]+'" fill-opacity=".7"/>');});return s;}},
-  {k:"Jours 12 à 20 · Pluricellulaire",t:"Chaque joueur devient un organe",
-   p:["L’alliance devient un corps. Chacun choisit un rôle : digestion, muscles, système nerveux, défense, squelette.","Un corps a des forces et des faiblesses. Vos espionnes révèlent les chiffres exacts de vos rivaux, et le rang T4 fait entrer les géants dans votre armée."],
+  {k:tr("Jours 12 à 20 · Pluricellulaire","Days 12 to 20 · Multicellular"),t:tr("Chaque joueur devient un organe","Each player becomes an organ"),
+   p:EN?["The alliance becomes a body. Each member picks a role: digestion, muscles, nervous system, defense, skeleton.","A body has strengths and weaknesses. Your spies reveal your rivals’ exact numbers, and rank T4 brings giants into your army."]:["L’alliance devient un corps. Chacun choisit un rôle : digestion, muscles, système nerveux, défense, squelette.","Un corps a des forces et des faiblesses. Vos espionnes révèlent les chiffres exacts de vos rivaux, et le rang T4 fait entrer les géants dans votre armée."],
    art:()=>{let s='<rect width="360" height="220" fill="#02060b"/>';const cols=["#ff8a5c","#ffe07a","#5ee6d0","#a99bff","#ef7fa6","#b8e05a","#4fc3f7"];
      for(let i=0;i<7;i++){const x=70+i*36,y=110+Math.sin(i*0.9)*16,r=24-Math.abs(i-3)*2.5;s+='<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#0f2a33" stroke="'+cols[i]+'" stroke-width="2.2"/><circle cx="'+x+'" cy="'+y+'" r="'+(r*0.35)+'" fill="'+cols[i]+'" fill-opacity=".6"/>';}
      s+='<circle cx="62" cy="100" r="5" fill="#ffd2b8"/>';return s;}},
-  {k:"Jours 20 à 30 · L’APEX",t:"Conquérir la terre ferme",
-   p:["Le but final : remonter jusqu’au centre du monde et sortir de l’eau. Aucune forme aquatique ne peut gagner : l’APEX doit vivre sur la terre ferme. La dernière semaine, les troupes légendaires T5 entrent en scène.","Avec votre alliance, vous choisissez la lignée qui dominera, selon les évolutions que vos membres ont travaillées : grand prédateur, reptile volant ou géant herbivore. Personne ne l’annonce : seuls l’espionnage et les trahisons révèlent qui s’en approche."],
+  {k:tr("Jours 20 à 30 · L’APEX","Days 20 to 30 · The APEX"),t:tr("Conquérir la terre ferme","Conquer dry land"),
+   p:EN?["The final goal: rise to the center of the world and leave the water. No aquatic form can win: the APEX must live on dry land. In the last week, legendary T5 troops enter the stage.","With your alliance, you choose the lineage that will rule, depending on the evolutions your members have worked on: great predator, flying reptile or giant herbivore. Nobody announces it: only spying and betrayals reveal who is getting close."]:["Le but final : remonter jusqu’au centre du monde et sortir de l’eau. Aucune forme aquatique ne peut gagner : l’APEX doit vivre sur la terre ferme. La dernière semaine, les troupes légendaires T5 entrent en scène.","Avec votre alliance, vous choisissez la lignée qui dominera, selon les évolutions que vos membres ont travaillées : grand prédateur, reptile volant ou géant herbivore. Personne ne l’annonce : seuls l’espionnage et les trahisons révèlent qui s’en approche."],
    res:[270,165],
    art:()=>{const R=mulberry32(65);let s='<defs>'+
        '<linearGradient id="ap-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e3a4c"/><stop offset=".5" stop-color="#7d7672"/><stop offset=".8" stop-color="#c9a478"/><stop offset="1" stop-color="#dcb684"/></linearGradient>'+
@@ -157,22 +157,22 @@ const INTRO=[
      for(let i=0;i<14;i++){s+='<rect x="'+(150+R()*120)+'" y="'+(164+R()*18)+'" width="1.6" height="1.6" fill="#4a3c2c"/>';}
      s+='<path d="M0 220 L0 196 Q16 186 30 196 Q38 180 52 190 L60 220Z" fill="#26301f"/><path d="M360 220 L360 192 Q344 184 334 196 Q322 182 310 194 L304 220Z" fill="#26301f"/>';
      return s;}},
-  {k:"Avant de commencer",t:"Ce qui compte pour votre souche",
-   p:["Votre souche de départ a cinq qualités. Aucune n’est meilleure qu’une autre : elles orientent votre manière de jouer.",Object.keys(STATS).map(k=>"<b>"+STATS[k].e+" "+k+"</b> ("+STATS[k].d.replace(/\.$/,"")+")").join("<br>")],
+  {k:tr("Avant de commencer","Before you start"),t:tr("Ce qui compte pour votre souche","What matters for your strain"),
+   p:[tr("Votre souche de départ a cinq qualités. Aucune n’est meilleure qu’une autre : elles orientent votre manière de jouer.","Your starting strain has five qualities. None is better than another: they shape the way you play."),Object.keys(STATS).map(k=>"<b>"+STATS[k].e+" "+k+"</b> ("+STATS[k].d.replace(/\.$/,"")+")").join("<br>")],
    art:()=>{let s='<rect width="360" height="220" fill="#02060b"/>';["varenne","kori","abyssa","ilheu"].forEach((id,i)=>{s+='<g transform="translate('+(10+(i%2)*175)+" "+(8+Math.floor(i/2)*106)+') scale(0.71)">'+portrait(id).replace(/^<svg[^>]*>/,"").replace(/<\/svg>$/,"").replace(/id="pg-/g,'id="pgi-').replace(/url\(#pg-/g,"url(#pgi-")+"</g>";});return s;}}
 ];
-const TL=["Procaryote","Eucaryote","Colonie","Pluricellulaire","APEX"];
+const TL=STAGE_NAME.slice(1,5).concat("APEX");
 function showIntro(i){
   i=Math.max(0,Math.min(INTRO.length-1,i));const sl=INTRO[i],last=i===INTRO.length-1;
   const on=i>=1&&i<=5?i-1:-1;
   let h='<div class="picker"><div class="intro">';
-  h+='<div class="intro-nav"><span class="kicker">'+sl.k+'</span>'+(S?'<button class="ghost" data-act="closeintro">Reprendre la partie</button>':'<span class="row"><button class="ghost" data-act="home">Accueil</button><button class="ghost" data-act="tostrains">Passer</button></span>')+"</div>";
+  h+='<div class="intro-nav"><span class="kicker">'+sl.k+'</span>'+(S?'<button class="ghost" data-act="closeintro">'+tr("Reprendre la partie","Resume the game")+"</button>":'<span class="row"><button class="ghost" data-act="home">'+tr("Accueil","Home")+'</button><button class="ghost" data-act="tostrains">'+tr("Passer","Skip")+"</button></span>")+"</div>";
   h+="<h2>"+sl.t+'</h2><div class="timeline">'+TL.map((t,j)=>'<span class="'+(j===on?"on":"")+'">'+t+"</span>").join("")+"</div>";
   const rs=sl.res||[180,110];h+='<div class="art">'+artBox("intro",'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220" role="img" aria-label="'+esc(sl.t)+'">'+sl.art()+"</svg>",rs[0],rs[1])+"</div>";
   h+='<div class="txt">'+sl.p.map(t=>"<p>"+t+"</p>").join("")+"</div>";
-  if(i===0&&!S)h+='<div class="quick"><button class="btn big" data-act="quickstart">Jouer tout de suite</button><span class="desc">Souche conseillée : Kōri-71, la plus tolérante. Vous pourrez relire l’histoire avec « ? ».</span></div>';
-  h+='<div class="intro-nav"><button class="btn alt" data-act="slide" data-i="'+(i-1)+'"'+(i===0?" disabled":"")+'>Précédent</button><div class="dots">'+INTRO.map((_,j)=>'<i class="'+(j===i?"on":"")+'"></i>').join("")+"</div>";
-  h+=last?(S?'<span class="row"><button class="btn alt" data-act="tour">Visite des onglets</button><button class="btn" data-act="closeintro">Reprendre</button></span>':'<button class="btn" data-act="tostrains">Choisir ma souche</button>'):'<button class="btn" data-act="slide" data-i="'+(i+1)+'">Suivant</button>';
+  if(i===0&&!S)h+='<div class="quick"><button class="btn big" data-act="quickstart">'+tr("Jouer tout de suite","Play right now")+'</button><span class="desc">'+tr("Souche conseillée : Kōri-71, la plus tolérante. Vous pourrez relire l’histoire avec « ? ».","Recommended strain: Kōri-71, the most forgiving. You can read the story again with “?”.")+"</span></div>";
+  h+='<div class="intro-nav"><button class="btn alt" data-act="slide" data-i="'+(i-1)+'"'+(i===0?" disabled":"")+">"+tr("Précédent","Previous")+'</button><div class="dots">'+INTRO.map((_,j)=>'<i class="'+(j===i?"on":"")+'"></i>').join("")+"</div>";
+  h+=last?(S?'<span class="row"><button class="btn alt" data-act="tour">'+tr("Visite des onglets","Tab tour")+'</button><button class="btn" data-act="closeintro">'+tr("Reprendre","Resume")+"</button></span>":'<button class="btn" data-act="tostrains">'+tr("Choisir ma souche","Choose my strain")+"</button>"):'<button class="btn" data-act="slide" data-i="'+(i+1)+'">'+tr("Suivant","Next")+"</button>";
   h+="</div></div></div>";
   $("picker").innerHTML=h;pxify($("picker"));
 }
@@ -263,7 +263,7 @@ function titleOver(narrow,px){
   s+='<g class="snow s1">'+sn1+'</g><g class="snow s2">'+sn2+'</g>';
   s+='<path class="trail" d="'+ttPath()+'" fill="none" stroke="#bff7ec" stroke-opacity=".7" stroke-width="'+(px?3:2)+'" stroke-dasharray="'+(px?"4 9":"2 10")+'" stroke-linecap="'+(px?"butt":"round")+'"/>';
   const font=px?'"Pixelify Sans",monospace':"IBM Plex Mono,monospace";
-  [["PROCARYOTE",720,640,40,40],["EUCARYOTE",830,555,52,6],["COLONIE",925,440,74,6],["PLURICELLULAIRE",990,315,180,50,1],["APEX",1005,238,-125,34,1]].forEach(l=>{s+='<text x="'+(l[1]+l[3])+'" y="'+(l[2]+l[4])+'"'+(l[5]?' text-anchor="'+(l[5]==="m"?"middle":"end")+'"':"")+' font-family=\''+font+'\' font-size="'+(px?17:15)+'" letter-spacing="2" fill="#d9f6f1" fill-opacity=".85" paint-order="stroke" stroke="#02060b" stroke-opacity=".6" stroke-width="3">'+l[0]+'</text>';});
+  [[STAGE_NAME[1].toUpperCase(),720,640,40,40],[STAGE_NAME[2].toUpperCase(),830,555,52,6],[STAGE_NAME[3].toUpperCase(),925,440,74,6],[STAGE_NAME[4].toUpperCase(),990,315,180,50,1],["APEX",1005,238,-125,34,1]].forEach(l=>{s+='<text x="'+(l[1]+l[3])+'" y="'+(l[2]+l[4])+'"'+(l[5]?' text-anchor="'+(l[5]==="m"?"middle":"end")+'"':"")+' font-family=\''+font+'\' font-size="'+(px?17:15)+'" letter-spacing="2" fill="#d9f6f1" fill-opacity=".85" paint-order="stroke" stroke="#02060b" stroke-opacity=".6" stroke-width="3">'+l[0]+'</text>';});
   return s+"</svg>";
 }
 // en style pixel, le décor est rendu en basse résolution puis agrandi sans lissage
@@ -281,20 +281,20 @@ function showTitle(){
   const narrow=window.innerWidth<760;
   const px=isPixel();
   let h='<div class="picker title"><div class="tbg">'+(px?'<canvas class="tpx" width="2" height="2"></canvas>':titleArt(narrow))+titleOver(narrow,px)+'</div><div class="tscrim"></div><div class="tin">';
-  h+='<div class="tkick">Stratégie en temps réel · Serveur de 30 jours · 500 organismes</div>';
+  h+='<div class="tkick">'+tr("Stratégie en temps réel · Serveur de 30 jours · 500 organismes","Real-time strategy · 30-day server · 500 organisms")+"</div>";
   h+='<h1 class="tlogo">ORIGINS<span>27</span></h1>';
-  h+='<div class="tbadges"><span class="tb1">FREE TO PLAY</span><span class="tb2">NO PAY TO WIN</span><small>100 % gratuit : aucun achat ne donne d’avantage.</small></div>';
-  h+='<p class="thook">Vous naissez bactérie dans un monde hostile.<br>Irez-vous au bout du chemin pour devenir <b>l’APEX légendaire</b> ?</p>';
-  h+='<p class="tsub">Évoluez au détriment de vos rivaux, formez une colonie avec vos alliés, gérez vos troupes et vos ressources : soyez celui qui façonnera le monde de demain… ou pas.</p>';
-  h+='<div class="tcta">'+(S?'<button class="btn tbig" data-act="closeintro">Reprendre ma partie</button><button class="btn alt" data-act="slide" data-i="0">L’histoire</button>':'<button class="btn tbig" data-act="quickstart">Jouer maintenant</button><button class="btn alt" data-act="tostrains">Choisir ma souche</button><button class="btn alt" data-act="slide" data-i="0">L’histoire</button>')+'</div>';
+  h+='<div class="tbadges"><span class="tb1">FREE TO PLAY</span><span class="tb2">NO PAY TO WIN</span><small>'+tr("100 % gratuit : aucun achat ne donne d’avantage.","100% free: no purchase gives any advantage.")+"</small></div>";
+  h+='<p class="thook">'+tr("Vous naissez bactérie dans un monde hostile.<br>Irez-vous au bout du chemin pour devenir <b>l’APEX légendaire</b> ?","You are born a bacterium in a hostile world.<br>Will you go all the way to become <b>the legendary APEX</b>?")+"</p>";
+  h+='<p class="tsub">'+tr("Évoluez au détriment de vos rivaux, formez une colonie avec vos alliés, gérez vos troupes et vos ressources : soyez celui qui façonnera le monde de demain… ou pas.","Evolve at your rivals’ expense, form a colony with your allies, manage your troops and resources: be the one who will shape tomorrow’s world… or not.")+"</p>";
+  h+='<div class="tcta">'+(S?'<button class="btn tbig" data-act="closeintro">'+tr("Reprendre ma partie","Resume my game")+'</button><button class="btn alt" data-act="slide" data-i="0">'+tr("L’histoire","The story")+"</button>":'<button class="btn tbig" data-act="quickstart">'+tr("Jouer maintenant","Play now")+'</button><button class="btn alt" data-act="tostrains">'+tr("Choisir ma souche","Choose my strain")+'</button><button class="btn alt" data-act="slide" data-i="0">'+tr("L’histoire","The story")+"</button>")+"</div>";
   const st=["#5ee6d0","#a99bff","#4fc3f7","#ffd166","#ff9e6b"];
   const F=[
-    ["Évoluez","Aucune partie ne ressemble à la précédente : les chemins de l’évolution changent et se tirent au hasard. Réflexion et analyse feront votre domination.",'<div class="tstages">'+st.map((c,i)=>'<i style="--c:'+c+';--s:'+(8+i*3)+'px"></i>').join("")+"</div>"],
-    ["Pillez","499 autres organismes convoitent votre place. Le meilleur moyen de la garder ? Ne pas leur laisser le choix.",'<div class="ticons">'+["tox","pha","par","enz","har"].map(k=>unitIcon(k)).join("")+"</div>"],
-    ["Commandez","Vos troupes évoluent au fil des semaines, du rang T1 au légendaire T5. Combinez vos gènes pour forger les meilleures.",'<div class="ticons">'+["sold","tox","colo","pluri","anom"].map(k=>unitIcon(k)).join("")+"</div>"],
-    ["Dominez","Classement mondial, ligues et compétitions : des récompenses chaque jour pour creuser votre avance.",'<div class="tleague">'+LEAGUES.slice().reverse().map(l=>"<span>"+l[1]+"</span>").join("")+"</div>"]];
+    [tr("Évoluez","Evolve"),tr("Aucune partie ne ressemble à la précédente : les chemins de l’évolution changent et se tirent au hasard. Réflexion et analyse feront votre domination.","No two games are alike: evolution’s paths change and are drawn at random. Thought and analysis will make you dominant."),'<div class="tstages">'+st.map((c,i)=>'<i style="--c:'+c+';--s:'+(8+i*3)+'px"></i>').join("")+"</div>"],
+    [tr("Pillez","Raid"),tr("499 autres organismes convoitent votre place. Le meilleur moyen de la garder ? Ne pas leur laisser le choix.","499 other organisms covet your place. The best way to keep it? Leave them no choice."),'<div class="ticons">'+["tox","pha","par","enz","har"].map(k=>unitIcon(k)).join("")+"</div>"],
+    [tr("Commandez","Command"),tr("Vos troupes évoluent au fil des semaines, du rang T1 au légendaire T5. Combinez vos gènes pour forger les meilleures.","Your troops evolve over the weeks, from rank T1 to legendary T5. Combine your genes to forge the best."),'<div class="ticons">'+["sold","tox","colo","pluri","anom"].map(k=>unitIcon(k)).join("")+"</div>"],
+    [tr("Dominez","Dominate"),tr("Classement mondial, ligues et compétitions : des récompenses chaque jour pour creuser votre avance.","World ranking, leagues and competitions: rewards every day to widen your lead."),'<div class="tleague">'+LEAGUES.slice().reverse().map(l=>"<span>"+l[1]+"</span>").join("")+"</div>"]];
   h+='<div class="tfeats">'+F.map(f=>'<div class="tfeat">'+f[2]+"<h3>"+f[0]+"</h3><p>"+f[1]+"</p></div>").join("")+"</div>";
-  h+='<div class="tfoot">Free to play · No pay to win · Sans installation · Jouable sur mobile · <button class="tfb" data-act="feedback">✉ Donner mon avis</button></div>';
+  h+='<div class="tfoot">Free to play · No pay to win · '+tr("Sans installation · Jouable sur mobile","No install · Playable on mobile")+' · <button class="tfb" data-act="feedback">'+tr("✉ Donner mon avis","✉ Give feedback")+'</button> · <button class="tfb" data-act="lang">'+tr("🌐 English","🌐 Français")+"</button></div>";
   h+="</div></div>";
   $("picker").innerHTML=h;
   if(px)titlePixel(narrow);

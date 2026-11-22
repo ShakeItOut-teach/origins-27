@@ -52,10 +52,12 @@ function newGame(seed,souche){
     tiles,src,nodes:[],glv:{},emerg:[],emPairs:pairs,log:[],reports:[],popups:[],won:null,q:0,tourDone:false,
     hero:{xp:0,lvl:1,tp:{venin:0,bras:0,carapace:0,crochets:0,pattes:0},busy:false,fights:0,wins:0,form:"Larve",seen:["Larve"]},heroWith:true};
   pendingStart=null;openRef=null;tab="cell";cam=null;
+  {const si=S.slots.findIndex((s,j)=>!s&&slotOpen(j));if(si>=0)S.slots[si]={k:"ribo",l:1};} /* les ribosomes sont offerts : le guide commence par produire des troupes */
+  S.tut=0;
   if(mods().revealSource)revealSource(false);
   updateVision();
-  log("Votre souche "+SOUCHES[souche].name+" s’éveille au bord du monde, dans les abysses. Le centre, loin devant, remonte vers la terre ferme.");
-  log("Touchez un canal de la membrane ou un emplacement libre pour commencer à construire.");
+  log(tr("Votre souche ","Your strain ")+SOUCHES[souche].name+tr(" s’éveille au bord du monde, dans les abysses. Le centre, loin devant, remonte vers la terre ferme."," awakens at the edge of the world, in the abyss. The center, far ahead, rises toward dry land."));
+  log(tr("Touchez un canal de la membrane ou un emplacement libre pour commencer à construire.","Tap a membrane channel or a free slot to start building."));
   dirty=true;
 }
 

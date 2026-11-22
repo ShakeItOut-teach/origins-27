@@ -15,7 +15,7 @@ function landTile(px,py,x,y,dim){const r=rC(x,y),h=hash2(x,y),sh=(c)=>dim?mixHex
   const forest=r<LAND_R*0.55||h%9<2;ctx.fillStyle=sh(forest?"#2f5a2a":(h&1?"#4f8a3a":"#477f34"));ctx.fillRect(px,py,TS-1,TS-1);
   if(forest){ctx.fillStyle=sh("#1d3b1c");ctx.fillRect(px+1,py+1,4,3);ctx.fillStyle=sh("#3f7a34");ctx.fillRect(px+2,py+1,2,1);ctx.fillStyle=sh("#5a3a22");ctx.fillRect(px+3,py+4,1,2);}
   else if(h%5===0){ctx.fillStyle=sh("#8bc34a");ctx.fillRect(px+2,py+3,1,1);ctx.fillRect(px+5,py+5,1,1);}}
-const DIR8=["est","sud-est","sud","sud-ouest","ouest","nord-ouest","nord","nord-est"],ARR8=["→","↘","↓","↙","←","↖","↑","↗"];
+const DIR8=EN?["east","southeast","south","southwest","west","northwest","north","northeast"]:["est","sud-est","sud","sud-ouest","ouest","nord-ouest","nord","nord-est"],ARR8=["→","↘","↓","↙","←","↖","↑","↗"];
 function dirTo(x0,y0,x1,y1){const a=Math.atan2(y1-y0,x1-x0),i=((Math.round(a/(Math.PI/4))%8)+8)%8;return i;}
 function depthLight(x,y){const r=rC(x,y);return Math.pow(Math.max(0,Math.min(1,1-(r-LAND_R)/(RW-LAND_R))),1.7);}
 const DEEP_RGB=[7,22,32],SHAL_RGB=[58,170,176],DBANDS=9,DCOL={};
@@ -131,7 +131,7 @@ function draw(now,dtReal){
   let ccx=cx0,ccy=cy0;
   if(S.mig){const k=Math.max(0,Math.min(1,(S.t-S.mig.start)/(S.mig.end-S.mig.start)));ccx=Math.round(PX(S.mig.fx)+3+(PX(S.mig.x)-PX(S.mig.fx))*k);ccy=Math.round(PY(S.mig.fy)+3+(PY(S.mig.y)-PY(S.mig.fy))*k);ctx.fillStyle="rgba(255,224,122,.6)";for(let i=0;i<=20;i+=2)ctx.fillRect(Math.round(ccx+(PX(S.mig.x)+3-ccx)*i/20),Math.round(ccy+(PY(S.mig.y)+3-ccy)*i/20),1,1);}
   drawBase(ccx,ccy,t);
-  const co=$("mapcoord");if(co)co.textContent="Votre base : "+c[0]+","+c[1]+" · "+ZONE_NAME[zoneOf(c[0],c[1])]+", à "+Math.round(rC(c[0],c[1]))+" cases du centre (terre ferme : "+Math.max(0,Math.round(rC(c[0],c[1])-LAND_R))+" cases "+ARR8[dirTo(c[0],c[1],C0,C0)]+" "+DIR8[dirTo(c[0],c[1],C0,C0)]+") · ≈ "+fmt(depthM(c[0],c[1]))+" m, lumière "+Math.round(depthLight(c[0],c[1])*100)+" % · stade "+baseStage()+"/5 ("+STAGE_NAME[baseStage()]+")";
+  const co=$("mapcoord");if(co)co.textContent=tr("Votre base : ","Your base: ")+c[0]+","+c[1]+" · "+ZONE_NAME[zoneOf(c[0],c[1])]+tr(", à ",", ")+Math.round(rC(c[0],c[1]))+tr(" cases du centre (terre ferme : "," tiles from the center (dry land: ")+Math.max(0,Math.round(rC(c[0],c[1])-LAND_R))+tr(" cases "," tiles ")+ARR8[dirTo(c[0],c[1],C0,C0)]+" "+DIR8[dirTo(c[0],c[1],C0,C0)]+") · ≈ "+fmt(depthM(c[0],c[1]))+tr(" m, lumière "," m, light ")+Math.round(depthLight(c[0],c[1])*100)+PCT+tr(" · stade "," · stage ")+baseStage()+"/5 ("+STAGE_NAME[baseStage()]+")";
   if(!draw._m||now-draw._m>700){draw._m=now;drawMini();}
 }
 
