@@ -67,6 +67,7 @@ function raidRisk(){const p=openRef&&openRef.split(":");if(!p||p[0]!=="tile")ret
   return {B,n,pw,vis,ok:pw*ATK_ADV>=est,lf:lossFrac(pw,est)};}
 function raidArrive(M){
   const B=botAt(M.x,M.y);if(!B){M.result="none";report("combat",tr("Raid sans cible · case ","Raid without target · tile ")+M.x+","+M.y,[tr("Le rival avait migré ailleurs.","The rival had moved elsewhere.")],null);return;}
+  if(B.tut){fakeRaid(M,B);return;} /* souche-miroir du guide : pillage d entrainement */
   botSync(B);
   if(nightAt(S.t)){M.result="none";report("combat",tr("Kyste · ","Cyst · ")+B.name,["🌙 "+esc(B.name)+tr(" s’était enkysté pour la nuit : vos collectrices font demi-tour sans combattre."," had encysted for the night: your troops turn back without fighting.")],null);return;}
   if(!M.u)M.u={coll:M.n};

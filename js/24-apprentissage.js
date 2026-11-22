@@ -29,7 +29,7 @@ function lmPill(){if(!S||S.tut!=null)return "";const g=lmGotN();if(g>=LEARN.leng
 function lmIcon(M){return '<span class="lmic">'+(M.ic?sprImg(M.ic,2):M.e)+"</span>";}
 function lmHTML(){
   const rows=LEARN.map((M,i)=>({M,i,s:lmState(M)})).sort((a,b)=>(a.s.got-b.s.got)||((b.s.done&&!b.s.got)-(a.s.done&&!a.s.got))||a.i-b.i);
-  let h='<div class="kick">'+tr("Apprentissage","Learning")+"</div><h2>"+tr("Comprendre votre cellule","Understand your cell")+'</h2><p class="desc">'+tr("Des missions facultatives pour découvrir chaque bâtiment, dans l’ordre que vous voulez. Chacune rapporte une petite récompense, à récupérer ici.","Optional missions to discover each building, in any order. Each one gives a small reward, to claim here.")+" "+lmGotN()+" / "+LEARN.length+tr(" terminées."," done.")+'</p><div class="lmlist">';
+  let h='<div class="kick">'+tr("Apprentissage","Learning")+"</div><h2>"+tr("Comprendre votre cellule","Understand your cell")+'</h2><p class="desc">'+tr("Des missions facultatives pour découvrir chaque bâtiment, dans l’ordre que vous voulez. Chacune rapporte une petite récompense, à récupérer ici. Toutes terminées : un <b>coffre doré</b> !","Optional missions to discover each building, in any order. Each one gives a small reward, to claim here. All done: a <b>golden chest</b>!")+" "+lmGotN()+" / "+LEARN.length+tr(" terminées."," done.")+'</p><div class="lmlist">';
   rows.forEach(({M,i,s})=>{
     h+='<div class="lm'+(s.got?" got":s.done?" ready":"")+'">'+lmIcon(M)+'<div class="lmb"><div class="lmh"><b>'+M.t()+"</b><em>"+rwText(M.rw)+'</em></div><p class="desc">'+M.why()+"</p>";
     if(!s.got)h+='<div class="lmp"><span class="pb"><i style="width:'+Math.round(s.cur/s.max*100)+'%"></i></span><span>'+s.cur+" / "+s.max+"</span>"+(s.done?'<button class="btn sm" data-act="lmclaim" data-i="'+i+'">'+tr("Récupérer","Claim")+"</button>":'<button class="btn sm alt" data-act="lmgo" data-i="'+i+'">'+tr("Y aller →","Go there →")+"</button>")+"</div>";
@@ -39,6 +39,6 @@ function lmHTML(){
 function lmGo(i){const M=LEARN[i];if(!M)return;closeModal();tab=M.go.tab;openRef=M.go.ref?M.go.ref():null;if(tab==="evo")evoBr="P";dirty=true;}
 function lmClaim(i){const M=LEARN[i];if(!M)return;const s=lmState(M);if(!s.done||s.got)return;S.lmGot=S.lmGot||{};S.lmGot[M.id]=1;
   const cap=rates().cap;for(const k in M.rw)S.res[k]=Math.min(Math.max(S.res[k],cap),S.res[k]+M.rw[k]);
-  log(tr("Apprentissage : ","Learning: ")+M.t()+tr(". Récompense : ",". Reward: ")+rwText(M.rw)+".","good");toast("📘 "+rwText(M.rw));showModal(lmHTML());dirty=true;save();}
+  log(tr("Apprentissage : ","Learning: ")+M.t()+tr(". Récompense : ",". Reward: ")+rwText(M.rw)+".","good");toast("📘 "+rwText(M.rw));if(lmGotN()>=LEARN.length){closeModal();dirty=true;save();setTimeout(goldChest,300);return;}showModal(lmHTML());dirty=true;save();}
 /* un petit signal quand une mission devient récupérable */
 setInterval(()=>{if(!S||S.tut!=null||!LEARN)return;const first=!S.lmSeen;S.lmSeen=S.lmSeen||{};LEARN.forEach(M=>{if(S.lmSeen[M.id])return;const s=lmState(M);if(s.done){S.lmSeen[M.id]=1;if(!s.got&&!first){toast(tr("📘 Mission accomplie : ","📘 Mission complete: ")+M.t());dirty=true;}}});},1500);

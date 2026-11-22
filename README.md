@@ -40,7 +40,7 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261122c`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261122d`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
 
 ## Langues
 
@@ -117,7 +117,7 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | La carte | `js/19-carte.js` |
 | La sauvegarde, le démarrage | `js/21-demarrage.js` |
 | La fenêtre « Mon avis », le compteur de visites | `js/22-avis.js` |
-| Le guide des premiers pas (étapes, textes, flèche, temps accéléré), le pillage d’entraînement, le coffre doré de fin | `js/23-premiers-pas.js` |
+| Le guide des premiers pas (étapes, textes, flèche, temps accéléré), le pillage d’entraînement contre la souche-miroir, le coffre doré | `js/23-premiers-pas.js` |
 | Les missions d’apprentissage (📘) : liste, textes, récompenses | `js/24-apprentissage.js` |
 
 Pour ajouter un fichier : créez-le dans `js/`, en commençant par `"use strict";`, puis ajoutez sa ligne `<script src="js/…"></script>` dans `index.html`, après les fichiers dont il utilise les fonctions au chargement.
