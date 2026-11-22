@@ -45,7 +45,7 @@ function fakeRaid(){
   S.tutRaid={pw:Math.round(pw),def,lost,n,got};
 }
 function tutGoals(){const out=[];for(let i=S.q;i<QUESTS.length&&out.length<3;i++){if(!QUESTS[i].done())out.push(QUESTS[i]);}return out;}
-function tutEnd(){S.tut=null;S.tourDone=true;S.newTab="evo";tutKey=null;openRef=null;tab="cell";questTick();toast(tr("Tout est ouvert : bonne évolution !","Everything is open: happy evolving!"));dirty=true;save();}
+function tutEnd(){S.tut=null;S.tourDone=true;S.newTab="evo";tutKey=null;openRef=null;tab="cell";questTick();toast(tr("Tout est ouvert : bonne évolution !","Everything is open: happy evolving!"));dirty=true;save();if(!S.tutSkipped)setTimeout(goldChest,250);}
 
 const TUT=[
   {id:"hello",card:1,btn:()=>tr("C’est parti","Let’s go"),t:()=>tr("Bienvenue, souche ","Welcome, strain ")+SOUCHES[S.souche].name,
@@ -71,13 +71,14 @@ const TUT=[
     d:()=>{const g=(S.tutGain||{}).hunt;return (g?"<p>"+tr("<b>Ressources</b> : la proie dévorée vous rapporte","<b>Resources</b>: the devoured prey brings you")+"</p>"+tutResRows(g):"")+"<p><b>"+tr("Votre héros","Your hero")+"</b></p>"+(S.tutH0?tutHeroRows(S.tutH0):"")+
       "<p>"+tr("<b>Son rôle</b> : il accompagne vos chasses et vos pillages et ajoute sa force à celle des troupes. Il ne meurt jamais. Chaque proie renforce un trait (venin, carapace…) ; dès le niveau 3, ses deux traits dominants lui donnent une forme, avec ses forces et ses faiblesses.","<b>Its role</b>: it joins your hunts and raids and adds its strength to your troops. It never dies. Each prey strengthens a trait (venom, shell…); from level 3, its two dominant traits give it a form, with strengths and weaknesses.")+'</p><p class="desc">'+tr("Contre un organisme sauvage, il ne gagne qu’un dixième de l’expérience d’un combat contre un autre joueur.","Against a wild organism, it gains only a tenth of the experience of a fight against another player.")+"</p>";}},
   {id:"hero",sel:".herocard",scroll:"start",tab:"hero",btn:()=>tr("Suivant","Next"),t:()=>tr("La fiche du héros","The hero sheet"),d:()=>"<p>"+tr("Son niveau, son expérience et ses traits. Décochez « L’emmener dans mes chasses » si vous voulez le garder à la maison pour défendre.","Its level, experience and traits. Untick “Bring it on my hunts” to keep it home to defend.")+"</p>"},
-  {id:"pvp",card:1,kick:()=>tr("Les rivaux","Rivals"),btn:()=>tr("Lancer le pillage d’entraînement","Start the training raid"),next:fakeRaid,t:()=>tr("Les autres joueurs : pillez, défendez-vous","Other players: raid, defend yourself"),
+  {id:"pvp",card:1,kick:()=>tr("Les rivaux","Rivals"),btn:()=>tr("Lancer le pillage d’entraînement","Start the training raid"),next:()=>{S.tutRaidAt=Date.now()+2600;},t:()=>tr("Les autres joueurs : pillez, défendez-vous","Other players: raid, defend yourself"),
     d:()=>"<p>"+tr("Les 499 autres organismes sont des rivaux, comme vous. Eux ne sont pas neutres : on les <b>pille</b>… et ils vous pillent.","The 499 other organisms are rivals, like you. They are not neutral: you <b>raid</b> them… and they raid you.")+'</p><ul class="tutlist"><li>'+
       tr("Un pillage réussi emporte les ressources de son entrepôt, sauf la part à l’abri dans sa vacuole.","A successful raid takes the resources in its storage, except the share safe in its vacuole.")+"</li><li>"+
       tr("Le défenseur ne perd aucune troupe ; l’attaquant en perd d’autant plus que le combat est serré.","The defender loses no troops; the attacker loses more the closer the fight.")+"</li><li>"+
       tr("Votre héros y gagne dix fois plus d’expérience qu’à la chasse.","Your hero gains ten times more experience than from hunting.")+"</li><li>"+
       tr("Un rival pillé devient rancunier et peut riposter. Après un pillage subi, vous êtes protégé 1 h ; la nuit (minuit à 7 h), personne n’attaque.","A raided rival holds a grudge and may strike back. After being raided you are protected for 1 h; at night (midnight to 7 am) nobody attacks.")+"</li></ul><p>"+
       tr("Essayons sans risque : un pillage d’entraînement contre une souche-miroir.","Let’s try it risk-free: a training raid against a mirror strain.")+"</p>"},
+  {id:"raiding",float:1,t:()=>tr("Pillage en cours","Raid under way"),d:()=>"<p>"+tr("Vos troupes et votre héros foncent vers la souche-miroir… Le combat se règle à l’arrivée : votre force contre sa défense.","Your troops and hero rush toward the mirror strain… The fight is settled on arrival: your strength against its defense.")+'</p><div class="tutrun"><i style="animation-duration:2.6s"></i></div>',done:()=>Date.now()>=(S.tutRaidAt||0),after:fakeRaid},
   {id:"pvpsum",card:1,kick:()=>tr("Rapport","Report"),btn:()=>tr("Ouvrir les rapports","Open the reports"),t:()=>tr("Pillage réussi","Successful raid"),
     d:()=>{const R=S.tutRaid||{};return '<div class="fbar"><i style="width:'+Math.round(R.pw/(R.pw+R.def)*100)+'%"></i><span>'+tr("Vous ","You ")+fmt(R.pw||0)+"</span><span>"+tr("Défense ","Defense ")+fmt(R.def||0)+"</span></div>"+
       tutRow(tr("Pertes","Losses"),(R.lost||0)+" / "+(R.n||0)+(R.lost?tr(" (remboursées)"," (refunded)"):""),(R.lost||0)+" / "+(R.n||0)+(R.lost?tr(" (remboursées)"," (refunded)"):""))+
@@ -87,9 +88,10 @@ const TUT=[
     d:()=>"<p>"+tr("Chaque combat, chaque récolte et chaque pillage subi arrive ici, comme un courrier : la pastille rouge compte les rapports non lus. Ouvrez les rapports.","Every fight, every harvest and every raid you suffer arrives here, like mail: the red badge counts unread reports. Open the reports.")+"</p>",done:()=>tab==="act"},
   {id:"report",sel:"#viewarea .rep",tab:"act",enter:()=>{actSub="combat";},btn:()=>tr("Suivant","Next"),t:()=>tr("Le rapport de combat","The combat report"),
     d:()=>"<p>"+tr("Forces en présence, pertes, butin, gain du héros : tout y est. Les sous-onglets séparent les troupes en route, les combats, les récoltes, le classement et le journal.","Forces on each side, losses, loot, hero gain: it’s all there. The sub-tabs separate troops on the way, fights, harvests, ranking and the log.")+"</p>"},
-  {id:"final",card:1,kick:()=>tr("Premiers pas terminés","First steps complete"),btn:()=>tr("Jouer !","Play!"),next:tutEnd,t:()=>tr("À vous de jouer","Over to you"),
+  {id:"final",card:1,kick:()=>tr("Premiers pas terminés","First steps complete"),btn:()=>S.tutSkipped?tr("Jouer !","Play!"):tr("🎁 Ouvrir mon coffre doré","🎁 Open my golden chest"),next:tutEnd,t:()=>tr("À vous de jouer","Over to you"),
     d:()=>"<h3>"+tr("Vos prochains objectifs","Your next goals")+'</h3><ol class="tutlist">'+tutGoals().map(Q=>"<li>"+Q.t+' <em class="up">'+rwText(Q.rw)+"</em></li>").join("")+"</ol>"+
       '<p class="desc">'+tr("La quête du moment s’affiche toujours en haut de l’écran : touchez-la, le jeu vous emmène au bon endroit.","The current quest always shows at the top of the screen: tap it and the game takes you to the right place.")+"</p>"+
+      "<p>"+tr("En plus, le carnet <b>📘 Apprentissage</b> (en haut de l’écran) propose de petites missions récompensées pour comprendre chaque bâtiment. Elles sont facultatives : sans elles, pas de récompense.","Also, the <b>📘 Learning</b> notebook (top of the screen) offers small rewarded missions to understand each building. They are optional: skip them and you miss the rewards.")+"</p>"+
       "<h3>"+tr("Encore à découvrir","Still to discover")+'</h3><ul class="tutdisc">'+[
         ["🧬",tr("<b>Évolution</b> (nouvel onglet) : gènes, mutations, émergences cachées, jusqu’à l’Endosymbiose.","<b>Evolution</b> (new tab): genes, mutations, hidden emergences, up to Endosymbiosis.")],
         ["🏗",tr("<b>Construire</b> : canaux de la membrane, noyau et organites de la cellule.","<b>Building</b>: membrane channels, nucleus and the cell’s organelles.")],
@@ -106,7 +108,7 @@ const TUT=[
 function tutStep(){return S&&S.tut!=null?TUT[S.tut]||null:null;}
 function tutGo(i){if(i>=TUT.length){tutEnd();return;}S.tut=i;tutKey=null;tutScrolled=false;const st=TUT[i];if(st.enter)st.enter();if(st.tab&&tab!==st.tab){tab=st.tab;openRef=null;}dirty=true;save();}
 function tutNext(){const st=tutStep();if(!st)return;if(st.next)st.next();if(S.tut==null)return;tutGo(S.tut+1);}
-function tutSkip(){if(!S||S.tut==null)return;const f=tutI("final");if(S.tut===f){tutEnd();return;}tutGo(f);}
+function tutSkip(){if(!S||S.tut==null)return;S.tutSkipped=1;const f=tutI("final");if(S.tut===f){tutEnd();return;}tutGo(f);}
 function tutStripHTML(){const st=tutStep();let h='<span class="tutpill">🎓 '+tr("Premiers pas","First steps")+" <b>"+(S.tut+1)+" / "+TUT.length+"</b>"+(st?" · "+st.t():"")+"</span>";
   if(S.queue.length)h+="<span>"+tr("Production : ","Production: ")+S.queue.length+' · <span data-end="'+queueEnd()+'"></span></span>';
   return h+'<span data-act="tab" data-t="hero">'+sprImg("u_coll",1)+tr(" Troupes "," Troops ")+"<b>"+S.idle+tr(" libres / "," free / ")+cellCount()+"</b></span>";}
@@ -150,3 +152,13 @@ function tutTick(){
 }
 setInterval(tutTick,120);
 window.addEventListener("resize",()=>{tutKey=null;});
+/* Coffre doré de fin de guide : ressources, énergie, XP du héros et 2 constructions instantanées */
+function goldChest(){if(!S||S.goldDone)return;S.goldDone=1;
+  const items=[];giveRes(1.6,RES,items);const e=enGive(15);if(e)items.push({k:"en",v:e});
+  const xp=Math.round(xpNeed(S.hero.lvl)*0.5),H=S.hero;H.xp+=xp;items.push({k:"xp",v:xp});while(H.xp>=xpNeed(H.lvl)){H.xp-=xpNeed(H.lvl);H.lvl++;}
+  S.inst=(S.inst||0)+2;items.push({k:"inst",v:2});
+  const T=Object.assign({},CHEST_TIERS[3],{n:tr("Doré","Golden"),mt:tr("Premiers pas","First steps"),ti:3});
+  log("👑 "+tr("Coffre doré des premiers pas : ressources, énergie, XP du héros et 2 constructions instantanées.","Golden first-steps chest: resources, energy, hero XP and 2 instant builds."),"rare");
+  dirty=true;save();chestFX(T,items);}
+function instPill(){if(!S||S.tut!=null||!(S.inst>0)||S.build)return "";return '<span class="rwpill instpill" data-tip="'+esc(tr("<b>Construction instantanée</b>Lancez une construction dans la cellule, puis touchez 🏗 à côté de sa barre : elle se termine tout de suite.","<b>Instant build</b>Start a build in the cell, then tap 🏗 next to its bar: it finishes right away."))+'">🏗 ×'+S.inst+"</span>";}
+function useInstant(){if(!S||!S.build||!(S.inst>0))return;S.inst--;S.build.end=S.t;S.build.start=Math.min(S.build.start,S.t);toast(tr("🏗 Construction terminée !","🏗 Build complete!"));dirty=true;}

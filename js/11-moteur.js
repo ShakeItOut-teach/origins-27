@@ -129,7 +129,7 @@ const BQ_MAX=2; /* constructions programmées en plus de celle en cours */
 function bqFull(){return !!S.build&&(S.bq||[]).length>=BQ_MAX;}
 function bqSame(b,type,i){return b&&b.type===type&&(type==="noyau"||b.i===i);}
 function bqPending(type,i){return (bqSame(S.build,type,i)?1:0)+(S.bq||[]).filter(b=>bqSame(b,type,i)).length;}
-function bqStart(o){dqAdd("build");if(!S.build){S.build=Object.assign(o,{start:S.t,end:S.t+o.time});toast(tr("Construction lancée","Build started"));}else{S.bq=S.bq||[];S.bq.push(o);toast(tr("Ajouté à la file (","Added to the queue (")+S.bq.length+"/"+BQ_MAX+")");}}
+function bqStart(o){dqAdd("build");if(tutFast())o.time=Math.min(o.time,2*S.speed);if(!S.build){S.build=Object.assign(o,{start:S.t,end:S.t+o.time});toast(tr("Construction lancée","Build started"));}else{S.bq=S.bq||[];S.bq.push(o);toast(tr("Ajouté à la file (","Added to the queue (")+S.bq.length+"/"+BQ_MAX+")");}}
 function upgradeBlock(u){if(bqFull())return busyMsg();if(u.level>=u.max)return tr("Niveau maximum atteint.","Maximum level reached.");return capBlock(u.cost);}
 function newBlock(k){if(bqFull())return busyMsg();if(S.slots.some(s=>s&&s.k===k)||(S.build&&S.build.type==="new"&&S.build.k===k)||(S.bq||[]).some(b=>b.type==="new"&&b.k===k))return tr("Déjà construit.","Already built.");if(!BLD[k].req.every(reqMet))return tr("Conditions non remplies.","Requirements not met.");return capBlock(bldCost(k,0));}
 function nodeState(id){
@@ -153,7 +153,7 @@ function sendMission(kind,quiet,auto){
   const T0=S.tiles[y*W+x],kk=kind==="collect"&&!T0.s?"explore":kind,u0=auto?pickUnits(kk,Math.max(1,Math.min(S.idle,S.selN||1))):selComp(kk),u=kk==="spy"?Object.fromEntries(Object.entries(u0).filter(e=>UNITS[e[0]].spy>0)):u0,n=uSum(u);
   if(n<1){if(!quiet)toast(kk==="spy"?tr("Il faut des troupes d’espionnage (éclaireuses ou mieux)","You need spy troops (scouts or better)"):tr("Choisissez au moins une troupe","Choose at least one troop"));return;}
   if(!enSpend(enCostFor(kk,T0),quiet))return false;S.sentOnce=1;
-  for(const k in u)S.army[k]-=u[k];syncIdle();const dur=tutFast()?Math.min(6*S.speed,d*tileTime()/compSpd(u)):d*tileTime()/compSpd(u);
+  for(const k in u)S.army[k]-=u[k];syncIdle();const dur=tutFast()?Math.min(1.5*S.speed,d*tileTime()/compSpd(u)):d*tileTime()/compSpd(u);
   const hero=(kind==="hunt"||kind==="raid")&&S.heroWith&&!S.hero.busy;if(hero)S.hero.busy=true;
   S.missions.push({id:S.nextId++,kind,x,y,n,u,hero,depart:S.t,arrive:S.t+dur,back:S.t+2*dur,arrived:false,cargo:null});
   if(!quiet)toast(compText(u)+tr(" en route"," on the way"));dirty=true;return true;

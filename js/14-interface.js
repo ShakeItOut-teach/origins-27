@@ -111,7 +111,7 @@ function stripHTML(){
   if(S.mig)h+='<span>Migration <b>'+tr("vers ","to ")+S.mig.x+","+S.mig.y+'</b><span class="pb"><i data-ps="'+S.mig.start+'" data-pe="'+S.mig.end+'"></i></span><span data-end="'+S.mig.end+'"></span></span>';
   h+=S.research?'<span>'+tr("Gène ","Gene ")+'<b>'+NODES[S.research.id].name+(S.research.lvl?tr(" niv. "," lvl ")+S.research.lvl:"")+'</b><span class="pb evo"><i data-ps="'+S.research.start+'" data-pe="'+S.research.end+'"></i></span><span data-end="'+S.research.end+'"></span>'+accelHTML("r")+'</span>':"<span>"+tr("Aucun gène en cours","No gene in progress")+"</span>";
   if(S.mres)h+='<span>'+tr("Recherche ","Research ")+'<b>'+RBR[S.mres.br].e+" T"+S.mres.L+'</b><span class="pb evo"><i data-ps="'+S.mres.start+'" data-pe="'+S.mres.end+'"></i></span><span data-end="'+S.mres.end+'"></span>'+accelHTML("m")+"</span>";
-  h+=enPill();
+  h+=enPill()+lmPill()+instPill();
   {const st=stashTotal();if(st>=1)h+='<span class="rwpill" data-act="rewards">🧺 <b>'+fmt(st)+"</b>"+tr(" en réserve"," in reserve")+"</span>";}
   {const n=rwCount();h+='<span class="rwpill'+(n?" on":"")+'" data-act="rewards">🎁 '+(n?tr("Récompenses ","Rewards ")+"<b>"+n+"</b>":tr("Coffre dans ","Chest in ")+"<span data-endr=\""+S.chestAt+"\"></span>")+"</span>";}
   {const r=myRank("pow"),L=leagueOf(r);h+='<span class="rkpill" data-act="goto" data-tab="act" data-sub="rank">'+L[1]+" <b>#"+r+"</b>"+tr(" mondial"," world")+"</span>";}

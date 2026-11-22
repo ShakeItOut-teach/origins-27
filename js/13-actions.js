@@ -76,6 +76,10 @@ function act(a,el){
   if(a==="raid"){const R=raidRisk();if(R&&!R.ok){showModal(botWarnHTML(R));return;}const n0=S.missions.length;sendMission("raid");if(S.missions.length>n0&&shieldAt(S.t)){S.shieldR=0;toast(tr("🛡 Vous attaquez : votre protection s’arrête","🛡 You attack: your protection ends"));}return;}
   if(a==="raidgo"){closeModal();const n0=S.missions.length;sendMission("raid");if(S.missions.length>n0&&shieldAt(S.t)){S.shieldR=0;toast(tr("🛡 Vous attaquez : votre protection s’arrête","🛡 You attack: your protection ends"));}return;}
   if(a==="mclose"){closeModal();return;}
+  if(a==="instant"){useInstant();return;}
+  if(a==="learn"){showModal(lmHTML());return;}
+  if(a==="lmgo"){lmGo(+el.dataset.i);return;}
+  if(a==="lmclaim"){lmClaim(+el.dataset.i);return;}
   if(a==="goadv"){closeModal();tab=el.dataset.tab;openRef=el.dataset.ref||null;dirty=true;return;}
   if(a==="filament"){const p=openRef.split(":"),x=+p[1],y=+p[2];if(filBlock(x,y))return;const d=dist(x,y),c=filCost(d);if(!afford(c))return;pay(c);S.build={type:"fil",x,y,start:S.t,end:S.t+filTime(d),label:tr("Filament vers ","Filament to ")+x+","+y};toast(tr("Filament en croissance","Filament growing"));dirty=true;return;}
   if(a==="recallall"){let n=0;S.missions.forEach(M=>{if(M.arrived)return;const el2=S.t-M.depart;M.result="cancel";M.arrived=true;M.cancelled=true;M.arrive=S.t;M.back=S.t+el2;n++;});toast(n?n+" mission"+(n>1?"s":"")+tr(" rappelée"+(n>1?"s":"")," recalled"):tr("Toutes vos troupes sont déjà sur le retour","All your troops are already returning"));dirty=true;return;}

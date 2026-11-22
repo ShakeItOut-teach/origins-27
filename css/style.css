@@ -625,7 +625,7 @@ body.pixel .mut,body.pixel .mutbar,body.pixel .linrow,body.pixel .quick,body.pix
 /* Premiers pas : le guide d’une nouvelle partie (flèche, masque qui bloque le reste, bulles et bilans) */
 #coach{position:fixed;inset:0;z-index:30;display:none;pointer-events:none}
 #coach.on{display:block}
-#coach .cm{position:fixed;background:rgba(2,6,11,.72);pointer-events:auto}
+#coach .cm{position:fixed;background:rgba(2,6,11,.6);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);pointer-events:auto}
 #coach:not(.c-block) .cm,#coach.c-card .cm+.cm{display:none}
 #coach .cring{position:fixed;border:2px solid var(--gold,#ffd166);border-radius:10px;box-shadow:0 0 18px rgba(255,209,102,.55);animation:cpulse 1.4s ease-in-out infinite}
 #coach.c-card .cring,#coach.c-float .cring{display:none}
@@ -652,3 +652,25 @@ body.pixel #coach .cbub,body.pixel #coach .cring,body.pixel .tutres div{border-r
 @keyframes cpulse{0%,100%{box-shadow:0 0 10px rgba(255,209,102,.4)}50%{box-shadow:0 0 26px rgba(255,209,102,.9)}}
 @keyframes cbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
 @media (prefers-reduced-motion:reduce){#coach .cring,#coach .carr svg{animation:none}}
+/* Carnet d’apprentissage : missions facultatives, une par bâtiment */
+.lmpill{border-color:#8fb8ff}.lmpill.on{background:#ffd166;color:#2a1800;border-color:#ffd166}
+.lmlist{display:grid;gap:8px;margin-top:10px;max-height:min(60vh,560px);overflow:auto;padding-right:4px;text-align:left}
+.lm{display:flex;gap:10px;align-items:flex-start;background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.lm.ready{border-color:#ffd166;box-shadow:0 0 12px rgba(255,209,102,.25)}
+.lm.got{opacity:.55}
+.lmic{flex:0 0 34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.lmb{flex:1;min-width:0}.lmb .desc{margin:3px 0 6px;font-size:12.5px}
+.lmh{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}.lmh em{font-style:normal;color:var(--lume);font-size:12px}
+.lmp{display:flex;align-items:center;gap:8px;font-size:12px}.lmp .pb{flex:1;min-width:60px}
+.lmok{font-size:12px;margin:0}
+body.pixel .lm{border-radius:0}
+.lmic img,.lmic canvas,.lmic svg{max-width:34px;max-height:34px;width:auto;height:auto}
+.lmp .pb{display:block;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.lmp .pb i{display:block;height:100%;background:var(--lume)}
+.lm.ready .lmp .pb i{background:#ffd166}
+/* Guide : barre de marche animée, construction instantanée */
+.tutrun{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:4px 0 2px}
+.tutrun i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ffd166,#ff9a3d);transform-origin:0 50%;animation:tutrun linear forwards}
+@keyframes tutrun{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.accb.inst{background:#ffd166;color:#2a1800;border-color:#ffd166}
+.instpill{border-color:#ffd166;color:#ffd166}

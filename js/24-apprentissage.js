@@ -1,0 +1,44 @@
+/* Origins 27 · 24-apprentissage.js
+   Carnet d’apprentissage : des missions facultatives, pour toutes les parties, qui font découvrir chaque bâtiment
+   (à quoi il sert, pourquoi il est là). Petites récompenses à récupérer à la main ; un lien « Y aller » mène au bon endroit.
+   Compteurs : S.lmc (alimenté par dqAdd), missions récupérées : S.lmGot.
+   Chargé dans l’ordre par index.html ; tous les fichiers partagent les mêmes variables globales. */
+"use strict";
+function lmCount(k){return (S.lmc&&S.lmc[k])||0;}
+function lmBld(k){return {tab:"cell",ref:()=>refFor(["b",k,1])};}
+const LEARN=[
+  {id:"coll5",ic:"o_ribo",t:()=>tr("Produire 5 collectrices","Produce 5 gatherers"),why:()=>tr("Les <b>ribosomes</b> sont votre caserne : chaque troupe y est fabriquée (onglet Armée). Plus de collectrices, c’est plus de récolte… et plus d’entretien à payer.","The <b>ribosomes</b> are your barracks: every troop is built there (Army tab). More gatherers means more harvest… and more upkeep to pay."),prog:()=>[lmCount("units"),5],go:{tab:"hero"},rw:{prot:30,atp:20}},
+  {id:"harv5",e:"⛏",t:()=>tr("Récolter 5 fois","Harvest 5 times"),why:()=>tr("Dans les <b>abysses</b>, vos collectrices rapportent ce que contiennent les gisements. Le bouton ⛏ envoie d’un coup toutes celles qui sont libres.","In the <b>abyss</b>, your gatherers bring back what deposits contain. The ⛏ button sends all free ones at once."),prog:()=>[lmCount("collect"),5],go:{tab:"map"},rw:{lip:40}},
+  {id:"fields",ic:"r_atp",t:()=>tr("Améliorer les 4 canaux de la membrane","Upgrade the 4 membrane channels"),why:()=>tr("Les <b>canaux</b> sont vos champs : un par ressource (ATP, protéines, lipides, nucléotides). Ils produisent en continu, même quand vous n’êtes pas là.","The <b>channels</b> are your fields: one per resource (ATP, proteins, lipids, nucleotides). They produce continuously, even while you are away."),prog:()=>[S.fields.filter(f=>f.l>0).length,4],go:{tab:"cell",ref:()=>{let bi=0;S.fields.forEach((f,i)=>{if(f.l<S.fields[bi].l)bi=i;});return "field:"+bi;}},rw:{atp:40,prot:40}},
+  {id:"noyau2",ic:"o_noyau",t:()=>tr("Monter le noyau au niveau 2","Raise the nucleus to level 2"),why:()=>tr("Le <b>noyau</b> est le cœur de la cellule : chaque niveau accélère toutes les constructions et débloque de nouveaux organites.","The <b>nucleus</b> is the heart of the cell: each level speeds up all building and unlocks new organelles."),prog:()=>[S.noyau,2],go:{tab:"cell",ref:()=>"noyau"},rw:{nuc:30}},
+  {id:"vac",ic:"o_vac",t:()=>tr("Construire la vacuole","Build the vacuole"),why:()=>BLD.vac.role+" "+tr("Sans elle, un pillage peut vous prendre presque tout.","Without it, a raid can take almost everything."),prog:()=>[Math.min(1,blvl("vac")),1],go:lmBld("vac"),rw:{lip:40}},
+  {id:"flag",ic:"o_flag",t:()=>tr("Construire le flagelle","Build the flagellum"),why:()=>BLD.flag.role,prog:()=>[Math.min(1,blvl("flag")),1],go:lmBld("flag"),rw:{atp:40}},
+  {id:"hunt3",e:"🦠",t:()=>tr("Chasser 3 organismes sauvages","Hunt 3 wild organisms"),why:()=>tr("Les organismes sauvages sont <b>neutres</b> : ils n’attaquent jamais. Chassez-les pour leur biomasse et pour faire progresser votre héros.","Wild organisms are <b>neutral</b>: they never attack. Hunt them for their biomass and to level up your hero."),prog:()=>[lmCount("hunt"),3],go:{tab:"map"},rw:{prot:50}},
+  {id:"photo",ic:"o_photo",t:()=>tr("Construire les photorécepteurs","Build the photoreceptors"),why:()=>BLD.photo.role+" "+tr("Voir plus loin, c’est repérer les gisements et les rivaux avant eux.","Seeing further means spotting deposits and rivals first."),prog:()=>[Math.min(1,blvl("photo")),1],go:lmBld("photo"),rw:{nuc:25}},
+  {id:"fil",e:"🌿",t:()=>tr("Étendre un filament","Extend a filament"),why:()=>tr("Un <b>filament</b> relie votre cellule à un gisement proche : il vous nourrit en continu, sans envoyer de troupes. Touchez un gisement dans les abysses.","A <b>filament</b> links your cell to a nearby deposit: it feeds you continuously, without sending troops. Tap a deposit in the abyss."),prog:()=>[Math.min(1,S.fils.length),1],go:{tab:"map"},rw:{lip:50}},
+  {id:"gene",e:"🧬",t:()=>tr("Exprimer un premier gène","Express a first gene"),why:()=>tr("Les <b>gènes</b> transforment votre cellule : plus de production, de force ou de vision. Ils coûtent surtout des nucléotides.","<b>Genes</b> transform your cell: more production, strength or sight. They mostly cost nucleotides."),prog:()=>[Math.min(1,S.nodes.length),1],go:{tab:"evo"},rw:{nuc:30}},
+  {id:"mito",ic:"o_mito",t:()=>tr("Construire la mitochondrie","Build the mitochondrion"),why:()=>BLD.mito.role+" "+tr("L’ATP paie presque tout : constructions, troupes, entretien.","ATP pays for almost everything: buildings, troops, upkeep."),prog:()=>[Math.min(1,blvl("mito")),1],go:lmBld("mito"),rw:{atp:60}},
+  {id:"ribo3",ic:"o_ribo",t:()=>tr("Ribosomes au niveau 3","Ribosomes to level 3"),why:()=>tr("Au niveau 3, une deuxième <b>chaîne de production</b> s’ouvre : deux troupes fabriquées à la fois.","At level 3, a second <b>production line</b> opens: two troops built at once."),prog:()=>[blvl("ribo"),3],go:lmBld("ribo"),rw:{prot:60}},
+  {id:"raid1",e:"⚔",t:()=>tr("Réussir un pillage","Win a raid"),why:()=>tr("Les <b>rivaux</b> sont d’autres organismes : leur entrepôt se pille, sauf la part cachée dans leur vacuole. Espionnez-les d’abord pour connaître leur défense.","<b>Rivals</b> are other organisms: their storage can be raided, except the share hidden in their vacuole. Spy on them first to learn their defense."),prog:()=>[Math.min(1,lmCount("raid")),1],go:{tab:"map"},rw:{atp:50,lip:50}}
+];
+function lmState(M){const p=M.prog(),got=!!(S.lmGot&&S.lmGot[M.id]);return {cur:Math.min(p[0],p[1]),max:p[1],done:p[0]>=p[1],got};}
+function lmReady(){return LEARN.filter(M=>{const s=lmState(M);return s.done&&!s.got;}).length;}
+function lmGotN(){return LEARN.filter(M=>S.lmGot&&S.lmGot[M.id]).length;}
+function lmPill(){if(!S||S.tut!=null)return "";const g=lmGotN();if(g>=LEARN.length)return "";const n=lmReady();
+  return '<span class="rwpill lmpill'+(n?" on":"")+'" data-act="learn">📘 '+(n?tr("Apprentissage : ","Learning: ")+"<b>"+n+"</b>"+tr(" à récupérer"," to claim"):tr("Apprentissage ","Learning ")+"<b>"+g+" / "+LEARN.length+"</b>")+"</span>";}
+function lmIcon(M){return '<span class="lmic">'+(M.ic?sprImg(M.ic,2):M.e)+"</span>";}
+function lmHTML(){
+  const rows=LEARN.map((M,i)=>({M,i,s:lmState(M)})).sort((a,b)=>(a.s.got-b.s.got)||((b.s.done&&!b.s.got)-(a.s.done&&!a.s.got))||a.i-b.i);
+  let h='<div class="kick">'+tr("Apprentissage","Learning")+"</div><h2>"+tr("Comprendre votre cellule","Understand your cell")+'</h2><p class="desc">'+tr("Des missions facultatives pour découvrir chaque bâtiment, dans l’ordre que vous voulez. Chacune rapporte une petite récompense, à récupérer ici.","Optional missions to discover each building, in any order. Each one gives a small reward, to claim here.")+" "+lmGotN()+" / "+LEARN.length+tr(" terminées."," done.")+'</p><div class="lmlist">';
+  rows.forEach(({M,i,s})=>{
+    h+='<div class="lm'+(s.got?" got":s.done?" ready":"")+'">'+lmIcon(M)+'<div class="lmb"><div class="lmh"><b>'+M.t()+"</b><em>"+rwText(M.rw)+'</em></div><p class="desc">'+M.why()+"</p>";
+    if(!s.got)h+='<div class="lmp"><span class="pb"><i style="width:'+Math.round(s.cur/s.max*100)+'%"></i></span><span>'+s.cur+" / "+s.max+"</span>"+(s.done?'<button class="btn sm" data-act="lmclaim" data-i="'+i+'">'+tr("Récupérer","Claim")+"</button>":'<button class="btn sm alt" data-act="lmgo" data-i="'+i+'">'+tr("Y aller →","Go there →")+"</button>")+"</div>";
+    else h+='<p class="up lmok">✔ '+tr("Récompense reçue","Reward received")+"</p>";
+    h+="</div></div>";});
+  return h+'</div><div class="row" style="justify-content:center;margin-top:10px"><button class="btn alt" data-act="mclose">'+tr("Fermer","Close")+"</button></div>";}
+function lmGo(i){const M=LEARN[i];if(!M)return;closeModal();tab=M.go.tab;openRef=M.go.ref?M.go.ref():null;if(tab==="evo")evoBr="P";dirty=true;}
+function lmClaim(i){const M=LEARN[i];if(!M)return;const s=lmState(M);if(!s.done||s.got)return;S.lmGot=S.lmGot||{};S.lmGot[M.id]=1;
+  const cap=rates().cap;for(const k in M.rw)S.res[k]=Math.min(Math.max(S.res[k],cap),S.res[k]+M.rw[k]);
+  log(tr("Apprentissage : ","Learning: ")+M.t()+tr(". Récompense : ",". Reward: ")+rwText(M.rw)+".","good");toast("📘 "+rwText(M.rw));showModal(lmHTML());dirty=true;save();}
+/* un petit signal quand une mission devient récupérable */
+setInterval(()=>{if(!S||S.tut!=null||!LEARN)return;const first=!S.lmSeen;S.lmSeen=S.lmSeen||{};LEARN.forEach(M=>{if(S.lmSeen[M.id])return;const s=lmState(M);if(s.done){S.lmSeen[M.id]=1;if(!s.got&&!first){toast(tr("📘 Mission accomplie : ","📘 Mission complete: ")+M.t());dirty=true;}}});},1500);

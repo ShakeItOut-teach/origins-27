@@ -83,7 +83,7 @@ Le texte tapé est gardé si la fenêtre est fermée. Un seul rappel discret app
 ```
 index.html          la page : en-tête, zones de l’écran, et la liste des scripts à charger
 css/style.css       toute l’apparence (couleurs, mise en page, animations)
-js/00-langue.js … js/23-premiers-pas.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas)
+js/00-langue.js … js/24-apprentissage.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage)
 apercu.jpg          l’image affichée quand on partage le lien (1200 × 630)
 ```
 
@@ -113,7 +113,8 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | La carte | `js/19-carte.js` |
 | La sauvegarde, le démarrage | `js/21-demarrage.js` |
 | La fenêtre « Mon avis », le compteur de visites | `js/22-avis.js` |
-| Le guide des premiers pas (étapes, textes, flèche), le pillage d’entraînement | `js/23-premiers-pas.js` |
+| Le guide des premiers pas (étapes, textes, flèche, temps accéléré), le pillage d’entraînement, le coffre doré de fin | `js/23-premiers-pas.js` |
+| Les missions d’apprentissage (📘) : liste, textes, récompenses | `js/24-apprentissage.js` |
 
 Pour ajouter un fichier : créez-le dans `js/`, en commençant par `"use strict";`, puis ajoutez sa ligne `<script src="js/…"></script>` dans `index.html`, après les fichiers dont il utilise les fonctions au chargement.
 

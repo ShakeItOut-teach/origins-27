@@ -50,7 +50,7 @@ const LIFE=["",tr("Procaryote","Prokaryote"),tr("Eucaryote","Eukaryote"),tr("Col
 function uReq(k){return UNITS[k].req.every(reqMet);}
 function uSum(a){let n=0;for(const k in a)n+=a[k]||0;return n;}
 function syncIdle(){S.idle=uSum(S.army);}
-function unitTime(k){if(tutFast())return 1.5*S.speed;return UNITS[k].t/10*cellTime();}
+function unitTime(k){if(tutFast())return 1*S.speed;return UNITS[k].t/10*cellTime();}
 function laneCount(){return 1+Math.floor(blvl("ribo")/3);}
 function queueEnd(){return S.queue.reduce((a,q)=>Math.max(a,q.t),S.t);}
 function queueUnit(k){const L=laneCount(),ends=new Array(L).fill(S.t);S.queue.forEach(q=>{const l=Math.min(L-1,q.l||0);ends[l]=Math.max(ends[l],q.t);});let li=0;for(let i=1;i<L;i++)if(ends[i]<ends[li])li=i;
