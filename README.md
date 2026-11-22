@@ -11,7 +11,7 @@
 - **Commandez :** vos troupes évoluent au fil des semaines, du rang T1 au légendaire T5. Combinez vos gènes pour forger les meilleures.
 - **Dominez :** classement mondial, ligues et compétitions : des récompenses chaque jour pour creuser votre avance.
 
-Tout le jeu tient dans un seul fichier, `index.html` (HTML, CSS et JavaScript, sans dépendance à installer). Il suffit de l’ouvrir dans un navigateur.
+Le jeu est écrit en HTML, CSS et JavaScript, sans dépendance à installer ni étape de compilation : il suffit d’ouvrir `index.html` dans un navigateur.
 
 ![Origins 27](presentation/paysage-1920x1080/00-accueil.png)
 
@@ -54,6 +54,41 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 - **Stades de vie :** Procaryote → Eucaryote → Colonie → Pluricellulaire → APEX (victoire : sortir de l’eau).
 - **Monde :** carte circulaire de 241 × 241 cases, événements de zone (éruption, plancton, zone anoxique, léviathan), 499 rivaux simulés qui s’adaptent à vos choix, 6 alliances.
 - **Mobile :** navigation en bas d’écran, zoom à deux doigts sur la carte, récolte automatique (⛏), conseiller « que faire ? ».
+
+## Organisation du code
+
+```
+index.html          la page : en-tête, zones de l’écran, et la liste des scripts à charger
+css/style.css       toute l’apparence (couleurs, mise en page, animations)
+js/01-monde.js … js/21-demarrage.js   le jeu, découpé par thème
+```
+
+Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre de leur numéro** et qui partagent les mêmes variables globales (l’état de la partie s’appelle `S`). Pas de module ni de compilation : c’est ce qui permet au jeu de s’ouvrir d’un double-clic, sur GitHub Pages comme en local. Chaque fichier commence par une ligne qui résume son contenu.
+
+**Où modifier quoi :**
+
+| Je veux changer… | Fichier |
+|---|---|
+| Les couleurs, la mise en page, une animation | `css/style.css` |
+| Le monde, les zones, la taille de la carte | `js/01-monde.js` |
+| Les ressources, souches, canaux, organites, gènes | `js/03-regles.js` |
+| Les mutations et lignées | `js/04-mutations.js` |
+| Les troupes, leurs coûts, les rangs T1 à T5 | `js/05-troupes.js` |
+| La production, l’entretien, les coûts des constructions | `js/07-economie.js` |
+| L’énergie, la connexion quotidienne, les coffres, les quêtes du jour | `js/08-recompenses.js` |
+| Les rivaux, les attaques subies, les protections (nuit, bouclier) | `js/09-rivaux.js` |
+| Le classement mondial et les ligues | `js/10-classement.js` |
+| La boucle de simulation, les constructions, les envois | `js/11-moteur.js` |
+| Les événements de zone et les alliances | `js/12-evenements.js` |
+| Ce que fait un bouton (`data-act="…"`) | `js/13-actions.js` |
+| L’affichage des onglets, les quêtes, le conseiller | `js/14-interface.js` |
+| Les rapports, le héros, l’onglet Armée | `js/15-panneaux.js` |
+| Les fiches de détail et les fenêtres | `js/17-fiches.js` |
+| L’écran titre, l’introduction, la visite guidée | `js/18-accueil.js` |
+| La carte | `js/19-carte.js` |
+| La sauvegarde, le démarrage | `js/21-demarrage.js` |
+
+Pour ajouter un fichier : créez-le dans `js/`, en commençant par `"use strict";`, puis ajoutez sa ligne `<script src="js/…"></script>` dans `index.html`, après les fichiers dont il utilise les fonctions au chargement.
 
 ## Outils
 
