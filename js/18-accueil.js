@@ -267,9 +267,12 @@ function titleOver(narrow,px){
   return s+"</svg>";
 }
 // en style pixel, le décor est rendu en basse résolution puis agrandi sans lissage
-function titlePixel(narrow){
+function titlePixel(narrow,tries){
   const cv=document.querySelector(".title .tpx");if(!cv)return;
-  const w=Math.max(200,Math.min(520,Math.round(window.innerWidth/3.6))),h=Math.max(120,Math.round(w*window.innerHeight/window.innerWidth));
+  /* dans un cadre (artefact, iframe), la fenêtre peut mesurer 0 au chargement : on attend qu'elle ait une vraie taille */
+  const vw=window.innerWidth||document.documentElement.clientWidth,vh=window.innerHeight||document.documentElement.clientHeight;
+  if(vw<50||vh<50){if((tries||0)<60)setTimeout(()=>titlePixel(narrow,(tries||0)+1),100);return;}
+  const w=Math.max(200,Math.min(520,Math.round(vw/3.6))),h=Math.max(120,Math.round(w*vh/vw));
   rasterize(titleArt(narrow,[w,h]),w,h,c=>{if(!cv.isConnected)return;cv.width=w;cv.height=h;const g=cv.getContext("2d");g.drawImage(c,0,0);
     // palette réduite : les dégradés deviennent des aplats, comme en pixel art
     try{const im=g.getImageData(0,0,w,h),d=im.data,q=14;for(let i=0;i<d.length;i+=4){d[i]=Math.round(d[i]/q)*q;d[i+1]=Math.round(d[i+1]/q)*q;d[i+2]=Math.round(d[i+2]/q)*q;}g.putImageData(im,0,0);}catch(e){}});

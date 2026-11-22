@@ -66,6 +66,8 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save();else lastFrame=performance.now();});
-let wasMob=null;window.addEventListener("resize",()=>{if(tourI>=0)showTour(tourI);if(cv)resize();sizeStage();const m=isMobile();if(m!==wasMob){wasMob=m;dirty=true;}});
+/* écran titre : le redessiner quand la LARGEUR change (dans un artefact, la fenêtre mesure 0 au chargement ; sur mobile, la hauteur bouge avec la barre d'adresse et ne compte pas) */
+let titleW=window.innerWidth;
+let wasMob=null;window.addEventListener("resize",()=>{if(document.querySelector(".title")&&Math.abs(window.innerWidth-titleW)>40){titleW=window.innerWidth;clearTimeout(showTitle.rt);showTitle.rt=setTimeout(()=>{if(document.querySelector(".title"))showTitle();},150);}if(tourI>=0)showTour(tourI);if(cv)resize();sizeStage();const m=isMobile();if(m!==wasMob){wasMob=m;dirty=true;}});
 requestAnimationFrame(frame);
 window.__o27={get S(){return S;},setStyle,camZoom,heroSVG,heroForm,act,advance,newGame,renderAll,setTab:t=>{tab=t;dirty=true;},setOpen:r=>{openRef=r;dirty=true;},dbg:{rates,upkeep,upgradeInfo,upgradeBlock,newBlock,bldCost,nodeCost,nodeState,nodeBlock,questTick,lvlCost,lvlBlock,spawnEvent,joinAlly,playerAtk,armyAll,pickUnits,uReq,zoneIdx,huntPower,heroPower,playerDef,botDef,botAtk,mods,setCostK:(v,p)=>{COST_K=v;if(p)PACE=p;},enGive,openChest,rollTier,giveRes,playerPoints,botPoints,botPow,myRank,rkRows,leagueOf}};
