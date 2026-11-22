@@ -192,6 +192,7 @@ canvas{display:block;border-radius:12px;border:1px solid var(--line);background:
 #modal{position:fixed;inset:0;z-index:25;background:rgba(2,6,11,.78);display:none;align-items:center;justify-content:center;padding:20px}
 #modal.on{display:flex}
 .incw{color:var(--bad);cursor:pointer;font-weight:600}
+.protw{color:#9fc4ff;font-weight:600}
 /* attaque en approche : l’écran scintille de rouge sur les bords */
 body.underatk::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9000;box-shadow:inset 0 0 0 3px rgba(255,70,70,.85),inset 0 0 110px 18px rgba(255,30,30,.42);animation:atkpulse 1.3s ease-in-out infinite}
 body.underatk.atknear::after{animation-duration:.7s}
@@ -1114,7 +1115,17 @@ function botStage(b){return Math.max(1,Math.min(5,1+Math.floor(bDays()*b.g/3)));
 function botCap(b){return Math.round(600*Math.pow(1.3,bDays()*b.g/2));}
 function botProt(b){return Math.round(120*Math.pow(1.33,bDays()*b.g/2));}
 function botSync(b){const dt=S.t-(b.lastT||0);if(dt>0){b.res=Math.min(botCap(b),b.res+(30+12*bDays()*b.g)*dt/60);b.lastT=S.t;}}
-function nightAt(t){return (t%1440)<420;}
+function hod(t){return ((t%1440)+1440)%1440;}
+function dayIdx(t){return Math.floor(t/1440);}
+/* Protections en heure RÉELLE, quelle que soit la vitesse du jeu : personne n'attaque de minuit à 7 h (heure du joueur),
+   ni pendant l'heure réelle qui suit un pillage subi. realOf convertit un instant de jeu en heure réelle,
+   y compris pendant le rattrapage hors ligne (cuMap). */
+let cuMap=null;
+function realOf(t){if(catchUp&&cuMap)return cuMap.r0+(t-cuMap.t0)/Math.max(1e-9,cuMap.t1-cuMap.t0)*(cuMap.r1-cuMap.r0);return Date.now()+(t-S.t)/Math.max(1e-9,S.speed)*1000;}
+function nightAt(t){return new Date(realOf(t)).getHours()<7;}
+function shieldAt(t){return !!S.shieldR&&realOf(t)<S.shieldR;}
+function protAt(t){return nightAt(t)||shieldAt(t);}
+function hhmm(ms){const d=new Date(ms);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
 function botPoints(b){return Math.round(botAtk(b)+botDef(b)+botStage(b)*60);}
 function playerAtk(){return Math.round(compAtk(armyAll(),null));}
 function defParts(dodge){const P=[["Membrane (base)",20],dodge?["Troupes au repos : esquivées, hors de la cellule",0]:["Troupes au repos : "+compText(S.army),compDef(S.army)],["Cytosquelette niv. "+blvl("cyto"),15*blvl("cyto")],["Noyau niv. "+S.noyau,6*S.noyau],["Canaux (niveaux cumulés)",6*S.fields.reduce((t,f)=>t+f.l,0)],["Stade de la base",12*baseStage()],[S.hero.busy?"Héros (en mission : absent)":"Héros présent",S.hero.busy?0:Math.round(heroBase()*0.6)]];
@@ -1171,7 +1182,7 @@ function botsStep(dm){
     const d=Math.hypot(b.x-c[0],b.y-c[1]);
     if(days>=1&&d<=22&&!S.inc.some(a=>a.bot===b.id)&&!S.mig&&!(S.ally&&b.tag===S.ally)){
       const p=(b.aggr*0.02+b.anger*0.1)*k*(S.ally&&b.tag?1.5:1);
-      if(Math.random()<p){const travel=Math.max(6,d*1.6),arr=S.t+travel;if(!nightAt(arr)&&!nightAt(S.t)){
+      if(Math.random()<p){const travel=Math.max(6,d*1.6),arr=S.t+travel;if(!protAt(arr)&&!protAt(S.t)){
         const atk=Math.round(botAtk(b)*(0.75+Math.random()*0.4)),A={id:S.nextId++,bot:b.id,atk,arrive:arr,from:[b.x,b.y]};S.inc.push(A);
         log("⚠️ Attaque entrante : "+b.name+" arrive à "+fmtClock(arr).replace("Jour ","J")+".","bad");toast("⚠️ Attaque entrante de "+b.name);
         if(!S.incTut){S.incTut=1;popup({kick:"⚠️ Attaque entrante",title:esc(b.name)+" vous attaque !",incTut:A.id,body:incTutHTML(A,b)});}
@@ -1193,10 +1204,12 @@ function incTutHTML(A,b){const g=incGuess(A);
   return '<p><b>'+esc(b.name)+"</b> arrive dans <b><span data-end=\""+A.arrive+'"></span></b> avec une force estimée de <b>'+incRange(A)+"</b>.</p>"+
   '<div class="inctut"><p><b>🛡 Défendre</b> : vos troupes au repos restent dans la cellule et se battent. Si la défense tient, il repart bredouille et votre héros gagne de l’expérience, mais quelques troupes tombent. Si elle cède, vous êtes pillé et vous perdez la moitié des troupes présentes.</p>'+
   '<p><b>💨 Esquiver</b> : vos troupes quittent la cellule juste avant l’impact et reviennent ensuite. Aucune perte, mais seuls la membrane, les organites et le héros défendent : ce qui dépasse la part protégée par la vacuole risque d’être pillé.</p></div>'+
-  '<p class="desc">Votre défense : <b>'+fmt(g.dd)+"</b> avec les troupes, <b>"+fmt(g.dn)+"</b> sans elles. Défendez si vous pouvez tenir, esquivez sinon. Vous pourrez changer d’avis jusqu’à l’arrivée, dans Rapports › En route.</p>"+incChoiceHTML(A);}
+  '<p class="desc">Votre défense : <b>'+fmt(g.dd)+"</b> avec les troupes, <b>"+fmt(g.dn)+"</b> sans elles. Défendez si vous pouvez tenir, esquivez sinon. Vous pourrez changer d’avis jusqu’à l’arrivée, dans Rapports › En route.</p>"+incChoiceHTML(A)+
+  '<p class="desc">🛡 Après un pillage subi, vous êtes protégé pendant 1 h. 🌙 De minuit à 7 h, personne n’attaque personne.</p>';}
 function loseHome(frac){const o={};for(const k in S.army){const n=Math.min(S.army[k]||0,Math.round((S.army[k]||0)*frac));if(n>0){o[k]=n;S.army[k]-=n;}}syncIdle();return o;}
 function incomingHit(A){
-  const b=S.bots.find(z=>z.id===A.bot);if(!b)return;const dodge=!!A.dodge&&uSum(S.army)>0,help=allyHelp(),def=playerDef(dodge)+help,win=A.atk*ATK_ADV>=def,D=defParts(dodge),r=A.atk*ATK_ADV/Math.max(1,def);
+  const b=S.bots.find(z=>z.id===A.bot);if(!b)return;
+  if(protAt(S.t)){const sh=shieldAt(S.t);report("combat","Attaque annulée · "+b.name,[(sh?"🛡 Vous êtes sous protection après un pillage":"🌙 Vous êtes protégé pour la nuit")+" : "+esc(b.name)+" fait demi-tour sans combattre."],null);log((sh?"🛡 ":"🌙 ")+b.name+" fait demi-tour : vous êtes protégé.","muted");return;}const dodge=!!A.dodge&&uSum(S.army)>0,help=allyHelp(),def=playerDef(dodge)+help,win=A.atk*ATK_ADV>=def,D=defParts(dodge),r=A.atk*ATK_ADV/Math.max(1,def);
   let tb='<table class="ftab"><thead><tr><th>Votre défense</th><th class="num">Points</th></tr></thead><tbody>'+D.P.filter(p=>p[1]>0||p[0].indexOf("Héros")===0).map(p=>"<tr><td>"+p[0]+'</td><td class="num">'+fmt(p[1])+"</td></tr>").join("");
   if(D.mult!==1)tb+='<tr><td>Bonus de défense (gènes, émergences, mutations)</td><td class="num">'+fmtF(D.mult)+"</td></tr>";
   if(help)tb+="<tr><td>Renforts de l’alliance "+S.ally+'</td><td class="num up">+'+fmt(help)+"</td></tr>";
@@ -1212,6 +1225,9 @@ function incomingHit(A){
     lines.push('<table class="ftab loot"><thead><tr><th>Pillé</th><th class="num">Avant</th><th class="num">À l’abri</th><th class="num">Volé</th><th class="num">Reste</th></tr></thead><tbody>'+RES.map(k=>'<tr><td><span class="c-'+k+'">'+RES_NAME[k]+'</span></td><td class="num">'+fmt(before[k])+'</td><td class="num">'+fmt(Math.min(before[k],pa))+'</td><td class="num neg">'+(got[k]?"−"+fmt(got[k]):"0")+'</td><td class="num">'+fmt(Math.round(S.res[k]))+"</td></tr>").join("")+"</tbody></table>");
     lines.push(take<1?"Rien de volé : tout était à l’abri dans votre vacuole.":"Il pouvait emporter "+fmt(carry)+" et a pris "+fmt(take)+". Votre vacuole met "+fmt(pa)+" de chaque ressource à l’abri : améliorez-la, dépensez vos réserves avant de partir, ou renforcez la défense (soldates au repos, cytosquelette, héros présent).");
     b.nem=(b.nem||0)+1;b.nemT=S.t;S.tiles[b.y*W+b.x].s=1;
+    S.shieldR=realOf(S.t)+3600000;/* les autres attaques déjà en route pendant la protection font demi-tour tout de suite */
+    S.inc=S.inc.filter(o=>{if(!shieldAt(o.arrive))return true;const ob=S.bots.find(z=>z.id===o.bot);log("🛡 "+(ob?ob.name:"Un rival")+" fait demi-tour : vous êtes protégé.","muted");return false;});
+    lines.push('<p class="fwhy">🛡 <b>Protection d’une heure</b> : aucun rival ne peut vous attaquer jusqu’à '+hhmm(S.shieldR)+". Si vous pillez quelqu’un d’ici là, la protection s’arrête.</p>");
     lines.push('<div class="row revrow"><button class="btn sm" data-act="revenge" data-id="'+b.id+'" style="background:var(--bad);border-color:var(--bad)">⚔ Riposter</button><span class="desc">Vengeance dans les 24 h de jeu : butin +50 %. '+(b.nem>1?"Il vous a déjà pillé "+b.nem+" fois.":"")+"</span></div>");
     const em=pickA(EMO.win);lines.push("💬 "+esc(b.name)+" : "+em);log("Pillé par "+b.name+". 💬 "+em,"bad");toast("Vous avez été pillé");
     report("combat","Pillage subi · "+b.name,lines,false);}
@@ -1238,8 +1254,8 @@ function rkRows(cat){
 function myRank(cat){return rkRows(cat||"pow").findIndex(r=>r.me)+1;}
 function leagueCut(L){return Math.max(1,Math.round(L[0]*(S.bots.length+1)));}
 function leagueOf(rank){return LEAGUES.find(L=>rank<=leagueCut(L))||LEAGUES[LEAGUES.length-1];}
-function rkSnap(){const p={};RK_CATS.forEach(c=>{const o={};rkRows(c[0]).forEach((r,i)=>{o[r.id]=i+1;});p[c[0]]=o;});S.rk={day:Math.floor(S.t/1440),prev:p};}
-function rkTick(){if(!S.bots)return;{const raw=playerPowRaw();S.rkPow=S.rkPow==null?raw:S.rkPow+(raw-S.rkPow)*0.08;}if(S.t<360)return;const dn=Math.floor(S.t/1440);
+function rkSnap(){const p={};RK_CATS.forEach(c=>{const o={};rkRows(c[0]).forEach((r,i)=>{o[r.id]=i+1;});p[c[0]]=o;});S.rk={day:dayIdx(S.t),prev:p};}
+function rkTick(){if(!S.bots)return;{const raw=playerPowRaw();S.rkPow=S.rkPow==null?raw:S.rkPow+(raw-S.rkPow)*0.08;}if(S.t<360)return;const dn=dayIdx(S.t);
   if(!S.rk){rkSnap();}
   else if(S.rk.day!==dn){const r=myRank("pow"),L=leagueOf(r);S.rkRew={lg:LEAGUES.indexOf(L),rank:r,day:S.rk.day+1,done:false};rkSnap();
     log(L[1]+" Fin du jour "+S.rkRew.day+" : vous finissez #"+r+" du classement mondial, ligue "+L[2]+". Récompense de ligue à récupérer (🎁).","good");}
@@ -1301,7 +1317,7 @@ function lvlTime(id,L){return TIME_F*NODES[id].time*0.6*Math.pow(1.35,L-1)/(1+0.
 function lvlBlock(id){if(!has(id))return "Gène non exprimé.";const L=glvl(id);if(L>=maxLvl(id))return "Niveau maximum atteint.";if(S.research)return "Un gène est déjà en cours d’expression.";return capBlock(lvlCost(id,L));}
 function fmt(n){return Math.floor(n).toLocaleString("fr-FR");}
 function fmtDur(min){min=Math.max(0,min);if(min<1)return Math.max(1,Math.ceil(min*60))+" s";if(min<60)return Math.ceil(min)+" min";const h=Math.floor(min/60),m=Math.min(59,Math.ceil(min%60));return h+" h "+String(m).padStart(2,"0");}
-function fmtClock(t){const d=Math.floor(t/1440)+1,h=Math.floor((t%1440)/60),m=Math.floor(t%60);return "Jour "+d+" · "+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");}
+function fmtClock(t){const d=dayIdx(t)+1,c=hod(t),h=Math.floor(c/60),m=Math.floor(c%60);return "Jour "+d+" · "+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");}
 function fmtMod(k,v){if(k==="revealSource")return MOD_LABEL[k];if(k==="photoPct")return "photosynthèse ×"+(Math.round(v*10)/10)+" (selon la lumière : aujourd’hui +"+Math.round(v*photoF()*100)+" % d’ATP)";if(k==="filAdd")return "filaments +"+v;const add=k==="rangeAdd"||k==="visionAdd";const s=v>0?"+":"−";const val=add?Math.abs(v)+" case"+(Math.abs(v)>1?"s":""):Math.round(Math.abs(v)*100)+" %";return MOD_LABEL[k]+" "+s+val;}
 function isGood(k,v){return GOOD_WHEN_NEG[k]?v<0:v>0;}
 function fxList(o){const ks=Object.keys(o).filter(k=>o[k]);if(!ks.length)return "";return '<ul class="fx">'+ks.map(k=>'<li class="'+(isGood(k,o[k])?"good":"badfx")+'">'+fmtMod(k,o[k])+"</li>").join("")+"</ul>";}
@@ -1597,8 +1613,8 @@ function act(a,el){
   if(a==="collect"){sendMission("collect");return;}
   if(a==="hunt"){const R=huntRisk();if(R&&!R.ok){showModal(huntWarnHTML(R));return;}sendMission("hunt");return;}
   if(a==="huntgo"){closeModal();sendMission("hunt");return;}
-  if(a==="raid"){const R=raidRisk();if(R&&!R.ok){showModal(botWarnHTML(R));return;}sendMission("raid");return;}
-  if(a==="raidgo"){closeModal();sendMission("raid");return;}
+  if(a==="raid"){const R=raidRisk();if(R&&!R.ok){showModal(botWarnHTML(R));return;}const n0=S.missions.length;sendMission("raid");if(S.missions.length>n0&&shieldAt(S.t)){S.shieldR=0;toast("🛡 Vous attaquez : votre protection s’arrête");}return;}
+  if(a==="raidgo"){closeModal();const n0=S.missions.length;sendMission("raid");if(S.missions.length>n0&&shieldAt(S.t)){S.shieldR=0;toast("🛡 Vous attaquez : votre protection s’arrête");}return;}
   if(a==="mclose"){closeModal();return;}
   if(a==="goadv"){closeModal();tab=el.dataset.tab;openRef=el.dataset.ref||null;dirty=true;return;}
   if(a==="filament"){const p=openRef.split(":"),x=+p[1],y=+p[2];if(filBlock(x,y))return;const d=dist(x,y),c=filCost(d);if(!afford(c))return;pay(c);S.build={type:"fil",x,y,start:S.t,end:S.t+filTime(d),label:"Filament vers "+x+","+y};toast("Filament en croissance");dirty=true;return;}
@@ -1715,6 +1731,8 @@ function stripHTML(){
   {const r=myRank("pow"),L=leagueOf(r);h+='<span class="rkpill" data-act="goto" data-tab="act" data-sub="rank">'+L[1]+" <b>#"+r+"</b> mondial</span>";}
   h+=eventPill();
   if(S.inc&&S.inc.length){const A=S.inc.slice().sort((a,b)=>a.arrive-b.arrive)[0],b=S.bots.find(z=>z.id===A.bot);h+='<span class="incw" data-act="goto" data-tab="act" data-sub="move">⚠️ Attaque de <b>'+esc(b?b.name:"?")+'</b> dans <span data-end="'+A.arrive+'"></span>'+(S.inc.length>1?" (+"+(S.inc.length-1)+")":"")+"</span>";}
+  else if(shieldAt(S.t))h+='<span class="protw" data-tip="'+esc("<b>Protection après un pillage</b>Aucun rival ne peut vous attaquer pendant 1 h. Piller quelqu’un met fin à la protection.")+'">🛡 Protégé encore <span data-endr="'+S.shieldR+'"></span></span>';
+  else if(nightAt(S.t))h+='<span class="protw" data-tip="'+esc("<b>Nuit protégée</b>De minuit à 7 h, personne n’attaque personne : dormez tranquille.")+'">🌙 Nuit protégée jusqu’à 07:00</span>';
   h+='<span data-act="tab" data-t="hero">'+sprImg("u_coll",1)+" Troupes <b>"+S.idle+" libres / "+cellCount()+"</b>"+(S.queue.length?" · "+S.queue.length+" en production":"")+"</span>";
   return h;
 }
@@ -2374,7 +2392,7 @@ function renderModal(){
 }
 function live(){
   if(!S)return;
-  {const n=S.inc&&S.inc.length?Math.min(...S.inc.map(A=>A.arrive)):0,bc=document.body.classList;bc.toggle("underatk",!!n);bc.toggle("atknear",!!n&&n-S.t<15);}
+  {const n=S.inc&&S.inc.length?Math.min(...S.inc.map(A=>A.arrive)):0,bc=document.body.classList;bc.toggle("underatk",!!n);bc.toggle("atknear",!!n&&n-S.t<15);const pk=shieldAt(S.t)?2:nightAt(S.t)?1:0;if(pk!==live.pk){live.pk=pk;dirty=true;}}
   $("clock").textContent=isMobile()?fmtClock(S.t).replace("Jour ","J"):fmtClock(S.t);
   const cap=rates().cap;
   document.querySelectorAll("[data-endr]").forEach(e=>{const ms=+e.dataset.endr-Date.now();if(ms<=0)dirty=true;e.textContent=fmtDur(Math.max(0,ms/60000));});
@@ -2968,11 +2986,10 @@ function migrate(d){
   if(!d.stage)d.stage=d.won?2:1;if(d.won&&!(d.nodes||[]).includes("APEX"))d.won=null;
 }
 function save(){if(!S)return;const T=S.tiles;try{S.realAt=Date.now();S.tiles=packTiles(T);localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(err){}finally{S.tiles=T;}}
-function load(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;const d=JSON.parse(raw);if(!d||d.v!==6||!d.fields)return false;if(d.tiles&&!Array.isArray(d.tiles))d.tiles=unpackTiles(d.tiles);migrate(d);S=d;
-  /* anciennes sauvegardes : ne garder que la dernière fenêtre de chaque sorte */
+function load(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;const d=JSON.parse(raw);if(!d||d.v!==6||!d.fields)return false;if(d.tiles&&!Array.isArray(d.tiles))d.tiles=unpackTiles(d.tiles);migrate(d);S=d;  /* anciennes sauvegardes : ne garder que la dernière fenêtre de chaque sorte */
   {const seen=new Set(),keep=[];for(let i=S.popups.length-1;i>=0;i--){const p=S.popups[i],g=p.grp||(p.kick==="Événement"?"ev":p.kick+p.title);if(seen.has(g))continue;seen.add(g);keep.unshift(p);}S.popups=keep.slice(-3);}
   const away=Math.min(1440,(Date.now()-(d.realAt||Date.now()))/1000*S.speed);
-  if(away>0.5){const r0=Object.assign({},S.res),n0=S.reports.length,id0=S.nextId;catchUp=[];advance(away);const got=catchUp;catchUp=null;
+  if(away>0.5){const r0=Object.assign({},S.res),n0=S.reports.length,id0=S.nextId;cuMap={t0:S.t,t1:S.t+away,r0:d.realAt||Date.now(),r1:Date.now()};catchUp=[];advance(away);const got=catchUp;catchUp=null;cuMap=null;
     log("Pendant votre absence : "+fmtDur(away)+" de jeu se sont écoulées.");
     const newRep=S.reports.filter(r=>r.id>=id0),cb=newRep.filter(r=>r.cat==="combat");
     if(away>=30&&(got.length||cb.length)){const evs=got.filter(p=>p.grp==="ev"),other=got.filter(p=>p.grp!=="ev");
