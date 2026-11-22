@@ -294,7 +294,7 @@ function showTitle(){
     ["Commandez","Vos troupes évoluent au fil des semaines, du rang T1 au légendaire T5. Combinez vos gènes pour forger les meilleures.",'<div class="ticons">'+["sold","tox","colo","pluri","anom"].map(k=>unitIcon(k)).join("")+"</div>"],
     ["Dominez","Classement mondial, ligues et compétitions : des récompenses chaque jour pour creuser votre avance.",'<div class="tleague">'+LEAGUES.slice().reverse().map(l=>"<span>"+l[1]+"</span>").join("")+"</div>"]];
   h+='<div class="tfeats">'+F.map(f=>'<div class="tfeat">'+f[2]+"<h3>"+f[0]+"</h3><p>"+f[1]+"</p></div>").join("")+"</div>";
-  h+='<div class="tfoot">Free to play · No pay to win · Sans installation · Jouable sur mobile</div>';
+  h+='<div class="tfoot">Free to play · No pay to win · Sans installation · Jouable sur mobile · <button class="tfb" data-act="feedback">✉ Donner mon avis</button></div>';
   h+="</div></div>";
   $("picker").innerHTML=h;
   if(px)titlePixel(narrow);

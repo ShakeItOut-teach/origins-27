@@ -35,6 +35,17 @@ Le jeu est écrit en HTML, CSS et JavaScript, sans dépendance à installer ni �
 
 La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil utilisé.
 
+## Avis des joueurs
+
+Le bouton **Mon avis** (✉ sur mobile), en haut de l’écran et en bas de l’écran d’accueil, ouvre une fenêtre de 3 questions et une note sur 5. Le joueur peut :
+
+- **Envoyer sur GitHub :** une page « New issue » s’ouvre déjà remplie, avec en plus le jour, le stade, la souche et l’appareil. Les avis arrivent dans l’onglet [Issues](https://github.com/ShakeItOut-teach/origins-27/issues) du dépôt. Il faut un compte GitHub gratuit.
+- **Copier le texte :** pour l’envoyer par message, sans compte.
+
+Le texte tapé est gardé si la fenêtre est fermée. Un seul rappel discret apparaît au jour 2 de la partie.
+
+**Compteur de visites (facultatif) :** créez un compte gratuit sur [goatcounter.com](https://www.goatcounter.com), puis collez son adresse dans `STATS_URL`, en haut de `js/22-avis.js` (par exemple `https://origins27.goatcounter.com/count`). Le comptage est anonyme, sans cookie, et ne fonctionne que sur le site en ligne.
+
 ## Contenu détaillé
 
 - **Écran d’accueil :** image animée de l’ascension (procaryote, eucaryote, colonie, pluricellulaire, APEX sortant de l’eau), accroche, « Jouer maintenant » en un clic, et l’histoire en 7 étapes pour qui veut lire.
@@ -63,7 +74,8 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 ```
 index.html          la page : en-tête, zones de l’écran, et la liste des scripts à charger
 css/style.css       toute l’apparence (couleurs, mise en page, animations)
-js/01-monde.js … js/21-demarrage.js   le jeu, découpé par thème
+js/01-monde.js … js/22-avis.js   le jeu, découpé par thème
+apercu.jpg          l’image affichée quand on partage le lien (1200 × 630)
 ```
 
 Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre de leur numéro** et qui partagent les mêmes variables globales (l’état de la partie s’appelle `S`). Pas de module ni de compilation : c’est ce qui permet au jeu de s’ouvrir d’un double-clic, sur GitHub Pages comme en local. Chaque fichier commence par une ligne qui résume son contenu.
@@ -90,6 +102,7 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | L’écran titre, l’introduction, la visite guidée | `js/18-accueil.js` |
 | La carte | `js/19-carte.js` |
 | La sauvegarde, le démarrage | `js/21-demarrage.js` |
+| La fenêtre « Mon avis », le compteur de visites | `js/22-avis.js` |
 
 Pour ajouter un fichier : créez-le dans `js/`, en commençant par `"use strict";`, puis ajoutez sa ligne `<script src="js/…"></script>` dans `index.html`, après les fichiers dont il utilise les fonctions au chargement.
 

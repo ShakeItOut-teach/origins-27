@@ -4,6 +4,7 @@
 "use strict";
 function act(a,el){
   hideTip();
+  if(a==="feedback"){showFeedback();return;}
   if(a==="autocollect"){autoCollect();return;}
   if(a==="allyjoin"&&S&&!S.ally){joinAlly(el.dataset.tag);return;}
   if(a==="allyleave"&&S&&S.ally){log("Vous quittez "+S.ally+". 💬 "+pickA(["Traître 😤","Bon vent… 😒","On s’en souviendra 🗡️"]),"bad");allyBots(S.ally).forEach(b=>b.anger=Math.min(1,b.anger+0.4));S.ally=null;dirty=true;return;}
