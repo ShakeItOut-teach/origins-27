@@ -674,3 +674,5 @@ body.pixel .lm{border-radius:0}
 @keyframes tutrun{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .accb.inst{background:#ffd166;color:#2a1800;border-color:#ffd166}
 .instpill{border-color:#ffd166;color:#ffd166}
+#coach .cbub.nudge{animation:cnudge .45s ease-in-out}
+@keyframes cnudge{0%,100%{transform:none}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}

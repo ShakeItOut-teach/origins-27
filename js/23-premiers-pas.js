@@ -51,13 +51,13 @@ const TUT=[
   {id:"hello",card:1,btn:()=>tr("C’est parti","Let’s go"),t:()=>tr("Bienvenue, souche ","Welcome, strain ")+SOUCHES[S.souche].name,
     d:()=>"<p>"+tr("Vous êtes une cellule seule, au bord d’un océan obscur. 499 autres organismes convoitent la même place que vous.","You are a lone cell at the edge of a dark ocean. 499 other organisms covet the same place as you.")+"</p><p>"+tr("Pour survivre, il vous faut des bras : des <b>collectrices</b>. Ce guide vous montre l’essentiel en quelques minutes, avec un temps accéléré. Le reste du jeu s’ouvrira ensuite.","To survive, you need hands: <b>gatherers</b>. This guide shows you the essentials in a few minutes, with sped-up time. The rest of the game opens afterwards.")+"</p>"},
   {id:"armytab",sel:'nav [data-t="hero"]',block:1,t:()=>tr("Vos troupes","Your troops"),d:()=>"<p>"+tr("Ouvrez l’onglet <b>Armée</b> : c’est là que naissent vos troupes.","Open the <b>Army</b> tab: that is where your troops are born.")+"</p>",done:()=>tab==="hero"},
-  {id:"make",sel:'[data-act="cell"][data-k="coll"][data-n="5"]',block:1,scroll:1,t:()=>tr("Produisez 5 collectrices","Produce 5 gatherers"),
+  {id:"make",tab:"hero",sel:'[data-act="cell"][data-k="coll"][data-n="5"]',block:1,scroll:1,t:()=>tr("Produisez 5 collectrices","Produce 5 gatherers"),
     d:()=>"<p>"+tr("Vos ribosomes fabriquent les troupes. Une collectrice coûte 30 protéines et 20 ATP : elle récolte, explore et se bat un peu. Touchez <b>×5</b>.","Your ribosomes build the troops. A gatherer costs 30 proteins and 20 ATP: it gathers, explores and fights a little. Tap <b>×5</b>.")+"</p>",done:()=>S.queue.length>0},
   {id:"prod",float:1,t:()=>tr("Production en cours","Production under way"),
     d:()=>"<p>"+tr("Les ribosomes assemblent vos collectrices une à une. D’habitude, chacune prend plusieurs minutes ; pendant ce guide, c’est accéléré.","The ribosomes assemble your gatherers one by one. Normally each takes several minutes; during this guide it is sped up.")+' <b><span data-end="'+queueEnd()+'"></span></b></p>',done:()=>!S.queue.length},
   {id:"maptab",sel:'nav [data-t="map"]',block:1,enter:()=>{S.newTab="map";},t:()=>tr("Les abysses s’ouvrent","The abyss opens up"),
     d:()=>"<p>"+tr("Vos collectrices sont prêtes. Votre cellule, elle, ne bouge pas : ce sont vos troupes qui sortent chercher des ressources dans les abysses autour de vous. Ouvrez la carte.","Your gatherers are ready. Your cell doesn’t move: your troops go out to find resources in the abyss around you. Open the map.")+"</p>",done:()=>tab==="map"},
-  {id:"auto",sel:".mapctl .auto",block:1,enter:()=>{S.tutGain={};enInit();S.en=Math.max(S.en,4);},t:()=>tr("Envoyez-les récolter","Send them harvesting"),
+  {id:"auto",tab:"map",sel:".mapctl .auto",block:1,enter:()=>{S.tutGain={};enInit();S.en=Math.max(S.en,4);},t:()=>tr("Envoyez-les récolter","Send them harvesting"),
     d:()=>"<p>"+tr("Touchez <b>⛏</b> : vos collectrices libres partent d’un coup vers les gisements proches, ou explorent les cases voilées. Plus tard, vous pourrez aussi toucher une case pour choisir vous-même.","Tap <b>⛏</b>: your free gatherers leave at once for nearby deposits, or explore veiled tiles. Later you can also tap a tile to choose yourself.")+"</p>",done:()=>!!S.sentOnce},
   {id:"travel",float:1,t:()=>tr("En route","On the way"),
     d:()=>"<p>"+tr("Suivez vos collectrices sur la carte. Chacune porte 20 unités ; au retour, une part est digérée en ATP pour payer leur entretien. Retour dans quelques secondes.","Follow your gatherers on the map. Each carries 20 units; on return, part is digested into ATP to pay their upkeep. Back in a few seconds.")+"</p>",done:()=>!S.missions.some(M=>M.kind==="collect")},
@@ -106,7 +106,7 @@ const TUT=[
 ];
 
 function tutStep(){return S&&S.tut!=null?TUT[S.tut]||null:null;}
-function tutGo(i){if(i>=TUT.length){tutEnd();return;}S.tut=i;tutKey=null;tutScrolled=false;const st=TUT[i];if(st.enter)st.enter();if(st.tab&&tab!==st.tab){tab=st.tab;openRef=null;}dirty=true;save();}
+function tutGo(i){if(i>=TUT.length){tutEnd();return;}S.tut=i;tutKey=null;tutMiss=0;tutScrolled=false;const st=TUT[i];if(st.enter)st.enter();if(st.tab&&tab!==st.tab){tab=st.tab;openRef=null;}dirty=true;save();}
 function tutNext(){const st=tutStep();if(!st)return;if(st.next)st.next();if(S.tut==null)return;tutGo(S.tut+1);}
 function tutSkip(){if(!S||S.tut==null)return;S.tutSkipped=1;const f=tutI("final");if(S.tut===f){tutEnd();return;}tutGo(f);}
 function tutStripHTML(){const st=tutStep();let h='<span class="tutpill">🎓 '+tr("Premiers pas","First steps")+" <b>"+(S.tut+1)+" / "+TUT.length+"</b>"+(st?" · "+st.t():"")+"</span>";
@@ -126,6 +126,7 @@ function tutTick(){
   if(S.newTab&&tab===S.newTab){S.newTab=null;dirty=true;}
   const st=tutStep();if(!st){tutHide(box);return;}
   if(st.keep)st.keep();
+  if(st.tab&&tab!==st.tab&&tutTabOk(st.tab)){tab=st.tab;openRef=null;dirty=true;}
   if(st.done&&st.done()){if(st.after)st.after();tutGo(S.tut+1);return;}
   const md=$("modal");
   if(document.getElementById("fbk")||$("picker").children.length||(md&&md.classList.contains("on"))||document.getElementById("chestfx")){tutHide(box);return;}
@@ -133,10 +134,14 @@ function tutTick(){
   if(key!==tutKey){box.innerHTML=tutHTML(st);tutKey=key;pxify(box);}
   let el=st.sel?document.querySelector(st.sel):null;
   if(el&&st.scroll&&!tutScrolled){el.scrollIntoView({block:st.scroll==="start"?"start":"center"});tutScrolled=true;}
+  if(el){const q=el.getBoundingClientRect();if((q.bottom<4||q.top>window.innerHeight-4)&&Date.now()-(tutTick.sc||0)>700){tutTick.sc=Date.now();el.scrollIntoView({block:"center"});}}
+  if(el&&el.disabled)el=null;
   const vw=window.innerWidth,vh=window.innerHeight;
   let r=el?el.getBoundingClientRect():null;if(r&&(r.width<1||r.height<1||r.bottom<4||r.top>vh-4))r=null;
-  const mode=st.card||(st.block&&!r)?"card":r?"point":"float";
-  box.className="on c-"+mode+(st.block||st.card?" c-block":"");
+  if(st.block&&!r){if(!tutTick.mt)tutTick.mt=Date.now();}else tutTick.mt=0;
+  const lost=!!(st.block&&!r&&Date.now()-tutTick.mt>1500); /* cible introuvable : on ne bloque plus le joueur */
+  const mode=st.card||(st.block&&!r&&!lost)?"card":r?"point":"float";
+  box.className="on c-"+mode+(st.card||(st.block&&!lost)?" c-block":"");
   const cm=box.querySelectorAll(".cm"),ring=box.querySelector(".cring"),arr=box.querySelector(".carr"),bub=box.querySelector(".cbub");
   const S2=(e,o)=>{for(const k in o)e.style[k]=o[k];};
   if(mode==="point"){const p=6,L=Math.max(0,r.left-p),T=Math.max(0,r.top-p),R=Math.min(vw,r.right+p),B=Math.min(vh,r.bottom+p);
@@ -151,7 +156,6 @@ function tutTick(){
   else{S2(cm[0],{left:"0",top:"0",width:vw+"px",height:vh+"px"});const bw=Math.min(460,vw-16);bub.style.width=bw+"px";bub.style.left=((vw-bw)/2)+"px";bub.style.top=Math.max(8,(vh-bub.offsetHeight)/2)+"px";arr.style.display="none";}
 }
 setInterval(tutTick,120);
-window.addEventListener("resize",()=>{tutKey=null;});
 /* Coffre doré de fin de guide : ressources, énergie, XP du héros et 2 constructions instantanées */
 function goldChest(){if(!S||S.goldDone)return;S.goldDone=1;
   const items=[];giveRes(1.6,RES,items);const e=enGive(15);if(e)items.push({k:"en",v:e});
@@ -162,3 +166,8 @@ function goldChest(){if(!S||S.goldDone)return;S.goldDone=1;
   dirty=true;save();chestFX(T,items);}
 function instPill(){if(!S||S.tut!=null||!(S.inst>0)||S.build)return "";return '<span class="rwpill instpill" data-tip="'+esc(tr("<b>Construction instantanée</b>Lancez une construction dans la cellule, puis touchez 🏗 à côté de sa barre : elle se termine tout de suite.","<b>Instant build</b>Start a build in the cell, then tap 🏗 next to its bar: it finishes right away."))+'">🏗 ×'+S.inst+"</span>";}
 function useInstant(){if(!S||!S.build||!(S.inst>0))return;S.inst--;S.build.end=S.t;S.build.start=Math.min(S.build.start,S.t);toast(tr("🏗 Construction terminée !","🏗 Build complete!"));dirty=true;}
+/* Sortie de secours : si le joueur touche le voile au lieu de la cible, on lui montre la bulle ; au 3e essai, il peut forcer l’étape */
+let tutMiss=0;
+document.addEventListener("click",e=>{if(!e.target.classList||!e.target.classList.contains("cm")||!e.target.closest("#coach"))return;const b=document.querySelector("#coach .cbub");if(b){b.classList.remove("nudge");void b.offsetWidth;b.classList.add("nudge");}
+  tutMiss++;if(tutMiss===3&&b&&!b.querySelector('[data-act="tutforce"]')){const r=b.querySelector(".cbtn");if(r)r.insertAdjacentHTML("beforeend",'<button class="btn alt" data-act="tutforce">'+tr("Continuer quand même","Continue anyway")+"</button>");}});
+function tutForce(){const st=tutStep();if(!st)return;if(st.id==="hunt"||st.id==="hunting")S.tutHuntDone=1;if(st.id==="auto")S.sentOnce=1;if(st.id==="raiding")S.tutRaidAt=0;if(st.after)st.after();if(st.next)st.next();if(S.tut==null)return;tutGo(S.tut+1);}

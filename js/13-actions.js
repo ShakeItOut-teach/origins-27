@@ -17,6 +17,7 @@ function act(a,el){
   if(a==="speed"){S.speed=SPEEDS[+el.dataset.i].v;dirty=true;return;}
   if(a==="tutnext"){tutNext();return;}
   if(a==="tutskip"){tutSkip();return;}
+  if(a==="tutforce"){tutForce();return;}
   if((a==="tab"||a==="goto")&&S&&!tutTabOk(a==="tab"?el.dataset.t:el.dataset.tab))return;
   if(a==="tab"){tab=el.dataset.t;openRef=null;dirty=true;return;}
   if(a==="open"){openRef=el.dataset.ref;dirty=true;return;}
