@@ -193,6 +193,63 @@ canvas{display:block;border-radius:12px;border:1px solid var(--line);background:
 #modal.on{display:flex}
 .incw{color:var(--bad);cursor:pointer;font-weight:600}
 .protw{color:#9fc4ff;font-weight:600}
+/* ===== Ouverture de coffre ===== */
+#chestfx{--tc:#9fb3c8;position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:center;
+  background:radial-gradient(circle at 50% 46%,color-mix(in srgb,var(--tc) 26%,transparent) 0,transparent 55%),rgba(2,6,11,.97);animation:cfxfade .2s ease-out;transition:opacity .18s}
+#chestfx.bye{opacity:0}
+.cfx-rays{position:absolute;left:50%;top:46%;width:900px;height:900px;margin:-450px 0 0 -450px;pointer-events:none;opacity:0;transform:scale(.2);transition:opacity .35s,transform .55s cubic-bezier(.2,1.4,.4,1);
+  background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--tc) 60%,transparent) 0 7deg,transparent 7deg 20deg);
+  -webkit-mask:radial-gradient(circle,#000 0,transparent 58%);mask:radial-gradient(circle,#000 0,transparent 58%)}
+#chestfx.open .cfx-rays{opacity:.85;transform:scale(1);animation:cfxspin 10s linear infinite}
+.cfx-stage{position:relative;width:200px;height:172px;flex:none;margin-top:40px;animation:cfxdrop .5s cubic-bezier(.2,1.6,.4,1) both}
+.cfx-chest{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 18px color-mix(in srgb,var(--tc) 55%,transparent))}
+.cfx-chest *{transition:fill .25s,stroke .25s}
+.cfx-lid{transform-box:fill-box;transform-origin:0% 100%;transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
+#chestfx.open .cfx-lid{transform:translate(-2px,-16px) rotate(-22deg)}
+.cfx-in{opacity:0;transition:opacity .2s}
+#chestfx.open .cfx-in{opacity:1;filter:blur(3px)}
+#chestfx.up .cfx-chest{animation:cfxshake .34s ease-in-out}
+.cfx-upg{position:absolute;left:50%;top:-6px;transform:translateX(-50%);white-space:nowrap;font-weight:800;font-size:20px;letter-spacing:1px;text-transform:uppercase;color:var(--tc);text-shadow:0 0 14px var(--tc);opacity:0}
+#chestfx.up .cfx-upg{animation:cfxpop .38s ease-out}
+#chestfx.open .cfx-upg{display:none}
+.cfx-p{position:absolute;left:50%;top:44%;width:9px;height:9px;border-radius:2px;background:var(--tc);opacity:0;pointer-events:none;box-shadow:0 0 8px var(--tc)}
+.cfx-p:nth-child(3n){background:#fff;width:6px;height:6px}
+.cfx-p:nth-child(4n){border-radius:50%}
+#chestfx.open .cfx-p{animation:cfxburst .95s cubic-bezier(.15,.8,.3,1) var(--d) forwards}
+.cfx-tier{display:flex;flex-direction:column;align-items:center;line-height:1;opacity:0;transform:scale(2.4);transition:opacity .2s,transform .4s cubic-bezier(.2,1.6,.4,1);position:relative}
+#chestfx.open .cfx-tier{opacity:1;transform:none}
+.cfx-tier .k{font-size:12px;letter-spacing:5px;text-transform:uppercase;color:#b9cdd6}
+.cfx-tier .n{font-size:30px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--tc);text-shadow:0 0 18px color-mix(in srgb,var(--tc) 70%,transparent);margin-top:4px}
+.cfx-tier .m{font-size:22px;font-weight:800;color:#fff;margin-top:2px}
+#chestfx.t2 .cfx-tier .n,#chestfx.t3 .cfx-tier .n{background:linear-gradient(90deg,var(--tc),#fff,var(--tc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:cfxshine 1.4s linear infinite}
+#chestfx.t3 .cfx-tier .n{font-size:34px}
+#chestfx.t3.open .cfx-stage{animation:cfxquake .5s}
+#chestfx.t3.open::before{content:"";position:absolute;inset:0;background:#fff;pointer-events:none;animation:cfxflash .5s ease-out forwards}
+.cfx-items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:460px;position:relative;cursor:default}
+.cfx-it{min-width:96px;padding:8px 10px;border-radius:12px;background:rgba(10,24,34,.88);border:1px solid color-mix(in srgb,var(--tc) 55%,transparent);box-shadow:0 0 16px color-mix(in srgb,var(--tc) 25%,transparent);display:flex;flex-direction:column;align-items:center;gap:3px;opacity:0;transform:translateY(-90px) scale(.2)}
+.cfx-it.in{opacity:1;transform:none;transition:transform .42s cubic-bezier(.2,1.7,.4,1),opacity .15s}
+.cfx-it b{font-size:20px;color:#fff;font-variant-numeric:tabular-nums}
+.cfx-it small{font-size:11.5px;color:#b9cdd6}
+.cfx-ic{display:flex;height:30px;align-items:center;justify-content:center}
+.cfx-ic img,.cfx-ic svg{max-height:30px;width:auto}
+.cfx-emo{font-size:24px;line-height:1}
+.cfx-kept{font-size:12.5px;color:#b9cdd6;margin:4px 0 0;position:relative;opacity:0}
+.cfx-btn{margin-top:8px;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s;position:relative;min-width:180px}
+.cfx-hint{font-size:11px;color:#7e97a7;margin:2px 0 0;position:relative;letter-spacing:1px}
+#chestfx.done .cfx-btn{opacity:1;pointer-events:auto;transform:none}
+#chestfx.done .cfx-kept{opacity:1}
+#chestfx.done .cfx-hint{visibility:hidden}
+@keyframes cfxfade{from{opacity:0}}
+@keyframes cfxspin{to{transform:rotate(360deg)}}
+@keyframes cfxdrop{0%{transform:translateY(-260px) scale(.6);opacity:0}60%{opacity:1}100%{transform:none}}
+@keyframes cfxshake{0%,100%{transform:none}20%{transform:translateX(-7px) rotate(-5deg) scale(1.06)}45%{transform:translateX(7px) rotate(5deg) scale(1.1)}70%{transform:translateX(-4px) rotate(-2deg) scale(1.04)}}
+@keyframes cfxpop{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}40%{opacity:1;transform:translate(-50%,-6px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-22px) scale(1)}}
+@keyframes cfxburst{0%{opacity:1;transform:translate(-50%,-50%) scale(var(--s))}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r)) scale(.3)}}
+@keyframes cfxshine{to{background-position:-200% 0}}
+@keyframes cfxquake{0%,100%{transform:none}20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-4px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(3px,3px)}}
+@keyframes cfxflash{from{opacity:.75}to{opacity:0}}
+@media (prefers-reduced-motion:reduce){#chestfx *{animation:none!important;transition:none!important}}
+@media (max-width:640px){.cfx-stage{width:170px;height:146px}.cfx-tier .n{font-size:24px}#chestfx.t3 .cfx-tier .n{font-size:27px}.cfx-it{min-width:84px;padding:6px 8px}.cfx-it b{font-size:17px}}
 /* attaque en approche : l’écran scintille de rouge sur les bords */
 body.underatk::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9000;box-shadow:inset 0 0 0 3px rgba(255,70,70,.85),inset 0 0 110px 18px rgba(255,30,30,.42);animation:atkpulse 1.3s ease-in-out infinite}
 body.underatk.atknear::after{animation-duration:.7s}
@@ -1035,8 +1092,8 @@ function rwInit(){S.daily=S.daily||{last:"",streak:0};if(S.chestAt==null)S.chest
 function dqAdd(id,n){if(!S||!S.dq||catchUp)return;S.dq.list.forEach(q=>{if(q.id===id&&!q.done&&q.got<q.goal){q.got=Math.min(q.goal,q.got+(n||1));if(q.got>=q.goal)toast("🎯 Quête du jour : "+q.txt+" ✔");}});}
 function rwBase(){return (120+70*S.noyau+40*(S.stage||1))*PACE;}
 /* Ce qui ne rentre pas dans les entrepôts va en réserve : rien n’est perdu, la réserve se vide dès qu’il y a de la place. */
-function giveRes(mult,ks){const cap=rates().cap,got=[];let kept=0;S.stash=S.stash||{};(ks||RES).forEach(r=>{const v=Math.round(rwBase()*mult*(r==="nuc"?0.4:1)),b=S.res[r];S.res[r]=Math.max(b,Math.min(cap,b+v));const over=v-(S.res[r]-b);if(over>0){S.stash[r]=(S.stash[r]||0)+over;kept+=over;}got.push(fmt(v)+" "+RES_NAME[r].toLowerCase());});
-  if(kept>1)got.push(fmt(kept)+" mis en réserve (entrepôts pleins)");return got;}
+function giveRes(mult,ks,items){const cap=rates().cap,got=[];let kept=0;S.stash=S.stash||{};(ks||RES).forEach(r=>{const v=Math.round(rwBase()*mult*(r==="nuc"?0.4:1)),b=S.res[r];S.res[r]=Math.max(b,Math.min(cap,b+v));const over=v-(S.res[r]-b);if(over>0){S.stash[r]=(S.stash[r]||0)+over;kept+=over;}got.push(fmt(v)+" "+RES_NAME[r].toLowerCase());if(items)items.push({k:"res",r,v});});
+  if(kept>1){got.push(fmt(kept)+" mis en réserve (entrepôts pleins)");if(items)items.kept=kept;}return got;}
 function stashTotal(){return S.stash?RES.reduce((a,r)=>a+(S.stash[r]||0),0):0;}
 function stashStep(){if(!S.stash)return;const cap=rates().cap;RES.forEach(r=>{const s=S.stash[r]||0;if(s<=0)return;const room=cap-S.res[r];if(room<=0)return;const m=Math.min(room,s);S.res[r]+=m;S.stash[r]=s-m;});}
 function stashHTML(){const t=stashTotal();if(t<1)return "";return '<div class="stash">🧺 Réserve des récompenses : '+RES.filter(r=>S.stash[r]>=1).map(r=>'<span class="c-'+r+'">'+fmt(S.stash[r])+" "+RES_NAME[r].toLowerCase()+"</span>").join(" · ")+'<br><span class="desc">Elle remplit vos entrepôts automatiquement dès qu’il y a de la place. Dépensez ou agrandissez la vacuole pour la vider plus vite.</span></div>';}
@@ -1054,17 +1111,52 @@ function claimDaily(){rwInit();const d=S.daily;if(d.last===dayKey())return;d.str
   log("🎁 Récompense du jour "+n+" (série de "+d.streak+" jours) : "+got.join(", ")+".","good");toast("🎁 Jour "+n+" : "+got.join(", "));}
 const CHEST_TIERS=[{n:"Commun",m:1,p:0.70,c:"#9fb3c8",e:"📦"},{n:"Rare",m:2,p:0.20,c:"#5ee6d0",e:"🎁"},{n:"Très rare",m:4,p:0.08,c:"#b28bff",e:"💎"},{n:"Extrêmement rare",m:8,p:0.02,c:"#ffd166",e:"👑"}];
 function rollTier(){let r=Math.random();for(const T of CHEST_TIERS){if(r<T.p)return T;r-=T.p;}return CHEST_TIERS[0];}
-function openChest(T){const m=T.m,got=[],ks=RES.slice().sort(()=>Math.random()-0.5).slice(0,m>=4?4:m>=2?3:2);
-  got.push(...giveRes((0.45+Math.random()*0.5)*m,ks));
-  const e=enGive(4*m);if(e)got.push("⚡ +"+e+" énergie");
+function openChest(T,items){const m=T.m,got=[],ks=RES.slice().sort(()=>Math.random()-0.5).slice(0,m>=4?4:m>=2?3:2);
+  got.push(...giveRes((0.45+Math.random()*0.5)*m,ks,items));
+  const e=enGive(4*m);if(e){got.push("⚡ +"+e+" énergie");if(items)items.push({k:"en",v:e});}
   const x=Math.random();
-  if(x<0.2){const el=UNIT_ORDER.filter(k=>UNITS[k].type&&uReq(k));if(el.length)got.push(giveTroops(el[Math.floor(Math.random()*el.length)],2*m));}
-  else if(x<0.4){const xp=Math.round(xpNeed(S.hero.lvl)*0.3*m);S.hero.xp+=xp;got.push("+"+xp+" XP pour le héros");const H=S.hero;while(H.xp>=xpNeed(H.lvl)){H.xp-=xpNeed(H.lvl);H.lvl++;}}
+  if(x<0.2){const el=UNIT_ORDER.filter(k=>UNITS[k].type&&uReq(k));if(el.length){const u=el[Math.floor(Math.random()*el.length)];got.push(giveTroops(u,2*m));if(items)items.push({k:"unit",u,v:2*m});}}
+  else if(x<0.4){const xp=Math.round(xpNeed(S.hero.lvl)*0.3*m);S.hero.xp+=xp;got.push("+"+xp+" XP pour le héros");if(items)items.push({k:"xp",v:xp});const H=S.hero;while(H.xp>=xpNeed(H.lvl)){H.xp-=xpNeed(H.lvl);H.lvl++;}}
   return got;}
-function claimChest(){rwInit();if(Date.now()<S.chestAt)return;S.chestAt=Date.now()+CHEST_MS;const T=rollTier(),got=openChest(T);
-  log(T.e+" Coffre "+T.n.toLowerCase()+" (×"+T.m+") : "+got.join(", ")+".",T.m>1?"rare":"good");toast(T.e+" "+T.n+" ×"+T.m+" : "+got.join(", "));
-  if(T.m>=4)popup({kick:"Coffre "+T.n.toLowerCase(),title:T.e+" ×"+T.m+" !",body:"<p>"+got.join("<br>")+"</p>"});
-  S.lastChest={n:T.n,m:T.m,e:T.e,c:T.c,got};}
+function claimChest(){rwInit();if(Date.now()<S.chestAt)return null;S.chestAt=Date.now()+CHEST_MS;const T=rollTier(),items=[],got=openChest(T,items);
+  log(T.e+" Coffre "+T.n.toLowerCase()+" (×"+T.m+") : "+got.join(", ")+".",T.m>1?"rare":"good");
+  S.lastChest={n:T.n,m:T.m,e:T.e,c:T.c,got};return {T,items};}
+/* Ouverture de coffre animée : le coffre tombe, monte en rareté (gris → turquoise → violet → or), s'ouvre dans un éclat
+   de lumière, puis les récompenses en sortent une à une. Un toucher passe directement au résultat. */
+function chestSVG(){return '<svg class="cfx-chest" viewBox="0 0 140 120" aria-hidden="true"><ellipse cx="70" cy="112" rx="52" ry="7" fill="rgba(0,0,0,.45)"/>'+
+  '<ellipse class="cfx-in" cx="70" cy="54" rx="44" ry="12" fill="var(--tc)"/>'+
+  '<rect x="22" y="54" width="96" height="54" rx="6" fill="#4a3322"/><rect x="22" y="54" width="96" height="10" fill="#5c412b"/>'+
+  '<rect x="22" y="54" width="96" height="54" rx="6" fill="none" stroke="var(--tc)" stroke-width="5"/><rect x="38" y="54" width="8" height="54" fill="var(--tc)"/><rect x="94" y="54" width="8" height="54" fill="var(--tc)"/>'+
+  '<g class="cfx-lid"><path d="M18 56 L18 38 Q18 16 70 14 Q122 16 122 38 L122 56 Z" fill="#5c412b"/><path d="M18 56 L18 38 Q18 16 70 14 Q122 16 122 38 L122 56 Z" fill="none" stroke="var(--tc)" stroke-width="5"/>'+
+  '<rect x="38" y="16" width="8" height="40" fill="var(--tc)"/><rect x="94" y="16" width="8" height="40" fill="var(--tc)"/><path d="M30 30 Q70 18 110 30" stroke="rgba(255,255,255,.25)" stroke-width="3" fill="none"/></g>'+
+  '<rect x="60" y="48" width="20" height="24" rx="4" fill="var(--tc)"/><rect x="67" y="56" width="6" height="9" rx="2" fill="#2a1a0e"/></svg>';}
+function chestItemHTML(it){let ic,lb;
+  if(it.k==="res"){ic=sprImg("r_"+it.r,2);lb='<span class="c-'+it.r+'">'+RES_NAME[it.r]+"</span>";}
+  else if(it.k==="en"){ic='<span class="cfx-emo">⚡</span>';lb="Énergie";}
+  else if(it.k==="unit"){ic=unitIcon(it.u);lb=(it.v>1?UNITS[it.u].pl:UNITS[it.u].name);}
+  else {ic='<span class="cfx-emo">⭐</span>';lb="XP du héros";}
+  return '<div class="cfx-it"><span class="cfx-ic">'+ic+'</span><b data-v="'+it.v+'">+0</b><small>'+lb+"</small></div>";}
+function chestFX(T,items){const old=document.getElementById("chestfx");if(old)old.remove();
+  const ti=Math.max(0,CHEST_TIERS.indexOf(T)),el=document.createElement("div"),np=14+ti*12;let ps="";
+  for(let i=0;i<np;i++){const a=Math.random()*Math.PI*2,d=110+Math.random()*(160+ti*50);ps+='<i class="cfx-p" style="--x:'+Math.round(Math.cos(a)*d)+"px;--y:"+Math.round(Math.sin(a)*d-40)+"px;--r:"+Math.round(Math.random()*720-360)+"deg;--d:"+Math.round(Math.random()*120)+"ms;--s:"+(0.6+Math.random()*0.9).toFixed(2)+'"></i>';}
+  el.id="chestfx";el.className="t"+ti;el.setAttribute("role","dialog");el.setAttribute("aria-label","Coffre "+T.n+", multiplicateur "+T.m);el.style.setProperty("--tc",CHEST_TIERS[0].c);
+  el.innerHTML='<div class="cfx-rays"></div><div class="cfx-tier"><span class="k">Coffre</span><span class="n">'+T.n+'</span><span class="m">×'+T.m+'</span></div><div class="cfx-stage"><div class="cfx-upg"></div>'+chestSVG()+ps+'</div><div class="cfx-items">'+items.map(chestItemHTML).join("")+"</div>"+(items.kept?'<p class="cfx-kept">🧺 '+fmt(items.kept)+" mis en réserve : vos entrepôts sont pleins.</p>":"")+'<button class="btn cfx-btn">Récupérer</button><p class="cfx-hint">Touchez pour passer</p>';
+  document.body.appendChild(el);
+  const timers=[],at=(ms,f)=>timers.push(setTimeout(f,ms)),cards=[...el.querySelectorAll(".cfx-it")];
+  const count=(b,instant)=>{const v=+b.dataset.v;if(instant){b.textContent="+"+fmt(v);return;}const t0=performance.now(),go=now=>{const k=Math.min(1,(now-t0)/450);b.textContent="+"+fmt(Math.round(v*(1-Math.pow(1-k,3))));if(k<1)requestAnimationFrame(go);};requestAnimationFrame(go);};
+  const bump=i=>{el.style.setProperty("--tc",CHEST_TIERS[i].c);const u=el.querySelector(".cfx-upg");u.textContent=CHEST_TIERS[i].n+" !";el.classList.remove("up");void el.offsetWidth;el.classList.add("up");};
+  const open=()=>{el.style.setProperty("--tc",T.c);el.classList.remove("up");el.classList.add("open");};
+  const card=(c,instant)=>{if(c.classList.contains("in"))return;c.classList.add("in");count(c.querySelector("b"),instant);};
+  const finish=()=>{timers.forEach(clearTimeout);open();cards.forEach(c=>card(c,true));el.classList.add("done");};
+  const close=()=>{timers.forEach(clearTimeout);document.removeEventListener("keydown",key);el.classList.add("bye");setTimeout(()=>el.remove(),180);};
+  const key=e=>{if(e.key==="Escape"||e.key==="Enter"||e.key===" "){e.preventDefault();el.classList.contains("done")?close():finish();}};
+  document.addEventListener("keydown",key);
+  el.addEventListener("click",e=>{e.stopPropagation();if(el.classList.contains("done")){if(e.target.closest(".cfx-btn")||!e.target.closest(".cfx-items"))close();}else finish();});
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){finish();return;}
+  for(let i=1;i<=ti;i++)at(380+i*380,()=>bump(i));
+  const tOpen=560+ti*380;at(tOpen,open);
+  cards.forEach((c,j)=>at(tOpen+320+j*130,()=>card(c,false)));
+  at(tOpen+320+cards.length*130+380,()=>{el.classList.add("done");el.querySelector(".cfx-btn").focus();});}
 function claimDq(j){const q=S.dq.list[j];if(!q||q.done||q.got<q.goal)return;q.done=true;const got=giveRes(0.8);{const e=enGive(5);if(e)got.push("⚡ +"+e);}toast("🎯 "+got.join(", "));
   if(S.dq.list.every(x=>x.done)&&!S.dq.bonus){S.dq.bonus=true;S.chestAt=Math.min(S.chestAt,Date.now());toast("Les 3 quêtes du jour : un coffre offert !");}}
 function rewardsHTML(){rwInit();const d=S.daily,can=d.last!==dayKey(),cur=can?dailyDay():((d.streak-1)%7)+1;
@@ -1575,7 +1667,7 @@ function act(a,el){
   if(a==="rkcat"){S.rkCat=el.dataset.c;dirty=true;return;}
   if(a==="rkall"){S.rkAll=!S.rkAll;dirty=true;return;}
   if(a==="rwleague"){claimLeague();dirty=true;if(modalExtra)showModal(rewardsHTML());return;}
-  if(a==="rwdaily"||a==="rwchest"||a==="rwdq"){if(a==="rwdaily")claimDaily();else if(a==="rwchest")claimChest();else claimDq(+el.dataset.j);dirty=true;if(S.mutOffer){closeModal();return;}showModal(rewardsHTML());return;}
+  if(a==="rwdaily"||a==="rwchest"||a==="rwdq"){let C=null;if(a==="rwdaily")claimDaily();else if(a==="rwchest")C=claimChest();else claimDq(+el.dataset.j);dirty=true;if(S.mutOffer){closeModal();if(C)chestFX(C.T,C.items);return;}showModal(rewardsHTML());if(C)chestFX(C.T,C.items);return;}
   if(a==="revenge"){const B=S.bots.find(z=>z.id===+el.dataset.id);if(!B)return;S.tiles[B.y*W+B.x].s=1;tab="map";openRef="tile:"+B.x+":"+B.y;S.compMode="man";S.comp=pickUnits("raid",S.idle);dirty=true;return;}
   if(a==="reset"){if(Date.now()<resetArmUntil){resetArmUntil=0;S=null;try{localStorage.removeItem(SAVE_KEY);}catch(e){}showTitle();}else resetArmUntil=Date.now()+4000;if(S)dirty=true;else renderReset();return;}
   if(a==="intro"){showTitle();return;}
