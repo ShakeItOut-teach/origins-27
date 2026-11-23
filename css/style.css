@@ -766,3 +766,10 @@ header .controls{min-width:0;flex-wrap:wrap;justify-content:flex-end}
 .cbub{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 /* Le bouton du guide reste toujours visible en bas de la bulle, même si le texte défile */
 .cbub .cbtn{position:sticky;bottom:-14px;margin:8px -16px -14px;padding:10px 16px 14px;background:inherit;z-index:1}
+/* Mots simples (29-mots.js) : le vrai terme en petit sous le titre, et le lexique */
+h2 .sci{display:block;font-size:12px;font-style:italic;font-weight:400;color:var(--muted);letter-spacing:0;text-transform:none;margin-top:2px}
+.lexique{display:flex;flex-direction:column;gap:6px;text-align:left;margin-top:8px}
+.lexrow{border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+.lexrow b{font-size:15px}
+.lexrow .lexsci{margin-left:8px;font-style:italic;color:var(--muted);font-size:13px}
+.lexrow p{margin:3px 0 0;font-size:13px}

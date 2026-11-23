@@ -40,7 +40,7 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123n`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123o`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
 
 ## Robot de test (avant chaque lancement)
 
@@ -89,6 +89,14 @@ Une saison (un serveur) dure **27 jours** de jeu (`SEASON_DAYS` dans `js/01-mond
 - **Réflexes** (⚙ Options) : esquive automatique si la défense ne tiendrait pas (activé par défaut), récolte en boucle (désactivée par défaut).
 - **Gazette du serveur** (Rapports › Gazette) : les brèves du jour, le top 3, l’alliance en tête, le pillard le plus redouté, le fossile du jour, et un bouton « Copier pour Discord ».
 - **Grande crise** (une par saison, au jour 18, annoncée 48 h avant) : glaciation, anoxie ou impact de météorite, tirée au sort par saison. Pendant 24 h de jeu, rien n’est détruit : seule la production change selon le classement (−25 % pour le premier, environ −9 % au milieu, +10 % pour les 30 % derniers). Deux mutations de la bonne famille divisent le malus par deux. Les rivaux subissent la même règle, ce qui resserre le classement. Les survivants gagnent un badge sur leur planche et au Muséum. Réglages : `CRISIS_DAY`, `crisisEffect()` dans `js/27-saison.js`.
+
+## Mots simples (pour les débutants)
+
+Par défaut, le jeu remplace à l’affichage les termes scientifiques par des mots de tous les jours : ATP → **sucre**, protéines → **briques**, lipides → **graisses**, nucléotides → **ADN**, ribosomes → **fabriques**, vacuole → **réserve**, organites → **bâtiments**, collectrices → **ouvrières**, procaryote → **bactérie**, etc. Le vrai terme reste écrit en petit sous le titre des fiches, et ⚙ Options › **Lexique** explique chaque mot. ⚙ Options › **Vocabulaire** permet de revenir aux termes scientifiques (classes de SVT, passionnés).
+
+Le remplacement se fait uniquement sur le texte affiché (le code et les sauvegardes gardent les termes scientifiques) : dictionnaires `VOCAB_FR` et `VOCAB_EN` dans `js/29-mots.js`. Pour changer un mot, modifier une ligne de ces listes. Un élément marqué `data-noword` n’est jamais traduit.
+
+Le jeu se dévoile aussi petit à petit : avant le noyau niveau 3, seules les troupes T1 sont visibles (pas de recherche militaire, de classement, de Gazette ni de fiche d’espèce) ; voir `earlyGame()` dans `js/06-etat.js`.
 
 ## Comptes, sauvegarde en ligne et PvP (Supabase)
 
@@ -155,7 +163,7 @@ Le texte tapé est gardé si la fenêtre est fermée. Un seul rappel discret app
 index.html          la page : en-tête, zones de l’écran, et la liste des scripts à charger
 css/style.css       toute l’apparence (couleurs, mise en page, animations)
 css/lab.css         le thème « Carnet de laboratoire » (par défaut) : papier, encre, éosine ; sans lui, le thème sombre « Abysses »
-js/00-langue.js … js/28-compte.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage ; 25 : les options ; 26 : les alliances)
+js/00-langue.js … js/29-mots.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage ; 25 : les options ; 26 : les alliances)
 apercu.jpg          l’image affichée quand on partage le lien (1200 × 630)
 ```
 
@@ -192,6 +200,7 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | Les alliances (technologies, dons, entraide, boutique, cadeau), le lien Discord | `js/26-alliances.js` |
 | La saison de 27 jours, la dormance, les réflexes, les mutations visibles, les fossiles, la planche d’espèce, la Gazette | `js/27-saison.js` |
 | Les comptes et la sauvegarde en ligne (Supabase) | `js/28-compte.js`, `supabase/001_init.sql` |
+| Les mots simples, le lexique et l’option Vocabulaire | `js/29-mots.js` |
 | Le rythme de vie des rivaux (sommeil, connexions) | `js/09-rivaux.js` |
 
 Pour ajouter un fichier : créez-le dans `js/`, en commençant par `"use strict";`, puis ajoutez sa ligne `<script src="js/…"></script>` dans `index.html`, après les fichiers dont il utilise les fonctions au chargement.

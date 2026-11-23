@@ -27,7 +27,7 @@ window.runMonkey = async function (opts) {
   const ce = console.error; console.error = function () { note("console", Array.from(arguments).join(" ")); return ce.apply(console, arguments); };
   const wOpen = window.open; window.open = () => null;
   const realRandom = Math.random;
-  const SKIP = new Set(["lang", "reset", "feedback", "style", "quickstart", "intro", "tostrains", "savex", "savei", "savec", "install", "opt", "discord", "opts", "specdl", "specshare", "newseason"]);
+  const SKIP = new Set(["lang", "reset", "feedback", "style", "quickstart", "intro", "tostrains", "savex", "savei", "savec", "install", "opt", "discord", "opts", "specdl", "specshare", "newseason", "vocab"]);
   const HOT = { upgrade: 6, buildnew: 6, cell: 4, collect: 4, hunt: 5, huntgo: 5, raid: 5, raidgo: 5, spy: 4, express: 5, glevel: 4, mres: 4, accel: 3, tutnext: 8, tutforce: 4, rwchest: 3, mutpick: 6, lmclaim: 5, instant: 4, revenge: 4, filament: 4, incst: 4, aldon: 5, algift: 4, alhelp: 4, alask: 4, albuy: 3, alrec: 3, algo: 2, allyjoin: 2, autocollect: 3, migrate: 3, popok: 3, bqcancel: 2, cancel: 2, pick: 4, sub: 1, speed: 0.2, zoom: 0.3, recenter: 0.3 };
   const fin = (v) => typeof v === "number" && isFinite(v);
   const check = (where) => {

@@ -239,3 +239,5 @@ body.lab .optrow select{background:var(--sheet);border:1.5px solid var(--ink);bo
 body.lab .up{color:var(--algue)}
 body.lab #tip .up,body.lab #toasts .up{color:#8fd3a8}
 body.lab .cloudmail input{background:var(--sheet);border:1.5px solid var(--ink);border-radius:3px;color:var(--ink)}
+body.lab .lexrow{background:var(--sheet);border:1.5px solid var(--ink);border-radius:3px}
+body.lab .lexrow b{font-family:"Instrument Serif",serif;font-weight:400;font-size:19px}
