@@ -11,7 +11,8 @@ function reportCards(cat){
   return list.slice(0,60).map(r=>'<div class="rep'+(freshIds.has(r.id)?" fresh":"")+(r.win===true?" win":r.win===false?" lose":"")+'"><div class="rh"><b>'+r.title+"</b><time>"+fmtClock(r.t)+"</time></div>"+r.lines.map(l=>/^<(table|div|p)/.test(l)?l:"<p>"+l+"</p>").join("")+"</div>").join("");
 }
 function activityHTML(){
-  const subs=[["move",tr("En route","On the way"),S.missions.length+(S.inc?S.inc.length:0)],["combat",tr("Combats","Fights"),unread("combat")],["farm",tr("Récoltes","Harvests"),unread("farm")],["ally",tr("🤝 Alliance","🤝 Alliance"),S.ally?(alGiftReady()?1:0)+(alReqs()?1:0):0],["gaz",tr("📰 Gazette","📰 Gazette"),0],["rank",tr("Classement","Ranking"),0],["log",tr("Journal","Log"),0]];
+  const subs=[["move",tr("En route","On the way"),S.missions.length+(S.inc?S.inc.length:0)],["combat",tr("Combats","Fights"),unread("combat")],["farm",tr("Récoltes","Harvests"),unread("farm")],["ally",tr("🤝 Alliance","🤝 Alliance"),S.ally?(alGiftReady()?1:0)+(alReqs()?1:0):0],["gaz",tr("📰 Gazette","📰 Gazette"),0],["rank",tr("Classement","Ranking"),0],["log",tr("Journal","Log"),0]].filter(t=>!earlyGame()||!(t[0]==="gaz"||t[0]==="rank"||(t[0]==="ally"&&!S.ally)));
+  if(!subs.some(t=>t[0]===actSub))actSub="move";
   let h='<div class="activity"><div class="subtabs">'+subs.map(t=>'<button data-act="sub" data-s="'+t[0]+'" aria-pressed="'+(actSub===t[0])+'">'+t[1]+(t[2]?'<i class="'+(t[0]==="move"?"live":"red")+'">'+t[2]+"</i>":"")+"</button>").join("")+"</div>";
   if(actSub==="combat"){const st=S.stats||{},row=(lbl,o,cls)=>'<div class="stat"><span>'+lbl+"</span><b>"+(o&&RES.some(k=>o[k])?RES.filter(k=>o[k]).map(k=>'<span class="'+cls+'">'+fmt(o[k])+"</span> "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k]).join(" · "):"—")+"</b></div>",cb=S.reports.filter(r=>r.cat==="combat");
     return h+'<div class="card"><h2>'+tr("Bilan","Summary")+"</h2>"+row(tr("Pillé chez les rivaux","Raided from rivals"),st.lootIn,"up")+row(tr("Rapporté de vos chasses","Brought back from hunts"),st.huntIn,"up")+row(tr("Volé par les rivaux","Stolen by rivals"),st.lootOut,"neg")+'<div class="stat"><span>'+tr("Rapports récents","Recent reports")+"</span><b>"+cb.filter(r=>r.win===true).length+tr(" victoires · "," victories · ")+cb.filter(r=>r.win===false).length+tr(" défaites"," defeats")+"</b></div></div>"+'<div class="card"><h2>'+tr("Rapports de combat","Combat reports")+"</h2>"+reportCards("combat")+"</div></div>";}
@@ -126,10 +127,14 @@ function armyHTML(){
   h+='<p class="desc">'+tr("Entretien : ","Upkeep: ")+RES.map(k=>fmt(u[k])+" "+{atp:"ATP",prot:"prot.",lip:"lip.",nuc:"nucl."}[k]).join(" · ")+tr(" par heure. Sur la carte, « Auto » choisit les troupes à votre place ; « Je choisis » vous laisse composer chaque envoi."," per hour. On the map, “Auto” picks troops for you; “I choose” lets you compose each dispatch.")+"</p>";
   if(S.queue.length)h+='<p class="desc" style="margin-top:4px">'+(EN?"In production on "+laneCount()+" line"+(laneCount()>1?"s":"")+": ":"En production sur "+laneCount()+" chaîne"+(laneCount()>1?"s":"")+" : ")+compText(qby)+tr(" · fin dans "," · done in ")+'<span data-end="'+queueEnd()+'"></span></p>';
   if(blvl("ribo")<1)h+='<p class="reason" style="margin-top:6px">'+tr("Pour produire des troupes : ","To produce troops: ")+riboHint()+"</p>";
-  h+="</div>"+(S.tut!=null?"":mresHTML());
+  /* Le jeu se dévoile petit à petit : avant le noyau niveau 3, seules les troupes déjà accessibles s’affichent ;
+     ensuite, seulement le prochain rang à débloquer (pas toute la liste jusqu’au T5). */
+  const early=earlyGame();
+  if(early)h+='<p class="desc lockhint">🔒 '+tr("De nouvelles troupes et la recherche militaire apparaîtront au <b>noyau niveau 3</b>.","New troops and military research will appear at <b>nucleus level 3</b>.")+"</p>";
+  h+="</div>"+(S.tut!=null||early?"":mresHTML());
   ["atk","eco"].forEach(br=>{const B=RBR[br],R=rankOf(br);
-    h+='<div class="card tbranch" style="--bc:'+B.col+'"><h2>'+B.e+" "+B.name+' <span class="rkbadge" style="--rc:'+RANK_COL[R]+'">T'+R+" / T5</span></h2>";
-    for(let T=1;T<=5;T++){const open=R>=T,us=UNIT_ORDER.filter(k=>{const U=UNITS[k];if(U.br!==br||U.tier!==T)return false;return (A[k]||0)>0||!U.req.some(q=>q[0]==="g"&&nodeState(q[1])==="closed");});
+    h+='<div class="card tbranch" style="--bc:'+B.col+'"><h2>'+B.e+" "+B.name+(early?"":' <span class="rkbadge" style="--rc:'+RANK_COL[R]+'">T'+R+" / T5</span>")+"</h2>";
+    for(let T=1;T<=5;T++){if(T>R+(early?0:1))break;const open=R>=T,us=UNIT_ORDER.filter(k=>{const U=UNITS[k];if(U.br!==br||U.tier!==T)return false;return (A[k]||0)>0||!U.req.some(q=>q[0]==="g"&&nodeState(q[1])==="closed");});
       h+='<div class="tier'+(open?"":" lock")+'" style="--rc:'+RANK_COL[T]+'"><div class="thead"><b>T'+T+"</b><span>"+RANK_LBL[T]+"</span>"+(open?"":'<span class="tl">🔒 '+(T===R+1?tr("Recherche militaire T","Military research T")+T:tr("Après le T","After T")+(T-1))+"</span>")+"</div>";
       if(open)h+='<div class="units">'+us.map(k=>unitCard(k,A,qby)).join("")+"</div>";
       else h+='<div class="tlocked">'+us.map(k=>'<div class="tl1">'+unitIcon(k,true)+"<b>"+UNITS[k].name+"</b><small>⚔ "+UNITS[k].atk+" · 🛡 "+UNITS[k].def+" · 🎒 "+UNITS[k].carry+(UNITS[k].spy?" · 👁 "+UNITS[k].spy:"")+"</small></div>").join("")+"</div>";

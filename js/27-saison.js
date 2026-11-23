@@ -17,7 +17,12 @@ function seasonNo(){if(!S)return 1;if(!S.season)S.season=museum().length+1;retur
 function seasonSeed(){return ((S&&S.seed)||12345)+seasonNo()*7919;}
 function seasonDay(){return Math.min(SEASON_DAYS,dayIdx(S.t)+1);}
 function seasonLeft(){return Math.max(0,SEASON_DAYS*1440-S.t);}
+/* Le jeu se dévoile : au noyau niveau 3, on annonce ce qui vient d’apparaître dans l’interface. */
+function unlockTick(){
+  if(!S||S.unlock3||S.tut!=null||S.noyau<3)return;S.unlock3=1;if(S.noyau>3)return;
+  popup({kick:tr("Noyau niveau 3","Nucleus level 3"),title:tr("Nouvelles possibilités","New possibilities"),body:'<ul class="advice"><li>⚔ <b>'+tr("Recherche militaire","Military research")+"</b> "+tr("(onglet Armée) : de nouvelles troupes, plus fortes.","(Army tab): new, stronger troops.")+"</li><li>🏆 <b>"+tr("Classement mondial","World ranking")+"</b> "+tr("et","and")+" 📰 <b>"+tr("Gazette du serveur","Server gazette")+"</b> "+tr("(onglet Rapports).","(Reports tab).")+"</li><li>🔬 <b>"+tr("Mon espèce","My species")+"</b> "+tr("(onglet Évolution) : votre cousin fossile et votre planche à partager.","(Evolution tab): your fossil cousin and your plate to share.")+"</li></ul>"});dirty=true;}
 function seasonTick(){
+  unlockTick();
   if(S&&S.bots)crisisTick();
   if(!S||S.seasonEnd||S.tut!=null||S.t<SEASON_DAYS*1440)return;
   const rk=myRank("pow"),L=leagueOf(rk),sp=speciesInfo();
@@ -201,7 +206,7 @@ function speciesInfo(){
   SPC={key,S,v};return v;
 }
 function seasonMods(m){if(!S||!S.nodes)return;crisisMods(m);const sp=speciesInfo();if(sp.inShow){const e=sp.cousin.eff;for(const k in e)m[k]=(m[k]||0)+e[k];}}
-function speciesBarHTML(){if(!S)return "";const sp=speciesInfo();return '<button class="mutbar specbar" data-act="species"><span>🔬 '+tr("Mon espèce","My species")+" : <i>"+esc(sp.name)+"</i></span><span>"+tr("cousin fossile ","fossil cousin ")+"<b>"+esc(sp.cousin.name)+"</b>"+(sp.inShow?' <span class="up">'+tr("★ en vitrine cette saison","★ on display this season")+"</span>":"")+'</span><span class="muted">'+tr("Voir la planche →","See the plate →")+"</span></button>";}
+function speciesBarHTML(){if(!S||earlyGame())return "";const sp=speciesInfo();return '<button class="mutbar specbar" data-act="species"><span>🔬 '+tr("Mon espèce","My species")+" : <i>"+esc(sp.name)+"</i></span><span>"+tr("cousin fossile ","fossil cousin ")+"<b>"+esc(sp.cousin.name)+"</b>"+(sp.inShow?' <span class="up">'+tr("★ en vitrine cette saison","★ on display this season")+"</span>":"")+'</span><span class="muted">'+tr("Voir la planche →","See the plate →")+"</span></button>";}
 function speciesHTML(){
   const sp=speciesInfo(),c=sp.cousin;
   let h='<div class="kick">'+tr("Saison ","Season ")+seasonNo()+" · "+tr("jour ","day ")+seasonDay()+"/"+SEASON_DAYS+"</div><h2><i>"+esc(sp.name)+"</i></h2>"+(crisisBadge()?'<p class="up" style="text-align:center">🏅 '+tr("Survivant : ","Survivor: ")+crisisBadge().name+"</p>":"")+'<div class="specwrap"><div class="specimg" id="specimg"><span class="muted">'+tr("Préparation de la planche…","Preparing the plate…")+'</span></div><div class="specinfo">';

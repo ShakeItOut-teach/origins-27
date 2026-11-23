@@ -4,6 +4,8 @@
 "use strict";
 let lastTab=null;
 let S=null,openRef=null,tab="cell",resetArmUntil=0,dirty=true,suppressClick=false,evoBr="E",actSub="move",cam=null,camVT=21;
+/* Début de partie (avant le noyau niveau 3) : on n’affiche que l’essentiel ; le reste du jeu se dévoile ensuite. */
+function earlyGame(){return !!S&&S.noyau<3;}
 function shownN(){return Math.max(1,Math.min(S.selN||1,Math.max(1,S.idle)));}
 function isMobile(){return !!(window.matchMedia&&window.matchMedia("(max-width:820px)").matches);}
 

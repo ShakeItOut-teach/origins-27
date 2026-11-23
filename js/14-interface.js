@@ -111,10 +111,10 @@ function stripHTML(){
   if(S.mig)h+='<span>Migration <b>'+tr("vers ","to ")+S.mig.x+","+S.mig.y+'</b><span class="pb"><i data-ps="'+S.mig.start+'" data-pe="'+S.mig.end+'"></i></span><span data-end="'+S.mig.end+'"></span></span>';
   h+=S.research?'<span>'+tr("Gène ","Gene ")+'<b>'+NODES[S.research.id].name+(S.research.lvl?tr(" niv. "," lvl ")+S.research.lvl:"")+'</b><span class="pb evo"><i data-ps="'+S.research.start+'" data-pe="'+S.research.end+'"></i></span><span data-end="'+S.research.end+'"></span>'+accelHTML("r")+'</span>':"<span>"+tr("Aucun gène en cours","No gene in progress")+"</span>";
   if(S.mres)h+='<span>'+tr("Recherche ","Research ")+'<b>'+RBR[S.mres.br].e+" T"+S.mres.L+'</b><span class="pb evo"><i data-ps="'+S.mres.start+'" data-pe="'+S.mres.end+'"></i></span><span data-end="'+S.mres.end+'"></span>'+accelHTML("m")+"</span>";
-  h+=enPill()+lmPill()+alPill()+instPill();
+  h+=enPill()+lmPill()+(earlyGame()?"":alPill())+instPill();
   {const st=stashTotal();if(st>=1)h+='<span class="rwpill" data-act="rewards">🧺 <b>'+fmt(st)+"</b>"+tr(" en réserve"," in reserve")+"</span>";}
   {const n=rwCount();h+='<span class="rwpill'+(n?" on":"")+'" data-act="rewards">🎁 '+(n?tr("Récompenses ","Rewards ")+"<b>"+n+"</b>":tr("Coffre dans ","Chest in ")+"<span data-endr=\""+S.chestAt+"\"></span>")+"</span>";}
-  {const r=myRank("pow"),L=leagueOf(r);h+='<span class="rkpill" data-act="goto" data-tab="act" data-sub="rank">'+L[1]+" <b>#"+r+"</b>"+tr(" mondial"," world")+"</span>";}
+  if(!earlyGame()){const r=myRank("pow"),L=leagueOf(r);h+='<span class="rkpill" data-act="goto" data-tab="act" data-sub="rank">'+L[1]+" <b>#"+r+"</b>"+tr(" mondial"," world")+"</span>";}
   h+=eventPill();if(typeof crisisPill==="function")h+=crisisPill();
   if(S.inc&&S.inc.length){const A=S.inc.slice().sort((a,b)=>a.arrive-b.arrive)[0],b=S.bots.find(z=>z.id===A.bot);h+='<span class="incw" data-act="goto" data-tab="act" data-sub="move">'+tr("⚠️ Attaque de ","⚠️ Attack from ")+'<b>'+esc(b?b.name:"?")+'</b>'+tr(" dans "," in ")+'<span data-end="'+A.arrive+'"></span>'+(S.inc.length>1?" (+"+(S.inc.length-1)+")":"")+"</span>";}
   else if(shieldAt(S.t))h+='<span class="protw" data-tip="'+esc(tr("<b>Protection après un pillage</b>Aucun rival ne peut vous attaquer pendant 1 h. Piller quelqu’un met fin à la protection.","<b>Protection after a raid</b>No rival can attack you for 1 h. Raiding someone ends the protection."))+'">'+tr("🛡 Protégé encore ","🛡 Protected for ")+'<span data-endr="'+S.shieldR+'"></span></span>';
