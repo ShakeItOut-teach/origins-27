@@ -52,22 +52,27 @@ function load(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return fals
   return true;}catch(err){catchUp=null;return false;}}
 
 setTheme(getTheme());try{const st=localStorage.getItem("o27-style");document.body.classList.toggle("pixel",st!=="smooth");}catch(e){document.body.classList.add("pixel");}
-if(!load())showTitle();
-let lastFrame=performance.now(),lastUI=0,lastSave=0;
+let lastFrame=performance.now(),lastUI=0,lastSave=0,frameErrs=0;
+/* Une erreur dans une image ne doit jamais arrêter la boucle : on la note et on continue à l’image suivante. */
 function frame(now){
-  const dtReal=Math.min(5,(now-lastFrame)/1000);lastFrame=now;
-  if(S){
-    advance(dtReal*S.speed);
-    if(dirty)renderAll();else if(now-lastUI>200){live();lastUI=now;}
-    draw(now,dtReal);
-    if(resetArmUntil&&Date.now()>resetArmUntil){resetArmUntil=0;dirty=true;}
-    if(now-lastSave>4000){save();lastSave=now;}
-  }
-  requestAnimationFrame(frame);
+  try{
+    const dtReal=Math.min(5,(now-lastFrame)/1000);lastFrame=now;
+    if(S){
+      advance(dtReal*S.speed);
+      if(dirty)renderAll();else if(now-lastUI>200){live();lastUI=now;}
+      draw(now,dtReal);
+      if(resetArmUntil&&Date.now()>resetArmUntil){resetArmUntil=0;dirty=true;}
+      if(now-lastSave>4000){save();lastSave=now;}
+    }
+  }catch(e){if(frameErrs++<5){console.error(e);if(typeof errPush==="function")errPush("frame: "+(e&&e.message));}dirty=true;}
+  finally{requestAnimationFrame(frame);}
 }
+/* Démarrage : seulement quand TOUS les fichiers du jeu sont chargés (guide, options, saison, comptes…).
+   Avant, la boucle pouvait partir trop tôt, appeler une fonction pas encore chargée et s’arrêter : plus d’onglets, horloge figée à 00:00. */
+function boot(){if(boot.done)return;boot.done=1;if(!load())showTitle();lastFrame=performance.now();requestAnimationFrame(frame);}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else setTimeout(boot,0);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save();else lastFrame=performance.now();});
 /* écran titre : le redessiner quand la LARGEUR change (dans un artefact, la fenêtre mesure 0 au chargement ; sur mobile, la hauteur bouge avec la barre d'adresse et ne compte pas) */
 let titleW=window.innerWidth;
 let wasMob=null;window.addEventListener("resize",()=>{if(document.querySelector(".title")&&Math.abs(window.innerWidth-titleW)>40){titleW=window.innerWidth;clearTimeout(showTitle.rt);showTitle.rt=setTimeout(()=>{if(document.querySelector(".title"))showTitle();},150);}if(tourI>=0)showTour(tourI);if(cv)resize();sizeStage();const m=isMobile();if(m!==wasMob){wasMob=m;dirty=true;}});
-requestAnimationFrame(frame);
 window.__o27={get S(){return S;},save,load,draw:(n,d)=>{if(cv)draw(n,d);},get tab(){return tab;},setStyle,camZoom,heroSVG,heroForm,act,advance,newGame,renderAll,setTab:t=>{tab=t;dirty=true;},setOpen:r=>{openRef=r;dirty=true;},dbg:{rates,upkeep,upgradeInfo,upgradeBlock,newBlock,bldCost,nodeCost,nodeState,nodeBlock,questTick,lvlCost,lvlBlock,spawnEvent,joinAlly,playerAtk,armyAll,pickUnits,uReq,zoneIdx,huntPower,heroPower,playerDef,botDef,botAtk,mods,setCostK:(v,p)=>{COST_K=v;if(p)PACE=p;},enGive,openChest,rollTier,giveRes,playerPoints,botPoints,botPow,myRank,rkRows,leagueOf}};
