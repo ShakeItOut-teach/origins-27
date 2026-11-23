@@ -192,8 +192,31 @@ begin
 end;
 $$;
 
--- Un joueur ne peut pas déclencher lui-même un transfert.
+-- 6. Places dans la goutte : distribuées dans l'ordre, jamais deux fois la même.
+do $$
+declare
+  saison bigint;
+  premiere integer;
+begin
+  select id into strict saison from public.saisons order by debut desc limit 1;
+  premiere := public.prendre_place(saison);
+  if public.prendre_place(saison) <> premiere + 1 then
+    raise exception 'ECHEC : les places ne se suivent pas';
+  end if;
+end;
+$$;
+
+-- Un joueur ne peut pas déclencher lui-même un transfert, ni se donner une place.
 set local role authenticated;
+do $$
+begin
+  begin
+    perform public.prendre_place(1);
+    raise exception 'ECHEC : un joueur appelle la fonction des places';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
 do $$
 begin
   begin

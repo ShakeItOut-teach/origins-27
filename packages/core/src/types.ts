@@ -1,4 +1,4 @@
-import type { CounterId, MutationId, OrganelleId, ResourceId } from "@o27/data";
+import type { CounterId, MutationId, OrganelleId, PlaceKind, ResourceId } from "@o27/data";
 
 /**
  * Unités internes.
@@ -15,8 +15,24 @@ export interface Construction {
   readonly endsAt: number;
 }
 
+export interface Expedition {
+  /** Le lieu visé (sa case dans le monde). */
+  readonly place: string;
+  readonly kind: PlaceKind;
+  /** Butin fixé au départ, en millionièmes d'unité. */
+  readonly loot: number;
+  /** Énergie dépensée au départ (rendue en cas d'annulation). */
+  readonly energy: number;
+  /** Temps de repos du lieu après le retour. */
+  readonly restMs: number;
+  readonly startedAt: number;
+  readonly returnsAt: number;
+  /** Rappelée par le joueur : elle revient à vide. */
+  readonly cancelled: boolean;
+}
+
 export interface PlayerState {
-  readonly version: 1;
+  readonly version: 2;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -34,6 +50,16 @@ export interface PlayerState {
   readonly tier: number;
   /** Sert à limiter le nombre de touchers par seconde. */
   readonly tapBudgetAt: number;
+  /** Graine de la goutte : la même pour tous les joueurs d'une saison. */
+  readonly worldSeed: number;
+  /** Numéro de place du joueur dans la goutte. */
+  readonly slot: number;
+  /** Points d'énergie, et instant à partir duquel le prochain se regagne. */
+  readonly energy: number;
+  readonly energyAt: number;
+  readonly expedition: Expedition | null;
+  /** Lieux qui se regarnissent : pour chacun, l'instant où il redevient disponible. */
+  readonly placeReadyAt: Readonly<Record<string, number>>;
 }
 
 export type GameEvent =
@@ -57,7 +83,24 @@ export type GameEvent =
       readonly at: number;
       readonly options: readonly MutationId[];
     }
-  | { readonly type: "mutationChosen"; readonly at: number; readonly mutation: MutationId };
+  | { readonly type: "mutationChosen"; readonly at: number; readonly mutation: MutationId }
+  | {
+      readonly type: "expeditionSent";
+      readonly at: number;
+      readonly place: string;
+      readonly returnsAt: number;
+    }
+  | { readonly type: "expeditionCancelled"; readonly at: number; readonly returnsAt: number }
+  | {
+      readonly type: "expeditionReturned";
+      readonly at: number;
+      readonly place: string;
+      readonly resource: ResourceId;
+      /** Ce qui est entré dans la réserve, et ce qui a débordé. */
+      readonly gained: number;
+      readonly lost: number;
+      readonly cancelled: boolean;
+    };
 
 export type OrderErrorCode =
   /** L'heure fournie est antérieure à l'état. */
@@ -72,7 +115,11 @@ export type OrderErrorCode =
   | "busy"
   | "insufficient"
   | "noOffer"
-  | "notInOffer";
+  | "notInOffer"
+  | "unknownPlace"
+  | "placeResting"
+  | "noEnergy"
+  | "noExpedition";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

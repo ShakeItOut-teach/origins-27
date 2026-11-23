@@ -1,18 +1,42 @@
 /** Naissance d'un joueur, apparence de sa créature, résumé d'absence, sauvegarde. */
-import { BALANCE, COUNTER_IDS, MUTATION_IDS, ORGANELLE_IDS, RESOURCE_IDS } from "@o27/data";
+import {
+  BALANCE,
+  COUNTER_IDS,
+  MUTATION_IDS,
+  ORGANELLE_IDS,
+  PLACE_KINDS,
+  RESOURCE_IDS,
+} from "@o27/data";
 import type { CounterId, MutationId, OrganelleId, ResourceId, TraitId } from "@o27/data";
 import { createRng } from "./rng";
-import type { Construction, GameEvent, PlayerState } from "./types";
+import type { Construction, Expedition, GameEvent, PlayerState } from "./types";
 
 function fill<K extends string>(keys: readonly K[], value: number): Record<K, number> {
   return Object.fromEntries(keys.map((key) => [key, value])) as Record<K, number>;
 }
 
+/** Où un joueur vit dans la goutte. Sans serveur, chacun est seul au centre de son monde. */
+export interface WorldPlace {
+  readonly worldSeed: number;
+  readonly slot: number;
+}
+
 /** Crée un joueur au palier 0 : une cellule, rien d'autre. */
-export function createPlayer(seed: number, seasonStart: number, now: number): PlayerState {
+export function createPlayer(
+  seed: number,
+  seasonStart: number,
+  now: number,
+  world?: WorldPlace,
+): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 1,
+    version: 2,
+    worldSeed: (world?.worldSeed ?? seed) >>> 0,
+    slot: world?.slot ?? 0,
+    energy: BALANCE.energy.max,
+    energyAt: now,
+    expedition: null,
+    placeReadyAt: {},
     seed: seed >>> 0,
     rngState: seed >>> 0,
     seasonStart,
@@ -58,6 +82,8 @@ export interface AbsenceSummary {
     readonly level: number;
   }[];
   readonly tiersReached: readonly number[];
+  /** Nombre d'expéditions revenues avec leur butin. */
+  readonly expeditionsBack: number;
 }
 
 /** Ce qui s'est passé entre deux états, pour l'écran « pendant votre absence ». */
@@ -76,6 +102,9 @@ export function summarizeAbsence(
       event.type === "constructionDone" ? [{ organelle: event.organelle, level: event.level }] : [],
     ),
     tiersReached: events.flatMap((event) => (event.type === "tierReached" ? [event.tier] : [])),
+    expeditionsBack: events.filter(
+      (event) => event.type === "expeditionReturned" && !event.cancelled,
+    ).length,
   };
 }
 
@@ -104,6 +133,28 @@ export function serializeState(state: PlayerState): string {
     counters: pick(COUNTER_IDS, state.counters),
     tier: state.tier,
     tapBudgetAt: state.tapBudgetAt,
+    worldSeed: state.worldSeed,
+    slot: state.slot,
+    energy: state.energy,
+    energyAt: state.energyAt,
+    expedition:
+      state.expedition === null
+        ? null
+        : {
+            place: state.expedition.place,
+            kind: state.expedition.kind,
+            loot: state.expedition.loot,
+            energy: state.expedition.energy,
+            restMs: state.expedition.restMs,
+            startedAt: state.expedition.startedAt,
+            returnsAt: state.expedition.returnsAt,
+            cancelled: state.expedition.cancelled,
+          },
+    placeReadyAt: Object.fromEntries(
+      Object.keys(state.placeReadyAt)
+        .sort()
+        .map((id) => [id, state.placeReadyAt[id]]),
+    ),
   });
 }
 
@@ -146,10 +197,56 @@ function readConstruction(value: unknown): Construction | null {
   return { organelle, toLevel, endsAt };
 }
 
-/** Relit une sauvegarde. Refuse tout ce qui n'a pas exactement la forme attendue. */
-export function deserializeState(text: string): PlayerState {
+const PLACE_ID = /^-?\d{1,6}:-?\d{1,6}$/;
+
+function readExpedition(value: unknown): Expedition | null {
+  if (value === null) return null;
+  if (!isRecord(value)) throw new TypeError("sauvegarde invalide : expédition");
+  const kind = PLACE_KINDS.find((id) => id === value.kind);
+  const { place, loot, energy, restMs, startedAt, returnsAt, cancelled } = value;
+  if (
+    kind === undefined ||
+    typeof place !== "string" ||
+    !PLACE_ID.test(place) ||
+    !isCount(loot) ||
+    !isCount(energy) ||
+    !isCount(restMs) ||
+    !isCount(startedAt) ||
+    !isCount(returnsAt) ||
+    typeof cancelled !== "boolean"
+  ) {
+    throw new TypeError("sauvegarde invalide : expédition");
+  }
+  return { place, kind, loot, energy, restMs, startedAt, returnsAt, cancelled };
+}
+
+function readPlaceTimes(value: unknown): Record<string, number> {
+  if (!isRecord(value)) throw new TypeError("sauvegarde invalide : lieux");
+  const result: Record<string, number> = {};
+  for (const [id, readyAt] of Object.entries(value)) {
+    if (!PLACE_ID.test(id) || !isCount(readyAt)) throw new TypeError("sauvegarde invalide : lieux");
+    result[id] = readyAt;
+  }
+  return result;
+}
+
+/** Vrai pour une sauvegarde d'avant la carte : il faudra lui donner une place dans la goutte. */
+export function needsWorldPlace(text: string): boolean {
   const raw: unknown = JSON.parse(text);
-  if (!isRecord(raw) || raw.version !== 1) throw new TypeError("sauvegarde invalide : version");
+  return isRecord(raw) && raw.version === 1;
+}
+
+/**
+ * Relit une sauvegarde. Refuse tout ce qui n'a pas exactement la forme attendue.
+ * Une sauvegarde d'avant la carte (version 1) est convertie sans rien perdre : elle reçoit
+ * une énergie pleine et la place `world` (ou, sans serveur, le centre de son propre monde).
+ */
+export function deserializeState(text: string, world?: WorldPlace): PlayerState {
+  const raw: unknown = JSON.parse(text);
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2)) {
+    throw new TypeError("sauvegarde invalide : version");
+  }
+  const old = raw.version === 1;
   const { seed, rngState, seasonStart, now, tier, tapBudgetAt } = raw;
   if (
     !isCount(seed) ||
@@ -162,8 +259,18 @@ export function deserializeState(text: string): PlayerState {
   ) {
     throw new TypeError("sauvegarde invalide : nombres");
   }
+  const { worldSeed, slot, energy, energyAt } = raw;
+  if (!old && (!isCount(worldSeed) || !isCount(slot) || !isCount(energy) || !isCount(energyAt))) {
+    throw new TypeError("sauvegarde invalide : carte");
+  }
   return {
-    version: 1,
+    version: 2,
+    worldSeed: old ? (world?.worldSeed ?? seed) >>> 0 : (worldSeed as number),
+    slot: old ? (world?.slot ?? 0) : (slot as number),
+    energy: old ? BALANCE.energy.max : Math.min(BALANCE.energy.max, energy as number),
+    energyAt: old ? now : (energyAt as number),
+    expedition: old ? null : readExpedition(raw.expedition),
+    placeReadyAt: old ? {} : readPlaceTimes(raw.placeReadyAt),
     seed,
     rngState,
     seasonStart,

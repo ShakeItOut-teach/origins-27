@@ -1,5 +1,5 @@
 /**
- * Équilibrage des paliers 0 à 2.
+ * Équilibrage des paliers 0 à 3.
  * Tout changement se note dans docs/equilibrage/journal.md, avec la mesure avant et après.
  */
 import { BalanceSchema } from "./schema";
@@ -52,4 +52,22 @@ export const BALANCE: Balance = BalanceSchema.parse({
     thrift: { stat: "buildCost", percent: -10, trait: "spots" },
   },
   mutationOffer: { tier: 2, choices: 3 },
+  energy: { max: 10, regenSeconds: 1200 },
+  expedition: {
+    cancelSpeedup: 10,
+    placesPerBand: 2,
+    bands: [
+      { energy: 1, seconds: 30, sugar: 60, bricks: 20, restSeconds: 120 },
+      { energy: 2, seconds: 180, sugar: 150, bricks: 50, restSeconds: 600 },
+      { energy: 3, seconds: 600, sugar: 400, bricks: 120, restSeconds: 1800 },
+    ],
+  },
+  world: {
+    playerSpacing: 1000,
+    placeCell: 400,
+    placeChancePercent: 60,
+    sugarChancePercent: 45,
+    minDistance: 150,
+    searchCells: 3,
+  },
 });

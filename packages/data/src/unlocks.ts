@@ -28,7 +28,7 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
     condition: { counter: "mutationsChosen", atLeast: 1 },
     minDay: null,
     ui: ["map", "energy"],
-    orders: [],
+    orders: ["sendExpedition", "cancelExpedition"],
   },
   {
     tier: 4,
@@ -65,7 +65,7 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
  * Dernier palier livré aux joueurs. Le moteur ne fait jamais dépasser ce palier,
  * même si la condition du suivant est remplie : on livre un palier fini à la fois.
  */
-export const MAX_RELEASED_TIER = 2;
+export const MAX_RELEASED_TIER = 3;
 
 /** Premier palier où un joueur peut être attaqué. */
 export const FIRST_ATTACKABLE_TIER = 5;

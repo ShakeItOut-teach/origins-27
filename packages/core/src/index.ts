@@ -3,6 +3,7 @@ export type { Rng } from "./rng";
 export { MICRO, DAY_MS } from "./types";
 export type {
   Construction,
+  Expedition,
   GameEvent,
   OrderErrorCode,
   OrderResult,
@@ -24,7 +25,10 @@ export {
   createPlayer,
   describeCreature,
   deserializeState,
+  needsWorldPlace,
   serializeState,
   summarizeAbsence,
 } from "./player";
-export type { AbsenceSummary, Creature } from "./player";
+export type { AbsenceSummary, Creature, WorldPlace } from "./player";
+export { cancelReturnMs, energyAt, placeOffer, slotPosition, visiblePlaces } from "./world";
+export type { Energy, Offer, Place, Point } from "./world";

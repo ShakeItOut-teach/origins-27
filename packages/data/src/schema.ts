@@ -77,6 +77,40 @@ export const BalanceSchema = z.strictObject({
   } satisfies Record<(typeof MUTATION_IDS)[number], unknown>),
   /** Palier dont l'arrivée propose une mutation, et nombre de mutations proposées. */
   mutationOffer: z.strictObject({ tier: positiveInt, choices: positiveInt }),
+  /** L'énergie limite les expéditions. Elle se regagne toute seule, un point à la fois. */
+  energy: z.strictObject({ max: positiveInt, regenSeconds: positiveInt }),
+  expedition: z.strictObject({
+    /** Une expédition annulée revient ce nombre de fois plus vite qu'à l'aller. */
+    cancelSpeedup: positiveInt,
+    /** Nombre de lieux visibles dans chaque bande de distance. */
+    placesPerBand: positiveInt,
+    /** Du plus proche au plus loin. Butin en unités entières. */
+    bands: z
+      .array(
+        z.strictObject({
+          energy: positiveInt,
+          seconds: positiveInt,
+          sugar: positiveInt,
+          bricks: positiveInt,
+          /** Temps que met le lieu à se regarnir pour le joueur. */
+          restSeconds: positiveInt,
+        }),
+      )
+      .length(3),
+  }),
+  /** Géométrie de la goutte, en unités de carte. Entiers uniquement. */
+  world: z.strictObject({
+    /** Écart entre deux joueurs voisins. */
+    playerSpacing: positiveInt,
+    /** Côté des cases invisibles qui contiennent chacune au plus un lieu. */
+    placeCell: positiveInt,
+    placeChancePercent: z.number().int().min(1).max(100),
+    sugarChancePercent: z.number().int().min(1).max(99),
+    /** Un lieu plus proche que cela de la cellule est ignoré (il serait dessous). */
+    minDistance: positiveInt,
+    /** Nombre de cases regardées de chaque côté du joueur. */
+    searchCells: positiveInt,
+  }),
 });
 export type Balance = z.infer<typeof BalanceSchema>;
 export type OrganelleData = z.infer<typeof OrganelleSchema>;
@@ -102,6 +136,12 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("build"), organelle: z.enum(ORGANELLE_IDS) }),
   z.strictObject({ type: z.literal("upgrade"), organelle: z.enum(ORGANELLE_IDS) }),
   z.strictObject({ type: z.literal("chooseMutation"), mutation: z.enum(MUTATION_IDS) }),
+  /** Un lieu est désigné par sa case : « colonne:ligne ». */
+  z.strictObject({
+    type: z.literal("sendExpedition"),
+    place: z.string().regex(/^-?\d{1,6}:-?\d{1,6}$/),
+  }),
+  z.strictObject({ type: z.literal("cancelExpedition") }),
 ]);
 export type Order = z.infer<typeof OrderSchema>;
 

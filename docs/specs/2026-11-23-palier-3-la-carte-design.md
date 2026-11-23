@@ -1,6 +1,6 @@
 # Palier 3 — La carte : conception
 
-Date : 2026-11-23 · État : **proposé, à valider par le propriétaire**
+Date : 2026-11-23 · État : **validé par le propriétaire**
 
 Le palier 3 est le moment où le jeu cesse d'être un jeu de clics : la cellule découvre qu'il
 y a un monde autour d'elle, et le joueur commence à **choisir** où dépenser un bien rare.
@@ -62,9 +62,9 @@ Un écran, une idée : la fiche d'un lieu a la même forme que la fiche d'un org
 - Le butin est fixé au départ, livré au retour. Ce qui dépasse la réserve est perdu : cela
   donne enfin une raison d'améliorer la Réserve.
 - **Une expédition peut être annulée** tant qu'elle n'est pas revenue (décision du
-  propriétaire). Le filament se rétracte tout de suite : pas de butin, l'énergie dépensée est
-  rendue, le lieu reste intact. Annuler ne coûte donc rien : c'est un droit à l'erreur, pas
-  une tactique.
+  propriétaire). Le filament revient **dix fois plus vite** qu'à l'aller, depuis l'endroit où
+  il se trouve : pas de butin, l'énergie dépensée est rendue, le lieu reste intact. Pendant ce
+  court retour, on ne peut pas envoyer une autre expédition.
 - Elle continue pendant l'absence ; le résumé « Pendant votre absence » la raconte.
 - Le compteur « récoltes sur la carte » augmente au retour.
 

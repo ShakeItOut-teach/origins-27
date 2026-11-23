@@ -4,7 +4,8 @@ import type { MutationId, Order, OrganelleId } from "@o27/data";
 import { advance } from "./advance";
 import { capacity, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
-import { evaluateTier, orderTier } from "./unlock";
+import { orderTier } from "./unlock";
+import { cancelReturnMs, placeOffer, visiblePlaces } from "./world";
 
 type Outcome =
   | { readonly state: PlayerState; readonly events: readonly GameEvent[] }
@@ -76,6 +77,49 @@ function chooseMutation(state: PlayerState, mutation: MutationId): Outcome {
   };
 }
 
+function sendExpedition(state: PlayerState, placeId: string): Outcome {
+  if (state.expedition !== null) return { error: "busy" };
+  const place = visiblePlaces(state.worldSeed, state.slot).find((entry) => entry.id === placeId);
+  if (place === undefined) return { error: "unknownPlace" };
+  if ((state.placeReadyAt[placeId] ?? 0) > state.now) return { error: "placeResting" };
+  const offer = placeOffer(place);
+  if (state.energy < offer.energy) return { error: "noEnergy" };
+  const returnsAt = state.now + offer.durationMs;
+  return {
+    state: {
+      ...state,
+      energy: state.energy - offer.energy,
+      expedition: {
+        place: placeId,
+        kind: place.kind,
+        loot: offer.loot,
+        energy: offer.energy,
+        restMs: offer.restMs,
+        startedAt: state.now,
+        returnsAt,
+        cancelled: false,
+      },
+    },
+    events: [{ type: "expeditionSent", at: state.now, place: placeId, returnsAt }],
+  };
+}
+
+function cancelExpedition(state: PlayerState): Outcome {
+  const expedition = state.expedition;
+  if (expedition === null || expedition.cancelled) return { error: "noExpedition" };
+  const returnsAt =
+    state.now + cancelReturnMs(expedition.startedAt, expedition.returnsAt, state.now);
+  return {
+    state: {
+      ...state,
+      // L'énergie est rendue tout de suite ; le filament, lui, met un instant à rentrer.
+      energy: Math.min(BALANCE.energy.max, state.energy + expedition.energy),
+      expedition: { ...expedition, returnsAt, cancelled: true },
+    },
+    events: [{ type: "expeditionCancelled", at: state.now, returnsAt }],
+  };
+}
+
 function execute(state: PlayerState, order: Order): Outcome {
   switch (order.type) {
     case "harvest":
@@ -86,6 +130,10 @@ function execute(state: PlayerState, order: Order): Outcome {
       return upgrade(state, order.organelle);
     case "chooseMutation":
       return chooseMutation(state, order.mutation);
+    case "sendExpedition":
+      return sendExpedition(state, order.place);
+    case "cancelExpedition":
+      return cancelExpedition(state);
   }
 }
 
@@ -99,7 +147,8 @@ export function applyOrder(state: PlayerState, order: Order, now: number): Order
   if (orderTier(order.type) > before.state.tier) return { ok: false, error: "locked" };
   const outcome = execute(before.state, order);
   if ("error" in outcome) return { ok: false, error: outcome.error };
-  const after = evaluateTier(outcome.state, now);
+  // Une expédition rappelée tout près de la cellule peut rentrer dans la même milliseconde.
+  const after = advance(outcome.state, now);
   return {
     ok: true,
     state: after.state,

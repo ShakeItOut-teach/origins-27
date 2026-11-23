@@ -371,7 +371,7 @@ describe("garanties du moteur", () => {
 
   it("refuse une sauvegarde abîmée", () => {
     const good = serializeState(atTier2());
-    expect(() => deserializeState(good.replace('"version":1', '"version":2'))).toThrow(TypeError);
+    expect(() => deserializeState(good.replace('"version":2', '"version":9'))).toThrow(TypeError);
     expect(() => deserializeState(good.replace('"sugar":', '"sucre":'))).toThrow(TypeError);
     expect(() => deserializeState("[]")).toThrow(TypeError);
   });

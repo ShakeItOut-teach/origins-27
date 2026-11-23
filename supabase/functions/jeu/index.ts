@@ -66,7 +66,7 @@ Deno.serve(async (request) => {
 
   const { data: season, error: seasonError } = await admin
     .from("saisons")
-    .select("id, debut")
+    .select("id, debut, graine")
     .lte("debut", new Date().toISOString())
     .order("debut", { ascending: false })
     .limit(1)
@@ -81,7 +81,13 @@ Deno.serve(async (request) => {
     clock: () => Date.now(),
     newSeed: () => crypto.getRandomValues(new Uint32Array(1))[0],
     seasonStart: Date.parse(season.debut),
+    worldSeed: Number(season.graine),
     repo: {
+      async nextSlot() {
+        const { data, error } = await admin.rpc("prendre_place", { p_saison: season.id });
+        if (error !== null) throw error;
+        return Number(data);
+      },
       async load(id: string) {
         const { data, error } = await admin
           .from("etats_joueur")

@@ -1,4 +1,4 @@
-import { MICRO } from "@o27/core";
+import { MICRO, placeOffer, visiblePlaces } from "@o27/core";
 import { describe, expect, it } from "vitest";
 import { createMemoryRepository } from "./memory";
 import { handleOrder, handleState } from "./service";
@@ -15,7 +15,13 @@ function id(n: number): string {
 
 function setup(repo: Repository = createMemoryRepository()) {
   const time = { now: START + 60_000 };
-  const deps: ServerDeps = { repo, clock: () => time.now, newSeed: () => 42, seasonStart: START };
+  const deps: ServerDeps = {
+    repo,
+    clock: () => time.now,
+    newSeed: () => 42,
+    seasonStart: START,
+    worldSeed: 27,
+  };
   return { deps, time, repo };
 }
 
@@ -141,6 +147,93 @@ describe("ordre", () => {
     expect((await handleOrder(deps, ALICE, harvest(1))).status).toBe("closed");
     expect((await handleState(deps, ALICE)).status).toBe("closed");
     expect(await repo.load(ALICE)).toBeNull();
+  });
+});
+
+describe("place dans la goutte", () => {
+  it("chaque joueur reçoit sa propre place, dans la goutte de la saison", async () => {
+    const { deps } = setup();
+    const alice = await handleState(deps, ALICE);
+    const bob = await handleState(deps, BOB);
+    if (alice.status !== "done" || bob.status !== "done") throw new Error("état attendu");
+    expect(alice.state.worldSeed).toBe(27);
+    expect(bob.state.worldSeed).toBe(27);
+    expect(alice.state.slot).not.toBe(bob.state.slot);
+    const again = await handleState(deps, ALICE);
+    if (again.status !== "done") throw new Error("état attendu");
+    expect(again.state.slot).toBe(alice.state.slot);
+  });
+
+  it("une partie d'avant la carte reçoit une place sans rien perdre", async () => {
+    const { deps, repo } = setup();
+    const first = await handleOrder(deps, ALICE, harvest(1, 3));
+    if (first.status !== "done") throw new Error("ordre attendu");
+    const stored = await repo.load(ALICE);
+    if (stored === null) throw new Error("partie attendue");
+    // On retire ce que la carte a ajouté, pour retrouver la forme d'une ancienne sauvegarde.
+    const added = ["worldSeed", "slot", "energy", "energyAt", "expedition", "placeReadyAt"];
+    const old = Object.fromEntries(
+      Object.entries(JSON.parse(stored.state) as Record<string, unknown>).filter(
+        ([key]) => !added.includes(key),
+      ),
+    );
+    await repo.commit({
+      playerId: ALICE,
+      expectedVersion: stored.version,
+      state: JSON.stringify({ ...old, version: 1 }),
+      order: null,
+    });
+
+    const back = await handleState(deps, ALICE);
+    if (back.status !== "done") throw new Error("état attendu");
+    expect(back.state.version).toBe(2);
+    expect(back.state.counters.harvests).toBe(3);
+    expect(back.state.worldSeed).toBe(27);
+    expect(back.state.slot).toBeGreaterThan(first.state.slot);
+    const later = await handleState(deps, ALICE);
+    if (later.status !== "done") throw new Error("état attendu");
+    expect(later.state.slot).toBe(back.state.slot);
+  });
+
+  it("une expédition envoyée passe par le serveur et revient avec son butin", async () => {
+    const { deps, time, repo } = setup();
+    const start = await handleState(deps, ALICE);
+    if (start.status !== "done") throw new Error("état attendu");
+    const stored = await repo.load(ALICE);
+    if (stored === null) throw new Error("partie attendue");
+    // On place le joueur au palier 3 sans rejouer toute la partie.
+    const ready = {
+      ...start.state,
+      tier: 3,
+      counters: { ...start.state.counters, harvests: 10, organellesBuilt: 3, mutationsChosen: 1 },
+      mutations: ["thrift"],
+    };
+    await repo.commit({
+      playerId: ALICE,
+      expectedVersion: stored.version,
+      state: JSON.stringify(ready),
+      order: null,
+    });
+    const [nearest] = visiblePlaces(27, start.state.slot);
+    if (nearest === undefined) throw new Error("lieu attendu");
+
+    const sent = await handleOrder(deps, ALICE, {
+      orderId: id(50),
+      order: { type: "sendExpedition", place: nearest.id },
+    });
+    expect(sent).toMatchObject({ status: "done", outcome: { ok: true } });
+    const unknown = await handleOrder(deps, ALICE, {
+      orderId: id(51),
+      order: { type: "sendExpedition", place: "pas un lieu" },
+    });
+    expect(unknown.status).toBe("invalid");
+
+    time.now += placeOffer(nearest).durationMs;
+    const back = await handleState(deps, ALICE);
+    if (back.status !== "done") throw new Error("état attendu");
+    expect(back.state.expedition).toBeNull();
+    expect(back.state.counters.mapHarvests).toBe(1);
+    expect(back.state.resources[placeOffer(nearest).resource]).toBe(placeOffer(nearest).loot);
   });
 });
 

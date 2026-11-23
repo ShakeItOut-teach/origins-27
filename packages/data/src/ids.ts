@@ -47,8 +47,23 @@ export const COUNTER_IDS = [
 export type CounterId = (typeof COUNTER_IDS)[number];
 
 /** Les ordres qu'un joueur peut envoyer. */
-export const ORDER_TYPES = ["harvest", "build", "upgrade", "chooseMutation"] as const;
+export const ORDER_TYPES = [
+  "harvest",
+  "build",
+  "upgrade",
+  "chooseMutation",
+  "sendExpedition",
+  "cancelExpedition",
+] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
+
+/** Les sortes de lieux de la carte, et ce que chacune rapporte. */
+export const PLACE_KINDS = ["sugarCluster", "debris"] as const;
+export type PlaceKind = (typeof PLACE_KINDS)[number];
+export const PLACE_RESOURCE: Readonly<Record<PlaceKind, ResourceId>> = {
+  sugarCluster: "sugar",
+  debris: "bricks",
+};
 
 /** Les éléments d'interface soumis au déblocage. */
 export const UI_ELEMENT_IDS = [

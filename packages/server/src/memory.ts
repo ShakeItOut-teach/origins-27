@@ -10,10 +10,12 @@ export function createMemoryRepository(): MemoryRepository {
   const players = new Map<string, StoredPlayer>();
   const outcomes = new Map<string, Outcome>();
   let writes = 0;
+  let slots = 0;
   const key = (playerId: string, orderId: string): string => `${playerId}/${orderId}`;
 
   return {
     writes: () => writes,
+    nextSlot: () => Promise.resolve(slots++),
     load: (playerId) => Promise.resolve(players.get(playerId) ?? null),
     findOutcome: (playerId, orderId) =>
       Promise.resolve(outcomes.get(key(playerId, orderId)) ?? null),

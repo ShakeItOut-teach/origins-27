@@ -8,6 +8,7 @@ import {
   applyOrder,
   createPlayer,
   deserializeState,
+  needsWorldPlace,
   serializeState,
   summarizeAbsence,
 } from "@o27/core";
@@ -42,6 +43,8 @@ export interface Repository {
    * version a changé entre-temps (un autre ordre du même joueur est passé avant).
    */
   readonly commit: (change: Commit) => Promise<boolean>;
+  /** Donne la prochaine place libre dans la goutte de la saison. Jamais deux fois la même. */
+  readonly nextSlot: () => Promise<number>;
 }
 
 export interface ServerDeps {
@@ -51,6 +54,8 @@ export interface ServerDeps {
   readonly newSeed: () => number;
   /** Début de la saison en cours, en millisecondes. */
   readonly seasonStart: number;
+  /** Graine de la goutte : la même pour tous les joueurs de la saison. */
+  readonly worldSeed: number;
 }
 
 export type OrderReply =
@@ -81,8 +86,15 @@ interface Loaded {
 
 async function loadOrCreate(deps: ServerDeps, playerId: string, now: number): Promise<Loaded> {
   const stored = await deps.repo.load(playerId);
-  if (stored !== null) return { state: deserializeState(stored.state), version: stored.version };
-  return { state: createPlayer(deps.newSeed(), deps.seasonStart, now), version: 0 };
+  if (stored !== null) {
+    // Une partie d'avant la carte reçoit sa place dans la goutte à sa première relecture.
+    const world = needsWorldPlace(stored.state)
+      ? { worldSeed: deps.worldSeed, slot: await deps.repo.nextSlot() }
+      : undefined;
+    return { state: deserializeState(stored.state, world), version: stored.version };
+  }
+  const world = { worldSeed: deps.worldSeed, slot: await deps.repo.nextSlot() };
+  return { state: createPlayer(deps.newSeed(), deps.seasonStart, now, world), version: 0 };
 }
 
 /** Applique un ordre pour un joueur déjà identifié. `body` vient du client : rien n'y est sûr. */
