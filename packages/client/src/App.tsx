@@ -127,7 +127,7 @@ export function App({ store, lang, onSwitchLang }: Props) {
 
       <section className="lens">
         <CellCanvas scene={scene} label={t("label.cell")} onTap={tap} />
-        {!touched && <p className="hint">{t("hint.tap")}</p>}
+        {!touched && state.counters.harvests === 0 && <p className="hint">{t("hint.tap")}</p>}
         {show("buildSlots") &&
           slots.map((id) => {
             const level = state.organelles[id];
