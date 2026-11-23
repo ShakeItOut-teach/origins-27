@@ -226,3 +226,12 @@ body.lab.pixel h1,body.lab.pixel h2,body.lab.pixel .heroform,body.lab.pixel .pop
 body.lab.pixel .btn{border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
 body.lab.pixel .btn:disabled{box-shadow:none;border-color:#b7aa8b}
 body.lab.pixel .btn:active:not(:disabled){box-shadow:1px 1px 0 var(--ink)}
+/* Saison : espèce, fossiles, Gazette */
+body.lab .specimg{background:var(--sheet);border:2px solid var(--ink);border-radius:4px;box-shadow:3px 3px 0 var(--ink)}
+body.lab .fosscard{background:var(--sheet);border:1.5px solid var(--ink);border-radius:4px}
+body.lab .fosscard b,body.lab .gazette h2,body.lab .specname{font-family:"Instrument Serif",serif;font-weight:400}
+body.lab .fosscard b{font-size:1.5em}
+body.lab .gazette h2{font-size:30px;font-style:italic}
+body.lab .fosspill{background:var(--sheet);border:1.5px solid var(--ink);border-radius:3px}
+body.lab .fosspill.on{background:#f6e3b4;box-shadow:2px 2px 0 var(--ink);border-color:var(--ink)}
+body.lab .optrow select{background:var(--sheet);border:1.5px solid var(--ink);border-radius:3px;color:var(--ink)}

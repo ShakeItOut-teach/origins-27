@@ -30,12 +30,12 @@ function botProt(b){return Math.round(120*Math.pow(1.33,bDays()*b.g/2));}
 function botSync(b){const dt=S.t-(b.lastT||0);if(dt>0){b.res=Math.min(botCap(b),b.res+(30+12*bDays()*b.g)*dt/60);b.lastT=S.t;}}
 function hod(t){return ((t%1440)+1440)%1440;}
 function dayIdx(t){return Math.floor(t/1440);}
-/* Protections en heure RÉELLE, quelle que soit la vitesse du jeu : personne n'attaque de minuit à 7 h (heure du joueur),
+/* Protections en heure RÉELLE, quelle que soit la vitesse du jeu : personne n'attaque pendant la dormance du joueur (8 h choisies, 23 h – 7 h par défaut),
    ni pendant l'heure réelle qui suit un pillage subi. realOf convertit un instant de jeu en heure réelle,
    y compris pendant le rattrapage hors ligne (cuMap). */
 let cuMap=null;
 function realOf(t){if(catchUp&&cuMap)return cuMap.r0+(t-cuMap.t0)/Math.max(1e-9,cuMap.t1-cuMap.t0)*(cuMap.r1-cuMap.r0);return Date.now()+(t-S.t)/Math.max(1e-9,S.speed)*1000;}
-function nightAt(t){return new Date(realOf(t)).getHours()<7;}
+function nightAt(t){return dormAt(t);}
 function shieldAt(t){return !!S.shieldR&&realOf(t)<S.shieldR;}
 function protAt(t){return nightAt(t)||shieldAt(t);}
 function hhmm(ms){const d=new Date(ms);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
@@ -130,10 +130,10 @@ function incTutHTML(A,b){const g=incGuess(A);
   '<div class="inctut"><p>'+tr("<b>🛡 Défendre</b> : vos troupes au repos restent dans la cellule et se battent. Si la défense tient, il repart bredouille et votre héros gagne de l’expérience, mais quelques troupes tombent. Si elle cède, vous êtes pillé et vous perdez la moitié des troupes présentes.","<b>🛡 Defend</b>: your resting troops stay in the cell and fight. If the defense holds, the attacker leaves empty-handed and your hero gains experience, but a few troops fall. If it gives way, you are raided and lose half the troops present.")+"</p>"+
   "<p>"+tr("<b>💨 Esquiver</b> : vos troupes quittent la cellule juste avant l’impact et reviennent ensuite. Aucune perte, mais seuls la membrane, les organites et le héros défendent : ce qui dépasse la part protégée par la vacuole risque d’être pillé.","<b>💨 Dodge</b>: your troops leave the cell just before impact and come back afterwards. No losses, but only the membrane, organelles and hero defend: anything above the share protected by the vacuole may be raided.")+"</p></div>"+
   '<p class="desc">'+tr("Votre défense : ","Your defense: ")+"<b>"+fmt(g.dd)+"</b>"+tr(" avec les troupes, "," with troops, ")+"<b>"+fmt(g.dn)+"</b>"+tr(" sans elles. Défendez si vous pouvez tenir, esquivez sinon. Vous pourrez changer d’avis jusqu’à l’arrivée, dans Rapports › En route."," without them. Defend if you can hold, dodge otherwise. You can change your mind until arrival, in Reports › On the way.")+"</p>"+incChoiceHTML(A)+
-  '<p class="desc">'+tr("🛡 Après un pillage subi, vous êtes protégé pendant 1 h. 🌙 De minuit à 7 h, personne n’attaque personne.","🛡 After being raided, you are protected for 1 h. 🌙 From midnight to 7 am, nobody attacks anybody.")+"</p>";}
+  '<p class="desc">'+tr("🛡 Après un pillage subi, vous êtes protégé pendant 1 h. ","🛡 After being raided, you are protected for 1 h. ")+dormSentence()+"</p>";}
 function loseHome(frac){const o={};for(const k in S.army){const n=Math.min(S.army[k]||0,Math.round((S.army[k]||0)*frac));if(n>0){o[k]=n;S.army[k]-=n;}}syncIdle();return o;}
 function incomingHit(A){
-  const b=S.bots.find(z=>z.id===A.bot);if(!b)return;
+  const b=S.bots.find(z=>z.id===A.bot);if(!b)return;rfxIncoming(A);
   if(protAt(S.t)){const sh=shieldAt(S.t);report("combat",tr("Attaque annulée · ","Attack cancelled · ")+b.name,[(sh?tr("🛡 Vous êtes sous protection après un pillage","🛡 You are protected after a raid"):tr("🌙 Vous êtes protégé pour la nuit","🌙 You are protected for the night"))+" : "+esc(b.name)+tr(" fait demi-tour sans combattre."," turns back without fighting.")],null);log((sh?"🛡 ":"🌙 ")+b.name+tr(" fait demi-tour : vous êtes protégé."," turns back: you are protected."),"muted");return;}const dodge=!!A.dodge&&uSum(S.army)>0,help=allyHelp(),def=playerDef(dodge)+help,win=A.atk*ATK_ADV>=def,D=defParts(dodge),r=A.atk*ATK_ADV/Math.max(1,def);
   let tb='<table class="ftab"><thead><tr><th>'+tr("Votre défense","Your defense")+'</th><th class="num">'+tr("Points","Points")+"</th></tr></thead><tbody>"+D.P.filter(p=>p[1]>0||p[0].indexOf(HERO_LBL)===0).map(p=>"<tr><td>"+p[0]+'</td><td class="num">'+fmt(p[1])+"</td></tr>").join("");
   if(D.mult!==1)tb+="<tr><td>"+tr("Bonus de défense (gènes, émergences, mutations)","Defense bonus (genes, emergences, mutations)")+'</td><td class="num">'+fmtF(D.mult)+"</td></tr>";

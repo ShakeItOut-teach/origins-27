@@ -78,7 +78,7 @@ const TUT=[
       tr("Un pillage réussi emporte les ressources de son entrepôt, sauf la part à l’abri dans sa vacuole.","A successful raid takes the resources in its storage, except the share safe in its vacuole.")+"</li><li>"+
       tr("Le défenseur ne perd aucune troupe ; l’attaquant en perd d’autant plus que le combat est serré.","The defender loses no troops; the attacker loses more the closer the fight.")+"</li><li>"+
       tr("Votre héros y gagne dix fois plus d’expérience qu’à la chasse.","Your hero gains ten times more experience than from hunting.")+"</li><li>"+
-      tr("Un rival pillé devient rancunier et peut riposter. Après un pillage subi, vous êtes protégé 1 h ; la nuit (minuit à 7 h), personne n’attaque.","A raided rival holds a grudge and may strike back. After being raided you are protected for 1 h; at night (midnight to 7 am) nobody attacks.")+"</li></ul><p>"+
+      tr("Un rival pillé devient rancunier et peut riposter. Après un pillage subi, vous êtes protégé 1 h ; pendant votre dormance (8 h par nuit, réglable dans les options), personne ne vous attaque.","A raided rival holds a grudge and may strike back. After being raided you are protected for 1 h; during your dormancy (8 h a night, set in the options) nobody attacks you.")+"</li></ul><p>"+
       tr("Essayons sans risque : une souche-miroir, un faux rival d’entraînement, vient d’apparaître près de vous dans les abysses.","Let’s try it risk-free: a mirror strain, a fake training rival, has just appeared near you in the abyss.")+"</p>"},
   {id:"raidtab",sel:'nav [data-t="map"]',block:1,t:()=>tr("Direction les abysses","Off to the abyss"),d:()=>"<p>"+tr("Les rivaux vivent dans les abysses, comme vous. Ouvrez la carte.","Rivals live in the abyss, like you. Open the map.")+"</p>",done:()=>tab==="map"},
   {id:"raidpick",zoom:1,tab:"map",rect:tutBotRect,block:1,enter:()=>{openRef=null;},t:()=>tr("Choisissez votre cible","Pick your target"),d:()=>"<p>"+tr("Voici la <b>souche-miroir</b>, un faux rival d’entraînement. Sur la carte, chaque rival est une base comme la vôtre. Touchez-la.","Here is the <b>mirror strain</b>, a fake training rival. On the map, each rival is a base like yours. Tap it.")+"</p>",done:()=>{const B=tutBot();return !!B&&openRef==="tile:"+B.x+":"+B.y;}},
@@ -106,7 +106,7 @@ const TUT=[
         ["🧭",tr("<b>Migration</b> : remonter vers le centre, plus lumineux… et plus disputé.","<b>Migration</b>: rise toward the center, brighter… and more contested.")],
         ["🎁",tr("<b>Coffres et récompenses</b> : un coffre gratuit toutes les 4 heures, des quêtes du jour.","<b>Chests and rewards</b>: a free chest every 4 hours, daily quests.")],
         ["🏆",tr("<b>Classement, ligues et alliances.</b>","<b>Ranking, leagues and alliances.</b>")],
-        ["🦖",tr("<b>L’APEX</b> : sortir de l’eau avant la fin des 30 jours.","<b>The APEX</b>: leave the water before the 30 days are up.")]
+        ["🦖",tr("<b>L’APEX</b> : sortir de l’eau avant la fin des 27 jours.","<b>The APEX</b>: leave the water before the 27 days are up.")]
       ].map(x=>"<li><span>"+x[0]+"</span><span>"+x[1]+"</span></li>").join("")+"</ul>"}
 ];
 

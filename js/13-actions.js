@@ -4,6 +4,7 @@
 "use strict";
 function act(a,el){
   hideTip();
+  if(typeof seasonAct==="function"&&seasonAct(a,el))return;
   if(a==="feedback"){showFeedback();return;}
   if(a==="lang"){setLang(EN?"fr":"en");return;}
   if(a==="autocollect"){autoCollect();return;}
@@ -40,7 +41,7 @@ function act(a,el){
   if(a==="close"){openRef=null;dirty=true;return;}
   if(a==="goto"){tab=el.dataset.tab;openRef=el.dataset.ref||null;if(el.dataset.sub)actSub=el.dataset.sub;if(openRef&&openRef.indexOf("node:")===0){const n=NODES[openRef.slice(5)];if(n)evoBr=n.br;}dirty=true;return;}
   if(a==="popok"){S.popups.shift();dirty=true;return;}
-  if(a==="incst"){const A=(S.inc||[]).find(x=>x.id===+el.dataset.id);if(A){A.dodge=el.dataset.s==="dodge";toast(A.dodge?tr("💨 Vos troupes esquiveront l’attaque","💨 Your troops will dodge the attack"):tr("🛡 Vos troupes défendront la cellule","🛡 Your troops will defend the cell"));}
+  if(a==="incst"){const A=(S.inc||[]).find(x=>x.id===+el.dataset.id);if(A){A.manual=1;A.dodge=el.dataset.s==="dodge";toast(A.dodge?tr("💨 Vos troupes esquiveront l’attaque","💨 Your troops will dodge the attack"):tr("🛡 Vos troupes défendront la cellule","🛡 Your troops will defend the cell"));}
     const p=S.popups[0];if(p&&p.incTut)S.popups.shift();dirty=true;return;}
   if(a==="popall"){S.popups=[];dirty=true;return;}
   if(a==="rewards"){showModal(rewardsHTML());return;}
@@ -71,7 +72,7 @@ function act(a,el){
   if(a==="glevel"){const id=el.dataset.id;if(lvlBlock(id))return;const L=glvl(id),c=lvlCost(id,L);if(!afford(c))return;pay(c);S.research={id,lvl:L+1,start:S.t,end:S.t+lvlTime(id,L)};toast(tr("Amélioration lancée : ","Upgrade started: ")+NODES[id].name);dqAdd("gene");dirty=true;return;}
   if(a==="herowith"){S.heroWith=!S.heroWith;dirty=true;return;}
   if(a==="sub"){actSub=el.dataset.s;dirty=true;return;}
-  if(a==="migrate"){const p=openRef.split(":"),x=+p[1],y=+p[2];if(migBlock(x,y))return;const d=dist(x,y),c=migCost(d);if(!afford(c))return;pay(c);
+  if(a==="migrate"){if(!openRef||openRef.indexOf("tile:")!==0)return;const p=openRef.split(":"),x=+p[1],y=+p[2];if(migBlock(x,y))return;const d=dist(x,y),c=migCost(d);if(!afford(c))return;pay(c);
     if(S.fils.length){log(EN?"Migration: your "+S.fils.length+" filament"+(S.fils.length>1?"s are":" is")+" cut.":"Migration : vos "+S.fils.length+" filament"+(S.fils.length>1?"s sont coupés":" est coupé")+".","bad");S.fils=[];}
     if(S.build&&S.build.type==="fil")S.build=null;
     S.mig={fx:S.px,fy:S.py,x,y,start:S.t,end:S.t+migTime(d)};toast(tr("Migration lancée","Migration started"));dirty=true;return;}
@@ -98,7 +99,7 @@ function act(a,el){
   if(a==="lmgo"){lmGo(+el.dataset.i);return;}
   if(a==="lmclaim"){lmClaim(+el.dataset.i);return;}
   if(a==="goadv"){closeModal();tab=el.dataset.tab;openRef=el.dataset.ref||null;dirty=true;return;}
-  if(a==="filament"){const p=openRef.split(":"),x=+p[1],y=+p[2];if(filBlock(x,y))return;const d=dist(x,y),c=filCost(d);if(!afford(c))return;pay(c);S.build={type:"fil",x,y,start:S.t,end:S.t+filTime(d),label:tr("Filament vers ","Filament to ")+x+","+y};toast(tr("Filament en croissance","Filament growing"));dirty=true;return;}
+  if(a==="filament"){if(!openRef||openRef.indexOf("tile:")!==0)return;const p=openRef.split(":"),x=+p[1],y=+p[2];if(filBlock(x,y))return;const d=dist(x,y),c=filCost(d);if(!afford(c))return;pay(c);S.build={type:"fil",x,y,start:S.t,end:S.t+filTime(d),label:tr("Filament vers ","Filament to ")+x+","+y};toast(tr("Filament en croissance","Filament growing"));dirty=true;return;}
   if(a==="recallall"){let n=0;S.missions.forEach(M=>{if(M.arrived)return;const el2=S.t-M.depart;M.result="cancel";M.arrived=true;M.cancelled=true;M.arrive=S.t;M.back=S.t+el2;n++;});toast(n?n+" mission"+(n>1?"s":"")+tr(" rappelée"+(n>1?"s":"")," recalled"):tr("Toutes vos troupes sont déjà sur le retour","All your troops are already returning"));dirty=true;return;}
   if(a==="cancel"){const M=S.missions.find(m=>m.id===+el.dataset.id);if(!M||M.arrived)return;M.result="cancel";const el2=S.t-M.depart;M.arrived=true;M.cancelled=true;M.arrive=S.t;M.back=S.t+el2;toast(tr("Ordre annulé, retour en cours","Order cancelled, returning"));dirty=true;return;}
 }

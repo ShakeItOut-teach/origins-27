@@ -4,7 +4,7 @@
 "use strict";
 function fmt(n){return Math.floor(n).toLocaleString(EN?"en-US":"fr-FR");}
 function fmtDur(min){min=Math.max(0,min);if(min<1)return Math.max(1,Math.ceil(min*60))+" s";if(min<60)return Math.ceil(min)+" min";const h=Math.floor(min/60),m=Math.min(59,Math.ceil(min%60));return h+" h "+String(m).padStart(2,"0");}
-function fmtClock(t){const d=dayIdx(t)+1,c=hod(t),h=Math.floor(c/60),m=Math.floor(c%60);return tr("Jour ","Day ")+d+" · "+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");}
+function fmtClock(t){const d=dayIdx(t)+1,c=hod(t),h=Math.floor(c/60),m=Math.floor(c%60);return tr("Jour ","Day ")+d+(d<=SEASON_DAYS?"/"+SEASON_DAYS:tr(" (prolongation)"," (extra time)"))+" · "+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");}
 /* version courte pour le journal et le mobile : « J3 · 08:00 » / « D3 · 08:00 » */
 function fmtClockShort(t){return fmtClock(t).replace(tr("Jour ","Day "),tr("J","D"));}
 function fmtMod(k,v){if(k==="revealSource")return MOD_LABEL[k];if(k==="photoPct")return tr("photosynthèse ×","photosynthesis ×")+dec(Math.round(v*10)/10)+tr(" (selon la lumière : aujourd’hui +"," (depends on light: today +")+Math.round(v*photoF()*100)+PCT+tr(" d’ATP)"," ATP)");if(k==="filAdd")return "filaments +"+v;const add=k==="rangeAdd"||k==="visionAdd";const s=v>0?"+":"−";const val=add?Math.abs(v)+tr(" case"," tile")+(Math.abs(v)>1?"s":""):Math.round(Math.abs(v)*100)+PCT;return MOD_LABEL[k]+" "+s+val;}
@@ -109,7 +109,7 @@ function step(dm){
       if(M.n>0){const tp=parts.filter(p=>p[0]!=="<");log(compText(M.u)+tr(" de retour"," back")+(M.cancelled?tr(" (ordre annulé)"," (order cancelled)"):"")+(tp.length?" : "+tp.join(", "):tr(" les mains vides"," empty-handed"))+".");}
       if(M.kind!=="spy"&&(M.kind!=="hunt"&&M.kind!=="raid"||parts.length||lostCap.length))report("farm",(M.kind==="hunt"?tr("Butin de chasse","Hunting loot"):M.kind==="raid"?tr("Butin de pillage","Raid loot"):M.cancelled?tr("Retour (ordre annulé)","Return (order cancelled)"):parts.length?tr("Récolte","Harvest"):tr("Exploration","Exploration"))+tr(" · case "," · tile ")+M.x+","+M.y,[compText(M.u)+tr(" de retour."," back."),parts.length?tr("Rapporté : ","Brought back: ")+parts.join(", ")+".":tr("Rien rapporté.","Nothing brought back.")+(S.tiles[M.y*W+M.x].k||M.cargo?"":tr(" La zone autour est maintenant cartographiée."," The surrounding area is now mapped."))].concat(lostCap.length?['<span class="neg">'+tr("Perdu, entrepôt plein : ","Lost, storage full: ")+lostCap.join(", ")+".</span>"+tr(" Agrandissez la vacuole ou dépensez avant le retour."," Upgrade the vacuole or spend before the return.")]:[]),null);
       {const tp=parts.filter(p=>p[0]!=="<");if(tp.length&&M.kind==="collect")dqAdd("collect");if(tp.length)toast("+"+tp.join(", +"));}
-      S.missions.splice(i,1);dirty=true;
+      S.missions.splice(i,1);if(M.kind==="collect"&&!M.cancelled)rfxLoop(M);dirty=true;
     }
   }
   updateVision();

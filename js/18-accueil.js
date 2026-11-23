@@ -281,7 +281,7 @@ function showTitle(){
   const narrow=window.innerWidth<760;
   const px=isPixel();
   let h='<div class="picker title"><div class="tbg">'+(px?'<canvas class="tpx" width="2" height="2"></canvas>':titleArt(narrow))+titleOver(narrow,px)+'</div><div class="tscrim"></div><div class="tin">';
-  h+='<div class="tkick">'+tr("Stratégie en temps réel · Serveur de 30 jours · 500 organismes","Real-time strategy · 30-day server · 500 organisms")+"</div>";
+  h+='<div class="tkick">'+tr("Stratégie en temps réel · Serveur de 27 jours · 500 organismes","Real-time strategy · 27-day server · 500 organisms")+"</div>";
   h+='<h1 class="tlogo">ORIGINS<span>27</span></h1>';
   h+='<div class="tbadges"><span class="tb1">FREE TO PLAY</span><span class="tb2">NO PAY TO WIN</span><small>'+tr("100 % gratuit : aucun achat ne donne d’avantage.","100% free: no purchase gives any advantage.")+"</small></div>";
   h+='<p class="thook">'+tr("Vous naissez bactérie dans un monde hostile.<br>Irez-vous au bout du chemin pour devenir <b>l’APEX légendaire</b> ?","You are born a bacterium in a hostile world.<br>Will you go all the way to become <b>the legendary APEX</b>?")+"</p>";

@@ -118,7 +118,7 @@ function stripHTML(){
   h+=eventPill();
   if(S.inc&&S.inc.length){const A=S.inc.slice().sort((a,b)=>a.arrive-b.arrive)[0],b=S.bots.find(z=>z.id===A.bot);h+='<span class="incw" data-act="goto" data-tab="act" data-sub="move">'+tr("⚠️ Attaque de ","⚠️ Attack from ")+'<b>'+esc(b?b.name:"?")+'</b>'+tr(" dans "," in ")+'<span data-end="'+A.arrive+'"></span>'+(S.inc.length>1?" (+"+(S.inc.length-1)+")":"")+"</span>";}
   else if(shieldAt(S.t))h+='<span class="protw" data-tip="'+esc(tr("<b>Protection après un pillage</b>Aucun rival ne peut vous attaquer pendant 1 h. Piller quelqu’un met fin à la protection.","<b>Protection after a raid</b>No rival can attack you for 1 h. Raiding someone ends the protection."))+'">'+tr("🛡 Protégé encore ","🛡 Protected for ")+'<span data-endr="'+S.shieldR+'"></span></span>';
-  else if(nightAt(S.t))h+='<span class="protw" data-tip="'+esc(tr("<b>Nuit protégée</b>De minuit à 7 h, personne n’attaque personne : dormez tranquille.","<b>Protected night</b>From midnight to 7 am, nobody attacks anybody: sleep easy."))+'">'+tr("🌙 Nuit protégée jusqu’à 07:00","🌙 Protected night until 07:00")+"</span>";
+  else if(nightAt(S.t))h+='<span class="protw" data-tip="'+esc(tr("<b>Dormance</b>Pendant votre fenêtre de sommeil, personne ne vous attaque et vous n’attaquez personne : dormez tranquille. Réglez-la dans ⚙ Options.","<b>Dormancy</b>During your sleep window, nobody attacks you and you attack nobody: sleep easy. Set it in ⚙ Options."))+'">'+tr("🌙 Dormance jusqu’à ","🌙 Dormant until ")+dormEndTxt()+"</span>";
   h+='<span data-act="tab" data-t="hero">'+sprImg("u_coll",1)+tr(" Troupes "," Troops ")+"<b>"+S.idle+tr(" libres / "," free / ")+cellCount()+"</b>"+(S.queue.length?" · "+S.queue.length+tr(" en production"," in production"):"")+"</span>";
   return h;
 }
@@ -126,7 +126,7 @@ function stripHTML(){
 /* Dessins d’évolution sur la cellule */
 function polar(C,a,r){return [C+Math.cos(a)*r,C+Math.sin(a)*r];}
 function evoOuter(C,mem){
-  let s="";const N=n=>has(n),D=Math.PI/180;
+  let s=typeof mutOuterSVG==="function"?mutOuterSVG(C,mem):"";const N=n=>has(n),D=Math.PI/180;
   if(N("P1")){for(let i=0;i<72;i++){const a=i*5*D,p=polar(C,a,mem+11),q=polar(C,a+0.02,mem+20);s+='<line x1="'+p[0]+'" y1="'+p[1]+'" x2="'+q[0]+'" y2="'+q[1]+'" stroke="#9fd8cf" stroke-opacity=".55" stroke-width="1"/>';}}
   if(N("PA")){for(let i=0;i<16;i++){const a=(i*22.5+11)*D,p1=polar(C,a-0.04,mem+10),p2=polar(C,a+0.04,mem+10),t=polar(C,a,mem+30);s+='<polygon points="'+p1+" "+t+" "+p2+'" fill="#e3e9ee"/>';}}
   if(N("E2a")||N("E3a")){[-160,20,100].forEach((g,i)=>{const a=g*D,b=polar(C,a,mem+8),t=polar(C,a,mem+(N("E3a")?62:48)),perp=a+Math.PI/2,w=N("E3a")?18:13,c1=[(b[0]+t[0])/2+Math.cos(perp)*w,(b[1]+t[1])/2+Math.sin(perp)*w],c2=[(b[0]+t[0])/2-Math.cos(perp)*w,(b[1]+t[1])/2-Math.sin(perp)*w];
@@ -145,7 +145,7 @@ function evoOuter(C,mem){
   return s;
 }
 function evoInner(C,mem){
-  let s="";const N=n=>has(n),D=Math.PI/180;
+  let s=typeof mutInnerSVG==="function"?mutInnerSVG(C,mem):"";const N=n=>has(n),D=Math.PI/180;
   if(N("E1"))s+='<circle cx="'+C+'" cy="'+C+'" r="'+(mem-14)+'" fill="url(#glow)"/>';
   if(N("E2a")){for(let i=0;i<5;i++){const p=polar(C,(i*72+40)*D,198);s+='<ellipse cx="'+p[0]+'" cy="'+p[1]+'" rx="11" ry="6" transform="rotate('+(i*72+130)+" "+p[0]+" "+p[1]+')" fill="#2f7d3a" stroke="#7fd36b"/>';if(N("E3a"))s+='<line x1="'+(p[0]-6)+'" y1="'+p[1]+'" x2="'+(p[0]+6)+'" y2="'+p[1]+'" stroke="#bff0a8"/>';}}
   if(N("E2b")){for(let i=0;i<10;i++){const p=polar(C,(i*36+5)*D,203);s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="#ffe07a" fill-opacity=".85"/>';}}
@@ -273,7 +273,7 @@ function wheelSVG(){
 function mobileTreeHTML(){
   const cnt=b=>Object.keys(NODES).filter(k=>NODES[k].br===b&&nodeView(k).ready).length;
   const tabs=[["E",BRANCH.E],["P",BRANCH.P],["M",BRANCH.M],["X",tr("Stades","Stages")],["A","APEX"]];
-  let h='<div class="mtree">'+mutBarHTML()+'<div class="mtabs">'+tabs.map(t=>{const c=cnt(t[0]);return '<button data-act="evobr" data-b="'+t[0]+'" aria-pressed="'+(evoBr===t[0])+'">'+t[1]+(c?"<i>"+c+"</i>":"")+"</button>";}).join("")+'</div><div class="mbody">';
+  let h='<div class="mtree">'+mutBarHTML()+(typeof speciesBarHTML==="function"?speciesBarHTML():"")+'<div class="mtabs">'+tabs.map(t=>{const c=cnt(t[0]);return '<button data-act="evobr" data-b="'+t[0]+'" aria-pressed="'+(evoBr===t[0])+'">'+t[1]+(c?"<i>"+c+"</i>":"")+"</button>";}).join("")+'</div><div class="mbody">';
   const line='<div class="mlink"></div>';
   if(evoBr==="E"||evoBr==="M"){const b=evoBr;
     h+='<p class="mnote">'+tr("Rang 3","Rank 3")+'</p><div class="mrow">'+mCard(b+"3a")+mCard(b+"3b")+"</div>"+'<div class="mrow links"><div class="mlink"></div><div class="mlink"></div></div>';
@@ -294,7 +294,7 @@ function mobileTreeHTML(){
 }
 function treeHTML(){
   const W2=900,H2=640;
-  let s='<div class="treebox">'+mutBarHTML()+'<svg viewBox="0 0 '+W2+" "+H2+'" role="img" aria-label="'+tr("Arbre d’évolution","Evolution tree")+'"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>';
+  let s='<div class="treebox">'+mutBarHTML()+(typeof speciesBarHTML==="function"?speciesBarHTML():"")+'<svg viewBox="0 0 '+W2+" "+H2+'" role="img" aria-label="'+tr("Arbre d’évolution","Evolution tree")+'"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>';
   const P=TREE_POS,curve=(a,b,on,dash)=>{const y1=a[1]-23,y2=b[1]+23,my=(y1+y2)/2;s+='<path d="M'+a[0]+" "+y1+" C"+a[0]+" "+my+" "+b[0]+" "+my+" "+b[0]+" "+y2+'" fill="none" stroke="'+(on?"#5ee6d0":"#173349")+'" stroke-width="'+(on?2:1.5)+'"'+(dash?' stroke-dasharray="4 5"':"")+"/>";};
   const root=[450,620];
   ["E1","P1","M1"].forEach(id=>curve([root[0],root[1]+23],P[id],has(id)));

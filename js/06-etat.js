@@ -69,6 +69,6 @@ function mods(){
   S.emerg.forEach(id=>add(EMERG.find(e=>e.id===id).eff));
   (S.muts||[]).forEach(id=>{const u=MUT_BY[id];if(u){add(u.eff);add(u.mal);}});
   lineages().forEach(t=>add(LINEAGE[t].eff));
-  if(S.ally)m.fieldPct+=0.05;if(typeof alMods==="function")alMods(m);
+  if(S.ally)m.fieldPct+=0.05;if(typeof alMods==="function")alMods(m);if(typeof seasonMods==="function")seasonMods(m);
   return m;
 }

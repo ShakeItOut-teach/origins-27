@@ -8,7 +8,7 @@
 
 **FREE TO PLAY · NO PAY TO WIN** : le jeu est entièrement gratuit, et aucun achat ne donne d’avantage.
 
-Évoluez au détriment de vos rivaux, formez une colonie avec vos alliés, gérez vos troupes et vos ressources : soyez celui qui façonnera le monde de demain… ou pas. Origins 27 est un jeu de stratégie en temps réel, jouable dans le navigateur, sur un serveur de 30 jours peuplé de 500 organismes.
+Évoluez au détriment de vos rivaux, formez une colonie avec vos alliés, gérez vos troupes et vos ressources : soyez celui qui façonnera le monde de demain… ou pas. Origins 27 est un jeu de stratégie en temps réel, jouable dans le navigateur, sur un serveur de 27 jours peuplé de 500 organismes.
 
 - **Évoluez :** aucune partie ne ressemble à la précédente. Les chemins de l’évolution changent et se tirent au hasard ; réflexion et analyse feront votre domination.
 - **Pillez :** 499 autres organismes convoitent votre place. Le meilleur moyen de la garder ? Ne pas leur laisser le choix.
@@ -40,7 +40,7 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123d`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123e`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
 
 ## Robot de test (avant chaque lancement)
 
@@ -77,6 +77,17 @@ La sauvegarde du joueur n’est jamais touchée : les robots travaillent dans un
 ## Discord
 
 Collez l’invitation du serveur dans `DISCORD_URL`, en haut de `js/26-alliances.js` (par exemple `"https://discord.gg/xxxxxxx"`). Le bouton « Rejoindre le Discord » apparaît alors dans l’écran Alliance et dans ⚙ Options ; la première visite rapporte +15 ⚡, un coffre rare et 300 crédits d’alliance. Vide, le bouton reste caché.
+
+## Saison de 27 jours, espèce unique et fossiles
+
+Une saison (un serveur) dure **27 jours** de jeu (`SEASON_DAYS` dans `js/01-monde.js`). L’horloge affiche « Jour 6/27 ». Au jour 27, l’espèce du joueur entre au **Muséum** (gardé dans ce navigateur) ; il peut continuer en prolongation ou ouvrir la saison suivante.
+
+- **Mutations visibles** : chaque mutation se dessine sur la cellule (cils, antennes, paroi, poche digestive, plasmides…), et des taches de pigment propres à chaque partie rendent deux cellules toujours différentes.
+- **Mon espèce** (bouton dans l’onglet Évolution) : un nom latin qui change avec le stade de vie, un **cousin fossile réel** (18 animaux documentés, de *Charnia* à *Meganeura*, de l’Ediacarien au Carbonifère) et une **planche** à télécharger ou partager (image 1080 × 1350).
+- **Fossiles de la saison** : 6 fossiles tirés au sort par saison. Si le cousin fossile du joueur en fait partie, il reçoit un petit bonus (5 à 8 %).
+- **Dormance** (⚙ Options) : 8 h par jour, choisies par le joueur (23 h – 7 h par défaut), où personne ne l’attaque et où il n’attaque personne. Modifiable une fois par 24 h.
+- **Réflexes** (⚙ Options) : esquive automatique si la défense ne tiendrait pas (activé par défaut), récolte en boucle (désactivée par défaut).
+- **Gazette du serveur** (Rapports › Gazette) : les brèves du jour, le top 3, l’alliance en tête, le pillard le plus redouté, le fossile du jour, et un bouton « Copier pour Discord ».
 
 ## Identité graphique : le carnet de laboratoire
 
@@ -116,7 +127,7 @@ Le texte tapé est gardé si la fenêtre est fermée. Un seul rappel discret app
 - **Rapports :** tableau de force par type de troupe (voie, bonus, pertes), raison de la victoire ou de la défaite, détail du butin et des ressources volées, bilan cumulé des pillages.
 - **Énergie (⚡) :** chaque action en consomme (récolter ou explorer 1, chasser 2, piller 3, accélérer un chantier ou un gène de 1 h : 5). Elle remonte de 1 toutes les 20 minutes jusqu’à 30. Seules les récompenses la font dépasser 30 (jusqu’à 120) : connexion du jour, coffres, quêtes du jour, ligue, léviathan vaincu et gisements d’événement (gratuits à récolter, +2 au retour).
 - **Récompenses (🎁) :** série de connexion sur 7 jours, coffre gratuit toutes les 4 heures, 3 quêtes du jour. Les coffres ont 4 raretés : commun ×1 (70 %), rare ×2 (20 %), très rare ×4 (8 %), extrêmement rare ×8 (2 %). L’ouverture est animée : le coffre tombe, monte en rareté sous vos yeux (gris → turquoise → violet → or), s’ouvre dans un éclat de lumière, puis les récompenses en sortent une à une (un toucher passe directement au résultat). Rien n’est perdu : ce qui ne rentre pas dans les entrepôts va dans une réserve (🧺), à l’abri du pillage, qui les remplit automatiquement dès qu’il y a de la place.
-- **Rythme d’un serveur de 30 jours :** production passive réduite de 30 %, coûts qui montent avec les niveaux, capacité des entrepôts ajustée en conséquence. En simulation, un joueur qui ouvre ses coffres atteint l’APEX vers le jour 20 ; sans coffres, il n’y arrive pas en 30 jours.
+- **Rythme d’un serveur de 27 jours :** production passive réduite de 30 %, coûts qui montent avec les niveaux, capacité des entrepôts ajustée en conséquence. En simulation, un joueur qui ouvre ses coffres atteint l’APEX vers le jour 20 ; sans coffres, il n’y arrive pas en 27 jours.
 - **File de constructions :** jusqu’à 2 constructions programmées derrière celle en cours, annulables avec remboursement.
 - **Attaques subies :** tant qu’un rival est en route, les bords de l’écran scintillent en rouge (plus vite dans le dernier quart d’heure). Pour chaque attaque, vous choisissez : 🛡 **Défendre** (vos troupes au repos se battent ; quelques-unes tombent si la défense tient, la moitié si elle cède) ou 💨 **Esquiver** (elles quittent la cellule sans perte, mais ne défendent pas). Le choix est expliqué à la première attaque.
 - **Protections (en heure réelle, quelle que soit la vitesse du jeu) :** après un pillage subi, 🛡 une heure pendant laquelle aucun rival ne peut vous attaquer (elle s’arrête si vous pillez quelqu’un) ; et 🌙 de minuit à 7 h, personne n’attaque personne, même pendant le rattrapage hors ligne. Les attaques déjà en route font demi-tour.
@@ -134,7 +145,7 @@ Le texte tapé est gardé si la fenêtre est fermée. Un seul rappel discret app
 index.html          la page : en-tête, zones de l’écran, et la liste des scripts à charger
 css/style.css       toute l’apparence (couleurs, mise en page, animations)
 css/lab.css         le thème « Carnet de laboratoire » (par défaut) : papier, encre, éosine ; sans lui, le thème sombre « Abysses »
-js/00-langue.js … js/26-alliances.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage ; 25 : les options ; 26 : les alliances)
+js/00-langue.js … js/27-saison.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage ; 25 : les options ; 26 : les alliances)
 apercu.jpg          l’image affichée quand on partage le lien (1200 × 630)
 ```
 
@@ -169,6 +180,7 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | Les missions d’apprentissage (📘) : liste, textes, récompenses | `js/24-apprentissage.js` |
 | Le son, la musique, les effets visuels, les notifications, l’export/import de la sauvegarde, la fenêtre ⚙ Options | `js/25-options.js` |
 | Les alliances (technologies, dons, entraide, boutique, cadeau), le lien Discord | `js/26-alliances.js` |
+| La saison de 27 jours, la dormance, les réflexes, les mutations visibles, les fossiles, la planche d’espèce, la Gazette | `js/27-saison.js` |
 | Le rythme de vie des rivaux (sommeil, connexions) | `js/09-rivaux.js` |
 
 Pour ajouter un fichier : créez-le dans `js/`, en commençant par `"use strict";`, puis ajoutez sa ligne `<script src="js/…"></script>` dans `index.html`, après les fichiers dont il utilise les fonctions au chargement.

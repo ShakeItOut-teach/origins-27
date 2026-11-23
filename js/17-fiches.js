@@ -221,7 +221,7 @@ function renderModal(){
   md.classList.add("on");pxify(md);
 }
 function live(){
-  if(!S)return;
+  if(!S)return;if(typeof seasonTick==="function")seasonTick();
   {const n=S.inc&&S.inc.length?Math.min(...S.inc.map(A=>A.arrive)):0,bc=document.body.classList;bc.toggle("underatk",!!n);bc.toggle("atknear",!!n&&n-S.t<15);const pk=shieldAt(S.t)?2:nightAt(S.t)?1:0;if(pk!==live.pk){live.pk=pk;dirty=true;}}
   $("clock").textContent=isMobile()?fmtClockShort(S.t):fmtClock(S.t);
   const cap=rates().cap;

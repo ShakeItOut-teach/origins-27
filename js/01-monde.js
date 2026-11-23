@@ -3,6 +3,8 @@
    Chargé dans l’ordre par index.html ; tous les fichiers partagent les mêmes variables globales. */
 "use strict";
 /* Monde : un disque de rayon RW. Taille prévue pour ~500 joueurs au départ ; on agrandit RW pour 2 000. */
+/* Durée d’une saison (un serveur) en jours de jeu. */
+const SEASON_DAYS=27;
 const W=241,H=241,C0=120,RW=120,LAND_R=26;
 const ZB={shallow:LAND_R+0.13*(RW-LAND_R),mid:LAND_R+0.30*(RW-LAND_R),deep:LAND_R+0.57*(RW-LAND_R)};
 const AREA_F=(RW*RW-LAND_R*LAND_R)/(50*50-4*4);
