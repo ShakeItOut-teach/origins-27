@@ -1,2 +1,4 @@
 # paquets fabriqués par tools/itch-zip.ps1
 dist/
+# captures brutes de tools/capture/refaire-visuels.ps1
+tools/capture/shots/

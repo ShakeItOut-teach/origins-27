@@ -49,16 +49,18 @@ Le fichier `dist\origins27-itch.zip` contient `index.html` à la racine, `css/` 
 
 **You are born a bacterium in a hostile world. Will you go all the way to become the legendary APEX?**
 
-Origins 27 is a real-time strategy game that runs in your browser. Start as a single cell at the edge of a dark ocean, among 499 other organisms, and climb toward the light, from prokaryote to eukaryote, colony, multicellular creature, and finally the APEX that leaves the water.
+Origins 27 is a real-time strategy game that runs in your browser. Start as a single cell at the edge of a dark ocean, among 499 other organisms, and climb toward the light: bacterium, nucleated cell, colony, organism, and finally the APEX that leaves the water. No biology degree needed: the game speaks plain words (sugar, bricks, factories…), with the real scientific terms one click away.
 
 - **Evolve:** no two games are alike. Evolution paths are drawn at random; genes, mutations and hidden emergences shape your own lineage.
 - **Raid:** 499 rivals covet your place. Hunt, spy, raid, and strike back at those who raided you.
 - **Command:** troops evolve over the weeks, from rank T1 to legendary T5.
-- **Dominate:** world ranking, six leagues and daily rewards.
+- **A unique species:** every mutation shows on your cell, and your species gets a Latin name and a real fossil cousin (Anomalocaris, Opabinia, Tiktaalik…), on a plate you can share.
+- **Dominate:** world ranking, six leagues, daily rewards, alliances from day 5 and a server gazette.
+- **Survive the great crisis:** on day 18, a glaciation, anoxia or meteor slows the biggest down. Prepare your species for it.
 
 **FREE TO PLAY · NO PAY TO WIN.** Nothing to buy, ever.
 
-A full game lasts 30 in-game days. The 499 rivals are simulated and react to your choices. Your progress is saved in your browser, and a protected night (midnight to 7 am) and a one-hour shield after being raided let you sleep in peace.
+A season lasts 27 days; at the end, your species enters the Museum. The 499 rivals are simulated and react to your choices. Your progress is saved in your browser (or online with a Discord account), and an 8-hour dormancy of your choice plus a one-hour shield after being raided let you sleep in peace. Raiding during them breaks them, after a warning.
 
 Available in English and French. Playable on desktop and mobile.
 
@@ -68,6 +70,8 @@ Feedback is very welcome: use the **Feedback** button in the game, or leave a co
 
 **Vous naissez bactérie dans un monde hostile. Irez-vous au bout du chemin pour devenir l’APEX légendaire ?**
 
-Origins 27 est un jeu de stratégie en temps réel, jouable dans le navigateur. Partez d’une seule cellule au bord d’un océan obscur, parmi 499 autres organismes, et remontez vers la lumière : procaryote, eucaryote, colonie, pluricellulaire, puis l’APEX qui sort de l’eau.
+Origins 27 est un jeu de stratégie en temps réel, jouable dans le navigateur. Partez d’une seule cellule au bord d’un océan obscur, parmi 499 autres organismes, et remontez vers la lumière : bactérie, cellule à noyau, colonie, organisme, puis l’APEX qui sort de l’eau. Pas besoin d’être biologiste : le jeu parle en mots simples (sucre, briques, fabriques…), avec les vrais termes scientifiques à portée de clic.
+
+Chaque mutation se voit sur votre cellule, et votre espèce reçoit un nom latin et un vrai cousin fossile. Une saison dure 27 jours, avec une grande crise au jour 18 et le Muséum à la fin.
 
 Free to play, no pay to win. Les 499 rivaux sont simulés et s’adaptent à vos choix. Jeu en français et en anglais, sur ordinateur et sur mobile.

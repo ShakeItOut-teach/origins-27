@@ -21,13 +21,23 @@ Le jeu est écrit en HTML, CSS et JavaScript, sans dépendance à installer ni �
 
 ## Présentation
 
-- **Bande-annonce (28 s, 1080p) :** [presentation/origins27-bande-annonce.webm](presentation/origins27-bande-annonce.webm)
-- **Images légendées :** [paysage 1920 × 1080](presentation/paysage-1920x1080) et [mobile 1080 × 1920](presentation/mobile-1080x1920), plus l’[image clé sans texte](presentation/image-cle-sans-texte.png).
+- **Bande-annonce (28 s, 1080p) :** [presentation/origins27-bande-annonce.webm](presentation/origins27-bande-annonce.webm) (ancienne direction « Abysses », antérieure au carnet de laboratoire)
+- **Images légendées :** [paysage 1920 × 1080](presentation/paysage-1920x1080) et [mobile 1080 × 1920](presentation/mobile-1080x1920), plus l’[image clé sans texte](presentation/image-cle-sans-texte.png). Elles se refont automatiquement : voir « Refaire les captures » plus bas.
 
 | | |
 |---|---|
-| ![Pillage](presentation/paysage-1920x1080/03-pillage.png) | ![Armée](presentation/paysage-1920x1080/04-armee.png) |
-| ![Coffre](presentation/paysage-1920x1080/05-coffre.png) | ![Classement](presentation/paysage-1920x1080/06-classement.png) |
+| ![Cellule](presentation/paysage-1920x1080/01-cellule.png) | ![Pillage](presentation/paysage-1920x1080/03-pillage.png) |
+| ![Espèce unique](presentation/paysage-1920x1080/05-espece.png) | ![Grande crise](presentation/paysage-1920x1080/08-crise.png) |
+
+### Refaire les captures
+
+Après une mise à jour visible du jeu, tous les visuels (diapositives de présentation, captures itch.io, couverture, aperçu des liens) se refont en une commande, sous Windows avec Microsoft Edge :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\capture\refaire-visuels.ps1
+```
+
+Une partie de démonstration (jour 9) est construite par `tools/capture/cap.html`, puis Edge la photographie sans fenêtre ; les textes des diapositives sont dans `tools/capture/slide.html`.
 
 ## Jouer
 
@@ -40,7 +50,7 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123q`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123r`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
 
 ## Robot de test (avant chaque lancement)
 

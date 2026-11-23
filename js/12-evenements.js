@@ -61,7 +61,7 @@ function botsAdapt(){
   for(const b of S.bots){const d=Math.hypot(b.x-c[0],b.y-c[1]);if(d>30||b.tag&&b.tag===S.ally)continue;
     if(own.length&&Math.random()<0.25){const counter=LOSES_TO[own[0]];if(b.type!==counter){b.type=counter;switched++;}}
     const bp=botPoints(b);if(pp>bp*1.3)b.g=Math.min(3,b.g+0.05);}
-  if(switched)log(tr("📣 Les rivaux s’adaptent : ","📣 Rivals adapt: ")+switched+tr(" d’entre eux développent des "," of them develop ")+TYPES[LOSES_TO[own[0]]].name.toLowerCase()+tr(", qui battent vos ",", which beat your ")+TYPES[own[0]].name.toLowerCase()+".","bad");
+  if(switched)log(tr("📣 Les rivaux s’adaptent : ","📣 Rivals adapt: ")+switched+tr(" d’entre eux passent à la voie "," of them switch to ")+TYPES[LOSES_TO[own[0]]].name+tr(", qui bat votre voie ",", which beats your ")+TYPES[own[0]].name+tr("."," path."),"bad");
 }
 
 /* Récolte automatique : un seul geste pour occuper les collectrices libres (gisements connus, sinon exploration) */

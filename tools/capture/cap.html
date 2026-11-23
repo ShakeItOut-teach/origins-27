@@ -1,0 +1,60 @@
+<!doctype html><meta charset="utf-8"><title>capture</title>
+<script>
+/* Page de mise en scène pour les captures (non publiée) : construit une partie de démonstration
+   puis affiche une scène. Paramètres : ?s=scene&lang=fr|en */
+(async()=>{
+  try{localStorage.clear();}catch(e){}
+  const q=new URLSearchParams(location.search),scene=q.get("s")||"cell";
+  let h=await (await fetch("/index.html?"+Date.now())).text();
+  h=h.replace("<head>",'<head><base href="/">');
+  document.open();document.write(h);document.close();
+  await new Promise(r=>setTimeout(r,2500));
+  const G=window.__o27;
+  if(scene==="title"){return;}
+  G.act("pick",{dataset:{s:"varenne"}});await new Promise(r=>setTimeout(r,400));
+  const S=G.S;S.tut=null;S.popups=[];closeModal();
+  const el=document.getElementById("tour");if(el)el.innerHTML="";
+  /* une cellule bien développée, jour 9 */
+  S.noyau=6;S.unlock3=1;S.incTut=1;S.sawHero=1;
+  S.nodes=["E1","E2b","P1","P2","PH","M1","M2a","ENDO"];S.stage=2;S.glv={E1:3,P1:2};
+  S.muts=["cils","paro","esto","lyso","pigm","atp"];
+  S.fields.forEach((f,i)=>{f.l=[6,5,5,4][i%4]||4;});
+  S.slots=[{k:"ribo",l:5},{k:"vac",l:4},{k:"mito",l:4},{k:"flag",l:3},{k:"photo",l:3},{k:"cyto",l:2},{k:"golgi",l:2},null];
+  S.rank={eco:2,atk:2};
+  S.army={coll:26,sold:14,ecl:5,port:4,pha:9};syncIdle();
+  S.hero.lvl=4;S.hero.xp=40;S.hero.tp={venin:2,bras:5,carapace:1,crochets:0,pattes:3};
+  RES.forEach(k=>S.res[k]=Math.round(rates().cap*0.7));
+  S.t=8*1440;
+  /* un peu de vie sur le serveur : une journée simulée (pillages entre rivaux pour la Gazette) */
+  for(let i=0;i<16;i++){G.advance(60);S.popups=[];S.mutOffer=null;}
+  S.t=8*1440+940;
+  RES.forEach(k=>S.res[k]=Math.round(rates().cap*0.72));
+  /* un joueur bien placé (vers la 40e place), une construction et un gène en cours, une quête avancée */
+  for(let g=0;g<40&&myRank("pow")>40;g++)S.bots.forEach(b=>b.g*=0.93);
+  S.q=Math.min(QUESTS.length-1,14);S.qs14=1;
+  S.build={type:"slot",i:2,label:BLD.mito.name+" niv. 5",start:S.t-25,end:S.t+35,time:60};
+  S.research={id:"M2b",start:S.t-10,end:S.t+50,lvl:0};
+  S.popups=[];S.mutOffer=null;S.inc=[];closeModal();
+  const c=cpos(),near=()=>S.bots.filter(b=>!b.tut).sort((a,b)=>Math.hypot(a.x-c[0],a.y-c[1])-Math.hypot(b.x-c[0],b.y-c[1]))[0];
+  const go=(t,sub)=>{tab=t;if(sub)actSub=sub;openRef=null;dirty=true;renderAll();};
+  if(scene==="cell"){go("cell");if(innerWidth>820){openRef="slot:0";dirty=true;renderAll();}}
+  else if(scene==="map"){go("map");}
+  else if(scene==="raid"){const B=near();S.tiles[B.y*W+B.x].s=1;go("map");openRef="tile:"+B.x+":"+B.y;cam={x:B.x+0.5,y:B.y+0.5};dirty=true;renderAll();}
+  else if(scene==="army"){go("hero");}
+  else if(scene==="evo"){go("evo");}
+  else if(scene==="gazette"){go("act","gaz");}
+  else if(scene==="rank"){go("act","rank");}
+  else if(scene==="species"){go("evo");speciesShow();await new Promise(r=>{const t=setInterval(()=>{if(SPEC_IMG){clearInterval(t);r();}},100);});dirty=true;renderAll();}
+  else if(scene==="crisis"){S.research=null;S.build=null;S.t=crisisStart()+120;S.crWarned=1;S.crOn=1;S.crP=null;for(let g=0;g<40&&myRank("pow")>40;g++)S.bots.forEach(b=>b.g*=0.93);S.crP=null;S.popups=[];go("cell");act("crisis",document.body);}
+  else if(scene==="chest"){go("cell");const T=CHEST_TIERS[2],items=[];openChest(T,items);chestFX(T,items);}
+  else if(scene==="cover"||scene==="og"){
+    /* composition : logo + accroche + vraie planche d'espèce */
+    const url=await new Promise(res=>speciesCard(cv=>res(cv.toDataURL("image/png"))));
+    const og=scene==="og",T=(f,e)=>EN?e:f;
+    if(window.vocabObs)vocabObs.disconnect();
+    document.body.className="lab";document.body.innerHTML='<div class="cv '+(og?"og":"co")+'"><div class="cvl"><div class="cvk">'+T("Jeu de stratégie gratuit · navigateur","Free strategy game · browser")+'</div><div class="cvt">Origins <i>27</i></div><div class="cvs">'+T("De la bactérie à l’APEX","From bacterium to APEX")+'</div><ul>'+[T("Saisons de 27 jours","27-day seasons"),T("Une espèce unique, de vrais fossiles","A unique species, real fossils"),T("Pas de pay-to-win","No pay-to-win")].map(x=>"<li>"+x+"</li>").join("")+'</ul></div><div class="cvr"><img src="'+url+'"></div></div>';
+    const st=document.createElement("style");st.textContent='html,body{margin:0;height:100%;overflow:hidden}body{background:#f3ecdc;background-image:linear-gradient(rgba(29,36,51,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(29,36,51,.07) 1px,transparent 1px);background-size:24px 24px}.cv{display:flex;align-items:center;gap:4%;height:100vh;padding:0 5%;box-sizing:border-box;font-family:"IBM Plex Sans",sans-serif;color:#1d2433}.cvl{flex:1.15}.cvr{flex:1;display:flex;justify-content:center}.cvr img{height:86vh;border:3px solid #1d2433;box-shadow:8px 8px 0 #1d2433;background:#fbf7ec}.cvk{font-family:"IBM Plex Mono",monospace;font-size:2.4vh;letter-spacing:.14em;text-transform:uppercase;color:#a8402c}.cvt{font-family:"Instrument Serif",serif;font-size:15vh;line-height:.95;margin:1.5vh 0}.cvt i{color:#a8402c}.cvs{font-family:"Instrument Serif",serif;font-style:italic;font-size:5vh;color:#4a5263;margin-bottom:2.5vh}.cv ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1.4vh}.cv li{font-size:3.2vh;font-weight:600;padding-left:3.4vh;position:relative}.cv li:before{content:"";position:absolute;left:0;top:.9vh;width:1.7vh;height:1.7vh;background:#3f7d5c;border:2px solid #1d2433}.co .cvt{font-size:10.5vh;white-space:nowrap}.co .cvs{font-size:4.2vh}.co .cvk{font-size:2.5vh}.co li{font-size:3.3vh}.co .cvl{flex:1.05}';
+    document.head.appendChild(st);await document.fonts.ready;}
+  document.body.dataset.ready="1";
+})();
+</script>

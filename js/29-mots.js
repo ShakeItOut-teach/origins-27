@@ -38,7 +38,7 @@ const LEXIQUE=[
 const VOCAB_FR=[
   ["l’ATP synthase","la machine à sucre"],["d’ATP","de sucre"],["d'ATP","de sucre"],["l’ATP","le sucre"],["l'ATP","le sucre"],["ATP","Sucre"],["atp","sucre"],
   ["Protéines","Briques"],["protéines","briques"],["Prot.","Briq."],["prot.","briq."],
-  ["Canal lipidique","Puits à graisse"],["Lipides","Graisses"],["lipides","graisses"],["Lipi.","Gras."],["lip.","gras."],
+  ["Canal lipidique","Puits à graisse"],["Lipides","Graisses"],["lipides","graisses"],["Lipi.","Gras."],["Lip.","Gras."],["LIP.","GRAS."],["lip.","gras."],
   ["des nucléotides","de l’ADN"],["les nucléotides","l’ADN"],["de nucléotides","d’ADN"],["Nucléotides","ADN"],["nucléotides","ADN"],["Nucl.","ADN"],["nucl.","ADN"],
   ["Pompe à protons","Puits à sucre"],["pompe à protons","puits à sucre"],["Perméase","Puits à briques"],["perméase","puits à briques"],["Pore nucléique","Puits à ADN"],["pore nucléique","puits à ADN"],
   ["Nouvel organite","Nouveau bâtiment"],["nouvel organite","nouveau bâtiment"],["l’organite","le bâtiment"],["d’organite","de bâtiment"],["Organites","Bâtiments"],["organites","bâtiments"],["Organite","Bâtiment"],["organite","bâtiment"],
@@ -123,3 +123,5 @@ function vocabAct(a){
   if(a==="vocab"){try{localStorage.setItem(VOCAB_KEY,vocabSimple()?"sci":"simple");}catch(e){}if(typeof save==="function")save();location.reload();return true;}
   return false;
 }
+/* Pour les textes dessinés (illustrations, planches) que le remplacement automatique n’atteint pas */
+function vw(s){return (vocabSimple()&&typeof vocabText==="function")?vocabText(String(s)):String(s);}

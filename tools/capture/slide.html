@@ -1,0 +1,47 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><title>slide</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:#f3ecdc;background-image:linear-gradient(rgba(29,36,51,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(29,36,51,.07) 1px,transparent 1px);background-size:32px 32px;color:#1d2433;font-family:"IBM Plex Sans",sans-serif}
+.s{position:absolute;inset:0;display:flex;box-sizing:border-box}
+.txt{display:flex;flex-direction:column}
+.k{font-family:"IBM Plex Mono",monospace;color:#a8402c;letter-spacing:.16em}
+.t{font-family:"Instrument Serif",serif;line-height:.98;margin:.25em 0 .3em}
+.t i{color:#a8402c}
+.p{color:#3b4252;line-height:1.45}
+.b{display:flex;gap:18px;flex-wrap:wrap}
+.b span{font-family:"IBM Plex Mono",monospace;font-weight:500;letter-spacing:.12em;border:3px solid #1d2433;box-shadow:5px 5px 0 #1d2433;padding:.45em .8em}
+.b .f{background:#3f7d5c;color:#fbf7ec}.b .n{background:#d9a441;color:#1d2433}
+.logo{font-family:"Instrument Serif",serif}.logo i{color:#a8402c}
+.sub{font-family:"IBM Plex Mono",monospace;letter-spacing:.2em;color:#5a6273}
+.shot{border:4px solid #1d2433;box-shadow:14px 14px 0 #1d2433;background:#fbf7ec;display:block}
+/* paysage 1920 × 1080 */
+.L{padding:90px 80px 70px 100px;gap:70px;align-items:center}
+.L .txt{width:560px;height:100%;justify-content:center}
+.L .k{font-size:28px}.L .t{font-size:88px}.L .p{font-size:30px;margin-bottom:36px}.L .b span{font-size:22px}.L .b{margin-bottom:40px}
+.L .foot{margin-top:auto}.L .logo{font-size:54px}.L .sub{font-size:20px;margin-top:6px}
+.L .shot{width:1120px}
+/* portrait 1080 × 1920 */
+.P{flex-direction:column;padding:90px 80px;gap:56px;align-items:center}
+.P .txt{width:100%}
+.P .k{font-size:30px}.P .t{font-size:96px}.P .p{font-size:34px;margin-bottom:34px}.P .b span{font-size:24px}
+.P .shot{height:1000px}
+.P .foot{position:absolute;left:80px;bottom:70px}.P .logo{font-size:48px}.P .sub{font-size:18px}
+</style>
+<body>
+<script>
+const SL=[
+ ["00-accueil","Naissez bactérie.","Devenez l’APEX.","Un jeu de stratégie gratuit, dans le navigateur. Une saison de 27 jours contre 499 rivaux."],
+ ["01-cellule","Bâtissez","votre cellule.","Puits, fabriques, réserve, centrale : votre cellule est un village. Pas besoin d’être biologiste."],
+ ["02-carte","Explorez","les abysses.","Récoltez, chassez et remontez vers la lumière. La terre ferme vous attend au centre du monde."],
+ ["03-pillage","Pillez.","Ripostez.","499 rivaux convoitent votre place. Et pour dormir tranquille : 8 h de dormance par jour."],
+ ["04-armee","Commandez","votre armée.","Ouvrières, soldates, éclaireuses… De nouvelles troupes se dévoilent à mesure que vous grandissez."],
+ ["05-espece","Une espèce","unique.","Chaque mutation se voit. Votre espèce reçoit un nom latin et un vrai cousin fossile, sur une planche à partager."],
+ ["06-gazette","Le serveur","est vivant.","Alliances dès le jour 5, classement mondial et la Gazette du jour, à partager sur Discord."],
+ ["07-evolution","Évoluez","à votre façon.","Gènes, mutations, émergences cachées : aucune partie ne ressemble à la précédente."],
+ ["08-crise","Survivez","à la grande crise.","Au jour 18 : glaciation, anoxie ou météorite. Rien n’est détruit, mais les plus gros ralentissent. Préparez-vous."]
+];
+const q=new URLSearchParams(location.search),i=+q.get("i")||0,f=q.get("f")||"paysage",d=SL[i],P=f==="mobile";
+document.body.innerHTML='<div class="s '+(P?"P":"L")+'"><div class="txt"><div class="k">'+String(i).padStart(2,"0")+" / "+String(SL.length-1).padStart(2,"0")+'</div><div class="t">'+d[1]+"<br><i>"+d[2]+'</i></div><div class="p">'+d[3]+'</div><div class="b"><span class="f">FREE TO PLAY</span><span class="n">NO PAY TO WIN</span></div>'+(P?"":'<div class="foot"><div class="logo">Origins <i>27</i></div><div class="sub">DE LA BACTÉRIE À L’APEX</div></div>')+'</div><img class="shot" src="shots/'+f+"/"+d[0]+'.png">'+(P?'<div class="foot"><div class="logo">Origins <i>27</i></div><div class="sub">DE LA BACTÉRIE À L’APEX</div></div>':"")+"</div>";
+</script>
+</body></html>
