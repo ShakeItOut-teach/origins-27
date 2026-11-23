@@ -48,7 +48,9 @@ export const en = {
   "state.resting": "Growing back",
   "state.noEnergy": "Not enough energy",
   "state.oneAtATime": "One expedition at a time",
-  "state.overflow": "Store too full: part of the haul will be lost.",
+  "state.overflow": "Store too full: part of the haul will be lost. Upgrade the Store.",
+  "loss.title": "Haul lost",
+  "loss.text": "The store was full. Upgrade the Store to keep it all.",
   "absence.expedition": "Expedition back",
 
   "action.build": "Build",

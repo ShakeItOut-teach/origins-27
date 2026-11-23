@@ -634,3 +634,61 @@ p {
   background: var(--paper);
   color: var(--ink);
 }
+
+/* Butin perdu faute de place : une étiquette qu'on ne peut pas manquer */
+.loss {
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+  width: min(100%, 420px);
+  padding: var(--space-3) var(--touch) var(--space-3) var(--space-4);
+  border: var(--line);
+  border-color: var(--eosin);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--eosin);
+  font-size: 15px;
+  animation: drop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.loss strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-number);
+  font-weight: 500;
+}
+
+.loss span {
+  color: var(--ink);
+}
+
+.loss .close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: var(--eosin);
+}
+
+/* Trois compteurs sur un téléphone : on resserre, sans retour à la ligne */
+.counter-label,
+.counter-rate {
+  white-space: nowrap;
+}
+
+.counters:has(.counter-energy) {
+  gap: var(--space-4);
+}
+
+.counters:has(.counter-energy) .counter-value {
+  font-size: 30px;
+}
+
+.counter-value small {
+  font-size: 0.5em;
+  color: var(--ink-soft);
+}
+
+.counters:has(.counter-energy) .counter-rate {
+  font-size: 11px;
+}

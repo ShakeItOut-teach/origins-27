@@ -75,3 +75,16 @@ plus grande partie.
 cellule remplit la réserve trop vite par rapport à ce qu'elle contient. L'avertissement dans la
 fiche aide, mais la vraie réponse est sans doute de rendre le toucher moins rentable une fois la
 carte ouverte, ou d'agrandir la réserve de base. À décider avec le propriétaire avant le palier 4.
+
+## 2026-11-23 — Décision du propriétaire : la réserve se paie
+
+La réserve de base n'est **pas** agrandie. Si le butin déborde, c'est au joueur d'améliorer la
+Réserve, en payant : « c'est comme ça que ça fonctionne ». Aucun chiffre ne change.
+
+Ce qui change, c'est que le jeu le dit :
+
+- la fiche d'un lieu prévient avant l'envoi et nomme la solution (« Améliorez la Réserve ») ;
+- au retour, si du butin est perdu, une étiquette annonce combien et pourquoi.
+
+Repère : passer la Réserve au niveau 2 coûte 96 sucres et 30 briques, soit deux expéditions
+proches ; elle passe alors de 200 à 320 places.

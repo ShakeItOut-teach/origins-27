@@ -44,6 +44,8 @@ function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number):
 export function App({ store, lang, onSwitchLang, account }: Props) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [view, setView] = useState<"cell" | "map">("cell");
+  /** Butin perdu au dernier retour, faute de place : on le dit, une fois. */
+  const [loss, setLoss] = useState<{ resource: ResourceId; amount: number } | null>(null);
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const t = (key: TextKey): string => translate(lang, key);
   const [selected, setSelected] = useState<OrganelleId | null>(null);
@@ -61,6 +63,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         for (const event of events) {
           if (event.type === "tierReached" && event.tier >= 1 && event.tier <= MAX_RELEASED_TIER) {
             setReveal(event.tier);
+          }
+          if (event.type === "expeditionReturned" && event.lost >= MICRO) {
+            setLoss({ resource: event.resource, amount: event.lost });
           }
         }
       }),
@@ -160,16 +165,18 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         {show("energy") && (
           <div className="counter counter-energy" data-testid="counter-energy">
             <EnergyIcon />
-            <span className="counter-value">{state.energy}</span>
-            <span className="counter-label">
-              {t("label.energy")} · {BALANCE.energy.max}
+            <span className="counter-value">
+              {state.energy}
+              <small>/{BALANCE.energy.max}</small>
             </span>
+            <span className="counter-label">{t("label.energy")}</span>
           </div>
         )}
       </header>
 
-      {onMap && (
+      {show("map") && (
         <MapView
+          hidden={!onMap}
           state={state}
           hue={creature.hue}
           lang={lang}
@@ -228,6 +235,26 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               {t(`view.${id}`)}
             </button>
           ))}
+        </div>
+      )}
+
+      {loss !== null && (
+        <div className="loss" role="status" data-testid="loss">
+          <strong>
+            {t("loss.title")} · <ResourceIcon id={loss.resource} />
+            {formatAmount(loss.amount, lang)}
+          </strong>
+          <span>{t("loss.text")}</span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setLoss(null);
+            }}
+          >
+            ×
+          </button>
         </div>
       )}
 

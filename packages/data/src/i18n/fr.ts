@@ -46,7 +46,9 @@ export const fr = {
   "state.resting": "Se regarnit",
   "state.noEnergy": "Pas assez d’énergie",
   "state.oneAtATime": "Une expédition à la fois",
-  "state.overflow": "Réserve trop pleine : une partie du butin sera perdue.",
+  "state.overflow": "Réserve trop pleine : une partie du butin sera perdue. Améliorez la Réserve.",
+  "loss.title": "Butin perdu",
+  "loss.text": "La réserve était pleine. Améliorez la Réserve pour tout garder.",
   "absence.expedition": "Expédition revenue",
 
   "action.build": "Construire",

@@ -68,6 +68,13 @@ export function MapCanvas({ scene }: { readonly scene: MapScene }) {
         element.appendChild(app.canvas);
         app.stage.addChild(graphics);
         app.ticker.add(() => {
+          if (element.offsetParent === null) return;
+          if (
+            app.screen.width !== element.clientWidth ||
+            app.screen.height !== element.clientHeight
+          ) {
+            app.resize();
+          }
           const current = sceneRef.current;
           const size = Math.min(app.screen.width, app.screen.height);
           const t = (reducedMotion ? 0.12 : 1) * (performance.now() / 1000);

@@ -60,6 +60,13 @@ export function CellCanvas({ scene, label, onTap }: Props) {
         element.appendChild(app.canvas);
         app.stage.addChild(graphics);
         app.ticker.add(() => {
+          if (element.offsetParent === null) return;
+          if (
+            app.screen.width !== element.clientWidth ||
+            app.screen.height !== element.clientHeight
+          ) {
+            app.resize();
+          }
           const now = performance.now();
           const current = sceneRef.current;
           if (current.seed !== decorSeed) {

@@ -11,6 +11,8 @@ import type { Lang } from "../game/text";
 import { EnergyIcon, ResourceIcon } from "./icons";
 
 interface Props {
+  /** La goutte reste en place quand on regarde la cellule : elle est seulement cachée. */
+  readonly hidden: boolean;
   readonly state: PlayerState;
   readonly hue: number;
   readonly lang: Lang;
@@ -19,7 +21,7 @@ interface Props {
 }
 
 /** La goutte : la cellule au centre, les lieux autour, une expédition à la fois. */
-export function MapView({ state, hue, lang, onOrder }: Props) {
+export function MapView({ hidden, state, hue, lang, onOrder }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const [selected, setSelected] = useState<string | null>(null);
   const placed = useMemo(
@@ -58,7 +60,7 @@ export function MapView({ state, hue, lang, onOrder }: Props) {
 
   return (
     <>
-      <section className="lens" data-testid="map" aria-label={t("label.map")}>
+      <section className="lens" data-testid="map" aria-label={t("label.map")} hidden={hidden}>
         <MapCanvas scene={scene} />
         {placed.map(({ place, x, y }) => {
           const restingFor = (state.placeReadyAt[place.id] ?? 0) - state.now;
@@ -88,7 +90,7 @@ export function MapView({ state, hue, lang, onOrder }: Props) {
         })}
       </section>
 
-      {open !== null && (
+      {open !== null && !hidden && (
         <PlaceSheet
           state={state}
           place={open}
