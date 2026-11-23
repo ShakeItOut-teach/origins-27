@@ -1,0 +1,12 @@
+{
+  "name": "@o27/core",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@o27/data": "workspace:*"
+  }
+}
