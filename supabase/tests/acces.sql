@@ -115,7 +115,7 @@ $$;
 set local role service_role;
 set local request.jwt.claims = '{"role":"service_role"}';
 
-do $
+do $$
 declare
   alice constant uuid := '00000000-0000-4000-8000-00000000000a';
   saison bigint;
@@ -131,6 +131,6 @@ begin
     raise exception 'ECHEC : le serveur ne peut pas enregistrer';
   end if;
 end;
-$;
+$$;
 
 rollback;
