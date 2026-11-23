@@ -1,11 +1,18 @@
-import { capacity, describeCreature, levelCost, levelDuration, productionRate } from "@o27/core";
-import type { PlayerState } from "@o27/core";
+import {
+  MICRO,
+  capacity,
+  describeCreature,
+  levelCost,
+  levelDuration,
+  productionRate,
+} from "@o27/core";
+import type { AbsenceSummary, PlayerState } from "@o27/core";
 import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS } from "@o27/data";
 import type { MutationId, OrganelleId, ResourceId, TextKey } from "@o27/data";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
 import type { GameStore } from "./game/store";
-import { formatAmount, formatDuration, formatRate, translate } from "./game/text";
+import { formatAmount, formatAway, formatDuration, formatRate, translate } from "./game/text";
 import type { Lang } from "./game/text";
 import { isVisible } from "./game/unlock";
 import { OrganelleIcon, ResourceIcon } from "./ui/icons";
@@ -13,6 +20,7 @@ import { OrganelleIcon, ResourceIcon } from "./ui/icons";
 interface Props {
   readonly store: GameStore;
   readonly lang: Lang;
+  readonly onSwitchLang: () => void;
 }
 
 /** Position de chaque emplacement sur la lame, en pourcentage. */
@@ -28,7 +36,7 @@ function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number):
   return RESOURCE_IDS.every((id) => state.resources[id] >= cost[id]);
 }
 
-export function App({ store, lang }: Props) {
+export function App({ store, lang, onSwitchLang }: Props) {
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const t = (key: TextKey): string => translate(lang, key);
   const [selected, setSelected] = useState<OrganelleId | null>(null);
@@ -36,7 +44,13 @@ export function App({ store, lang }: Props) {
   const [touched, setTouched] = useState(state.counters.harvests > 0);
   const [fullFlash, setFullFlash] = useState(0);
 
-  useEffect(() => store.start(), [store]);
+  const [absence, setAbsence] = useState<AbsenceSummary | null>(null);
+
+  useEffect(() => {
+    const stop = store.start();
+    setAbsence(store.getAbsence());
+    return stop;
+  }, [store]);
   useEffect(
     () =>
       store.onEvents((events) => {
@@ -73,10 +87,20 @@ export function App({ store, lang }: Props) {
     isVisible(element, state.tier);
   const counters: ResourceId[] = show("bricksCounter") ? ["sugar", "bricks"] : ["sugar"];
   const slots = ORGANELLE_IDS.filter((id) => BALANCE.organelles[id].tier <= state.tier);
-  const choosing = reveal === null && state.mutationOffer !== null && show("mutationChoice");
+  const choosing =
+    absence === null && reveal === null && state.mutationOffer !== null && show("mutationChoice");
 
   return (
     <main className="page" data-tier={state.tier}>
+      <button
+        type="button"
+        className="lang"
+        aria-label={t("action.switchLanguage")}
+        data-testid="lang"
+        onClick={onSwitchLang}
+      >
+        {lang === "fr" ? "EN" : "FR"}
+      </button>
       <header className="counters">
         {counters.map((id) => {
           const full = state.resources[id] >= capacity(state, id);
@@ -149,7 +173,41 @@ export function App({ store, lang }: Props) {
         />
       )}
 
-      {reveal !== null && (
+      {absence !== null && (
+        <div className="veil" role="dialog" aria-modal="true">
+          <div className="note" data-testid="absence">
+            <h2>{t("absence.title")}</h2>
+            <p>
+              {t("absence.away")} {formatAway(absence.elapsedMs, lang)}
+            </p>
+            <ul className="absence-list">
+              {RESOURCE_IDS.filter((id) => absence.gained[id] >= MICRO).map((id) => (
+                <li key={id}>
+                  <ResourceIcon id={id} />+{formatAmount(absence.gained[id], lang)}{" "}
+                  {t(`resource.${id}`)}
+                </li>
+              ))}
+              {absence.constructionsDone.map((done) => (
+                <li key={done.organelle}>
+                  <OrganelleIcon id={done.organelle} />
+                  {t(`organelle.${done.organelle}.name`)} · {t("absence.built")}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="button"
+              onClick={() => {
+                setAbsence(null);
+              }}
+            >
+              {t("action.continue")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {absence === null && reveal !== null && (
         <div className="veil" role="dialog" aria-modal="true">
           <div className="note" data-testid="reveal">
             <h2>{t(`unlock.${String(reveal)}.title` as TextKey)}</h2>

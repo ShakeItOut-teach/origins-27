@@ -45,6 +45,11 @@ export const fr = {
   "label.cell": "Votre cellule",
 
   "absence.title": "Pendant votre absence",
+  "absence.away": "Vous êtes parti",
+  "absence.built": "Construction terminée",
+  "unit.hours": "h",
+  "unit.days": "j",
+  "action.switchLanguage": "Switch to English",
   "account.keep": "Retrouver ma partie sur un autre appareil",
 } as const;
 

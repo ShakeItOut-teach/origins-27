@@ -37,3 +37,24 @@ export function formatDuration(ms: number): string {
     ? `${String(minutes)} min`
     : `${String(minutes)} min ${String(rest).padStart(2, "0")}`;
 }
+
+/** Une longue durée, arrondie : « 12 min », « 8 h », « 3 j ». */
+export function formatAway(ms: number, lang: Lang): string {
+  const minutes = Math.max(1, Math.floor(ms / 60_000));
+  if (minutes < 60) return `${String(minutes)} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 48) return `${String(hours)} ${translate(lang, "unit.hours")}`;
+  return `${String(Math.floor(hours / 24))} ${translate(lang, "unit.days")}`;
+}
+
+const LANG_KEY = "o27.langue";
+
+/** La langue choisie par le joueur si elle existe, sinon celle de l'appareil. */
+export function initialLang(storage: Pick<Storage, "getItem">, languages: readonly string[]): Lang {
+  const saved = storage.getItem(LANG_KEY);
+  return saved === "fr" || saved === "en" ? saved : detectLang(languages);
+}
+
+export function saveLang(storage: Pick<Storage, "setItem">, lang: Lang): void {
+  storage.setItem(LANG_KEY, lang);
+}

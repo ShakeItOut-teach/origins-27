@@ -4,13 +4,23 @@
  * l'appareil. Quand le serveur sera branché, seul ce fichier changera : l'interface
  * continue d'afficher un état et d'envoyer des ordres.
  */
-import { advance, applyOrder, createPlayer, deserializeState, serializeState } from "@o27/core";
-import type { GameEvent, OrderResult, PlayerState } from "@o27/core";
+import {
+  MICRO,
+  advance,
+  applyOrder,
+  createPlayer,
+  deserializeState,
+  serializeState,
+  summarizeAbsence,
+} from "@o27/core";
+import type { AbsenceSummary, GameEvent, OrderResult, PlayerState } from "@o27/core";
 import type { Order } from "@o27/data";
 
 const SAVE_KEY = "o27.partie-locale.v1";
 const TICK_MS = 250;
 const SAVE_EVERY_MS = 5000;
+/** En dessous de cette durée, on ne parle pas d'absence. */
+export const ABSENCE_MIN_MS = 5 * 60_000;
 
 export interface GameStore {
   readonly getState: () => PlayerState;
@@ -18,6 +28,8 @@ export interface GameStore {
   readonly onEvents: (listener: (events: readonly GameEvent[]) => void) => () => void;
   readonly send: (order: Order) => OrderResult;
   readonly start: () => () => void;
+  /** Ce qui s'est passé depuis la dernière visite, s'il y a quelque chose à raconter. */
+  readonly getAbsence: () => AbsenceSummary | null;
 }
 
 export interface StoreDeps {
@@ -42,6 +54,8 @@ function load(deps: StoreDeps): PlayerState {
 export function createStore(deps: StoreDeps): GameStore {
   let state = load(deps);
   let lastSave = 0;
+  let started = false;
+  let absence: AbsenceSummary | null = null;
   const listeners = new Set<() => void>();
   const eventListeners = new Set<(events: readonly GameEvent[]) => void>();
 
@@ -75,9 +89,20 @@ export function createStore(deps: StoreDeps): GameStore {
       if (result.ok) commit(result.state, result.events, true);
       return result;
     },
+    getAbsence: () => absence,
     start() {
       const tick = (): void => {
+        const before = state;
         const step = advance(state, now());
+        if (!started) {
+          started = true;
+          const summary = summarizeAbsence(before, step.state, step.events);
+          const told =
+            summary.gained.sugar >= MICRO ||
+            summary.gained.bricks >= MICRO ||
+            summary.constructionsDone.length > 0;
+          if (summary.elapsedMs >= ABSENCE_MIN_MS && told) absence = summary;
+        }
         commit(step.state, step.events, step.events.length > 0);
       };
       tick();

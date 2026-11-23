@@ -6,7 +6,16 @@ const INTERDIT_DANS_CORE =
   "Interdit dans le moteur : il doit rester pur et déterministe. Passe le temps et la graine en paramètre (voir packages/core/CLAUDE.md).";
 
 export default tseslint.config(
-  { ignores: ["**/dist/**", "**/node_modules/**", "**/*.cjs", "*.config.js", "*.config.ts"] },
+  {
+    ignores: [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/*.cjs",
+      "*.config.js",
+      "*.config.ts",
+      "supabase/**",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   {

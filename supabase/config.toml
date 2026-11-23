@@ -1,0 +1,13 @@
+# Réglages Supabase du nouveau jeu. Aucun secret ici.
+project_id = "origins-27"
+
+[db]
+major_version = 17
+
+[auth]
+# Un joueur arrive sans rien remplir : il reçoit un compte anonyme.
+enable_anonymous_sign_ins = true
+
+[functions.jeu]
+# La fonction vérifie elle-même le jeton du joueur.
+verify_jwt = true

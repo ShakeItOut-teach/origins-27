@@ -47,5 +47,10 @@ export const en = {
   "label.cell": "Your cell",
 
   "absence.title": "While you were away",
+  "absence.away": "You were away for",
+  "absence.built": "Building finished",
+  "unit.hours": "h",
+  "unit.days": "d",
+  "action.switchLanguage": "Passer en français",
   "account.keep": "Find my game on another device",
 } as const satisfies Record<TextKey, string>;

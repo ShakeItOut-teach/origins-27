@@ -458,3 +458,42 @@ p {
     transition: none !important;
   }
 }
+
+/* Bouton de langue : discret, dans le coin */
+.lang {
+  position: fixed;
+  top: max(var(--space-2), env(safe-area-inset-top));
+  right: var(--space-2);
+  z-index: 5;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+/* Résumé d'absence */
+.absence-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 17px;
+}
+
+.absence-list li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.absence-list svg {
+  width: 22px;
+  height: 22px;
+}

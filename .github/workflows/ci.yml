@@ -36,3 +36,53 @@ jobs:
         run: pnpm test
       - name: Construction du client
         run: pnpm build
+      - name: Assemblage du serveur
+        run: pnpm server:bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: packages/client/dist
+          retention-days: 7
+
+  database:
+    name: Base de données
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Base vide, migrations rejouées
+        run: supabase db start
+      - name: Règles d'accès et écritures
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/acces.sql
+
+  deploy:
+    name: Mise en ligne (préproduction)
+    needs: [check, database]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/next'
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Secrets Cloudflare présents ?
+        id: secrets
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Mise en ligne sautée : ajouter les secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID au dépôt."
+          fi
+      - uses: actions/download-artifact@v4
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          name: site
+          path: dist
+      - name: Créer le projet Cloudflare Pages s'il n'existe pas
+        if: steps.secrets.outputs.ready == 'true'
+        run: npx --yes wrangler@4 pages project create origins-27 --production-branch=main || true
+      - name: Envoyer le site
+        if: steps.secrets.outputs.ready == 'true'
+        run: npx --yes wrangler@4 pages deploy dist --project-name=origins-27 --branch=next --commit-dirty=true

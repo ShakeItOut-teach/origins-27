@@ -104,3 +104,7 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("chooseMutation"), mutation: z.enum(MUTATION_IDS) }),
 ]);
 export type Order = z.infer<typeof OrderSchema>;
+
+/** Ce que le client envoie pour passer un ordre. L'identifiant sert à ne jamais le compter deux fois. */
+export const OrderRequestSchema = z.strictObject({ orderId: z.uuid(), order: OrderSchema });
+export type OrderRequest = z.infer<typeof OrderRequestSchema>;
