@@ -140,9 +140,11 @@ function tutTick(){
   if(key!==tutKey){box.innerHTML=tutHTML(st);tutKey=key;pxify(box);}
   let el=st.sel?document.querySelector(st.sel):null;
   if(el&&st.scroll&&!tutScrolled){el.scrollIntoView({block:st.scroll==="start"?"start":"center"});tutScrolled=true;}
-  if(el){const q=el.getBoundingClientRect();if((q.bottom<4||q.top>window.innerHeight-4)&&Date.now()-(tutTick.sc||0)>700){tutTick.sc=Date.now();el.scrollIntoView({block:"center"});}}
+  /* hauteur réellement visible : sur téléphone, la barre d’adresse peut cacher le bas de la page */
+  const VV=window.visualViewport,vw=window.innerWidth,vh=Math.round(VV?Math.min(window.innerHeight,VV.height):window.innerHeight);
+  if(el){const q=el.getBoundingClientRect(),cut=q.bottom>vh-2&&q.height<160;/* petite cible (onglet, bouton) coupée en bas : on la remonte */
+    if((q.bottom<4||q.top>vh-4||cut||q.right<4||q.left>vw-4)&&Date.now()-(tutTick.sc||0)>700){tutTick.sc=Date.now();el.scrollIntoView({block:cut?"end":"center",inline:"nearest"});}}
   if(el&&el.disabled)el=null;
-  const vw=window.innerWidth,vh=window.innerHeight;
   let r=el?el.getBoundingClientRect():null;if(st.rect)r=st.rect();if(r&&(r.width<1||r.height<1||r.bottom<4||r.top>vh-4))r=null;
   if(st.block&&!r){if(!tutTick.mt)tutTick.mt=Date.now();}else tutTick.mt=0;
   const lost=!!(st.block&&!r&&Date.now()-tutTick.mt>1500); /* cible introuvable : on ne bloque plus le joueur */
