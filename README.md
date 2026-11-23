@@ -40,7 +40,7 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123g`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123h`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
 
 ## Robot de test (avant chaque lancement)
 
@@ -89,6 +89,15 @@ Une saison (un serveur) dure **27 jours** de jeu (`SEASON_DAYS` dans `js/01-mond
 - **Réflexes** (⚙ Options) : esquive automatique si la défense ne tiendrait pas (activé par défaut), récolte en boucle (désactivée par défaut).
 - **Gazette du serveur** (Rapports › Gazette) : les brèves du jour, le top 3, l’alliance en tête, le pillard le plus redouté, le fossile du jour, et un bouton « Copier pour Discord ».
 - **Grande crise** (une par saison, au jour 18, annoncée 48 h avant) : glaciation, anoxie ou impact de météorite, tirée au sort par saison. Pendant 24 h de jeu, rien n’est détruit : seule la production change selon le classement (−25 % pour le premier, environ −9 % au milieu, +10 % pour les 30 % derniers). Deux mutations de la bonne famille divisent le malus par deux. Les rivaux subissent la même règle, ce qui resserre le classement. Les survivants gagnent un badge sur leur planche et au Muséum. Réglages : `CRISIS_DAY`, `crisisEffect()` dans `js/27-saison.js`.
+
+## Comptes, sauvegarde en ligne et PvP (Supabase)
+
+Le chemin vers le PvP est décrit dans [docs/PVP.md](docs/PVP.md). L’étape 2 (comptes et sauvegarde en ligne) est codée dans `js/28-compte.js` et reste **invisible** tant que `SUPA_URL` et `SUPA_KEY` sont vides. Pour l’activer :
+
+1. Suivre [docs/SUPABASE.md](docs/SUPABASE.md) : créer le projet, exécuter [`supabase/001_init.sql`](supabase/001_init.sql), et créer l’application Discord.
+2. Coller l’adresse du projet et la clé publique `anon` en haut de `js/28-compte.js`.
+
+La connexion se fait avec Discord ou par un lien reçu par e-mail. La partie est sauvegardée en ligne toutes les 2 minutes. Si deux parties existent, le joueur choisit laquelle garder. « Supprimer mon compte » efface tout côté serveur. Le plan pour trouver les 50 joueurs de la bêta : [docs/RECRUTEMENT.md](docs/RECRUTEMENT.md).
 
 ## Identité graphique : le carnet de laboratoire
 
@@ -146,7 +155,7 @@ Le texte tapé est gardé si la fenêtre est fermée. Un seul rappel discret app
 index.html          la page : en-tête, zones de l’écran, et la liste des scripts à charger
 css/style.css       toute l’apparence (couleurs, mise en page, animations)
 css/lab.css         le thème « Carnet de laboratoire » (par défaut) : papier, encre, éosine ; sans lui, le thème sombre « Abysses »
-js/00-langue.js … js/27-saison.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage ; 25 : les options ; 26 : les alliances)
+js/00-langue.js … js/28-compte.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage ; 25 : les options ; 26 : les alliances)
 apercu.jpg          l’image affichée quand on partage le lien (1200 × 630)
 ```
 
@@ -182,6 +191,7 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | Le son, la musique, les effets visuels, les notifications, l’export/import de la sauvegarde, la fenêtre ⚙ Options | `js/25-options.js` |
 | Les alliances (technologies, dons, entraide, boutique, cadeau), le lien Discord | `js/26-alliances.js` |
 | La saison de 27 jours, la dormance, les réflexes, les mutations visibles, les fossiles, la planche d’espèce, la Gazette | `js/27-saison.js` |
+| Les comptes et la sauvegarde en ligne (Supabase) | `js/28-compte.js`, `supabase/001_init.sql` |
 | Le rythme de vie des rivaux (sommeil, connexions) | `js/09-rivaux.js` |
 
 Pour ajouter un fichier : créez-le dans `js/`, en commençant par `"use strict";`, puis ajoutez sa ligne `<script src="js/…"></script>` dans `index.html`, après les fichiers dont il utilise les fonctions au chargement.

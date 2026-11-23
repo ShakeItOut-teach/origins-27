@@ -211,8 +211,8 @@ function huntWarnHTML(R){
 
 function renderModal(){
   const md=$("modal");
-  if(S.mutOffer){md.innerHTML='<div class="pop adv mutpop">'+mutOfferHTML()+"</div>";md.classList.add("on");return;}
-  if(!S.popups.length){if(modalExtra){md.innerHTML=modalExtra;md.classList.add("on");pxify(md);return;}md.classList.remove("on");md.innerHTML="";return;}
+  if(S&&S.mutOffer){md.innerHTML='<div class="pop adv mutpop">'+mutOfferHTML()+"</div>";md.classList.add("on");return;}
+  if(!S||!S.popups.length){if(modalExtra){md.innerHTML=modalExtra;md.classList.add("on");pxify(md);return;}md.classList.remove("on");md.innerHTML="";return;}
   const p=S.popups[0];
   const art=p.hero?'<div class="popart">'+heroSVG()+"</div>":isPixel()?'<div class="popart">'+artBox("mini",miniSVG(p.org),110,110)+"</div>":miniSVG(p.org);
   const more=p.more?'<p class="desc" style="margin-top:6px">+ '+p.more+(EN?" older event"+(p.more>1?"s":"")+": see Reports › Log.":" autre"+(p.more>1?"s":"")+" événement"+(p.more>1?"s":"")+" plus ancien"+(p.more>1?"s":"")+" : voir Rapports › Journal.")+"</p>":"";

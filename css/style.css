@@ -741,3 +741,10 @@ svg.fxpop{animation:fxpopk .55s cubic-bezier(.3,1.6,.5,1)}
 .optrow select{font:inherit;padding:4px 6px;border-radius:6px;background:var(--panel);color:var(--text);border:1px solid var(--line)}
 @media (max-width:760px){.specwrap,.gzcols{grid-template-columns:1fr}}
 .pop.adv:has(.specwrap),.pop.adv:has(.gazette){max-width:880px}
+/* Comptes (28-compte.js) */
+.cloudpick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0}
+.cloudpick .btn{display:flex;flex-direction:column;gap:2px;padding:10px}
+.cloudpick small{font-weight:400;opacity:.85}
+.cloudmail{display:flex;gap:6px;margin-top:6px}
+.cloudmail input{flex:1;min-width:0;font:inherit;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--text)}
+@media (max-width:520px){.cloudpick{grid-template-columns:1fr}}

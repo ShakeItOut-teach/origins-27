@@ -238,3 +238,4 @@ body.lab .optrow select{background:var(--sheet);border:1.5px solid var(--ink);bo
 /* Gains en vert algue (la planche B : algue = vie, gains), pertes en éosine */
 body.lab .up{color:var(--algue)}
 body.lab #tip .up,body.lab #toasts .up{color:#8fd3a8}
+body.lab .cloudmail input{background:var(--sheet);border:1.5px solid var(--ink);border-radius:3px;color:var(--ink)}

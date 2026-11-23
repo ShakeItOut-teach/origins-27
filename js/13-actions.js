@@ -5,6 +5,7 @@
 function act(a,el){
   hideTip();
   if(typeof seasonAct==="function"&&seasonAct(a,el))return;
+  if(typeof cloudAct==="function"&&cloudAct(a,el))return;
   if(a==="feedback"){showFeedback();return;}
   if(a==="lang"){setLang(EN?"fr":"en");return;}
   if(a==="autocollect"){autoCollect();return;}
