@@ -761,3 +761,8 @@ header .controls{min-width:0;flex-wrap:wrap;justify-content:flex-end}
 @media (max-width:420px){header{padding:8px 8px;gap:6px}header .controls{gap:2px}}
 @media (max-width:380px){header .clock{font-size:11px;letter-spacing:-.02em}#speeds button{padding:4px 4px}header .controls button.ghost{padding:4px 5px}}
 @media (max-width:380px){header{gap:4px;padding:8px 6px}header .controls{gap:1px}}
+/* Bulles du guide : jamais plus hautes que l’écran réellement visible, et défilables au doigt */
+@supports (height:100dvh){.cbub{max-height:calc(100dvh - 16px)}}
+.cbub{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+/* Le bouton du guide reste toujours visible en bas de la bulle, même si le texte défile */
+.cbub .cbtn{position:sticky;bottom:-14px;margin:8px -16px -14px;padding:10px 16px 14px;background:inherit;z-index:1}
