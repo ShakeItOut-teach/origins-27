@@ -551,3 +551,86 @@ p {
 .sheet-head-plain {
   grid-template-columns: 1fr auto;
 }
+
+/* Palier 3 : la goutte */
+.lens[hidden] {
+  display: none;
+}
+
+.counter-energy .counter-value {
+  font-size: 32px;
+}
+
+.icon-energy {
+  color: var(--algae);
+}
+
+.place {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid var(--on-dark);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--lens-edge) 55%, transparent);
+  color: var(--iodine);
+  cursor: pointer;
+  animation: appear 0.5s ease-out;
+}
+
+.place-debris {
+  color: var(--eosin);
+  background: color-mix(in srgb, var(--on-dark) 85%, transparent);
+  border-color: var(--on-dark);
+}
+
+.place.is-resting {
+  opacity: 0.45;
+  border-style: dashed;
+}
+
+.place.is-target {
+  border-color: var(--iodine);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--iodine) 35%, transparent);
+}
+
+.views {
+  display: flex;
+  border: var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.view {
+  min-height: var(--touch);
+  padding: 0 var(--space-5);
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.view + .view {
+  border-left: var(--line);
+}
+
+.view.is-on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.cost-gain {
+  color: var(--algae);
+}
+
+.button-quiet {
+  background: var(--paper);
+  color: var(--ink);
+}

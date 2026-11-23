@@ -17,7 +17,8 @@ import { formatAmount, formatAway, formatDuration, formatRate, translate } from 
 import type { Lang } from "./game/text";
 import { isVisible } from "./game/unlock";
 import { AccountSheet } from "./ui/AccountSheet";
-import { OrganelleIcon, ResourceIcon } from "./ui/icons";
+import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
+import { MapView } from "./ui/MapView";
 
 interface Props {
   readonly store: GameStore;
@@ -42,6 +43,7 @@ function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number):
 
 export function App({ store, lang, onSwitchLang, account }: Props) {
   const [accountOpen, setAccountOpen] = useState(false);
+  const [view, setView] = useState<"cell" | "map">("cell");
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const t = (key: TextKey): string => translate(lang, key);
   const [selected, setSelected] = useState<OrganelleId | null>(null);
@@ -91,6 +93,8 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const slots = ORGANELLE_IDS.filter((id) => BALANCE.organelles[id].tier <= state.tier);
   const choosing =
     absence === null && reveal === null && state.mutationOffer !== null && show("mutationChoice");
+
+  const onMap = view === "map" && show("map");
 
   if (!store.isReady()) {
     return <main className="page" data-tier="loading" aria-busy="true" />;
@@ -153,9 +157,27 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             </div>
           );
         })}
+        {show("energy") && (
+          <div className="counter counter-energy" data-testid="counter-energy">
+            <EnergyIcon />
+            <span className="counter-value">{state.energy}</span>
+            <span className="counter-label">
+              {t("label.energy")} · {BALANCE.energy.max}
+            </span>
+          </div>
+        )}
       </header>
 
-      <section className="lens">
+      {onMap && (
+        <MapView
+          state={state}
+          hue={creature.hue}
+          lang={lang}
+          onOrder={(order) => store.send(order).ok}
+        />
+      )}
+
+      <section className="lens" hidden={onMap}>
         <CellCanvas scene={scene} label={t("label.cell")} onTap={tap} />
         {!touched && state.counters.harvests === 0 && <p className="hint">{t("hint.tap")}</p>}
         {show("buildSlots") &&
@@ -189,6 +211,26 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           })}
       </section>
 
+      {show("map") && (
+        <div className="views" role="tablist">
+          {(["cell", "map"] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={view === id}
+              className={`view${view === id ? " is-on" : ""}`}
+              data-testid={`view-${id}`}
+              onClick={() => {
+                setView(id);
+              }}
+            >
+              {t(`view.${id}`)}
+            </button>
+          ))}
+        </div>
+      )}
+
       {selected !== null && (
         <OrganelleSheet
           state={state}
@@ -218,6 +260,13 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
                   {t(`resource.${id}`)}
                 </li>
               ))}
+              {(absence.expeditionsBack as number | undefined) !== undefined &&
+                absence.expeditionsBack > 0 && (
+                  <li>
+                    {t("absence.expedition")}
+                    {absence.expeditionsBack > 1 ? ` × ${String(absence.expeditionsBack)}` : ""}
+                  </li>
+                )}
               {absence.constructionsDone.map((done) => (
                 <li key={done.organelle}>
                   <OrganelleIcon id={done.organelle} />
@@ -247,6 +296,8 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               type="button"
               className="button"
               onClick={() => {
+                // La carte vient de s'ouvrir : on y emmène le joueur.
+                if (reveal === 3) setView("map");
                 setReveal(null);
               }}
             >
