@@ -34,3 +34,5 @@ jobs:
         run: pnpm boundaries
       - name: Tests
         run: pnpm test
+      - name: Construction du client
+        run: pnpm build

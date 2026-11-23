@@ -53,7 +53,10 @@ function deepFreeze<T>(value: T): T {
 
 /** Un joueur au palier 1, sans rien de construit. */
 function atTier1(seed = 7): PlayerState {
-  return ok(fresh(seed), { type: "harvest", taps: 1 }, T0);
+  return {
+    ...ok(fresh(seed), { type: "harvest", taps: 10 }, T0),
+    resources: { sugar: 0, bricks: 0 },
+  };
 }
 
 /** Un joueur qui vient d'atteindre le palier 2, avec ses trois organites du palier 1. */
@@ -84,13 +87,19 @@ describe("palier 0 : une cellule, un geste", () => {
     expect(refusal(fresh(), { type: "harvest", taps: 1 }, T0)).toBeNull();
   });
 
-  it("le premier toucher rapporte du sucre et ouvre le palier 1", () => {
+  it("le premier toucher rapporte du sucre, le dixième ouvre le palier 1", () => {
     const result = applyOrder(fresh(), { type: "harvest", taps: 1 }, T0);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.state.resources.sugar).toBe(BALANCE.tap.yield * MICRO);
-    expect(result.state.tier).toBe(1);
-    expect(result.events.map((e) => e.type)).toEqual(["harvested", "tierReached"]);
+    expect(result.state.tier).toBe(0);
+    expect(result.events.map((e) => e.type)).toEqual(["harvested"]);
+
+    const tenth = applyOrder(result.state, { type: "harvest", taps: 9 }, T0);
+    expect(tenth.ok).toBe(true);
+    if (!tenth.ok) return;
+    expect(tenth.state.tier).toBe(1);
+    expect(tenth.events.map((e) => e.type)).toEqual(["harvested", "tierReached"]);
   });
 });
 

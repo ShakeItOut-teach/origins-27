@@ -1,0 +1,32 @@
+/* Jetons de design : le carnet de laboratoire. Aucune couleur n'est écrite ailleurs. */
+:root {
+  --ink: #1d2433;
+  --ink-soft: #5b6477;
+  --paper: #f4efe4;
+  --paper-deep: #e9e1d0;
+  --grid: rgba(74, 111, 165, 0.14);
+  --eosin: #a8402c;
+  --algae: #3f7d5c;
+  --iodine: #d9a441;
+  --slide: #4a6fa5;
+  --lens-center: #17283f;
+  --lens-edge: #060a12;
+  --on-dark: #e8eef7;
+
+  --font-title: "Instrument Serif", Georgia, serif;
+  --font-text: "IBM Plex Sans", system-ui, sans-serif;
+  --font-number: "IBM Plex Mono", ui-monospace, monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --line: 2px solid var(--ink);
+  --shadow: 4px 4px 0 var(--ink);
+  --shadow-big: 6px 6px 0 var(--ink);
+  --radius: 10px;
+  --touch: 48px;
+}

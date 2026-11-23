@@ -35,6 +35,15 @@ export const fr = {
   "action.choose": "Choisir",
   "action.continue": "Continuer",
 
+  "action.close": "Fermer",
+
+  "hint.tap": "Touchez la cellule",
+  "state.full": "Réserve pleine",
+  "state.building": "En construction",
+  "label.level": "Niveau",
+  "label.perSecond": "par seconde",
+  "label.cell": "Votre cellule",
+
   "absence.title": "Pendant votre absence",
   "account.keep": "Retrouver ma partie sur un autre appareil",
 } as const;

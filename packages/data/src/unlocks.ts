@@ -11,7 +11,7 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
   { tier: 0, condition: null, minDay: null, ui: ["cell", "sugarCounter"], orders: ["harvest"] },
   {
     tier: 1,
-    condition: { counter: "harvests", atLeast: 1 },
+    condition: { counter: "harvests", atLeast: 10 },
     minDay: null,
     ui: ["buildSlots", "productionRate", "constructionTimer"],
     orders: ["build"],

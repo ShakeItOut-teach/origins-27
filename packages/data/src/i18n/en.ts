@@ -37,6 +37,15 @@ export const en = {
   "action.choose": "Choose",
   "action.continue": "Continue",
 
+  "action.close": "Close",
+
+  "hint.tap": "Tap the cell",
+  "state.full": "Store full",
+  "state.building": "Building",
+  "label.level": "Level",
+  "label.perSecond": "per second",
+  "label.cell": "Your cell",
+
   "absence.title": "While you were away",
   "account.keep": "Find my game on another device",
 } as const satisfies Record<TextKey, string>;

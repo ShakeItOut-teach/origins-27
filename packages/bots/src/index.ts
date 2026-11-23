@@ -1,2 +1,2 @@
-// Paquet encore vide : voir docs/plans pour les tâches qui le remplissent.
-export {};
+export { PROFILES, simulate } from "./simulate";
+export type { Profile, Report } from "./simulate";

@@ -1,0 +1,460 @@
+/* Mise en page : téléphone d'abord. Toutes les couleurs viennent de tokens.css. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-text);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  user-select: none;
+}
+
+h2 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+p {
+  margin: 0;
+}
+
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: max(var(--space-5), env(safe-area-inset-top)) var(--space-4)
+    max(var(--space-5), env(safe-area-inset-bottom));
+}
+
+/* Compteurs */
+.counters {
+  display: flex;
+  gap: var(--space-5);
+  min-height: 84px;
+  align-items: flex-start;
+}
+
+.counter {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: var(--space-2);
+  align-items: center;
+  justify-items: start;
+}
+
+.counter-value {
+  font-family: var(--font-number);
+  font-weight: 500;
+  font-size: 40px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.counter-label {
+  grid-column: 1 / -1;
+  font-family: var(--font-title);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.counter-rate {
+  grid-column: 1 / -1;
+  font-family: var(--font-number);
+  font-size: 13px;
+  color: var(--algae);
+}
+
+.counter.is-full .counter-label {
+  color: var(--eosin);
+}
+
+.icon-sugar {
+  color: var(--iodine);
+}
+
+.icon-bricks {
+  color: var(--eosin);
+}
+
+.shake {
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* La lame de microscope */
+.lens {
+  position: relative;
+  width: min(92vw, 58vh, 520px);
+  aspect-ratio: 1;
+  border: var(--line);
+  border-width: 3px;
+  border-radius: 50%;
+  box-shadow: var(--shadow-big);
+  background: radial-gradient(circle at 50% 45%, var(--lens-center), var(--lens-edge) 78%);
+}
+
+.lens-canvas {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.lens-canvas:focus-visible {
+  outline: 3px solid var(--iodine);
+  outline-offset: 4px;
+}
+
+.lens-canvas canvas {
+  display: block;
+  pointer-events: none;
+}
+
+.hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14%;
+  text-align: center;
+  font-family: var(--font-title);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--on-dark);
+  pointer-events: none;
+  animation: breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Emplacements d'organites */
+.slot {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px dashed var(--on-dark);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--on-dark);
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.75;
+  animation: appear 0.5s ease-out;
+}
+
+.slot .plus {
+  font-family: var(--font-title);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.slot.is-ready {
+  opacity: 1;
+  border-color: var(--iodine);
+  color: var(--iodine);
+  animation:
+    appear 0.5s ease-out,
+    beckon 1.6s ease-in-out 0.5s infinite;
+}
+
+.slot.is-built,
+.slot.is-building {
+  opacity: 1;
+  border-style: solid;
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.slot.is-building {
+  border-color: var(--eosin);
+  color: var(--eosin);
+}
+
+.slot-timer {
+  position: absolute;
+  top: 100%;
+  margin-top: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-number);
+  font-size: 12px;
+}
+
+.slot:focus-visible,
+.button:focus-visible,
+.mutation:focus-visible,
+.close:focus-visible {
+  outline: 3px solid var(--iodine);
+  outline-offset: 2px;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@keyframes beckon {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+/* Voile, notes et fiches */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--ink) 45%, transparent);
+  animation: fade 0.2s ease-out;
+}
+
+.veil-bottom {
+  place-items: end center;
+  padding: 0;
+  background: color-mix(in srgb, var(--ink) 20%, transparent);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.note,
+.sheet {
+  display: grid;
+  gap: var(--space-4);
+  width: min(100%, 420px);
+  padding: var(--space-5);
+  border: var(--line);
+  background: var(--paper);
+}
+
+.note {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-big);
+  text-align: center;
+  justify-items: center;
+  transform: rotate(-1deg);
+  animation: drop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.note p {
+  font-size: 17px;
+  color: var(--ink-soft);
+}
+
+.note-wide {
+  transform: none;
+  width: min(100%, 460px);
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-24px) rotate(-4deg);
+  }
+}
+
+.sheet {
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding-bottom: max(var(--space-5), env(safe-area-inset-bottom));
+  animation: rise 0.25s ease-out;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.sheet-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.sheet-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: var(--line);
+  border-radius: 50%;
+}
+
+.sheet-level,
+.sheet-building {
+  font-family: var(--font-number);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.sheet-building {
+  color: var(--eosin);
+}
+
+.sheet-role {
+  font-size: 17px;
+}
+
+.close {
+  width: var(--touch);
+  height: var(--touch);
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.costs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-number);
+  font-size: 18px;
+}
+
+.cost.is-missing {
+  color: var(--eosin);
+}
+
+.cost-time {
+  color: var(--ink-soft);
+}
+
+.button {
+  min-height: var(--touch);
+  min-width: 160px;
+  padding: 0 var(--space-5);
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  background: var(--eosin);
+  color: var(--paper);
+  font-family: var(--font-text);
+  font-weight: 600;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.button:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.button:disabled {
+  background: var(--paper-deep);
+  color: var(--ink-soft);
+  box-shadow: none;
+  cursor: default;
+}
+
+.mutations {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.mutation {
+  display: grid;
+  gap: 2px;
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mutation strong {
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: 22px;
+}
+
+.mutation span {
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.mutation.is-picked {
+  background: var(--slide);
+  color: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.mutation.is-picked span {
+  color: var(--paper);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
