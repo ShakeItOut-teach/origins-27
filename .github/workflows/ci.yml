@@ -49,11 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
+      # Par npx plutôt que par supabase/setup-cli, qui échoue quand GitHub limite ses appels.
       - name: Base vide, migrations rejouées
-        run: supabase db start
+        run: npx --yes supabase@2 db start
       - name: Règles d'accès et écritures
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/acces.sql
 
