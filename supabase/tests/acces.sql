@@ -111,4 +111,26 @@ begin
 end;
 $$;
 
+-- 4. Le serveur (clé de service) : il lit et écrit tout ce dont il a besoin.
+set local role service_role;
+set local request.jwt.claims = '{"role":"service_role"}';
+
+do $
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+  saison bigint;
+begin
+  select id into strict saison from public.saisons order by debut desc limit 1;
+  if (select count(*) from public.etats_joueur) <> 2 then
+    raise exception 'ECHEC : le serveur ne voit pas tous les états';
+  end if;
+  if (select count(*) from public.ordres) <> 1 then
+    raise exception 'ECHEC : le serveur ne lit pas les ordres';
+  end if;
+  if not public.enregistrer(alice, saison, 2, '{"n":3}', null, null) then
+    raise exception 'ECHEC : le serveur ne peut pas enregistrer';
+  end if;
+end;
+$;
+
 rollback;

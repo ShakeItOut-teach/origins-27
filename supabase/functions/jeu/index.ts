@@ -48,7 +48,10 @@ Deno.serve(async (request) => {
     .order("debut", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (seasonError !== null) return json(500, { error: "season" });
+  if (seasonError !== null) {
+    console.error(seasonError);
+    return json(500, { error: "season" });
+  }
   if (season === null) return json(403, { status: "closed" });
 
   const deps = {
