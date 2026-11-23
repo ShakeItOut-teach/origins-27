@@ -3,3 +3,6 @@ packages:
 
 allowBuilds:
   lefthook: true
+
+# Chemins courts : Windows limite la longueur des chemins de fichiers.
+virtualStoreDirMaxLength: 40
