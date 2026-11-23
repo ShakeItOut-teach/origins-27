@@ -125,7 +125,7 @@ jobs:
         run: npx --yes supabase@2 link --project-ref "$SUPABASE_PROJECT"
       - name: Appliquer les migrations
         if: steps.secrets.outputs.ready == 'true'
-        run: npx --yes supabase@2 db push
+        run: npx --yes supabase@2 db push --linked
       - name: Déployer la fonction du jeu
         if: steps.secrets.outputs.ready == 'true'
         run: npx --yes supabase@2 functions deploy jeu --project-ref "$SUPABASE_PROJECT" --use-api
