@@ -22,6 +22,7 @@ Environ 20 minutes. À la fin, tu m’envoies **deux valeurs publiques** (l’ad
 1. Menu de gauche › **SQL Editor** › **New query**.
 2. Ouvre le fichier [`supabase/001_init.sql`](../supabase/001_init.sql) du dépôt, copie **tout** son contenu et colle-le.
 3. Clique sur **Run**. Le message attendu est « Success. No rows returned ».
+4. Recommence avec [`supabase/002_droits.sql`](../supabase/002_droits.sql) (nouvelle requête, coller, **Run**) : il donne aux joueurs connectés le droit d’utiliser les tables.
 
 ## 3. Créer l’application Discord (pour « Se connecter avec Discord »)
 
