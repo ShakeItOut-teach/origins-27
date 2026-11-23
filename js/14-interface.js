@@ -111,7 +111,7 @@ function stripHTML(){
   if(S.mig)h+='<span>Migration <b>'+tr("vers ","to ")+S.mig.x+","+S.mig.y+'</b><span class="pb"><i data-ps="'+S.mig.start+'" data-pe="'+S.mig.end+'"></i></span><span data-end="'+S.mig.end+'"></span></span>';
   h+=S.research?'<span>'+tr("Gène ","Gene ")+'<b>'+NODES[S.research.id].name+(S.research.lvl?tr(" niv. "," lvl ")+S.research.lvl:"")+'</b><span class="pb evo"><i data-ps="'+S.research.start+'" data-pe="'+S.research.end+'"></i></span><span data-end="'+S.research.end+'"></span>'+accelHTML("r")+'</span>':"<span>"+tr("Aucun gène en cours","No gene in progress")+"</span>";
   if(S.mres)h+='<span>'+tr("Recherche ","Research ")+'<b>'+RBR[S.mres.br].e+" T"+S.mres.L+'</b><span class="pb evo"><i data-ps="'+S.mres.start+'" data-pe="'+S.mres.end+'"></i></span><span data-end="'+S.mres.end+'"></span>'+accelHTML("m")+"</span>";
-  h+=enPill()+lmPill()+instPill();
+  h+=enPill()+lmPill()+alPill()+instPill();
   {const st=stashTotal();if(st>=1)h+='<span class="rwpill" data-act="rewards">🧺 <b>'+fmt(st)+"</b>"+tr(" en réserve"," in reserve")+"</span>";}
   {const n=rwCount();h+='<span class="rwpill'+(n?" on":"")+'" data-act="rewards">🎁 '+(n?tr("Récompenses ","Rewards ")+"<b>"+n+"</b>":tr("Coffre dans ","Chest in ")+"<span data-endr=\""+S.chestAt+"\"></span>")+"</span>";}
   {const r=myRank("pow"),L=leagueOf(r);h+='<span class="rkpill" data-act="goto" data-tab="act" data-sub="rank">'+L[1]+" <b>#"+r+"</b>"+tr(" mondial"," world")+"</span>";}
@@ -195,7 +195,7 @@ function cellSVG(mode){
   mode=mode||"full";const A=x=>mode==="ui"?"":x,U=x=>mode==="art"?"":x;
   const C=280,mem=233,m=mods();
   let s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -50 660 660" role="img" aria-label="'+tr("Intérieur de votre cellule","Inside your cell")+'"'+(mode==="ui"?' class="uilayer"':"")+">";
-  if(mode!=="ui"){for(let i=0;i<46;i++){const a=i*2.39996,rr=255+((i*37)%60);s+='<circle cx="'+(C+Math.cos(a)*rr)+'" cy="'+(C+Math.sin(a)*rr)+'" r="'+(1.2+(i%3)*0.8)+'" fill="#9fc3d3" fill-opacity="'+(0.18+(i%4)*0.06)+'"/>';}s+=bodySVG(C,mem);}
+  if(mode!=="ui"){for(let i=0;i<46;i++){const a=i*2.39996,rr=255+((i*37)%60);s+='<circle cx="'+(C+Math.cos(a)*rr)+'" cy="'+(C+Math.sin(a)*rr)+'" r="'+(1.2+(i%3)*0.8)+'" fill="#9fc3d3" fill-opacity="'+(0.18+(i%4)*0.06)+'"/>';}s+='<g class="cbody" style="animation-delay:-'+((Date.now()/1000)%7).toFixed(2)+'s">'+bodySVG(C,mem)+"</g>";}
   S.fields.forEach((f,i)=>{
     const a=fAng(i),x=C+Math.cos(a)*mem,y=C+Math.sin(a)*mem,ref="field:"+i,col="var(--"+f.k+")";
     const busy=S.build&&S.build.type==="field"&&S.build.i===i,selc=openRef===ref?" sel":"";
@@ -214,7 +214,7 @@ function cellSVG(mode){
     else if(slotOpen(i))tip=tr("<b>Emplacement libre</b>Touchez pour choisir un organite à construire.","<b>Free slot</b>Tap to choose an organelle to build.");
     else tip=tr("<b>Emplacement verrouillé</b>Il s’ouvre avec le cytosquelette niveau ","<b>Locked slot</b>It opens with cytoskeleton level ")+(i-5)+".";
     s+=U('<g class="hit'+selc+'" data-act="open" data-ref="'+ref+'" data-tip="'+esc(tip)+'" tabindex="0" role="button" aria-label="'+tr("Emplacement ","Slot ")+(i+1)+'"><circle cx="'+x+'" cy="'+y+'" r="40" fill="rgba(0,0,0,0)"/><circle class="ring" cx="'+x+'" cy="'+y+'" r="40"/>');
-    if(sl){s+=A('<circle cx="'+x+'" cy="'+y+'" r="36" fill="#061a22" fill-opacity=".7"/>'+orgArt(sl.k,x,y))+U('<circle cx="'+(x+30)+'" cy="'+(y-30)+'" r="11" fill="#03080f" stroke="#7e97a7"/><text x="'+(x+30)+'" y="'+(y-26)+'" text-anchor="middle" class="svgs" style="fill:#d6e5ec;font-size:12px">'+sl.l+"</text>");}
+    if(sl){s+=A('<circle cx="'+x+'" cy="'+y+'" r="36" fill="#061a22" fill-opacity=".7"/>'+'<g class="orgf" style="animation-delay:-'+((Date.now()/1000+i*0.9)%5).toFixed(2)+'s">'+orgArt(sl.k,x,y)+"</g>")+U('<circle cx="'+(x+30)+'" cy="'+(y-30)+'" r="11" fill="#03080f" stroke="#7e97a7"/><text x="'+(x+30)+'" y="'+(y-26)+'" text-anchor="middle" class="svgs" style="fill:#d6e5ec;font-size:12px">'+sl.l+"</text>");}
     else if(busy&&S.build.type==="new"){s+=A('<g opacity=".45">'+orgArt(S.build.k,x,y)+"</g>")+U('<text x="'+x+'" y="'+(y+52)+'" text-anchor="middle" class="svgl">'+BLD[S.build.k].name+'</text><text x="'+x+'" y="'+(y+65)+'" text-anchor="middle" class="svgs">'+tr("en construction","building")+'</text>');}
     else if(slotOpen(i)){s+=A('<circle cx="'+x+'" cy="'+y+'" r="32" fill="rgba(3,8,15,.45)" stroke="#7e97a7" stroke-opacity=".7" stroke-width="2" stroke-dasharray="6 6"/>')+U('<text x="'+x+'" y="'+(y+56)+'" text-anchor="middle" class="svgs">'+tr("libre","free")+'</text>');}
     else{s+=A('<circle cx="'+x+'" cy="'+y+'" r="32" fill="none" stroke="#173349" stroke-width="2" stroke-dasharray="3 7"/>')+U("");}

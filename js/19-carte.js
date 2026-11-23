@@ -33,7 +33,7 @@ const WSPR={
 };
 const DSPR={1:["xx","xx"],2:[".xx.","xxxx","xxxx",".xx."],3:[".xxxx.","xxxxxx","xxxxxx","xxxxxx","xxxxxx",".xxxx."]};
 function camInit(){if(!cam){const c=S.mig?[S.mig.fx,S.mig.fy]:cpos();cam={x:c[0]+0.5,y:c[1]+0.5};}camClamp();}
-function camClamp(){const h=camVT/2;cam.x=Math.max(h,Math.min(W-h,cam.x));cam.y=Math.max(h,Math.min(H-h,cam.y));}
+function camClamp(){if(!cam)return;const h=camVT/2;cam.x=Math.max(h,Math.min(W-h,cam.x));cam.y=Math.max(h,Math.min(H-h,cam.y));}
 function camZoom(dz){let i=ZOOMS.indexOf(camVT);if(i<0)i=1;i=Math.max(0,Math.min(ZOOMS.length-1,i+dz));camVT=ZOOMS[i];if(cv){resize();camClamp();}}
 function tileAt(e){if(!cv||!cam)return null;const b=cv.getBoundingClientRect(),x=Math.floor((e.clientX-b.left)/b.width*camVT+cam.x-camVT/2),y=Math.floor((e.clientY-b.top)/b.height*camVT+cam.y-camVT/2);return x<0||y<0||x>=W||y>=H?null:[x,y];}
 function bindMap(){

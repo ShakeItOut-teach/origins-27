@@ -7,7 +7,22 @@ function act(a,el){
   if(a==="feedback"){showFeedback();return;}
   if(a==="lang"){setLang(EN?"fr":"en");return;}
   if(a==="autocollect"){autoCollect();return;}
-  if(a==="allyjoin"&&S&&!S.ally){joinAlly(el.dataset.tag);return;}
+  if(a==="allyjoin"&&S&&!S.ally&&alOpen()){joinAlly(el.dataset.tag);return;}
+  if(a==="allyleave"&&S&&S.ally&&alLeave())return;
+  if(a==="opts"){showModal(optHTML());return;}
+  if(a==="opt"){optAct(el.dataset.k);return;}
+  if(a==="savex"){saveExportFile();return;}
+  if(a==="savec"){saveCopy();return;}
+  if(a==="savei"){const t=document.getElementById("svcode");saveImport(t&&t.value);return;}
+  if(a==="install"){if(installEvt){installEvt.prompt();installEvt=null;}closeModal();return;}
+  if(a==="algo"){closeModal();tab="act";actSub="ally";openRef=null;dirty=true;return;}
+  if(a==="aldon"){alDonate(el.dataset.id);return;}
+  if(a==="alrec"){alSetRec(el.dataset.id);return;}
+  if(a==="alhelp"){alHelpAll();return;}
+  if(a==="alask"){alAskHelp();return;}
+  if(a==="algift"){const C=alGift();dirty=true;if(C)chestFX(C.T,C.items);return;}
+  if(a==="albuy"){const C=alBuy(el.dataset.id);if(C)chestFX(C.T,C.items);return;}
+  if(a==="discord"){discordGo();return;}
   if(a==="allyleave"&&S&&S.ally){log(tr("Vous quittez ","You leave ")+S.ally+". 💬 "+pickA(EN?["Traitor 😤","Good riddance… 😒","We’ll remember this 🗡️"]:["Traître 😤","Bon vent… 😒","On s’en souviendra 🗡️"]),"bad");allyBots(S.ally).forEach(b=>b.anger=Math.min(1,b.anger+0.4));S.ally=null;dirty=true;return;}
   if(a==="muts"){showModal(mutListHTML());return;}
   if(a==="mutpick"&&S&&S.mutOffer){const id=el.dataset.id;if(S.mutOffer.indexOf(id)<0)return;const L0=lineages();S.muts=(S.muts||[]).concat(id);S.mutOffer=null;const m=MUT_BY[id];log(tr("Mutation gardée : ","Mutation kept: ")+m.name+".","rare");

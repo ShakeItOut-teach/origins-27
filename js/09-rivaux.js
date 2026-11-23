@@ -39,6 +39,14 @@ function nightAt(t){return new Date(realOf(t)).getHours()<7;}
 function shieldAt(t){return !!S.shieldR&&realOf(t)<S.shieldR;}
 function protAt(t){return nightAt(t)||shieldAt(t);}
 function hhmm(ms){const d=new Date(ms);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
+/* Rythme de vie des rivaux : chacun dort 10 h d'affilée (heure de coucher entre 21 h et 1 h, propre à chacun) et se connecte 5 fois par jour, 20 à 40 min. Ils n'attaquent que connectés. */
+function botHash(a,b,c){let h=(a*73856093)^(b*19349663)^(c*83492791);h=Math.imul(h^(h>>>13),1274126177);return ((h^(h>>>16))>>>0)/4294967296;}
+function botSleepStart(b){return (1260+Math.floor(botHash(b.id,7,1)*5)*60)%1440;}
+function botAsleep(b,t){return ((hod(t)-botSleepStart(b))+1440)%1440<600;}
+function botSessions(b,d){const o=[],a0=d*1440+botSleepStart(b)+600;for(let i=0;i<5;i++){const s=a0+i*168+Math.floor(botHash(b.id,d,i)*128),L=20+Math.floor(botHash(b.id,d,i+9)*21);o.push([s,s+L]);}return o;}
+function botOnline(b,t){if(botAsleep(b,t))return false;const d=dayIdx(t);for(const dd of [d-1,d])for(const s of botSessions(b,dd))if(t>=s[0]&&t<s[1])return true;return false;}
+function botLastSeen(b,t){let best=-1;const d=dayIdx(t);for(const dd of [d-2,d-1,d])for(const s of botSessions(b,dd))if(s[0]<=t)best=Math.max(best,Math.min(t,s[1]));return best;}
+function botStatus(b){if(botOnline(b,S.t))return '<span class="up">'+tr("🟢 en ligne","🟢 online")+"</span>";if(botAsleep(b,S.t))return tr("💤 endormi","💤 asleep");const ls=botLastSeen(b,S.t);return '<span class="muted">'+tr("⚪ hors ligne","⚪ offline")+(ls>=0?tr(" · vu il y a "," · seen ")+fmtDur(S.t-ls)+tr(""," ago"):"")+"</span>";}
 function botPoints(b){return Math.round(botAtk(b)+botDef(b)+botStage(b)*60);}
 function playerAtk(){return Math.round(compAtk(armyAll(),null));}
 const HERO_LBL=tr("Héros","Hero");
@@ -50,7 +58,7 @@ function botEst(b,exact){const d=botDef(b);if(exact)return fmt(d);return "≈ "+
 function botPanel(b,vis){botSync(b);const st=botStage(b),loot=Math.max(0,b.res-botProt(b)),ng=nightAt(S.t);
   let h='<p class="wildic" style="margin-top:6px">'+sprImg(STAGE_SPR[st],2)+'<span><b>'+esc(b.name)+"</b> "+(b.tag?'<span class="muted">'+b.tag+"</span>":"")+'<br><span class="muted" style="font-size:12px">'+(S.ally&&b.tag===S.ally?'<span class="up">'+tr("Allié","Ally")+"</span>":tr("Rival","Rival"))+" · "+STAGE_NAME[st]+"</span></span></p>";
   h+='<div class="stat"><span>'+tr("Défense estimée","Estimated defense")+"</span><b>"+botEst(b,vis)+'</b></div><div class="stat"><span>'+tr("Voie offensive","Offensive path")+'</span><b style="color:var(--t-'+b.type+')">'+TYPES[b.type].name+"</b></div>";
-  h+='<div class="stat"><span>'+tr("Butin pillable","Raidable loot")+"</span><b>"+(vis?fmt(loot):tr("inconnu","unknown"))+'</b></div><div class="stat"><span>'+tr("Humeur","Mood")+"</span><b>"+(b.anger>0.3?tr("😡 rancunier","😡 vengeful"):b.aggr>0.6?tr("😈 agressif","😈 aggressive"):tr("😐 calme","😐 calm"))+"</b></div>";
+  h+='<div class="stat"><span>'+tr("Butin pillable","Raidable loot")+"</span><b>"+(vis?fmt(loot):tr("inconnu","unknown"))+'</b></div><div class="stat"><span>'+tr("Activité","Activity")+"</span><b>"+botStatus(b)+'</b></div><div class="stat"><span>'+tr("Humeur","Mood")+"</span><b>"+(b.anger>0.3?tr("😡 rancunier","😡 vengeful"):b.aggr>0.6?tr("😈 agressif","😈 aggressive"):tr("😐 calme","😐 calm"))+"</b></div>";
   {const rk=rkRows("pow").findIndex(x=>x.b===b)+1;h+='<div class="stat"><span>'+tr("Classement mondial","World ranking")+"</span><b>"+leagueOf(rk)[1]+" #"+rk+" · "+fmt(botPow(b))+" pts</b></div>";}
   if(b.nem)h+='<div class="stat"><span>'+tr("🎯 Ennemi juré","🎯 Sworn enemy")+'</span><b class="neg">'+tr("vous a pillé ","raided you ")+b.nem+tr(" fois"," times")+(b.avenged?tr(" · vengé "," · avenged ")+b.avenged+tr(" fois"," times"):"")+"</b></div>"+(b.nemT&&S.t-b.nemT<1440?'<p class="up" style="font-size:12.5px">'+tr("🔥 Vengeance possible encore ","🔥 Revenge still possible for ")+'<span data-end="'+(b.nemT+1440)+'"></span>'+tr(" : butin +50 %.",": loot +50%.")+"</p>":"");
   if(ng)h+='<p class="desc">'+tr("🌙 Enkysté pour la nuit jusqu’à 07:00 : impossible de l’attaquer.","🌙 Encysted for the night until 07:00: it cannot be attacked.")+"</p>";
@@ -96,8 +104,8 @@ function botsStep(dm){
   for(const b of S.bots){
     b.anger=Math.max(0,b.anger-0.02*k);
     const d=Math.hypot(b.x-c[0],b.y-c[1]);
-    if(S.tut==null&&days>=1&&d<=22&&!S.inc.some(a=>a.bot===b.id)&&!S.mig&&!(S.ally&&b.tag===S.ally)){
-      const p=(b.aggr*0.02+b.anger*0.1)*k*(S.ally&&b.tag?1.5:1);
+    if(S.tut==null&&days>=1&&d<=22&&botOnline(b,S.t)&&!S.inc.some(a=>a.bot===b.id)&&!S.mig&&!(S.ally&&b.tag===S.ally)){
+      const p=(b.aggr*0.02+b.anger*0.1)*4*k*(S.ally&&b.tag?1.5:1);
       if(Math.random()<p){const travel=Math.max(6,d*1.6),arr=S.t+travel;if(!protAt(arr)&&!protAt(S.t)){
         const atk=Math.round(botAtk(b)*(0.75+Math.random()*0.4)),A={id:S.nextId++,bot:b.id,atk,arrive:arr,from:[b.x,b.y]};S.inc.push(A);
         log(tr("⚠️ Attaque entrante : ","⚠️ Incoming attack: ")+b.name+tr(" arrive à "," arrives at ")+fmtClockShort(arr)+".","bad");toast(tr("⚠️ Attaque entrante de ","⚠️ Incoming attack from ")+b.name);
@@ -106,6 +114,7 @@ function botsStep(dm){
   }
   if(Math.random()<0.04*k){const a=pickA(S.bots),b=pickA(S.bots);if(a!==b){const ok=Math.random()<0.6;if(ok){a.lw=(a.lw||0)+Math.round(botAtk(a)*(1+Math.random()));a.g=Math.min(3,a.g+0.01);b.g=Math.max(0.4,b.g-0.01);}log("📣 "+a.name+" "+(ok?tr("a pillé","raided"):tr("s’est cassé les dents sur","broke its teeth on"))+" "+b.name+".","muted");}}
   for(const b of S.bots)if(Math.random()<0.02*k*b.aggr)b.lw=(b.lw||0)+Math.round(botAtk(b)*(0.5+Math.random()));
+  if(typeof alTick==="function")alTick(k);
   rkTick();
   S.botAd=(S.botAd||0)+k*30;if(S.botAd>=720){S.botAd=0;botsAdapt();}
   S.botMig=(S.botMig||0)+k*30;if(S.botMig>=1440){S.botMig=0;for(const b of S.bots){if(Math.random()<0.25){const r=rC(b.x,b.y),step=3+Math.floor(Math.random()*4),nx=Math.round(C0+(b.x-C0)*(r-step)/r),ny=Math.round(C0+(b.y-C0)*(r-step)/r);

@@ -20,7 +20,7 @@ function maxLvl(id){return STAGE_NODES[id]?1:10;}
 function scaledEff(id,L){const e=NODES[id].eff,o={};for(const k in e){const v=e[k];if(k==="revealSource")o[k]=v;else if(ADD_KEYS[k])o[k]=v+(v>0?Math.floor((L-1)/3):0);else o[k]=Math.round(v*(1+0.2*(L-1))*1000)/1000;}return o;}
 
 function newGame(seed,souche){
-  S=null;
+  S=null;if(typeof closeModal==="function")try{closeModal();}catch(e){}
   const rng=mulberry32(seed),pick=a=>a[Math.floor(rng()*a.length)];
   const sa=rng()*Math.PI*2,sr=RW-19+rng()*16,stx=Math.round(C0+Math.cos(sa)*sr),sty=Math.round(C0+Math.sin(sa)*sr);pendingStart=[stx,sty];
   const tiles=[];
@@ -69,6 +69,6 @@ function mods(){
   S.emerg.forEach(id=>add(EMERG.find(e=>e.id===id).eff));
   (S.muts||[]).forEach(id=>{const u=MUT_BY[id];if(u){add(u.eff);add(u.mal);}});
   lineages().forEach(t=>add(LINEAGE[t].eff));
-  if(S.ally)m.fieldPct+=0.05;
+  if(S.ally)m.fieldPct+=0.05;if(typeof alMods==="function")alMods(m);
   return m;
 }

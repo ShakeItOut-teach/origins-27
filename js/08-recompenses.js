@@ -96,7 +96,7 @@ function chestFX(T,items){const old=document.getElementById("chestfx");if(old)ol
   const tOpen=560+ti*380;at(tOpen,open);
   cards.forEach((c,j)=>at(tOpen+320+j*130,()=>card(c,false)));
   at(tOpen+320+cards.length*130+380,()=>{el.classList.add("done");el.querySelector(".cfx-btn").focus();});}
-function claimDq(j){const q=S.dq.list[j];if(!q||q.done||q.got<q.goal)return;q.done=true;const got=giveRes(0.8);{const e=enGive(5);if(e)got.push("⚡ +"+e);}toast("🎯 "+got.join(", "));
+function claimDq(j){const q=S.dq&&S.dq.list&&S.dq.list[j];if(!q||q.done||q.got<q.goal)return;q.done=true;const got=giveRes(0.8);{const e=enGive(5);if(e)got.push("⚡ +"+e);}toast("🎯 "+got.join(", "));
   if(S.dq.list.every(x=>x.done)&&!S.dq.bonus){S.dq.bonus=true;S.chestAt=Math.min(S.chestAt,Date.now());toast(tr("Les 3 quêtes du jour : un coffre offert !","All 3 daily quests: a free chest!"));}}
 function rewardsHTML(){rwInit();const d=S.daily,can=d.last!==dayKey(),cur=can?dailyDay():((d.streak-1)%7)+1;
   let h='<div class="kick">'+tr("Récompenses","Rewards")+"</div><h2>"+tr("Chaque jour compte","Every day counts")+"</h2>";enInit();

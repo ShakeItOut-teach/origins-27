@@ -40,7 +40,47 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261122f`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123a`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+
+## Robot de test (avant chaque lancement)
+
+Trois robots jouent au jeu tout seuls pour trouver les bugs :
+
+- **Le robot « nouveau joueur »** suit le guide des premiers pas comme un joueur appliqué, sur plusieurs parties, et signale toute étape où il reste bloqué.
+- **Le robot « singe »** lance des dizaines de parties et clique au hasard sur tout ce qui est cliquable (en privilégiant construire, piller, chasser, donner à l’alliance…), fait filer le temps jusqu’au jour 13, sauvegarde et recharge la partie, et vérifie à chaque pas qu’aucune erreur n’apparaît, qu’aucune ressource ne devient négative, qu’aucun « NaN » ou « undefined » ne s’affiche, que le temps n’avance jamais à l’envers et que la sauvegarde ne perd rien. Chaque bug est noté avec sa graine et les dernières actions, pour être rejoué à l’identique.
+- **Le robot « joueur »** (`tools/sim.js`) joue 3 stratégies raisonnables et note les jalons atteints (noyau, stades, APEX) pour suivre l’équilibrage.
+
+**Automatiquement :** sur GitHub, l’action [Robot de test](https://github.com/ShakeItOut-teach/origins-27/actions/workflows/robot.yml) tourne chaque nuit et à chaque mise en ligne, sur ordinateur et sur mobile, dans un vrai navigateur. Le rapport s’affiche dans le résumé de l’action ; GitHub envoie un e-mail si un bug est trouvé. Bouton **Run workflow** pour la lancer à la main avec plus de parties.
+
+**À la main, dans le navigateur** (sur la page du jeu, console F12) :
+
+```js
+eval(await (await fetch('tools/monkey.js')).text());
+await runGuideBot();                                         // le guide, sur 6 parties
+await runMonkey({ games: 20, steps: 400, rich: 3, maxJump: 900 });  // le singe
+```
+
+**En local avec Node :** `npm i -D playwright && npx playwright install chromium && node tools/robot-ci.mjs` (écrit `robot-rapport.md`).
+
+La sauvegarde du joueur n’est jamais touchée : les robots travaillent dans une mémoire temporaire.
+
+## Alliances
+
+- **Ouverture au jour 5.** Ce jour-là, l’alliance la plus présente autour du joueur le recrute d’office ; il peut en changer **sans pénalité pendant 24 h** (Rapports → 🤝 Alliance).
+- **Technologies d’alliance :** 3 directions (🌱 Croissance, ⚔ Conquête, 🛡 Rempart), 3 technologies chacune, 5 niveaux. Les membres (le joueur et les rivaux de la bannière) y versent des points ; l’alliance suit une technologie **recommandée ⭐** qui rapporte ×1,5. À 600 points de contribution, le joueur devient **Officier** et choisit lui-même la recommandation.
+- **Dons :** 20 par jour de jeu ; chacun coûte de l’ATP et des protéines et rapporte de la contribution et des **crédits d’alliance**.
+- **Entraide :** « Demander de l’aide » sur un chantier (les membres connectés le raccourcissent, jusqu’à 10 aides) ; « Aider tout le monde » rapporte des crédits.
+- **Boutique :** énergie, coffre rare, bouclier d’1 h, construction instantanée.
+- **Cadeau d’alliance** chaque jour de jeu, plus gros quand l’alliance monte de niveau.
+- **Rivaux plus humains :** chacun dort 10 h d’affilée et se connecte 5 fois par jour ; ils n’attaquent que connectés (statut 🟢 / 💤 / ⚪ sur leur fiche).
+
+## Discord
+
+Collez l’invitation du serveur dans `DISCORD_URL`, en haut de `js/26-alliances.js` (par exemple `"https://discord.gg/xxxxxxx"`). Le bouton « Rejoindre le Discord » apparaît alors dans l’écran Alliance et dans ⚙ Options ; la première visite rapporte +15 ⚡, un coffre rare et 300 crédits d’alliance. Vide, le bouton reste caché.
+
+## Options, sauvegarde et application
+
+Le bouton **⚙ Options** règle le son et la musique (synthétisés dans le navigateur, aucun fichier audio), les effets visuels, les notifications (chantier fini, attaque, troupes prêtes, quand le jeu est ouvert en arrière-plan) et le style graphique. Il permet aussi d’**exporter la partie** (fichier `.o27` ou code à copier) et de l’**importer** sur un autre appareil. Le jeu s’installe comme une application (`manifest.webmanifest`, `sw.js`) et reste jouable hors ligne une fois chargé. Les 8 dernières erreurs techniques sont gardées sur l’appareil et jointes à « Mon avis ». La page [confidentialite.html](confidentialite.html) explique tout cela aux joueurs.
 
 ## Langues
 
@@ -87,7 +127,7 @@ Le texte tapé est gardé si la fenêtre est fermée. Un seul rappel discret app
 ```
 index.html          la page : en-tête, zones de l’écran, et la liste des scripts à charger
 css/style.css       toute l’apparence (couleurs, mise en page, animations)
-js/00-langue.js … js/24-apprentissage.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage)
+js/00-langue.js … js/26-alliances.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage ; 25 : les options ; 26 : les alliances)
 apercu.jpg          l’image affichée quand on partage le lien (1200 × 630)
 ```
 
@@ -119,10 +159,15 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | La fenêtre « Mon avis », le compteur de visites | `js/22-avis.js` |
 | Le guide des premiers pas (étapes, textes, flèche, temps accéléré), le pillage d’entraînement contre la souche-miroir, le coffre doré | `js/23-premiers-pas.js` |
 | Les missions d’apprentissage (📘) : liste, textes, récompenses | `js/24-apprentissage.js` |
+| Le son, la musique, les effets visuels, les notifications, l’export/import de la sauvegarde, la fenêtre ⚙ Options | `js/25-options.js` |
+| Les alliances (technologies, dons, entraide, boutique, cadeau), le lien Discord | `js/26-alliances.js` |
+| Le rythme de vie des rivaux (sommeil, connexions) | `js/09-rivaux.js` |
 
 Pour ajouter un fichier : créez-le dans `js/`, en commençant par `"use strict";`, puis ajoutez sa ligne `<script src="js/…"></script>` dans `index.html`, après les fichiers dont il utilise les fonctions au chargement.
 
 ## Outils
+
+`tools/monkey.js` et `tools/robot-ci.mjs` : voir « Robot de test » plus haut.
 
 `tools/sim.js` est un robot de test qui joue des parties accélérées pour vérifier l’équilibrage. Il se charge dans la console du navigateur, sur la page du jeu :
 

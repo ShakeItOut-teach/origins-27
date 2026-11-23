@@ -1,0 +1,39 @@
+name: Robot de test
+
+on:
+  schedule:
+    - cron: "0 3 * * *"        # chaque nuit à 3 h (UTC)
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      games:
+        description: "Nombre de parties du robot singe (ordinateur)"
+        default: "60"
+
+jobs:
+  robot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Installer Playwright (Chromium)
+        run: |
+          npm init -y >/dev/null
+          npm i -D playwright@1
+          npx playwright install --with-deps chromium
+      - name: Lancer le robot
+        env:
+          ROBOT_GAMES: ${{ github.event_name == 'push' && '12' || github.event.inputs.games || '60' }}
+          ROBOT_STEPS: "400"
+          ROBOT_SIM_DAYS: ${{ github.event_name == 'push' && '6' || '20' }}
+        run: node tools/robot-ci.mjs
+      - name: Garder le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-rapport
+          path: robot-rapport.md

@@ -676,3 +676,44 @@ body.pixel .lm{border-radius:0}
 .instpill{border-color:#ffd166;color:#ffd166}
 #coach .cbub.nudge{animation:cnudge .45s ease-in-out}
 @keyframes cnudge{0%,100%{transform:none}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+
+/* ---- cellule vivante ---- */
+.cbody{transform-box:view-box;transform-origin:280px 280px;animation:cbreath 7s ease-in-out infinite}
+@keyframes cbreath{0%,100%{transform:scale(1)}50%{transform:scale(1.014) rotate(.4deg)}}
+.orgf{transform-box:fill-box;transform-origin:center;animation:orgbob 5s ease-in-out infinite}
+@keyframes orgbob{0%,100%{transform:translate(0,0) rotate(0)}33%{transform:translate(1.5px,-2px) rotate(1.5deg)}66%{transform:translate(-1.5px,1px) rotate(-1deg)}}
+@media (prefers-reduced-motion:reduce){.cbody,.orgf{animation:none}}
+/* ---- effets ---- */
+.fxgain{position:fixed;z-index:80;pointer-events:none;transform:translate(-50%,0);font:700 14px/1 var(--mono,monospace);text-shadow:0 1px 0 #000,0 0 8px rgba(0,0,0,.6);animation:fxup 1.25s ease-out forwards}
+.fxgain.c-atp{color:var(--atp)}.fxgain.c-prot{color:var(--prot)}.fxgain.c-lip{color:var(--lip)}.fxgain.c-nuc{color:var(--nuc)}
+@keyframes fxup{0%{opacity:0;transform:translate(-50%,6px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-34px) scale(1)}}
+.res.fxpulse{animation:fxpulse .5s ease-out}
+@keyframes fxpulse{30%{box-shadow:0 0 0 2px rgba(94,230,208,.55),0 0 18px rgba(94,230,208,.45)}}
+body.fxshake main{animation:fxshake .45s}
+@keyframes fxshake{0%,100%{transform:none}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-3px,2px)}80%{transform:translate(2px,-1px)}}
+svg.fxpop{animation:fxpopk .55s cubic-bezier(.3,1.6,.5,1)}
+@keyframes fxpopk{0%{transform:scale(1)}35%{transform:scale(1.035)}100%{transform:scale(1)}}
+.fxspark{position:fixed;z-index:80;width:6px;height:6px;margin:-3px;background:var(--lume);box-shadow:0 0 8px var(--lume);pointer-events:none;animation:fxspark .85s ease-out forwards}
+@keyframes fxspark{to{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+@media (prefers-reduced-motion:reduce){.fxgain,.fxspark{animation-duration:.01s}body.fxshake main{animation:none}}
+/* ---- options ---- */
+.optgrid{display:grid;gap:8px;margin:10px 0;text-align:left}
+.optrow{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
+.optrow>span{display:flex;flex-direction:column;gap:2px}.optrow small{font-size:12px}
+.optrow input[type=range]{width:min(46%,200px);accent-color:var(--lume)}
+#svcode{width:100%;box-sizing:border-box;margin-top:6px;background:var(--deep);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:12px var(--mono,monospace)}
+.filebtn{cursor:pointer}.optlinks{margin-top:12px;text-align:center}.optlinks a{color:var(--lume)}
+/* ---- alliances ---- */
+.alhead .alstats{display:flex;flex-wrap:wrap;gap:6px 16px;margin:4px 0 10px;color:var(--muted)}.alhead .alstats b{color:var(--text)}
+.alacts{flex-wrap:wrap;gap:8px}
+.albr{margin-top:12px}.albr h3{margin:0 0 6px}
+.altech{background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:8px 11px;margin-bottom:6px}
+.altech.rec{border-color:#ffd166;box-shadow:0 0 0 1px rgba(255,209,102,.35) inset}
+.altech.max{opacity:.75}
+.alth{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.alstar{background:none;border:0;color:#ffd166;font-size:16px;cursor:pointer;padding:0 2px}
+.alshop{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:8px}
+.alshop .btn{display:flex;justify-content:space-between;gap:8px}
+.alpill{border-color:#5ee6d0}.alpill.on{background:#5ee6d0;color:#03221d;border-color:#5ee6d0}
+.dcard{border-color:#5865f2}
+.btn.discord{background:#5865f2;border-color:#5865f2;color:#fff}

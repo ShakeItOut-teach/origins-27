@@ -25,7 +25,8 @@ function fbContext(){
 function fbText(d){
   let t=tr("Note : ","Rating: ")+(d.note?"★".repeat(d.note)+"☆".repeat(5-d.note)+" ("+d.note+"/5)":tr("non donnée","not given"))+"\n";
   FB_Q.forEach(q=>{t+="\n### "+q.t+"\n"+((d[q.k]||"").trim()||"—")+"\n";});
-  return t+"\n---\n"+tr("Partie : ","Game: ")+fbContext()+"\n";
+  const er=typeof errText==="function"?errText():"";
+  return t+"\n---\n"+tr("Partie : ","Game: ")+fbContext()+"\n"+(er?"\n<details><summary>"+tr("Erreurs techniques récentes","Recent technical errors")+"</summary>\n\n```\n"+er+"\n```\n</details>\n":"");
 }
 function showFeedback(){
   hideTip();
