@@ -8,16 +8,19 @@
    La clé à coller ici est la clé PUBLIQUE « anon » (Supabase › Settings › API). Jamais la clé « service_role ».
    Chargé dans l’ordre par index.html ; tous les fichiers partagent les mêmes variables globales. */
 "use strict";
-const SUPA_URL="";
-const SUPA_KEY="";
+const SUPA_URL="https://dzotlvwbmjiqyfiymmlz.supabase.co";
+const SUPA_KEY="sb_publishable_x1OgN1cjsjly9r_ZWTsSKA_krpNYvkC";
 const SUPA_LIB="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
 const CLOUD_EVERY=120000;
-let SB=null,SBuser=null,SBready=null,cloudLast=0,cloudBusy=false,cloudErr="",cloudAsk=null;
+let SB=null,SBuser=null,SBready=null,cloudLast=0,cloudBusy=false,cloudErr="",cloudAsk=null,cloudProv={discord:true,email:true};
+/* Connexions réellement activées dans le projet Supabase : on n’affiche que celles-là. */
+function cloudProviders(){return fetch(SUPA_URL+"/auth/v1/settings",{headers:{apikey:SUPA_KEY}}).then(r=>r.json()).then(j=>{const e=j&&j.external||{};cloudProv={discord:!!e.discord,email:!!e.email};cloudRefreshUI();}).catch(()=>{});}
 
 /* Pas dans l’artefact claude.ai (iframe) : la connexion Discord a besoin d’une vraie page. */
 function cloudOn(){return !!(SUPA_URL&&SUPA_KEY)&&window.top===window.self&&(location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1");}
 function cloudInit(){
   if(!cloudOn())return Promise.resolve(null);if(SBready)return SBready;
+  cloudProviders();
   SBready=new Promise(ok=>{const s=document.createElement("script");s.src=SUPA_LIB;s.async=true;
     s.onload=()=>{try{SB=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce"}});
       SB.auth.onAuthStateChange((ev,ses)=>{const was=SBuser&&SBuser.id;SBuser=ses&&ses.user||null;if(SBuser&&SBuser.id!==was)setTimeout(()=>cloudOnLogin(),0);if(!SBuser)cloudAsk=null;dirty=true;cloudRefreshUI();});
@@ -76,7 +79,7 @@ function cloudOptHTML(){
 function cloudBoxHTML(){
   if(!SB&&!cloudErr)return '<p class="desc">'+tr("Chargement…","Loading…")+"</p>";
   if(!SB)return '<p class="desc neg">'+esc(cloudErr)+"</p>";
-  if(!SBuser)return '<p class="desc">'+tr("Retrouvez votre partie sur tous vos appareils. Bientôt : le classement et le PvP entre vrais joueurs.","Find your game on all your devices. Coming soon: the ranking and PvP between real players.")+'</p><div class="row"><button class="btn discord" data-act="clouddiscord">'+tr("Se connecter avec Discord","Sign in with Discord")+'</button></div><div class="row cloudmail"><input type="email" id="cloudmail" autocomplete="email" placeholder="'+tr("ou votre e-mail","or your email")+'" aria-label="E-mail"><button class="btn sm alt" data-act="cloudemail">'+tr("Recevoir un lien","Get a link")+"</button></div>";
+  if(!SBuser)return '<p class="desc">'+tr("Retrouvez votre partie sur tous vos appareils. Bientôt : le classement et le PvP entre vrais joueurs.","Find your game on all your devices. Coming soon: the ranking and PvP between real players.")+'</p>'+(cloudProv.discord?'<div class="row"><button class="btn discord" data-act="clouddiscord">'+tr("Se connecter avec Discord","Sign in with Discord")+"</button></div>":"")+(cloudProv.email?'<div class="row cloudmail"><input type="email" id="cloudmail" autocomplete="email" placeholder="'+(cloudProv.discord?tr("ou votre e-mail","or your email"):tr("votre e-mail","your email"))+'" aria-label="E-mail"><button class="btn sm alt" data-act="cloudemail">'+tr("Recevoir un lien","Get a link")+"</button></div>":"");
   const ago=cloudLast?Math.max(0,Math.round((Date.now()-cloudLast)/60000)):null;
   return '<p class="desc">'+tr("Connecté : ","Signed in: ")+"<b>"+esc(cloudProvider()==="discord"?cloudName():tr("compte e-mail","email account"))+"</b>"+(cloudProvider()==="discord"?" (Discord)":"")+"<br>"+(cloudErr?'<span class="neg">'+esc(cloudErr)+"</span>":ago==null?tr("Pas encore synchronisé.","Not synced yet."):tr("Dernière sauvegarde en ligne : il y a "+ago+" min","Last online save: "+ago+" min ago"))+'</p><div class="row"><button class="btn sm" data-act="cloudsync">'+tr("Sauvegarder maintenant","Save now")+'</button><button class="btn sm alt" data-act="cloudout">'+tr("Se déconnecter","Sign out")+'</button><button class="btn sm alt" data-act="clouddel">'+tr("Supprimer mon compte","Delete my account")+"</button></div>";}
 function cloudRefreshUI(){const b=document.getElementById("cloudbox");if(b)b.innerHTML=cloudBoxHTML();}

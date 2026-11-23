@@ -40,7 +40,7 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123h`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123i`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
 
 ## Robot de test (avant chaque lancement)
 
@@ -92,7 +92,7 @@ Une saison (un serveur) dure **27 jours** de jeu (`SEASON_DAYS` dans `js/01-mond
 
 ## Comptes, sauvegarde en ligne et PvP (Supabase)
 
-Le chemin vers le PvP est décrit dans [docs/PVP.md](docs/PVP.md). L’étape 2 (comptes et sauvegarde en ligne) est codée dans `js/28-compte.js` et reste **invisible** tant que `SUPA_URL` et `SUPA_KEY` sont vides. Pour l’activer :
+Le chemin vers le PvP est décrit dans [docs/PVP.md](docs/PVP.md). L’étape 2 (comptes et sauvegarde en ligne) est codée dans `js/28-compte.js` et **active** (projet Supabase `dzotlvwbmjiqyfiymmlz`, région UE). Le jeu n’affiche que les connexions activées dans Supabase (e-mail aujourd’hui ; Discord dès qu’il sera activé). Pour l’activer :
 
 1. Suivre [docs/SUPABASE.md](docs/SUPABASE.md) : créer le projet, exécuter [`supabase/001_init.sql`](supabase/001_init.sql), et créer l’application Discord.
 2. Coller l’adresse du projet et la clé publique `anon` en haut de `js/28-compte.js`.
