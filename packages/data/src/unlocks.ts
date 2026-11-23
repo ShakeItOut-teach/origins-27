@@ -35,7 +35,7 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
     condition: { counter: "mapHarvests", atLeast: 5 },
     minDay: null,
     ui: ["troops", "hunt", "chests", "dailyQuests"],
-    orders: [],
+    orders: ["trainTroop", "sendHunt", "strikeHunt", "cancelHunt", "buyMutation"],
   },
   {
     tier: 5,
@@ -65,7 +65,7 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
  * Dernier palier livré aux joueurs. Le moteur ne fait jamais dépasser ce palier,
  * même si la condition du suivant est remplie : on livre un palier fini à la fois.
  */
-export const MAX_RELEASED_TIER = 3;
+export const MAX_RELEASED_TIER = 4;
 
 /** Premier palier où un joueur peut être attaqué. */
 export const FIRST_ATTACKABLE_TIER = 5;

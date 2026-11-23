@@ -1,7 +1,8 @@
 /** Faire passer le temps : production passive, fin des chantiers, retour des expéditions, paliers. */
-import { PLACE_RESOURCE, RESOURCE_IDS } from "@o27/data";
+import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import { capacity, productionRate } from "./stats";
-import type { Construction, Expedition, GameEvent, PlayerState, Step } from "./types";
+import { partySize, resolveHunt } from "./hunt";
+import type { Construction, Expedition, GameEvent, Hunt, PlayerState, Step } from "./types";
 import { evaluateTier } from "./unlock";
 import { energyAt } from "./world";
 
@@ -64,6 +65,69 @@ function comeBack(state: PlayerState, expedition: Expedition): Step {
   };
 }
 
+/** Une cellule fille vient de naître ; la suivante, s'il y en a, commence aussitôt. */
+function born(state: PlayerState): Step {
+  const training = state.training;
+  if (training === null) return { state, events: [] };
+  const seconds = BALANCE.troops[training.troop].seconds;
+  return {
+    state: {
+      ...state,
+      troops: { ...state.troops, [training.troop]: state.troops[training.troop] + 1 },
+      training:
+        training.remaining <= 1
+          ? null
+          : {
+              ...training,
+              remaining: training.remaining - 1,
+              nextAt: training.nextAt + seconds * 1000,
+            },
+    },
+    events: [{ type: "troopBorn", at: training.nextAt, troop: training.troop }],
+  };
+}
+
+/** Le groupe de chasse est rentré : survivantes à la maison, protéines dans la réserve. */
+function huntBack(state: PlayerState, hunt: Hunt): Step {
+  const won = hunt.outcome?.won === true;
+  const losses = hunt.outcome?.losses ?? { hunter: 0, armored: 0, swift: 0 };
+  const troops = { ...state.troops };
+  for (const id of TROOP_IDS) troops[id] += hunt.party[id] - losses[id];
+  const room = Math.max(0, capacity(state, "proteins") - state.resources.proteins);
+  const promised = won ? hunt.proteins : 0;
+  const gained = Math.min(room, promised);
+  return {
+    state: {
+      ...state,
+      hunt: null,
+      troops,
+      resources: { ...state.resources, proteins: state.resources.proteins + gained },
+      counters: won ? { ...state.counters, huntsWon: state.counters.huntsWon + 1 } : state.counters,
+      placeReadyAt: won
+        ? { ...state.placeReadyAt, [hunt.prey]: hunt.returnsAt + hunt.restMs }
+        : state.placeReadyAt,
+    },
+    events: [
+      {
+        type: "huntReturned",
+        at: hunt.returnsAt,
+        prey: hunt.prey,
+        won,
+        gained,
+        lost: promised - gained,
+        losses: partySize(losses),
+        cancelled: hunt.cancelled,
+      },
+    ],
+  };
+}
+
+/** Prochain instant où la chasse en cours demande quelque chose : le combat, puis le retour. */
+function huntDue(hunt: Hunt | null): number {
+  if (hunt === null) return Number.POSITIVE_INFINITY;
+  return hunt.cancelled || hunt.outcome !== null ? hunt.returnsAt : hunt.resolveAt;
+}
+
 /** Énergie remise à jour, lieux regarnis oubliés. */
 function settle(state: PlayerState, now: number): PlayerState {
   const energy = energyAt(state, now);
@@ -88,13 +152,28 @@ export function advance(state: PlayerState, now: number): Step {
   let current = state;
   const events: GameEvent[] = [];
   for (;;) {
-    const { construction, expedition } = current;
+    const { construction, expedition, training, hunt } = current;
     const buildEnd = construction?.endsAt ?? Number.POSITIVE_INFINITY;
     const tripEnd = expedition?.returnsAt ?? Number.POSITIVE_INFINITY;
-    const at = Math.min(buildEnd, tripEnd);
+    const birth = training?.nextAt ?? Number.POSITIVE_INFINITY;
+    const huntAt = huntDue(hunt);
+    const at = Math.min(buildEnd, tripEnd, birth, huntAt);
     if (at > now) break;
-    // À la même milliseconde, le chantier passe d'abord : la réserve agrandie accueille le butin.
-    if (construction !== null && buildEnd <= tripEnd) {
+    // À la même milliseconde, l'ordre est fixe : chantier, naissance, expédition, chasse.
+    // Le chantier passe d'abord : la réserve agrandie accueille le butin.
+    if (training !== null && birth === at && buildEnd > at) {
+      const step = born(produce(current, at));
+      current = step.state;
+      events.push(...step.events);
+    } else if (hunt !== null && huntAt === at && buildEnd > at && tripEnd > at) {
+      const ready = produce(current, at);
+      const step =
+        hunt.cancelled || hunt.outcome !== null
+          ? huntBack(ready, hunt)
+          : resolveHunt(ready, hunt, at, false);
+      current = step.state;
+      events.push(...step.events);
+    } else if (construction !== null && buildEnd <= tripEnd) {
       current = complete(produce(current, at), construction);
       events.push({
         type: "constructionDone",

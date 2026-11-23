@@ -1,5 +1,5 @@
 /**
- * Équilibrage des paliers 0 à 3.
+ * Équilibrage des paliers 0 à 4.
  * Tout changement se note dans docs/equilibrage/journal.md, avec la mesure avant et après.
  */
 import { BalanceSchema } from "./schema";
@@ -7,7 +7,7 @@ import type { Balance } from "./schema";
 
 export const BALANCE: Balance = BalanceSchema.parse({
   tap: { yield: 1, minIntervalMs: 100, burst: 30 },
-  baseStorage: { sugar: 80, bricks: 100 },
+  baseStorage: { sugar: 80, bricks: 100, proteins: 100 },
   upgrade: { costGrowthPercent: 160, timeGrowthPercent: 150 },
   organelles: {
     mitochondrion: {
@@ -42,6 +42,14 @@ export const BALANCE: Balance = BalanceSchema.parse({
       maxLevel: 5,
       effect: { kind: "production", resource: "bricks", milliPerSecondPerLevel: 200 },
     },
+    nursery: {
+      tier: 4,
+      buildCost: { sugar: 150, bricks: 40 },
+      buildSeconds: 90,
+      upgradeBricks: 80,
+      maxLevel: 5,
+      effect: { kind: "troopCapacity", base: 10, addPerLevel: 5 },
+    },
   },
   mutations: {
     swiftCilia: { stat: "tapYield", percent: 50, trait: "longCilia" },
@@ -53,6 +61,22 @@ export const BALANCE: Balance = BalanceSchema.parse({
   },
   mutationOffer: { tier: 2, choices: 3 },
   energy: { max: 10, regenSeconds: 1200 },
+  troops: {
+    hunter: { cost: { sugar: 30, bricks: 0 }, seconds: 20 },
+    armored: { cost: { sugar: 20, bricks: 10 }, seconds: 20 },
+    swift: { cost: { sugar: 25, bricks: 5 }, seconds: 20 },
+  },
+  hunt: {
+    strongMultiplier: 2,
+    strikeWindowSeconds: 8,
+    certainFromPercent: 25,
+    bands: [
+      { energy: 1, seconds: 60, power: 6, proteins: 5, restSeconds: 180 },
+      { energy: 2, seconds: 180, power: 15, proteins: 15, restSeconds: 600 },
+      { energy: 3, seconds: 600, power: 35, proteins: 40, restSeconds: 1800 },
+    ],
+  },
+  mutationPrices: [20, 50, 100],
   expedition: {
     cancelSpeedup: 10,
     placesPerBand: 2,

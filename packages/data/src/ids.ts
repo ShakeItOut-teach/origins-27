@@ -3,10 +3,10 @@
  * s'appuie sur ces listes : ajouter un élément ici oblige à le décrire partout.
  */
 
-export const RESOURCE_IDS = ["sugar", "bricks"] as const;
+export const RESOURCE_IDS = ["sugar", "bricks", "proteins"] as const;
 export type ResourceId = (typeof RESOURCE_IDS)[number];
 
-export const ORGANELLE_IDS = ["mitochondrion", "vacuole", "cilia", "ribosome"] as const;
+export const ORGANELLE_IDS = ["mitochondrion", "vacuole", "cilia", "ribosome", "nursery"] as const;
 export type OrganelleId = (typeof ORGANELLE_IDS)[number];
 
 export const MUTATION_IDS = [
@@ -54,6 +54,11 @@ export const ORDER_TYPES = [
   "chooseMutation",
   "sendExpedition",
   "cancelExpedition",
+  "trainTroop",
+  "sendHunt",
+  "strikeHunt",
+  "cancelHunt",
+  "buyMutation",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
@@ -63,6 +68,17 @@ export type PlaceKind = (typeof PLACE_KINDS)[number];
 export const PLACE_RESOURCE: Readonly<Record<PlaceKind, ResourceId>> = {
   sugarCluster: "sugar",
   debris: "bricks",
+};
+
+/** Les cellules filles, et la sorte de proie contre laquelle chacune compte double. */
+export const TROOP_IDS = ["hunter", "armored", "swift"] as const;
+export type TroopId = (typeof TROOP_IDS)[number];
+export const PREY_KINDS = ["soft", "aggressive", "fleeing"] as const;
+export type PreyKind = (typeof PREY_KINDS)[number];
+export const STRONG_AGAINST: Readonly<Record<TroopId, PreyKind>> = {
+  hunter: "soft",
+  armored: "aggressive",
+  swift: "fleeing",
 };
 
 /** Les éléments d'interface soumis au déblocage. */

@@ -186,7 +186,7 @@ describe("place dans la goutte", () => {
 
     const back = await handleState(deps, ALICE);
     if (back.status !== "done") throw new Error("état attendu");
-    expect(back.state.version).toBe(2);
+    expect(back.state.version).toBe(3);
     expect(back.state.counters.harvests).toBe(3);
     expect(back.state.worldSeed).toBe(27);
     expect(back.state.slot).toBeGreaterThan(first.state.slot);

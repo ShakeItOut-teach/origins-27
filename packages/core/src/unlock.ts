@@ -25,7 +25,7 @@ function conditionMet(state: PlayerState, unlock: Unlock, at: number): boolean {
   return state.counters[unlock.condition.counter] >= unlock.condition.atLeast;
 }
 
-function drawMutationOffer(state: PlayerState, at: number): Step {
+export function drawMutationOffer(state: PlayerState, at: number): Step {
   const pool: MutationId[] = MUTATION_IDS.filter((id) => !state.mutations.includes(id));
   const count = Math.min(BALANCE.mutationOffer.choices, pool.length);
   if (count === 0) return { state, events: [] };
@@ -52,7 +52,8 @@ export function evaluateTier(state: PlayerState, at: number): Step {
     const next = UNLOCKS[current.tier + 1];
     if (next === undefined || next.tier > MAX_RELEASED_TIER) break;
     if (!conditionMet(current, next, at)) break;
-    current = { ...current, tier: next.tier };
+    // Un nouveau palier remplit la jauge : le joueur peut essayer tout de suite la nouveauté.
+    current = { ...current, tier: next.tier, energy: BALANCE.energy.max, energyAt: at };
     events.push({ type: "tierReached", at, tier: next.tier });
     if (next.tier === BALANCE.mutationOffer.tier) {
       const offer = drawMutationOffer(current, at);

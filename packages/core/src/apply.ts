@@ -1,11 +1,13 @@
 /** Point d'entrée du moteur : appliquer un ordre du joueur à un instant donné. */
-import { BALANCE, RESOURCE_IDS } from "@o27/data";
-import type { MutationId, Order, OrganelleId } from "@o27/data";
+import { BALANCE, MUTATION_IDS, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
+import type { MutationId, Order, OrganelleId, TroopId } from "@o27/data";
 import { advance } from "./advance";
 import { capacity, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
-import { orderTier } from "./unlock";
-import { cancelReturnMs, placeOffer, visiblePlaces } from "./world";
+import { partySize, resolveHunt, troopCapacity, troopsOwned } from "./hunt";
+import { MICRO } from "./types";
+import { drawMutationOffer, orderTier } from "./unlock";
+import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
 
 type Outcome =
   | { readonly state: PlayerState; readonly events: readonly GameEvent[] }
@@ -41,6 +43,7 @@ function startConstruction(state: PlayerState, organelle: OrganelleId, toLevel: 
     state: {
       ...state,
       resources: {
+        ...state.resources,
         sugar: state.resources.sugar - cost.sugar,
         bricks: state.resources.bricks - cost.bricks,
       },
@@ -120,6 +123,122 @@ function cancelExpedition(state: PlayerState): Outcome {
   };
 }
 
+function trainTroop(state: PlayerState, troop: TroopId, count: number): Outcome {
+  if (troopCapacity(state) === 0) return { error: "notBuilt" };
+  if (state.training !== null) return { error: "busy" };
+  if (troopsOwned(state) + count > troopCapacity(state)) return { error: "troopsFull" };
+  const data = BALANCE.troops[troop];
+  const sugar = data.cost.sugar * MICRO * count;
+  const bricks = data.cost.bricks * MICRO * count;
+  if (state.resources.sugar < sugar || state.resources.bricks < bricks) {
+    return { error: "insufficient" };
+  }
+  return {
+    state: {
+      ...state,
+      resources: {
+        ...state.resources,
+        sugar: state.resources.sugar - sugar,
+        bricks: state.resources.bricks - bricks,
+      },
+      training: { troop, remaining: count, nextAt: state.now + data.seconds * 1000 },
+    },
+    events: [],
+  };
+}
+
+function sendHunt(
+  state: PlayerState,
+  preyId: string,
+  party: Readonly<Record<TroopId, number>>,
+): Outcome {
+  if (state.hunt !== null) return { error: "busy" };
+  const prey = visiblePrey(state.worldSeed, state.slot).find((entry) => entry.id === preyId);
+  if (prey === undefined) return { error: "unknownPrey" };
+  if ((state.placeReadyAt[preyId] ?? 0) > state.now) return { error: "placeResting" };
+  if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {
+    return { error: "noTroops" };
+  }
+  const offer = preyOffer(prey);
+  if (state.energy < offer.energy) return { error: "noEnergy" };
+  const windowMs = BALANCE.hunt.strikeWindowSeconds * 1000;
+  const arrivesAt = state.now + (offer.durationMs - windowMs) / 2;
+  const returnsAt = state.now + offer.durationMs;
+  const troops = { ...state.troops };
+  for (const id of TROOP_IDS) troops[id] -= party[id];
+  return {
+    state: {
+      ...state,
+      energy: state.energy - offer.energy,
+      troops,
+      hunt: {
+        prey: preyId,
+        kind: prey.kind,
+        power: offer.power,
+        proteins: offer.proteins,
+        energy: offer.energy,
+        restMs: offer.restMs,
+        party: { hunter: party.hunter, armored: party.armored, swift: party.swift },
+        startedAt: state.now,
+        arrivesAt,
+        resolveAt: arrivesAt + windowMs,
+        returnsAt,
+        outcome: null,
+        cancelled: false,
+      },
+    },
+    events: [{ type: "huntSent", at: state.now, prey: preyId, arrivesAt, returnsAt }],
+  };
+}
+
+/** Le joueur touche la proie pendant que son groupe se bat. */
+function strikeHunt(state: PlayerState): Outcome {
+  const hunt = state.hunt;
+  if (hunt === null || hunt.cancelled) return { error: "noHunt" };
+  if (hunt.outcome !== null) return { error: "tooLate" };
+  if (state.now < hunt.arrivesAt) return { error: "notFighting" };
+  return resolveHunt(state, hunt, state.now, true);
+}
+
+/** Rappeler le groupe n'est possible que tant qu'il n'a pas atteint la proie. */
+function cancelHunt(state: PlayerState): Outcome {
+  const hunt = state.hunt;
+  if (hunt === null || hunt.cancelled) return { error: "noHunt" };
+  if (state.now >= hunt.arrivesAt) return { error: "tooLate" };
+  const returnsAt =
+    state.now + cancelReturnMs(hunt.startedAt, 2 * hunt.arrivesAt - hunt.startedAt, state.now);
+  return {
+    state: {
+      ...state,
+      energy: Math.min(BALANCE.energy.max, state.energy + hunt.energy),
+      hunt: { ...hunt, returnsAt, cancelled: true },
+    },
+    events: [{ type: "huntCancelled", at: state.now, returnsAt }],
+  };
+}
+
+/** Prix en protéines de la prochaine mutation, en millionièmes d'unité. */
+export function nextMutationPrice(state: PlayerState): number {
+  const prices = BALANCE.mutationPrices;
+  const bought = Math.max(0, state.counters.mutationsChosen - 1);
+  return (prices[Math.min(bought, prices.length - 1)] ?? 0) * MICRO;
+}
+
+function buyMutation(state: PlayerState): Outcome {
+  if (state.mutationOffer !== null) return { error: "offerPending" };
+  if (state.mutations.length >= MUTATION_IDS.length) return { error: "noMoreMutations" };
+  const price = nextMutationPrice(state);
+  if (state.resources.proteins < price) return { error: "insufficient" };
+  const offer = drawMutationOffer(
+    { ...state, resources: { ...state.resources, proteins: state.resources.proteins - price } },
+    state.now,
+  );
+  return {
+    state: offer.state,
+    events: [{ type: "mutationBought", at: state.now, price }, ...offer.events],
+  };
+}
+
 function execute(state: PlayerState, order: Order): Outcome {
   switch (order.type) {
     case "harvest":
@@ -134,6 +253,16 @@ function execute(state: PlayerState, order: Order): Outcome {
       return sendExpedition(state, order.place);
     case "cancelExpedition":
       return cancelExpedition(state);
+    case "trainTroop":
+      return trainTroop(state, order.troop, order.count);
+    case "sendHunt":
+      return sendHunt(state, order.prey, order.party);
+    case "strikeHunt":
+      return strikeHunt(state);
+    case "cancelHunt":
+      return cancelHunt(state);
+    case "buyMutation":
+      return buyMutation(state);
   }
 }
 

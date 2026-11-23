@@ -25,7 +25,8 @@ function grow(base: number, growthPercent: number, times: number): number {
   return value;
 }
 
-const PRODUCTION_STAT: Record<ResourceId, StatId> = {
+/** Les protéines ne se fabriquent pas : on ne les obtient qu'en chassant. */
+const PRODUCTION_STAT: Partial<Record<ResourceId, StatId>> = {
   sugar: "sugarProduction",
   bricks: "bricksProduction",
 };
@@ -40,7 +41,8 @@ export function productionRate(state: PlayerState, resource: ResourceId): number
     }
   }
   // 1 millième par seconde = 1 millionième par milliseconde.
-  return applyPercent(milliPerSecond, modifierPercent(state, PRODUCTION_STAT[resource]));
+  const stat = PRODUCTION_STAT[resource];
+  return applyPercent(milliPerSecond, stat === undefined ? 0 : modifierPercent(state, stat));
 }
 
 /** Quantité maximale stockable, en millionièmes d'unité. */
@@ -77,7 +79,11 @@ export function levelCost(
       ? data.buildCost.bricks * MICRO
       : grow(data.upgradeBricks * MICRO, growth, toLevel - 2);
   const percent = modifierPercent(state, "buildCost");
-  return { sugar: applyPercent(sugar, percent), bricks: applyPercent(bricks, percent) };
+  return {
+    sugar: applyPercent(sugar, percent),
+    bricks: applyPercent(bricks, percent),
+    proteins: 0,
+  };
 }
 
 /** Durée du chantier pour amener un organite au niveau `toLevel`, en millisecondes. */

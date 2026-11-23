@@ -1,6 +1,6 @@
 # Palier 4 — Troupes et chasse : conception
 
-Date : 2026-11-23 · État : **proposé, à valider par le propriétaire**
+Date : 2026-11-23 · État : **validé par le propriétaire**
 
 Au palier 3, le joueur choisit où envoyer un filament. Au palier 4, il prend son premier
 **risque** : lever des cellules filles et les envoyer chasser. C'est aussi le premier pas vers
@@ -74,7 +74,10 @@ les combats entre joueurs du palier 5.
   le joueur reçoit un nouveau choix parmi trois.
 - La première chasse gagnée compte pour l'ouverture du palier 5 (rivaux), au jour 2 de la saison.
 
-## Trois points à confirmer
+## Trois points discutés
+
+Point 1 tranché par le propriétaire : **le toucher garantit la victoire à partir d'une chance
+sur quatre** ; en dessous, il double les chances.
 
 1. **« Si on touche, on est certain » — sans condition ?** Tel quel, une seule cellule fille
    envoyée contre la plus grosse proie gagne à coup sûr, pourvu qu'on soit là pour toucher. Je

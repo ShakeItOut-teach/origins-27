@@ -6,6 +6,7 @@ import {
   ORDER_TYPES,
   ORGANELLE_IDS,
   RESOURCE_IDS,
+  TROOP_IDS,
   STAT_IDS,
   TRAIT_IDS,
   UI_ELEMENT_IDS,
@@ -26,6 +27,8 @@ export const OrganelleEffectSchema = z.discriminatedUnion("kind", [
   }),
   z.strictObject({ kind: z.literal("storage"), addPerLevel: positiveInt }),
   z.strictObject({ kind: z.literal("tapYield"), addPercentPerLevel: positiveInt }),
+  /** Nombre maximal de cellules filles : `base` au niveau 1, puis `addPerLevel` par niveau. */
+  z.strictObject({ kind: z.literal("troopCapacity"), base: positiveInt, addPerLevel: positiveInt }),
 ]);
 
 export const OrganelleSchema = z.strictObject({
@@ -55,7 +58,7 @@ export const BalanceSchema = z.strictObject({
     /** Nombre de touchers qu'on peut envoyer d'un coup après une pause. */
     burst: positiveInt,
   }),
-  baseStorage: z.strictObject({ sugar: positiveInt, bricks: positiveInt }),
+  baseStorage: z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
   upgrade: z.strictObject({
     /** Le coût est multiplié par ce pourcentage à chaque niveau (160 = ×1,6). */
     costGrowthPercent: z.number().int().min(101),
@@ -66,6 +69,7 @@ export const BalanceSchema = z.strictObject({
     vacuole: OrganelleSchema,
     cilia: OrganelleSchema,
     ribosome: OrganelleSchema,
+    nursery: OrganelleSchema,
   } satisfies Record<(typeof ORGANELLE_IDS)[number], unknown>),
   mutations: z.strictObject({
     swiftCilia: MutationSchema,
@@ -98,6 +102,35 @@ export const BalanceSchema = z.strictObject({
       )
       .length(3),
   }),
+  /** Les cellules filles : ce que chacune coûte et le temps qu'elle met à naître. */
+  troops: z.strictObject({
+    hunter: z.strictObject({ cost: CostSchema, seconds: positiveInt }),
+    armored: z.strictObject({ cost: CostSchema, seconds: positiveInt }),
+    swift: z.strictObject({ cost: CostSchema, seconds: positiveInt }),
+  } satisfies Record<(typeof TROOP_IDS)[number], unknown>),
+  hunt: z.strictObject({
+    /** Une cellule du bon type contre la bonne proie compte ce nombre de fois. */
+    strongMultiplier: positiveInt,
+    /** Durée pendant laquelle le joueur peut toucher la proie, à l'arrivée du groupe. */
+    strikeWindowSeconds: positiveInt,
+    /** À partir de ces chances, toucher rend la victoire certaine ; en dessous, il les double. */
+    certainFromPercent: z.number().int().min(1).max(100),
+    /** Du plus proche au plus loin. */
+    bands: z
+      .array(
+        z.strictObject({
+          energy: positiveInt,
+          /** Durée de l'aller-retour, sans compter le combat. */
+          seconds: positiveInt,
+          power: positiveInt,
+          proteins: positiveInt,
+          restSeconds: positiveInt,
+        }),
+      )
+      .length(3),
+  }),
+  /** Prix en protéines de chaque nouvelle mutation ; le dernier prix vaut pour toutes les suivantes. */
+  mutationPrices: z.array(positiveInt).min(1),
   /** Géométrie de la goutte, en unités de carte. Entiers uniquement. */
   world: z.strictObject({
     /** Écart entre deux joueurs voisins. */
@@ -142,6 +175,24 @@ export const OrderSchema = z.discriminatedUnion("type", [
     place: z.string().regex(/^-?\d{1,6}:-?\d{1,6}$/),
   }),
   z.strictObject({ type: z.literal("cancelExpedition") }),
+  z.strictObject({
+    type: z.literal("trainTroop"),
+    troop: z.enum(TROOP_IDS),
+    count: z.number().int().min(1).max(20),
+  }),
+  /** Une proie est désignée par sa case, précédée de « h: ». */
+  z.strictObject({
+    type: z.literal("sendHunt"),
+    prey: z.string().regex(/^h:-?\d{1,6}:-?\d{1,6}$/),
+    party: z.strictObject({
+      hunter: z.number().int().min(0).max(500),
+      armored: z.number().int().min(0).max(500),
+      swift: z.number().int().min(0).max(500),
+    }),
+  }),
+  z.strictObject({ type: z.literal("strikeHunt") }),
+  z.strictObject({ type: z.literal("cancelHunt") }),
+  z.strictObject({ type: z.literal("buyMutation") }),
 ]);
 export type Order = z.infer<typeof OrderSchema>;
 

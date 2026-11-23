@@ -1,0 +1,510 @@
+import { BALANCE, MUTATION_IDS, PREY_KINDS, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
+import type { Order, TroopId } from "@o27/data";
+import fc from "fast-check";
+import { describe, expect, it } from "vitest";
+import {
+  advance,
+  applyOrder,
+  capacity,
+  createPlayer,
+  deserializeState,
+  lossesFor,
+  MICRO,
+  nextMutationPrice,
+  partyPower,
+  partySize,
+  preyOffer,
+  serializeState,
+  strikeChance,
+  troopCapacity,
+  troopsOwned,
+  visiblePrey,
+  winChance,
+} from "./index";
+import type { OrderErrorCode, Prey, PlayerState } from "./index";
+
+const T0 = 1_800_000_000_000;
+const WORLD = { worldSeed: 27, slot: 4 };
+const WINDOW = BALANCE.hunt.strikeWindowSeconds * 1000;
+const NONE = { hunter: 0, armored: 0, swift: 0 };
+
+function party(values: Partial<Record<TroopId, number>>): Record<TroopId, number> {
+  return { ...NONE, ...values };
+}
+
+/** Un joueur au palier 4, Pouponnière construite, riche, avec les cellules filles demandées. */
+function atTier4(troops: Partial<Record<TroopId, number>> = {}, seed = 7): PlayerState {
+  const base = createPlayer(seed, T0, T0, WORLD);
+  return {
+    ...base,
+    tier: 4,
+    counters: {
+      ...base.counters,
+      harvests: 10,
+      organellesBuilt: 4,
+      mutationsChosen: 1,
+      mapHarvests: 5,
+    },
+    mutations: ["thrift"],
+    organelles: { ...base.organelles, vacuole: 5, nursery: 1 },
+    resources: { sugar: 500 * MICRO, bricks: 300 * MICRO, proteins: 0 },
+    troops: party(troops),
+  };
+}
+
+function ok(state: PlayerState, order: Order, now: number): PlayerState {
+  const result = applyOrder(state, order, now);
+  if (!result.ok) throw new Error(`ordre refusé : ${result.error}`);
+  return result.state;
+}
+
+function refusal(state: PlayerState, order: Order, now: number): OrderErrorCode | null {
+  const result = applyOrder(state, order, now);
+  return result.ok ? null : result.error;
+}
+
+function prey(band: number): Prey {
+  const found = visiblePrey(WORLD.worldSeed, WORLD.slot).find((entry) => entry.band === band);
+  if (found === undefined) throw new Error("proie attendue");
+  return found;
+}
+
+/** Le type de cellule fille qui compte double contre cette proie. */
+function strongType(target: Prey): TroopId {
+  const found = TROOP_IDS.find((id) => STRONG_AGAINST[id] === target.kind);
+  if (found === undefined) throw new Error("type attendu");
+  return found;
+}
+
+function hunt(target: Prey, group: Record<TroopId, number>): Order {
+  return { type: "sendHunt", prey: target.id, party: group };
+}
+
+describe("les proies de la goutte", () => {
+  it("tout joueur voit trois proies, une par distance et une de chaque sorte", () => {
+    for (let slot = 0; slot < 500; slot++) {
+      const seen = visiblePrey(27, slot);
+      expect(seen.map((entry) => entry.band)).toEqual([0, 1, 2]);
+      expect(new Set(seen.map((entry) => entry.kind)).size).toBe(PREY_KINDS.length);
+      expect(new Set(seen.map((entry) => entry.id)).size).toBe(3);
+      expect(seen.every((entry) => entry.id.startsWith("h:"))).toBe(true);
+    }
+  });
+
+  it("plus la proie est loin, plus elle est forte et plus elle rapporte", () => {
+    const [near, mid, far] = [0, 1, 2].map((band) => preyOffer(prey(band)));
+    if (near === undefined || mid === undefined || far === undefined) throw new Error("offres");
+    expect(mid.power).toBeGreaterThan(near.power);
+    expect(far.power).toBeGreaterThan(mid.power);
+    expect(far.proteins).toBeGreaterThan(mid.proteins);
+    expect(far.durationMs).toBeGreaterThan(mid.durationMs);
+  });
+});
+
+describe("force, chances et pertes", () => {
+  it("la cellule du bon type compte double", () => {
+    expect(partyPower(party({ hunter: 3 }), "soft")).toBe(6);
+    expect(partyPower(party({ hunter: 3 }), "fleeing")).toBe(3);
+    expect(partyPower(party({ hunter: 1, armored: 1, swift: 1 }), "aggressive")).toBe(4);
+  });
+
+  it("à force égale, une chance sur deux ; jamais 0 ni 100", () => {
+    expect(winChance(party({ swift: 6 }), "soft", 6)).toBe(50);
+    expect(winChance(party({ hunter: 3 }), "soft", 6)).toBe(50);
+    expect(winChance(party({ hunter: 500 }), "soft", 1)).toBe(99);
+    expect(winChance(party({ swift: 1 }), "soft", 500)).toBe(1);
+  });
+
+  it("toucher : victoire certaine à partir d'une chance sur quatre, chances doublées en dessous", () => {
+    const limit = BALANCE.hunt.certainFromPercent;
+    expect(strikeChance(limit)).toBe(100);
+    expect(strikeChance(80)).toBe(100);
+    expect(strikeChance(limit - 1)).toBe(2 * (limit - 1));
+    expect(strikeChance(10)).toBe(20);
+  });
+
+  it("on perd moins en gagnant qu'en perdant, et jamais tout le groupe", () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          hunter: fc.integer({ min: 0, max: 40 }),
+          armored: fc.integer({ min: 0, max: 40 }),
+          swift: fc.integer({ min: 0, max: 40 }),
+        }),
+        fc.integer({ min: 1, max: 99 }),
+        (group, chance) => {
+          fc.pre(partySize(group) > 0);
+          const win = lossesFor(group, chance, true);
+          const defeat = lossesFor(group, chance, false);
+          expect(partySize(win)).toBeLessThanOrEqual(partySize(defeat));
+          expect(partySize(defeat)).toBeLessThan(partySize(group));
+          for (const id of TROOP_IDS) {
+            expect(win[id]).toBeGreaterThanOrEqual(0);
+            expect(defeat[id]).toBeLessThanOrEqual(group[id]);
+          }
+        },
+      ),
+    );
+  });
+});
+
+describe("la Pouponnière", () => {
+  it("s'ouvre au palier 4 et fixe le nombre de cellules filles", () => {
+    const state = atTier4();
+    expect(troopCapacity(state)).toBe(10);
+    expect(troopCapacity({ ...state, organelles: { ...state.organelles, nursery: 3 } })).toBe(20);
+    expect(troopCapacity({ ...state, organelles: { ...state.organelles, nursery: 0 } })).toBe(0);
+    const tier3 = { ...state, tier: 3, counters: { ...state.counters, mapHarvests: 0 } };
+    expect(refusal(tier3, { type: "build", organelle: "nursery" }, T0)).toBe("locked");
+    expect(refusal(tier3, { type: "trainTroop", troop: "hunter", count: 1 }, T0)).toBe("locked");
+  });
+
+  it("les cellules filles naissent l'une après l'autre, payées d'avance", () => {
+    const seconds = BALANCE.troops.swift.seconds * 1000;
+    const cost = BALANCE.troops.swift.cost;
+    const start = atTier4();
+    const ordered = ok(start, { type: "trainTroop", troop: "swift", count: 3 }, T0);
+    expect(ordered.resources.sugar).toBe(start.resources.sugar - 3 * cost.sugar * MICRO);
+    expect(ordered.resources.bricks).toBe(start.resources.bricks - 3 * cost.bricks * MICRO);
+    expect(ordered.troops.swift).toBe(0);
+    expect(advance(ordered, T0 + seconds - 1).state.troops.swift).toBe(0);
+    expect(advance(ordered, T0 + seconds).state.troops.swift).toBe(1);
+    expect(advance(ordered, T0 + 2 * seconds).state.troops.swift).toBe(2);
+    const done = advance(ordered, T0 + 3 * seconds);
+    expect(done.state.troops.swift).toBe(3);
+    expect(done.state.training).toBeNull();
+    expect(done.events.filter((event) => event.type === "troopBorn")).toHaveLength(3);
+  });
+
+  it("refuse : sans Pouponnière, pendant une naissance, au-delà de la place, sans ressources", () => {
+    const start = atTier4();
+    const noNursery = { ...start, organelles: { ...start.organelles, nursery: 0 } };
+    expect(refusal(noNursery, { type: "trainTroop", troop: "hunter", count: 1 }, T0)).toBe(
+      "notBuilt",
+    );
+    const busy = ok(start, { type: "trainTroop", troop: "hunter", count: 1 }, T0);
+    expect(refusal(busy, { type: "trainTroop", troop: "hunter", count: 1 }, T0)).toBe("busy");
+    expect(refusal(start, { type: "trainTroop", troop: "hunter", count: 11 }, T0)).toBe(
+      "troopsFull",
+    );
+    expect(
+      refusal(atTier4({ swift: 8 }), { type: "trainTroop", troop: "hunter", count: 3 }, T0),
+    ).toBe("troopsFull");
+    const poor = { ...start, resources: { sugar: MICRO, bricks: 0, proteins: 0 } };
+    expect(refusal(poor, { type: "trainTroop", troop: "hunter", count: 1 }, T0)).toBe(
+      "insufficient",
+    );
+  });
+
+  it("les cellules parties en chasse comptent toujours dans la place occupée", () => {
+    const target = prey(0);
+    const away = ok(atTier4({ hunter: 10 }), hunt(target, party({ hunter: 10 })), T0);
+    expect(away.troops.hunter).toBe(0);
+    expect(troopsOwned(away)).toBe(10);
+    expect(refusal(away, { type: "trainTroop", troop: "swift", count: 1 }, T0 + 1)).toBe(
+      "troopsFull",
+    );
+  });
+});
+
+describe("la chasse", () => {
+  const target = prey(0);
+  const offer = preyOffer(target);
+  const strong = strongType(target);
+  const half = (offer.durationMs - WINDOW) / 2;
+
+  it("envoyer coûte de l'énergie et emmène les cellules choisies", () => {
+    const sent = ok(atTier4({ [strong]: 6 }), hunt(target, party({ [strong]: 4 })), T0);
+    expect(sent.energy).toBe(BALANCE.energy.max - offer.energy);
+    expect(sent.troops[strong]).toBe(2);
+    expect(sent.hunt).toMatchObject({
+      prey: target.id,
+      kind: target.kind,
+      arrivesAt: T0 + half,
+      resolveAt: T0 + half + WINDOW,
+      returnsAt: T0 + offer.durationMs,
+      outcome: null,
+    });
+  });
+
+  it("refuse : groupe vide, cellules qu'on n'a pas, proie inconnue, deuxième chasse, énergie", () => {
+    const state = atTier4({ hunter: 2 });
+    expect(refusal(state, hunt(target, NONE), T0)).toBe("noTroops");
+    expect(refusal(state, hunt(target, party({ hunter: 3 })), T0)).toBe("noTroops");
+    expect(refusal(state, hunt(target, party({ swift: 1 })), T0)).toBe("noTroops");
+    expect(
+      refusal(state, { type: "sendHunt", prey: "h:900:900", party: party({ hunter: 1 }) }, T0),
+    ).toBe("unknownPrey");
+    const sent = ok(state, hunt(target, party({ hunter: 1 })), T0);
+    expect(refusal(sent, hunt(prey(1), party({ hunter: 1 })), T0 + 1)).toBe("busy");
+    expect(refusal({ ...state, energy: 0 }, hunt(target, party({ hunter: 1 })), T0)).toBe(
+      "noEnergy",
+    );
+  });
+
+  it("toucher la proie avec un groupe sérieux : victoire certaine, quelle que soit la graine", () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const group = party({ [strong]: 3 });
+      const sent = ok(atTier4({ [strong]: 3 }, seed), hunt(target, group), T0);
+      expect(winChance(group, target.kind, offer.power)).toBeGreaterThanOrEqual(
+        BALANCE.hunt.certainFromPercent,
+      );
+      const struck = ok(sent, { type: "strikeHunt" }, T0 + half + 1000);
+      expect(struck.hunt?.outcome).toMatchObject({ won: true, struck: true });
+    }
+  });
+
+  it("on ne touche qu'une fois, et seulement pendant le combat", () => {
+    const sent = ok(atTier4({ [strong]: 3 }), hunt(target, party({ [strong]: 3 })), T0);
+    expect(refusal(sent, { type: "strikeHunt" }, T0 + half - 1)).toBe("notFighting");
+    const struck = ok(sent, { type: "strikeHunt" }, T0 + half);
+    expect(refusal(struck, { type: "strikeHunt" }, T0 + half + 1)).toBe("tooLate");
+    // Fenêtre passée : le sort a déjà décidé.
+    expect(refusal(sent, { type: "strikeHunt" }, T0 + half + WINDOW)).toBe("tooLate");
+    expect(refusal(atTier4(), { type: "strikeHunt" }, T0)).toBe("noHunt");
+  });
+
+  it("sans toucher, le sort décide à la fin de la fenêtre, selon les chances annoncées", () => {
+    const group = party({ [strong]: 3 });
+    const chance = winChance(group, target.kind, offer.power);
+    let wins = 0;
+    const games = 400;
+    for (let seed = 1; seed <= games; seed++) {
+      const sent = ok(atTier4({ [strong]: 3 }, seed), hunt(target, group), T0);
+      expect(advance(sent, T0 + half + WINDOW - 1).state.hunt?.outcome).toBeNull();
+      const resolved = advance(sent, T0 + half + WINDOW).state;
+      expect(resolved.hunt?.outcome?.struck).toBe(false);
+      if (resolved.hunt?.outcome?.won === true) wins += 1;
+    }
+    expect((100 * wins) / games).toBeGreaterThan(chance - 10);
+    expect((100 * wins) / games).toBeLessThan(chance + 10);
+  });
+
+  it("victoire : les survivantes rentrent avec les protéines, la proie se repose", () => {
+    const group = party({ [strong]: 3 });
+    const sent = ok(atTier4({ [strong]: 3 }), hunt(target, group), T0);
+    const struck = ok(sent, { type: "strikeHunt" }, T0 + half);
+    const losses = partySize(struck.hunt?.outcome?.losses ?? NONE);
+    const home = advance(struck, T0 + offer.durationMs);
+    expect(home.state.hunt).toBeNull();
+    expect(home.state.resources.proteins).toBe(offer.proteins);
+    expect(home.state.troops[strong]).toBe(3 - losses);
+    expect(home.state.counters.huntsWon).toBe(1);
+    expect(home.events.find((event) => event.type === "huntReturned")).toMatchObject({
+      won: true,
+      gained: offer.proteins,
+      lost: 0,
+      losses,
+    });
+    expect(refusal(home.state, hunt(target, party({ [strong]: 1 })), T0 + offer.durationMs)).toBe(
+      "placeResting",
+    );
+  });
+
+  it("défaite : pas de protéines, des pertes, mais toujours une survivante", () => {
+    const far = prey(2);
+    const farOffer = preyOffer(far);
+    const weak = TROOP_IDS.find((id) => STRONG_AGAINST[id] !== far.kind) ?? "hunter";
+    let defeats = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      const sent = ok(atTier4({ [weak]: 4 }, seed), hunt(far, party({ [weak]: 4 })), T0);
+      const home = advance(sent, T0 + farOffer.durationMs).state;
+      if (home.counters.huntsWon === 1) continue;
+      defeats += 1;
+      expect(home.resources.proteins).toBe(0);
+      expect(home.troops[weak]).toBeGreaterThanOrEqual(1);
+      expect(home.troops[weak]).toBeLessThan(4);
+      expect(home.placeReadyAt).toEqual({});
+    }
+    expect(defeats).toBeGreaterThan(15);
+  });
+
+  it("rappel avant la proie : retour dix fois plus rapide, énergie rendue, tout le monde rentre", () => {
+    const sent = ok(atTier4({ swift: 5 }), hunt(target, party({ swift: 5 })), T0);
+    const elapsed = 10_000;
+    const called = ok(sent, { type: "cancelHunt" }, T0 + elapsed);
+    expect(called.energy).toBe(BALANCE.energy.max);
+    expect(called.hunt?.returnsAt).toBe(T0 + elapsed + elapsed / BALANCE.expedition.cancelSpeedup);
+    const home = advance(called, T0 + elapsed + 1000).state;
+    expect(home.hunt).toBeNull();
+    expect(home.troops.swift).toBe(5);
+    expect(home.counters.huntsWon).toBe(0);
+    expect(home.resources.proteins).toBe(0);
+  });
+
+  it("une fois face à la proie, on ne peut plus rappeler", () => {
+    const sent = ok(atTier4({ swift: 5 }), hunt(target, party({ swift: 5 })), T0);
+    expect(refusal(sent, { type: "cancelHunt" }, T0 + half)).toBe("tooLate");
+    expect(refusal(atTier4(), { type: "cancelHunt" }, T0)).toBe("noHunt");
+  });
+
+  it("une chasse et une expédition peuvent être en route en même temps", () => {
+    const sent = ok(atTier4({ swift: 2 }), hunt(target, party({ swift: 2 })), T0);
+    const both = applyOrder(sent, { type: "sendExpedition", place: "x" }, T0 + 1);
+    expect(both.ok ? null : both.error).toBe("unknownPlace");
+  });
+});
+
+describe("les protéines paient l'évolution", () => {
+  it("acheter une mutation coûte des protéines et propose un nouveau choix", () => {
+    const start = atTier4();
+    const price = nextMutationPrice(start);
+    expect(price).toBe((BALANCE.mutationPrices[0] ?? 0) * MICRO);
+    expect(refusal(start, { type: "buyMutation" }, T0)).toBe("insufficient");
+
+    const rich = { ...start, resources: { ...start.resources, proteins: price + MICRO } };
+    const bought = ok(rich, { type: "buyMutation" }, T0);
+    expect(bought.resources.proteins).toBe(MICRO);
+    expect(bought.mutationOffer).toHaveLength(3);
+    expect(bought.mutationOffer).not.toContain("thrift");
+    expect(refusal(bought, { type: "buyMutation" }, T0)).toBe("offerPending");
+
+    const [choice] = bought.mutationOffer ?? [];
+    if (choice === undefined) throw new Error("choix attendu");
+    const mutated = ok(bought, { type: "chooseMutation", mutation: choice }, T0);
+    expect(mutated.mutations).toEqual(["thrift", choice]);
+    expect(nextMutationPrice(mutated)).toBe((BALANCE.mutationPrices[1] ?? 0) * MICRO);
+  });
+
+  it("plus rien à acheter quand toutes les mutations sont prises", () => {
+    const start = atTier4();
+    const all = {
+      ...start,
+      mutations: [...MUTATION_IDS],
+      resources: { ...start.resources, proteins: capacity(start, "proteins") },
+    };
+    expect(refusal(all, { type: "buyMutation" }, T0)).toBe("noMoreMutations");
+  });
+
+  it("le palier 5 n'est pas livré : une chasse gagnée ne fait pas dépasser le palier 4", () => {
+    const target = prey(0);
+    const strong = strongType(target);
+    const sent = ok(atTier4({ [strong]: 3 }), hunt(target, party({ [strong]: 3 })), T0);
+    const struck = ok(sent, { type: "strikeHunt" }, sent.hunt?.arrivesAt ?? T0);
+    const home = advance(struck, T0 + 30 * 86_400_000).state;
+    expect(home.counters.huntsWon).toBe(1);
+    expect(home.tier).toBe(4);
+  });
+});
+
+describe("garanties du moteur avec la chasse", () => {
+  const targets = visiblePrey(WORLD.worldSeed, WORLD.slot);
+  const order = fc.oneof(
+    fc.constantFrom<Order>(
+      { type: "harvest", taps: 3 },
+      { type: "strikeHunt" },
+      { type: "cancelHunt" },
+      { type: "buyMutation" },
+      { type: "trainTroop", troop: "hunter", count: 2 },
+      { type: "trainTroop", troop: "armored", count: 1 },
+      { type: "trainTroop", troop: "swift", count: 4 },
+    ),
+    fc
+      .tuple(
+        fc.constantFrom(...targets),
+        fc.integer({ min: 0, max: 4 }),
+        fc.integer({ min: 0, max: 4 }),
+        fc.integer({ min: 0, max: 4 }),
+      )
+      .map(([target, hunter, armored, swift]): Order => hunt(target, { hunter, armored, swift })),
+  );
+  const steps = fc.array(fc.tuple(order, fc.integer({ min: 0, max: 400_000 })), {
+    minLength: 1,
+    maxLength: 50,
+  });
+
+  it("quoi qu'on envoie : rien de négatif, jamais plus de cellules que la Pouponnière n'en loge", () => {
+    fc.assert(
+      fc.property(steps, (sequence) => {
+        let state = atTier4();
+        let now = T0;
+        for (const [next, wait] of sequence) {
+          now += wait;
+          const result = applyOrder(state, next, now);
+          state = result.ok ? result.state : advance(state, now).state;
+          for (const id of TROOP_IDS) expect(state.troops[id]).toBeGreaterThanOrEqual(0);
+          expect(troopsOwned(state)).toBeLessThanOrEqual(troopCapacity(state));
+          expect(state.resources.proteins).toBeGreaterThanOrEqual(0);
+          expect(state.resources.proteins).toBeLessThanOrEqual(capacity(state, "proteins"));
+          expect(state.resources.sugar).toBeGreaterThanOrEqual(0);
+          expect(state.resources.bricks).toBeGreaterThanOrEqual(0);
+          expect(state.energy).toBeGreaterThanOrEqual(0);
+        }
+      }),
+    );
+  });
+
+  it("avancer en une fois ou en plusieurs donne le même état, tirages compris", () => {
+    fc.assert(
+      fc.property(
+        steps,
+        fc.array(fc.integer({ min: 1, max: 900_000 }), { minLength: 1, maxLength: 6 }),
+        (sequence, pauses) => {
+          let state = atTier4();
+          let now = T0;
+          for (const [next, wait] of sequence) {
+            now += wait;
+            const result = applyOrder(state, next, now);
+            if (result.ok) state = result.state;
+          }
+          const end = now + pauses.reduce((sum, pause) => sum + pause, 0);
+          let stepped = state;
+          let at = now;
+          for (const pause of pauses) {
+            at += pause;
+            stepped = advance(stepped, at).state;
+          }
+          expect(serializeState(stepped)).toBe(serializeState(advance(state, end).state));
+        },
+      ),
+    );
+  });
+
+  it("sauvegarder puis relire rend le même état : naissances, chasse en route, chasse jouée", () => {
+    const target = prey(1);
+    const training = ok(
+      atTier4({ swift: 4 }),
+      { type: "trainTroop", troop: "hunter", count: 2 },
+      T0,
+    );
+    const sent = ok(training, hunt(target, party({ swift: 4 })), T0);
+    const fought = advance(sent, sent.hunt?.resolveAt ?? T0).state;
+    for (const state of [training, sent, fought]) {
+      expect(deserializeState(serializeState(state))).toEqual(state);
+    }
+  });
+
+  it("une sauvegarde d'avant la chasse est convertie : ni protéines ni cellules, rien de perdu", () => {
+    const current = JSON.parse(serializeState(atTier4())) as Record<string, unknown>;
+    const resources = { ...(current.resources as Record<string, number>) };
+    const organelles = { ...(current.organelles as Record<string, number>) };
+    const old = Object.fromEntries(
+      Object.entries(current).filter(([key]) => !["troops", "training", "hunt"].includes(key)),
+    );
+    const text = JSON.stringify({
+      ...old,
+      version: 2,
+      resources: { sugar: resources.sugar, bricks: resources.bricks },
+      organelles: Object.fromEntries(
+        Object.entries(organelles).filter(([key]) => key !== "nursery"),
+      ),
+    });
+    const back = deserializeState(text);
+    expect(back.version).toBe(3);
+    expect(back.resources).toEqual({ sugar: 500 * MICRO, bricks: 300 * MICRO, proteins: 0 });
+    expect(back.organelles.nursery).toBe(0);
+    expect(back.troops).toEqual(NONE);
+    expect(back.counters.mapHarvests).toBe(5);
+  });
+
+  it("refuse une sauvegarde dont la chasse est abîmée", () => {
+    const sent = ok(atTier4({ swift: 2 }), hunt(prey(0), party({ swift: 2 })), T0);
+    const text = serializeState(sent);
+    expect(() => deserializeState(text.replace('"outcome":null', '"outcome":3'))).toThrow(
+      TypeError,
+    );
+    expect(() => deserializeState(text.replace(/"prey":"h:[^"]+"/, '"prey":"ailleurs"'))).toThrow(
+      TypeError,
+    );
+  });
+});

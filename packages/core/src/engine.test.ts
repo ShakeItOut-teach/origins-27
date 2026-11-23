@@ -29,7 +29,7 @@ function fresh(seed = 7): PlayerState {
 
 /** Donne des ressources sans passer par le jeu, pour aller droit au cas testé. */
 function give(state: PlayerState, sugar: number, bricks = 0): PlayerState {
-  return { ...state, resources: { sugar: sugar * MICRO, bricks: bricks * MICRO } };
+  return { ...state, resources: { sugar: sugar * MICRO, bricks: bricks * MICRO, proteins: 0 } };
 }
 
 function ok(state: PlayerState, order: Order, now: number): PlayerState {
@@ -55,7 +55,7 @@ function deepFreeze<T>(value: T): T {
 function atTier1(seed = 7): PlayerState {
   return {
     ...ok(fresh(seed), { type: "harvest", taps: 10 }, T0),
-    resources: { sugar: 0, bricks: 0 },
+    resources: { sugar: 0, bricks: 0, proteins: 0 },
   };
 }
 
@@ -75,7 +75,7 @@ describe("palier 0 : une cellule, un geste", () => {
   it("un nouveau joueur n'a rien d'autre qu'une cellule vide", () => {
     const state = fresh();
     expect(state.tier).toBe(0);
-    expect(state.resources).toEqual({ sugar: 0, bricks: 0 });
+    expect(state.resources).toEqual({ sugar: 0, bricks: 0, proteins: 0 });
     expect(ORGANELLE_IDS.every((id) => state.organelles[id] === 0)).toBe(true);
   });
 
@@ -200,7 +200,7 @@ describe("palier 2 : muter", () => {
     if (first === undefined) throw new Error("offre inattendue");
     const mutated = ok(state, { type: "chooseMutation", mutation: first }, state.now);
     expect(mutated.counters.mutationsChosen).toBe(1);
-    expect(mutated.tier).toBe(MAX_RELEASED_TIER);
+    expect(mutated.tier).toBe(3);
   });
 
   it("ouvre la fabrique et l'amélioration", () => {
@@ -371,7 +371,7 @@ describe("garanties du moteur", () => {
 
   it("refuse une sauvegarde abîmée", () => {
     const good = serializeState(atTier2());
-    expect(() => deserializeState(good.replace('"version":2', '"version":9'))).toThrow(TypeError);
+    expect(() => deserializeState(good.replace('"version":3', '"version":9'))).toThrow(TypeError);
     expect(() => deserializeState(good.replace('"sugar":', '"sucre":'))).toThrow(TypeError);
     expect(() => deserializeState("[]")).toThrow(TypeError);
   });

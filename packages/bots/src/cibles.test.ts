@@ -107,3 +107,60 @@ describe("cibles d'équilibrage du palier 3 (la carte)", () => {
     expect(near.sugar).toBeGreaterThanOrEqual(near.seconds * BALANCE.tap.yield * 1.5);
   });
 });
+
+describe("cibles d'équilibrage du palier 4 (troupes et chasse)", () => {
+  const SECOND_MUTATION = "secondMutation" as const;
+  const opened = (report: { tierSeconds: readonly (number | null)[] }): number =>
+    report.tierSeconds[4] ?? Number.POSITIVE_INFINITY;
+
+  it("un joueur appliqué envoie sa première chasse moins de 5 minutes après l'ouverture", () => {
+    for (const seed of SEEDS) {
+      const report = simulate(PROFILES.applique, seed, 6 * HOUR, SECOND_MUTATION);
+      expect((report.firstHuntSeconds ?? Number.POSITIVE_INFINITY) - opened(report)).toBeLessThan(
+        5 * 60,
+      );
+    }
+  });
+
+  it("il gagne sa première chasse dans la foulée, dans la première session", () => {
+    for (const seed of SEEDS) {
+      const report = simulate(PROFILES.applique, seed, 6 * HOUR, SECOND_MUTATION);
+      expect(
+        (report.firstHuntWonSeconds ?? Number.POSITIVE_INFINITY) - opened(report),
+      ).toBeLessThan(8 * 60);
+      expect(report.huntsLost).toBe(0);
+    }
+  });
+
+  it("il obtient sa deuxième mutation en moins de deux heures de jeu", () => {
+    for (const seed of SEEDS) {
+      const report = simulate(PROFILES.applique, seed, 6 * HOUR, SECOND_MUTATION);
+      expect(report.secondMutationSeconds).not.toBeNull();
+      expect(report.secondMutationSeconds).toBeLessThanOrEqual(2 * HOUR);
+    }
+  });
+
+  it("un joueur qui ne touche jamais la proie progresse quand même, plus lentement", () => {
+    for (const seed of SEEDS) {
+      const report = simulate(PROFILES.debutant, seed, 12 * HOUR, SECOND_MUTATION);
+      expect(report.secondMutationSeconds).not.toBeNull();
+      expect(report.secondMutationSeconds).toBeLessThanOrEqual(4 * HOUR);
+    }
+  });
+
+  it("aucune chasse, même perdue, ne laisse un joueur sans cellule fille", () => {
+    for (const profile of [PROFILES.applique, PROFILES.debutant]) {
+      for (const seed of SEEDS) {
+        const report = simulate(profile, seed, 12 * HOUR, SECOND_MUTATION);
+        expect(report.fewestTroopsAfterHunt).toBeGreaterThanOrEqual(1);
+      }
+    }
+  });
+
+  it("un joueur qui revient deux minutes toutes les 8 heures finit par gagner une chasse", () => {
+    for (const seed of SEEDS) {
+      const report = simulate(PROFILES.absent, seed, 96 * HOUR, { huntsWon: 1 });
+      expect(report.huntsWon).toBeGreaterThanOrEqual(1);
+    }
+  });
+});

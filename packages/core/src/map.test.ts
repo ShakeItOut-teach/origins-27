@@ -227,7 +227,7 @@ describe("palier 3 : expéditions", () => {
     expect(back.state.counters.mapHarvests).toBe(1);
   });
 
-  it("le palier 4 n'est pas livré : cinq expéditions ne font pas dépasser le palier 3", () => {
+  it("cinq expéditions revenues ouvrent le palier 4, et pas davantage", () => {
     let state = atTier3({ energy: BALANCE.energy.max });
     let now = T0;
     for (let trip = 0; trip < 6; trip++) {
@@ -238,7 +238,7 @@ describe("palier 3 : expéditions", () => {
       state = advance(state, now).state;
     }
     expect(state.counters.mapHarvests).toBe(6);
-    expect(state.tier).toBe(3);
+    expect(state.tier).toBe(4);
   });
 });
 
@@ -270,7 +270,7 @@ describe("annuler une expédition", () => {
     const cancelled = ok(sent, { type: "cancelExpedition" }, T0 + 50_000);
     const home = advance(cancelled, T0 + 50_000 + 5000);
     expect(home.state.expedition).toBeNull();
-    expect(home.state.resources).toEqual({ sugar: 0, bricks: 0 });
+    expect(home.state.resources).toEqual({ sugar: 0, bricks: 0, proteins: 0 });
     expect(home.state.counters.mapHarvests).toBe(0);
     expect(home.state.placeReadyAt).toEqual({});
     expect(refusal(home.state, send(target), T0 + 55_000)).toBeNull();
@@ -393,7 +393,7 @@ describe("garanties du moteur avec la carte", () => {
     const text = JSON.stringify({ ...old, version: 1 });
 
     const alone = deserializeState(text);
-    expect(alone.version).toBe(2);
+    expect(alone.version).toBe(3);
     expect(alone.counters.harvests).toBe(10);
     expect(alone.energy).toBe(BALANCE.energy.max);
     expect(alone.slot).toBe(0);

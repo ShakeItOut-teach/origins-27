@@ -5,11 +5,13 @@ import {
   MUTATION_IDS,
   ORGANELLE_IDS,
   PLACE_KINDS,
+  PREY_KINDS,
   RESOURCE_IDS,
+  TROOP_IDS,
 } from "@o27/data";
 import type { CounterId, MutationId, OrganelleId, ResourceId, TraitId } from "@o27/data";
 import { createRng } from "./rng";
-import type { Construction, Expedition, GameEvent, PlayerState } from "./types";
+import type { Construction, Expedition, GameEvent, Hunt, PlayerState, Training } from "./types";
 
 function fill<K extends string>(keys: readonly K[], value: number): Record<K, number> {
   return Object.fromEntries(keys.map((key) => [key, value])) as Record<K, number>;
@@ -30,13 +32,16 @@ export function createPlayer(
 ): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 2,
+    version: 3,
     worldSeed: (world?.worldSeed ?? seed) >>> 0,
     slot: world?.slot ?? 0,
     energy: BALANCE.energy.max,
     energyAt: now,
     expedition: null,
     placeReadyAt: {},
+    troops: fill(TROOP_IDS, 0),
+    training: null,
+    hunt: null,
     seed: seed >>> 0,
     rngState: seed >>> 0,
     seasonStart,
@@ -97,6 +102,7 @@ export function summarizeAbsence(
     gained: {
       sugar: Math.max(0, after.resources.sugar - before.resources.sugar),
       bricks: Math.max(0, after.resources.bricks - before.resources.bricks),
+      proteins: Math.max(0, after.resources.proteins - before.resources.proteins),
     },
     constructionsDone: events.flatMap((event) =>
       event.type === "constructionDone" ? [{ organelle: event.organelle, level: event.level }] : [],
@@ -155,6 +161,40 @@ export function serializeState(state: PlayerState): string {
         .sort()
         .map((id) => [id, state.placeReadyAt[id]]),
     ),
+    troops: pick(TROOP_IDS, state.troops),
+    training:
+      state.training === null
+        ? null
+        : {
+            troop: state.training.troop,
+            remaining: state.training.remaining,
+            nextAt: state.training.nextAt,
+          },
+    hunt:
+      state.hunt === null
+        ? null
+        : {
+            prey: state.hunt.prey,
+            kind: state.hunt.kind,
+            power: state.hunt.power,
+            proteins: state.hunt.proteins,
+            energy: state.hunt.energy,
+            restMs: state.hunt.restMs,
+            party: pick(TROOP_IDS, state.hunt.party),
+            startedAt: state.hunt.startedAt,
+            arrivesAt: state.hunt.arrivesAt,
+            resolveAt: state.hunt.resolveAt,
+            returnsAt: state.hunt.returnsAt,
+            outcome:
+              state.hunt.outcome === null
+                ? null
+                : {
+                    won: state.hunt.outcome.won,
+                    struck: state.hunt.outcome.struck,
+                    losses: pick(TROOP_IDS, state.hunt.outcome.losses),
+                  },
+            cancelled: state.hunt.cancelled,
+          },
   });
 }
 
@@ -166,11 +206,17 @@ function isCount(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
-function readCounts<K extends string>(keys: readonly K[], value: unknown): Record<K, number> {
+/** `added` : clés apparues depuis, absentes des anciennes sauvegardes, qui valent alors 0. */
+function readCounts<K extends string>(
+  keys: readonly K[],
+  value: unknown,
+  added: readonly K[] = [],
+): Record<K, number> {
   if (!isRecord(value)) throw new TypeError("sauvegarde invalide");
   const result = fill(keys, 0);
   for (const key of keys) {
     const entry = value[key];
+    if (entry === undefined && added.includes(key)) continue;
     if (!isCount(entry)) throw new TypeError(`sauvegarde invalide : ${key}`);
     result[key] = entry;
   }
@@ -197,7 +243,7 @@ function readConstruction(value: unknown): Construction | null {
   return { organelle, toLevel, endsAt };
 }
 
-const PLACE_ID = /^-?\d{1,6}:-?\d{1,6}$/;
+const PLACE_ID = /^(h:)?-?\d{1,6}:-?\d{1,6}$/;
 
 function readExpedition(value: unknown): Expedition | null {
   if (value === null) return null;
@@ -230,6 +276,72 @@ function readPlaceTimes(value: unknown): Record<string, number> {
   return result;
 }
 
+function readTraining(value: unknown): Training | null {
+  if (value === null) return null;
+  if (!isRecord(value)) throw new TypeError("sauvegarde invalide : naissances");
+  const troop = TROOP_IDS.find((id) => id === value.troop);
+  const { remaining, nextAt } = value;
+  if (troop === undefined || !isCount(remaining) || remaining < 1 || !isCount(nextAt)) {
+    throw new TypeError("sauvegarde invalide : naissances");
+  }
+  return { troop, remaining, nextAt };
+}
+
+function readHunt(value: unknown): Hunt | null {
+  if (value === null) return null;
+  if (!isRecord(value)) throw new TypeError("sauvegarde invalide : chasse");
+  const kind = PREY_KINDS.find((id) => id === value.kind);
+  const { prey, power, proteins, energy, restMs, startedAt, arrivesAt, resolveAt, returnsAt } =
+    value;
+  const { cancelled, outcome } = value;
+  if (
+    kind === undefined ||
+    typeof prey !== "string" ||
+    !PLACE_ID.test(prey) ||
+    !isCount(power) ||
+    !isCount(proteins) ||
+    !isCount(energy) ||
+    !isCount(restMs) ||
+    !isCount(startedAt) ||
+    !isCount(arrivesAt) ||
+    !isCount(resolveAt) ||
+    !isCount(returnsAt) ||
+    typeof cancelled !== "boolean"
+  ) {
+    throw new TypeError("sauvegarde invalide : chasse");
+  }
+  let result: Hunt["outcome"] = null;
+  if (outcome !== null) {
+    if (
+      !isRecord(outcome) ||
+      typeof outcome.won !== "boolean" ||
+      typeof outcome.struck !== "boolean"
+    ) {
+      throw new TypeError("sauvegarde invalide : issue de la chasse");
+    }
+    result = {
+      won: outcome.won,
+      struck: outcome.struck,
+      losses: readCounts(TROOP_IDS, outcome.losses),
+    };
+  }
+  return {
+    prey,
+    kind,
+    power,
+    proteins,
+    energy,
+    restMs,
+    party: readCounts(TROOP_IDS, value.party),
+    startedAt,
+    arrivesAt,
+    resolveAt,
+    returnsAt,
+    outcome: result,
+    cancelled,
+  };
+}
+
 /** Vrai pour une sauvegarde d'avant la carte : il faudra lui donner une place dans la goutte. */
 export function needsWorldPlace(text: string): boolean {
   const raw: unknown = JSON.parse(text);
@@ -243,10 +355,12 @@ export function needsWorldPlace(text: string): boolean {
  */
 export function deserializeState(text: string, world?: WorldPlace): PlayerState {
   const raw: unknown = JSON.parse(text);
-  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2)) {
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3)) {
     throw new TypeError("sauvegarde invalide : version");
   }
   const old = raw.version === 1;
+  /** Sauvegarde d'avant la chasse : ni protéines, ni Pouponnière, ni cellules filles. */
+  const beforeHunt = raw.version !== 3;
   const { seed, rngState, seasonStart, now, tier, tapBudgetAt } = raw;
   if (
     !isCount(seed) ||
@@ -264,7 +378,10 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     throw new TypeError("sauvegarde invalide : carte");
   }
   return {
-    version: 2,
+    version: 3,
+    troops: beforeHunt ? fill(TROOP_IDS, 0) : readCounts(TROOP_IDS, raw.troops),
+    training: beforeHunt ? null : readTraining(raw.training),
+    hunt: beforeHunt ? null : readHunt(raw.hunt),
     worldSeed: old ? (world?.worldSeed ?? seed) >>> 0 : (worldSeed as number),
     slot: old ? (world?.slot ?? 0) : (slot as number),
     energy: old ? BALANCE.energy.max : Math.min(BALANCE.energy.max, energy as number),
@@ -275,8 +392,12 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     rngState,
     seasonStart,
     now,
-    resources: readCounts<ResourceId>(RESOURCE_IDS, raw.resources),
-    organelles: readCounts<OrganelleId>(ORGANELLE_IDS, raw.organelles),
+    resources: readCounts<ResourceId>(RESOURCE_IDS, raw.resources, beforeHunt ? ["proteins"] : []),
+    organelles: readCounts<OrganelleId>(
+      ORGANELLE_IDS,
+      raw.organelles,
+      beforeHunt ? ["nursery"] : [],
+    ),
     construction: readConstruction(raw.construction),
     mutations: readMutations(raw.mutations),
     mutationOffer: raw.mutationOffer === null ? null : readMutations(raw.mutationOffer),

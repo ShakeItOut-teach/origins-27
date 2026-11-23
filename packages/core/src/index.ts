@@ -5,13 +5,25 @@ export type {
   Construction,
   Expedition,
   GameEvent,
+  Hunt,
+  Training,
   OrderErrorCode,
   OrderResult,
   PlayerState,
   Step,
 } from "./types";
 export { advance } from "./advance";
-export { applyOrder } from "./apply";
+export { applyOrder, nextMutationPrice } from "./apply";
+export {
+  lossesFor,
+  partyPower,
+  partySize,
+  strikeChance,
+  troopCapacity,
+  troopsOwned,
+  winChance,
+} from "./hunt";
+export type { Party } from "./hunt";
 export { evaluateTier, orderTier, seasonDay } from "./unlock";
 export {
   capacity,
@@ -30,5 +42,13 @@ export {
   summarizeAbsence,
 } from "./player";
 export type { AbsenceSummary, Creature, WorldPlace } from "./player";
-export { cancelReturnMs, energyAt, placeOffer, slotPosition, visiblePlaces } from "./world";
-export type { Energy, Offer, Place, Point } from "./world";
+export {
+  cancelReturnMs,
+  energyAt,
+  placeOffer,
+  preyOffer,
+  slotPosition,
+  visiblePlaces,
+  visiblePrey,
+} from "./world";
+export type { Energy, Offer, Place, Point, Prey, PreyOffer } from "./world";

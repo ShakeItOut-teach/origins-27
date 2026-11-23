@@ -1,4 +1,12 @@
-import type { CounterId, MutationId, OrganelleId, PlaceKind, ResourceId } from "@o27/data";
+import type {
+  CounterId,
+  MutationId,
+  OrganelleId,
+  PlaceKind,
+  PreyKind,
+  ResourceId,
+  TroopId,
+} from "@o27/data";
 
 /**
  * Unités internes.
@@ -31,8 +39,42 @@ export interface Expedition {
   readonly cancelled: boolean;
 }
 
+/** Des cellules filles en train de naître, l'une après l'autre. */
+export interface Training {
+  readonly troop: TroopId;
+  readonly remaining: number;
+  /** Instant de la prochaine naissance. */
+  readonly nextAt: number;
+}
+
+export interface Hunt {
+  /** La proie visée (sa case dans le monde, précédée de « h: »). */
+  readonly prey: string;
+  readonly kind: PreyKind;
+  readonly power: number;
+  /** Protéines promises en cas de victoire, en millionièmes d'unité. */
+  readonly proteins: number;
+  readonly energy: number;
+  readonly restMs: number;
+  readonly party: Readonly<Record<TroopId, number>>;
+  readonly startedAt: number;
+  /** Le groupe atteint la proie : le joueur peut la toucher jusqu'à `resolveAt`. */
+  readonly arrivesAt: number;
+  /** Sans toucher du joueur, le sort décide à cet instant. */
+  readonly resolveAt: number;
+  readonly returnsAt: number;
+  /** `null` tant que le combat n'a pas eu lieu. */
+  readonly outcome: {
+    readonly won: boolean;
+    readonly struck: boolean;
+    readonly losses: Readonly<Record<TroopId, number>>;
+  } | null;
+  /** Rappelée avant d'atteindre la proie. */
+  readonly cancelled: boolean;
+}
+
 export interface PlayerState {
-  readonly version: 2;
+  readonly version: 3;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -60,6 +102,10 @@ export interface PlayerState {
   readonly expedition: Expedition | null;
   /** Lieux qui se regarnissent : pour chacun, l'instant où il redevient disponible. */
   readonly placeReadyAt: Readonly<Record<string, number>>;
+  /** Cellules filles à la maison, par type. */
+  readonly troops: Readonly<Record<TroopId, number>>;
+  readonly training: Training | null;
+  readonly hunt: Hunt | null;
 }
 
 export type GameEvent =
@@ -100,7 +146,35 @@ export type GameEvent =
       readonly gained: number;
       readonly lost: number;
       readonly cancelled: boolean;
-    };
+    }
+  | { readonly type: "troopBorn"; readonly at: number; readonly troop: TroopId }
+  | {
+      readonly type: "huntSent";
+      readonly at: number;
+      readonly prey: string;
+      readonly arrivesAt: number;
+      readonly returnsAt: number;
+    }
+  | { readonly type: "huntCancelled"; readonly at: number; readonly returnsAt: number }
+  | {
+      readonly type: "huntResolved";
+      readonly at: number;
+      readonly won: boolean;
+      readonly struck: boolean;
+      readonly losses: Readonly<Record<TroopId, number>>;
+    }
+  | {
+      readonly type: "huntReturned";
+      readonly at: number;
+      readonly prey: string;
+      readonly won: boolean;
+      /** Protéines entrées dans la réserve, et protéines qui ont débordé. */
+      readonly gained: number;
+      readonly lost: number;
+      readonly losses: number;
+      readonly cancelled: boolean;
+    }
+  | { readonly type: "mutationBought"; readonly at: number; readonly price: number };
 
 export type OrderErrorCode =
   /** L'heure fournie est antérieure à l'état. */
@@ -119,7 +193,16 @@ export type OrderErrorCode =
   | "unknownPlace"
   | "placeResting"
   | "noEnergy"
-  | "noExpedition";
+  | "noExpedition"
+  | "troopsFull"
+  | "noTroops"
+  | "unknownPrey"
+  | "noHunt"
+  /** Le groupe n'est pas (ou plus) face à la proie. */
+  | "notFighting"
+  | "tooLate"
+  | "offerPending"
+  | "noMoreMutations";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }
