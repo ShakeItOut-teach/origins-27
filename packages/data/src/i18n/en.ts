@@ -52,5 +52,16 @@ export const en = {
   "unit.hours": "h",
   "unit.days": "d",
   "action.switchLanguage": "Passer en français",
-  "account.keep": "Find my game on another device",
+  "account.title": "My game",
+  "account.open": "My game",
+  "account.keep": "Give your email to find your game on another device.",
+  "account.email": "Your email",
+  "account.send": "Get the link",
+  "account.sent": "Sent. Open the link you received by email.",
+  "account.linked": "Game linked to",
+  "account.note":
+    "If this email already has a game, the link will open it here instead of this one.",
+  "account.invalid": "This address does not look right.",
+  "account.tooMany": "Too many requests. Try again in a few minutes.",
+  "account.failed": "Could not send right now. Try again later.",
 } as const satisfies Record<TextKey, string>;

@@ -50,7 +50,17 @@ export const fr = {
   "unit.hours": "h",
   "unit.days": "j",
   "action.switchLanguage": "Switch to English",
-  "account.keep": "Retrouver ma partie sur un autre appareil",
+  "account.title": "Ma partie",
+  "account.open": "Ma partie",
+  "account.keep": "Donnez votre e-mail pour retrouver votre partie sur un autre appareil.",
+  "account.email": "Votre e-mail",
+  "account.send": "Recevoir le lien",
+  "account.sent": "C’est envoyé. Ouvrez le lien reçu par e-mail.",
+  "account.linked": "Partie liée à",
+  "account.note": "Si cet e-mail a déjà une partie, le lien l’ouvrira ici à la place de celle-ci.",
+  "account.invalid": "Cette adresse ne semble pas correcte.",
+  "account.tooMany": "Trop de demandes. Réessayez dans quelques minutes.",
+  "account.failed": "Envoi impossible pour l’instant. Réessayez plus tard.",
 } as const;
 
 export type TextKey = keyof typeof fr;

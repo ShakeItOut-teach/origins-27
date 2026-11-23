@@ -19,6 +19,23 @@ export interface ApiDeps {
   readonly storage: Pick<Storage, "getItem" | "setItem">;
 }
 
+/** Résultat d'une demande de lien : envoyé, adresse refusée, trop de demandes, ou panne. */
+export type LinkResult = "sent" | "invalid" | "tooMany" | "failed";
+
+export interface Account {
+  /** L'e-mail auquel la partie est liée, ou `null` si elle n'est liée à rien. */
+  readonly whoAmI: () => Promise<string | null>;
+  /**
+   * Envoie un lien par e-mail. Si l'adresse est nouvelle, le lien y attache la partie en
+   * cours ; si elle a déjà une partie, le lien ouvre cette partie-là sur cet appareil.
+   */
+  readonly linkEmail: (email: string, returnTo: string) => Promise<LinkResult>;
+}
+
+export interface Api extends Remote {
+  readonly account: Account;
+}
+
 interface Session {
   readonly access: string;
   readonly refresh: string;
@@ -35,7 +52,26 @@ function readSession(value: unknown): Session | null {
   return typeof access === "string" && typeof refresh === "string" ? { access, refresh } : null;
 }
 
-export function createApi(deps: ApiDeps): Remote {
+/**
+ * Au retour d'un lien reçu par e-mail, l'adresse de la page contient la session du joueur.
+ * On la range sur l'appareil. Renvoie vrai si une session a été trouvée.
+ */
+export function takeSessionFromHash(hash: string, storage: Pick<Storage, "setItem">): boolean {
+  const params = new URLSearchParams(hash.replace(/^#/, ""));
+  const access = params.get("access_token");
+  const refresh = params.get("refresh_token");
+  if (access === null || refresh === null || access === "" || refresh === "") return false;
+  storage.setItem(SESSION_KEY, JSON.stringify({ access, refresh } satisfies Session));
+  return true;
+}
+
+function errorCode(payload: unknown): string {
+  if (!isRecord(payload)) return "";
+  const code = payload.error_code ?? payload.code;
+  return typeof code === "string" ? code : "";
+}
+
+export function createApi(deps: ApiDeps): Api {
   let session: Session | null = null;
   try {
     session = readSession(JSON.parse(deps.storage.getItem(SESSION_KEY) ?? "null"));
@@ -43,16 +79,24 @@ export function createApi(deps: ApiDeps): Remote {
     session = null;
   }
 
-  const post = (path: string, body: unknown, token: string | null): Promise<Response> =>
+  const request = (
+    method: "GET" | "POST" | "PUT",
+    path: string,
+    body: unknown,
+    token: string | null,
+  ): Promise<Response> =>
     deps.fetch(`${deps.url}${path}`, {
-      method: "POST",
+      method,
       headers: {
         apikey: deps.key,
         "Content-Type": "application/json",
         ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
       },
-      body: JSON.stringify(body),
+      ...(method === "GET" ? {} : { body: JSON.stringify(body) }),
     });
+
+  const post = (path: string, body: unknown, token: string | null): Promise<Response> =>
+    request("POST", path, body, token);
 
   /** Ouvre ou renouvelle la session. Un compte anonyme est créé seulement s'il n'y en a aucun. */
   const openSession = async (): Promise<Session> => {
@@ -124,5 +168,42 @@ export function createApi(deps: ApiDeps): Remote {
     throw new Error(`ordre : ${String(response.status)}`);
   };
 
-  return { fetchState, sendOrder };
+  /** Un appel au service des comptes ; jeton périmé → renouvelé, puis un seul nouvel essai. */
+  const authCall = async (
+    method: "GET" | "PUT",
+    path: string,
+    body: unknown,
+  ): Promise<Response> => {
+    const current = session ?? (await renew());
+    const first = await request(method, path, body, current.access);
+    if (first.status !== 401 && first.status !== 403) return first;
+    const renewed = await renew();
+    return request(method, path, body, renewed.access);
+  };
+
+  const account: Account = {
+    async whoAmI() {
+      const response = await authCall("GET", "/auth/v1/user", null);
+      if (!response.ok) return null;
+      const payload: unknown = await response.json();
+      if (!isRecord(payload)) return null;
+      return typeof payload.email === "string" && payload.email !== "" ? payload.email : null;
+    },
+    async linkEmail(email, returnTo) {
+      const back = `redirect_to=${encodeURIComponent(returnTo)}`;
+      const attach = await authCall("PUT", `/auth/v1/user?${back}`, { email });
+      if (attach.ok) return "sent";
+      if (attach.status === 429) return "tooMany";
+      const code = errorCode(await attach.json().catch(() => null));
+      if (code === "email_address_invalid" || code === "validation_failed") return "invalid";
+      if (code !== "email_exists") return "failed";
+
+      // Cette adresse a déjà une partie : on envoie un lien pour l'ouvrir ici.
+      const open = await post(`/auth/v1/otp?${back}`, { email, create_user: false }, null);
+      if (open.ok) return "sent";
+      return open.status === 429 ? "tooMany" : "failed";
+    },
+  };
+
+  return { fetchState, sendOrder, account };
 }

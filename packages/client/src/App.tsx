@@ -11,16 +11,20 @@ import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS } from "@o27/da
 import type { MutationId, OrganelleId, ResourceId, TextKey } from "@o27/data";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
+import type { Account } from "./game/api";
 import type { GameStore } from "./game/store";
 import { formatAmount, formatAway, formatDuration, formatRate, translate } from "./game/text";
 import type { Lang } from "./game/text";
 import { isVisible } from "./game/unlock";
+import { AccountSheet } from "./ui/AccountSheet";
 import { OrganelleIcon, ResourceIcon } from "./ui/icons";
 
 interface Props {
   readonly store: GameStore;
   readonly lang: Lang;
   readonly onSwitchLang: () => void;
+  /** Absent quand le jeu tourne sans serveur. */
+  readonly account: Account | null;
 }
 
 /** Position de chaque emplacement sur la lame, en pourcentage. */
@@ -36,7 +40,8 @@ function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number):
   return RESOURCE_IDS.every((id) => state.resources[id] >= cost[id]);
 }
 
-export function App({ store, lang, onSwitchLang }: Props) {
+export function App({ store, lang, onSwitchLang, account }: Props) {
+  const [accountOpen, setAccountOpen] = useState(false);
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const t = (key: TextKey): string => translate(lang, key);
   const [selected, setSelected] = useState<OrganelleId | null>(null);
@@ -102,6 +107,31 @@ export function App({ store, lang, onSwitchLang }: Props) {
       >
         {lang === "fr" ? "EN" : "FR"}
       </button>
+      {account !== null && (
+        <button
+          type="button"
+          className="account-open"
+          aria-label={t("account.open")}
+          data-testid="account-open"
+          onClick={() => {
+            setAccountOpen(true);
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+          </svg>
+        </button>
+      )}
+      {account !== null && accountOpen && (
+        <AccountSheet
+          account={account}
+          lang={lang}
+          onClose={() => {
+            setAccountOpen(false);
+          }}
+        />
+      )}
       <header className="counters">
         {counters.map((id) => {
           const full = state.resources[id] >= capacity(state, id);

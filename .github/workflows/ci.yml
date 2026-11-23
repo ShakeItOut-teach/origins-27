@@ -142,3 +142,26 @@ jobs:
           code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://$SUPABASE_PROJECT.supabase.co/functions/v1/jeu/etat")
           echo "Réponse sans jeton : $code"
           test "$code" = "401"
+      # Le lien reçu par e-mail ne peut ramener le joueur que vers une adresse autorisée.
+      # On ajoute celles du jeu sans toucher à celles déjà présentes.
+      - name: Autoriser l'adresse du site pour les liens par e-mail
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          api="https://api.supabase.com/v1/projects/$SUPABASE_PROJECT/config/auth"
+          list=$(curl -sf -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" "$api" | jq -r '.uri_allow_list // ""')
+          wanted="$list"
+          for site in "https://next.origins-27.pages.dev" "https://origins-27.pages.dev"; do
+            case ",$wanted," in
+              *",$site,"*) ;;
+              *) wanted="${wanted:+$wanted,}$site" ;;
+            esac
+          done
+          if [ "$wanted" = "$list" ]; then
+            echo "Adresses déjà autorisées."
+          else
+            code=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH "$api" \
+              -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" \
+              -d "$(jq -n --arg list "$wanted" '{uri_allow_list: $list}')")
+            echo "Mise à jour des adresses autorisées : $code"
+            test "$code" = "200"
+          fi

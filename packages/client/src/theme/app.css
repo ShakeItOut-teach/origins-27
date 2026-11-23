@@ -497,3 +497,53 @@ p {
   width: 22px;
   height: 22px;
 }
+
+/* Compte : bouton discret dans le coin, puis fiche */
+.account-open {
+  position: fixed;
+  top: max(var(--space-2), env(safe-area-inset-top));
+  left: var(--space-2);
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.account-open svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.account-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.field {
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 17px;
+  user-select: text;
+}
+
+.account-error {
+  color: var(--eosin);
+  font-size: 15px;
+}
+
+.account-note {
+  color: var(--ink-soft);
+  font-size: 14px;
+}

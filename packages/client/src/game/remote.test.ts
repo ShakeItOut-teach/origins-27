@@ -2,7 +2,7 @@ import { MICRO, advance, applyOrder, createPlayer, summarizeAbsence } from "@o27
 import type { PlayerState } from "@o27/core";
 import type { Order } from "@o27/data";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createApi } from "./api";
+import { createApi, takeSessionFromHash } from "./api";
 import { createStore } from "./store";
 import type { Remote } from "./store";
 
@@ -228,5 +228,75 @@ describe("dialogue avec le serveur", () => {
     await expect(api.fetchState()).rejects.toThrow();
     expect(calls.some((call) => call.includes("signup"))).toBe(false);
     expect(storage.getItem("o27.session.v1")).toContain('"refresh":"R"');
+  });
+});
+
+describe("retrouver sa partie par e-mail", () => {
+  interface Call {
+    readonly method: string;
+    readonly path: string;
+    readonly body: unknown;
+  }
+
+  function accountApi(reply: (call: Call) => [number, unknown]) {
+    const calls: Call[] = [];
+    const fetchLike = ((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      const call: Call = {
+        method: init?.method ?? "GET",
+        path: url.replace("https://serveur.test", ""),
+        body: typeof init?.body === "string" ? (JSON.parse(init.body) as unknown) : null,
+      };
+      calls.push(call);
+      const [status, body] = reply(call);
+      return Promise.resolve(new Response(JSON.stringify(body), { status }));
+    }) as typeof fetch;
+    const storage = memory({ "o27.session.v1": JSON.stringify({ access: "A", refresh: "R" }) });
+    const api = createApi({ url: "https://serveur.test", key: "k", fetch: fetchLike, storage });
+    return { account: api.account, calls };
+  }
+
+  it("attache la partie en cours à une adresse nouvelle", async () => {
+    const { account, calls } = accountApi(() => [200, {}]);
+    expect(await account.linkEmail("ada@exemple.test", "https://jeu.test")).toBe("sent");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.method).toBe("PUT");
+    expect(calls[0]?.path).toBe("/auth/v1/user?redirect_to=https%3A%2F%2Fjeu.test");
+    expect(calls[0]?.body).toEqual({ email: "ada@exemple.test" });
+  });
+
+  it("si l'adresse a déjà une partie, envoie un lien pour l'ouvrir, sans créer de compte", async () => {
+    const { account, calls } = accountApi((call) =>
+      call.method === "PUT" ? [422, { error_code: "email_exists" }] : [200, {}],
+    );
+    expect(await account.linkEmail("ada@exemple.test", "https://jeu.test")).toBe("sent");
+    expect(calls[1]?.path).toBe("/auth/v1/otp?redirect_to=https%3A%2F%2Fjeu.test");
+    expect(calls[1]?.body).toEqual({ email: "ada@exemple.test", create_user: false });
+  });
+
+  it.each([
+    [422, { error_code: "email_address_invalid" }, "invalid"],
+    [429, { error_code: "over_email_send_rate_limit" }, "tooMany"],
+    [500, {}, "failed"],
+  ])("réponse %i du serveur → message adapté", async (status, body, expected) => {
+    const { account } = accountApi(() => [status, body]);
+    expect(await account.linkEmail("ada@exemple.test", "https://jeu.test")).toBe(expected);
+  });
+
+  it("dit à quelle adresse la partie est liée, ou rien pour un compte anonyme", async () => {
+    const linked = accountApi(() => [200, { email: "ada@exemple.test" }]);
+    expect(await linked.account.whoAmI()).toBe("ada@exemple.test");
+    const anonymous = accountApi(() => [200, { email: "", is_anonymous: true }]);
+    expect(await anonymous.account.whoAmI()).toBeNull();
+  });
+
+  it("range la session reçue dans l'adresse de la page au retour du lien", () => {
+    const storage = memory();
+    expect(takeSessionFromHash("#access_token=AA&refresh_token=RR&type=magiclink", storage)).toBe(
+      true,
+    );
+    expect(storage.getItem("o27.session.v1")).toBe('{"access":"AA","refresh":"RR"}');
+    expect(takeSessionFromHash("#error=access_denied", memory())).toBe(false);
+    expect(takeSessionFromHash("", memory())).toBe(false);
   });
 });

@@ -18,7 +18,7 @@ import {
 import type { AbsenceSummary, GameEvent, OrderResult, PlayerState } from "@o27/core";
 import type { Order } from "@o27/data";
 
-const SAVE_KEY = "o27.partie-locale.v1";
+export const SAVE_KEY = "o27.partie-locale.v1";
 const TICK_MS = 250;
 const SAVE_EVERY_MS = 5000;
 /** Les touchers sont regroupés et envoyés au plus une fois par ce délai. */
