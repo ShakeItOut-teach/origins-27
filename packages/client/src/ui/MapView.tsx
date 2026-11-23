@@ -4,6 +4,7 @@ import {
   placeOffer,
   preyOffer,
   strikeChance,
+  unattendedChance,
   visiblePlaces,
   visiblePrey,
   winChance,
@@ -410,7 +411,7 @@ function PreySheet({ state, prey, lang, onClose, onOrder }: SheetProps & { prey:
                 ))}
               </div>
               <p className="chance" data-testid="prey-chance">
-                {t("label.chance")} : <strong>{chance} %</strong>
+                {t("label.chance")} : <strong>{unattendedChance(chance)} %</strong>
                 {sure && <span className="chance-sure"> · {t("label.sureIfStruck")}</span>}
               </p>
             </>

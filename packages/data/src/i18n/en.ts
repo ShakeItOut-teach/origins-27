@@ -66,7 +66,7 @@ export const en = {
   "prey.fleeing.name": "Fleeing prey",
   "label.troops": "Daughter cells",
   "label.weakness": "Weak spot",
-  "label.chance": "Chance to win",
+  "label.chance": "Chance without tapping the prey",
   "label.party": "Your group",
   "label.sureIfStruck": "certain win if you tap the prey",
   "hunt.strikeHint": "Your group has reached the prey",

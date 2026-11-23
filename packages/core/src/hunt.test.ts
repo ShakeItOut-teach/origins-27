@@ -18,6 +18,7 @@ import {
   strikeChance,
   troopCapacity,
   troopsOwned,
+  unattendedChance,
   visiblePrey,
   winChance,
 } from "./index";
@@ -264,9 +265,14 @@ describe("la chasse", () => {
     expect(refusal(atTier4(), { type: "strikeHunt" }, T0)).toBe("noHunt");
   });
 
+  it("ne pas toucher coûte quelques points de chance, jamais en dessous de 1", () => {
+    expect(unattendedChance(50)).toBe(50 - BALANCE.hunt.unattendedPenaltyPercent);
+    expect(unattendedChance(3)).toBe(1);
+  });
+
   it("sans toucher, le sort décide à la fin de la fenêtre, selon les chances annoncées", () => {
     const group = party({ [strong]: 3 });
-    const chance = winChance(group, target.kind, offer.power);
+    const chance = unattendedChance(winChance(group, target.kind, offer.power));
     let wins = 0;
     const games = 400;
     for (let seed = 1; seed <= games; seed++) {

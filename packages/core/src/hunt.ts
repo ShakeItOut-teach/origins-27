@@ -30,6 +30,11 @@ export function winChance(party: Party, kind: PreyKind, preyPower: number): numb
   return Math.max(1, Math.min(99, percent));
 }
 
+/** Chances quand le joueur n'est pas là pour toucher : un peu moins bonnes. */
+export function unattendedChance(chance: number): number {
+  return Math.max(1, chance - BALANCE.hunt.unattendedPenaltyPercent);
+}
+
 /** Ce que vaut un toucher du joueur : victoire certaine, ou chances doublées. */
 export function strikeChance(chance: number): number {
   return chance >= BALANCE.hunt.certainFromPercent ? 100 : Math.min(99, chance * 2);
@@ -88,7 +93,7 @@ export function troopsOwned(state: PlayerState): number {
  */
 export function resolveHunt(state: PlayerState, hunt: Hunt, at: number, struck: boolean): Step {
   const base = winChance(hunt.party, hunt.kind, hunt.power);
-  const chance = struck ? strikeChance(base) : base;
+  const chance = struck ? strikeChance(base) : unattendedChance(base);
   const rng = createRng(state.rngState);
   const won = rng.int(100) < chance;
   const losses = lossesFor(hunt.party, base, won);

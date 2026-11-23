@@ -21,6 +21,7 @@ export {
   strikeChance,
   troopCapacity,
   troopsOwned,
+  unattendedChance,
   winChance,
 } from "./hunt";
 export type { Party } from "./hunt";

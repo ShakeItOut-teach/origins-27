@@ -70,6 +70,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     strongMultiplier: 2,
     strikeWindowSeconds: 8,
     certainFromPercent: 25,
+    unattendedPenaltyPercent: 10,
     bands: [
       { energy: 1, seconds: 60, power: 6, proteins: 5, restSeconds: 180 },
       { energy: 2, seconds: 180, power: 15, proteins: 15, restSeconds: 600 },

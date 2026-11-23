@@ -64,7 +64,7 @@ export const fr = {
   "prey.fleeing.name": "Proie fuyante",
   "label.troops": "Cellules filles",
   "label.weakness": "Point faible",
-  "label.chance": "Chances de victoire",
+  "label.chance": "Chances sans toucher la proie",
   "label.party": "Votre groupe",
   "label.sureIfStruck": "victoire certaine si vous touchez la proie",
   "hunt.strikeHint": "Votre groupe est sur la proie",

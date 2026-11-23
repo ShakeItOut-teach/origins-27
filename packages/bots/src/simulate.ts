@@ -246,7 +246,7 @@ export function simulate(
           const offer = preyOffer(prey);
           const chance = winChance(state.troops, prey.kind, offer.power);
           // Le soigneux attend d'avoir de vraies chances ; le débutant part dès qu'il a trois cellules.
-          const ready = profile.careful ? chance >= 50 : partySize(state.troops) >= 3;
+          const ready = profile.careful ? chance >= 50 : partySize(state.troops) >= 4;
           if (
             state.hunt === null &&
             ready &&
