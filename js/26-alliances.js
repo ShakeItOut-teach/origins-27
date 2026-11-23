@@ -12,7 +12,7 @@
    Chargé dans l'ordre par index.html ; tous les fichiers partagent les mêmes variables globales. */
 "use strict";
 /* Collez ici l'invitation du serveur Discord (par exemple "https://discord.gg/xxxxxxx"). Vide : le bouton n'apparaît pas. */
-const DISCORD_URL="https://discord.gg/ByzPhvfSj";
+const DISCORD_URL="https://discord.gg/xDFe8R3qv9";
 const AL_DAY=5,AL_DON_MAX=20,AL_OFFICER=600;
 const AL_BR=[
   {id:"G",ic:"🌱",name:tr("Croissance","Growth"),techs:[
