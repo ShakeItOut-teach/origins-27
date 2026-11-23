@@ -61,7 +61,10 @@ Un écran, une idée : la fiche d'un lieu a la même forme que la fiche d'un org
 - **Une seule à la fois** au palier 3. (Une deuxième sera une récompense plus tard.)
 - Le butin est fixé au départ, livré au retour. Ce qui dépasse la réserve est perdu : cela
   donne enfin une raison d'améliorer la Réserve.
-- Une expédition partie ne s'annule pas.
+- **Une expédition peut être annulée** tant qu'elle n'est pas revenue (décision du
+  propriétaire). Le filament se rétracte tout de suite : pas de butin, l'énergie dépensée est
+  rendue, le lieu reste intact. Annuler ne coûte donc rien : c'est un droit à l'erreur, pas
+  une tactique.
 - Elle continue pendant l'absence ; le résumé « Pendant votre absence » la raconte.
 - Le compteur « récoltes sur la carte » augmente au retour.
 
