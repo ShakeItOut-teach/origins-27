@@ -31,7 +31,7 @@ const LEXIQUE=[
   [tr("Cellule à noyau","Nucleated cell"),tr("Eucaryote","Eukaryote"),tr("Une cellule plus évoluée, avec un noyau et des centrales.","A more evolved cell, with a nucleus and power plants.")],
   [tr("Organisme","Organism"),tr("Pluricellulaire","Multicellular"),tr("Plusieurs cellules qui travaillent ensemble, chacune son métier.","Several cells working together, each with its own job.")],
   [tr("Fusion","Fusion"),tr("Endosymbiose","Endosymbiosis"),tr("Avaler une autre vie et la garder : c’est ainsi que sont nées les centrales.","Swallowing another life and keeping it: that is how power plants were born.")],
-  [tr("Poison, Avaleur, Parasite, Acide, Harpon","Poison, Swallower, Parasite, Acid, Harpoon"),tr("Toxines, phagocytose, parasitisme, enzymes lytiques, harpon","Toxins, phagocytosis, parasitism, lytic enzymes, harpoon"),tr("Vos 5 façons d’attaquer. Chacune bat la suivante, comme pierre-feuille-ciseaux.","Your 5 ways to attack. Each beats the next, like rock-paper-scissors.")]
+  [tr("Poison, Glouton, Parasite, Acide, Harpon","Poison, Glutton, Parasite, Acid, Harpoon"),tr("Toxines, phagocytose, parasitisme, enzymes lytiques, harpon","Toxins, phagocytosis, parasitism, lytic enzymes, harpoon"),tr("Vos 5 façons d’attaquer. Chacune bat la suivante, comme pierre-feuille-ciseaux.","Your 5 ways to attack. Each beats the next, like rock-paper-scissors.")]
 ];
 
 /* Remplacements : [motif, remplacement]. Ordre important : les tournures avec article d’abord. */
@@ -52,7 +52,7 @@ const VOCAB_FR=[
   ["Collectrices","Ouvrières"],["collectrices","ouvrières"],["Collectrice","Ouvrière"],["collectrice","ouvrière"],
   ["Procaryote","Bactérie"],["procaryote","bactérie"],["Eucaryote","Cellule à noyau"],["eucaryote","cellule à noyau"],["Pluricellulaire fortifié","Organisme fortifié"],["Pluricellulaire","Organisme"],["pluricellulaire","organisme"],
   ["Endosymbiose","Fusion"],["endosymbiose","fusion"],
-  ["Enzymes lytiques","Acide"],["enzymes lytiques","acide"],["Phagocytose","Avaleur"],["phagocytose","avaleur"],["Parasitisme","Parasite"],["parasitisme","parasite"],["Toxines","Poison"]
+  ["Enzymes lytiques","Acide"],["enzymes lytiques","acide"],["Phagocytose","Glouton"],["phagocytose","glouton"],["Parasitisme","Parasite"],["parasitisme","parasite"],["Toxines","Poison"]
 ];
 const VOCAB_EN=[
   ["ATP synthase","sugar machine"],["ATP","Sugar"],["atp","sugar"],
@@ -70,7 +70,7 @@ const VOCAB_EN=[
   ["Gatherers","Workers"],["gatherers","workers"],["Gatherer","Worker"],["gatherer","worker"],
   ["Prokaryote","Bacterium"],["prokaryote","bacterium"],["Eukaryote","Nucleated cell"],["eukaryote","nucleated cell"],["Multicellular","Organism"],["multicellular","organism"],
   ["Endosymbiosis","Fusion"],["endosymbiosis","fusion"],
-  ["Lytic enzymes","Acid"],["lytic enzymes","acid"],["Phagocytosis","Swallower"],["phagocytosis","swallower"],["Parasitism","Parasite"],["parasitism","parasite"],["Toxins","Poison"]
+  ["Lytic enzymes","Acid"],["lytic enzymes","acid"],["Phagocytosis","Glutton"],["phagocytosis","glutton"],["Parasitism","Parasite"],["parasitism","parasite"],["Toxins","Poison"]
 ];
 let VOC=null;
 function vocabBuild(){
