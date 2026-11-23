@@ -44,13 +44,10 @@ export function App({ store, lang, onSwitchLang }: Props) {
   const [touched, setTouched] = useState(state.counters.harvests > 0);
   const [fullFlash, setFullFlash] = useState(0);
 
-  const [absence, setAbsence] = useState<AbsenceSummary | null>(null);
+  const [absenceSeen, setAbsenceSeen] = useState(false);
+  const absence: AbsenceSummary | null = absenceSeen ? null : store.getAbsence();
 
-  useEffect(() => {
-    const stop = store.start();
-    setAbsence(store.getAbsence());
-    return stop;
-  }, [store]);
+  useEffect(() => store.start(), [store]);
   useEffect(
     () =>
       store.onEvents((events) => {
@@ -89,6 +86,10 @@ export function App({ store, lang, onSwitchLang }: Props) {
   const slots = ORGANELLE_IDS.filter((id) => BALANCE.organelles[id].tier <= state.tier);
   const choosing =
     absence === null && reveal === null && state.mutationOffer !== null && show("mutationChoice");
+
+  if (!store.isReady()) {
+    return <main className="page" data-tier="loading" aria-busy="true" />;
+  }
 
   return (
     <main className="page" data-tier={state.tier}>
@@ -198,7 +199,7 @@ export function App({ store, lang, onSwitchLang }: Props) {
               type="button"
               className="button"
               onClick={() => {
-                setAbsence(null);
+                setAbsenceSeen(true);
               }}
             >
               {t("action.continue")}

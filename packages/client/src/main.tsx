@@ -7,6 +7,8 @@ import "./theme/app.css";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { createApi } from "./game/api";
+import { SERVER } from "./game/config";
 import { createStore } from "./game/store";
 import { initialLang, saveLang } from "./game/text";
 import type { Lang } from "./game/text";
@@ -15,6 +17,15 @@ const store = createStore({
   clock: () => Date.now(),
   storage: window.localStorage,
   newSeed: () => crypto.getRandomValues(new Uint32Array(1))[0] ?? 1,
+  ...(SERVER === null
+    ? {}
+    : {
+        remote: createApi({
+          ...SERVER,
+          fetch: (input, init) => window.fetch(input, init),
+          storage: window.localStorage,
+        }),
+      }),
 });
 
 function Root() {
