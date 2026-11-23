@@ -83,7 +83,14 @@ jobs:
         run: npx --yes wrangler@4 pages project create origins-27 --production-branch=main || true
       - name: Envoyer le site
         if: steps.secrets.outputs.ready == 'true'
-        run: npx --yes wrangler@4 pages deploy dist --project-name=origins-27 --branch=next --commit-dirty=true
+        # Cloudflare limite parfois les appels : on réessaie après une pause.
+        run: |
+          for essai in 1 2 3 4; do
+            if npx --yes wrangler@4 pages deploy dist --project-name=origins-27 --branch=next --commit-dirty=true; then exit 0; fi
+            echo "Essai $essai échoué, nouvelle tentative dans 90 secondes."
+            sleep 90
+          done
+          exit 1
 
   deploy-server:
     name: Mise en ligne du serveur (Supabase)
