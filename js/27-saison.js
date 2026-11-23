@@ -35,10 +35,22 @@ function seasonEndHTML(e){
 
 /* ===== Dormance : 8 h choisies par le joueur (heure réelle) ===== */
 function dormH(){return S&&S.dormH!=null?S.dormH:23;}
-function dormAt(t){const d=new Date(realOf(t)),x=d.getHours()+d.getMinutes()/60;return ((x-dormH())%24+24)%24<DORM_LEN;}
+function dormRaw(r){const d=new Date(r),x=d.getHours()+d.getMinutes()/60;return ((x-dormH())%24+24)%24;}
+function dormAt(t){const r=realOf(t);if(dormRaw(r)>=DORM_LEN)return false;return !(S&&S.dormBrk&&r<S.dormBrk);}
 function hh(h){return String(((h%24)+24)%24).padStart(2,"0")+":00";}
 function dormEndTxt(){return hh(dormH()+DORM_LEN);}
-function dormSentence(){const a=hh(dormH()),b=dormEndTxt();return tr("🌙 Pendant votre dormance ("+a+" – "+b+"), personne ne vous attaque et vous n’attaquez personne.","🌙 During your dormancy ("+a+" – "+b+"), nobody attacks you and you attack nobody.");}
+function dormSentence(){const a=hh(dormH()),b=dormEndTxt();return tr("🌙 Pendant votre dormance ("+a+" – "+b+"), personne ne vous attaque. Si vous pillez, vous perdez cette protection jusqu’au matin.","🌙 During your dormancy ("+a+" – "+b+"), nobody attacks you. If you raid, you lose this protection until morning.");}
+/* Briser sa protection : piller pendant la dormance la supprime jusqu’à la fin de la nuit ;
+   pendant le bouclier d’après-pillage, jusqu’à la fin de l’heure. Une confirmation est demandée avant. */
+function dormBreak(){const r=Date.now(),el=dormRaw(r);
+  if(el<DORM_LEN&&!(S.dormBrk&&r<S.dormBrk)){S.dormBrk=r+(DORM_LEN-el)*3600000;log("🌙 "+tr("Dormance brisée : vous pouvez être attaqué jusqu’à ","Dormancy broken: you can be attacked until ")+hhmm(S.dormBrk)+".","bad");}
+  if(shieldAt(S.t)){S.shieldR=0;log("🛡 "+tr("Bouclier brisé : vous pouvez être attaqué.","Shield broken: you can be attacked."),"bad");}
+  dirty=true;}
+function brkNeeded(){if(!S||!openRef||openRef.indexOf("tile:")!==0)return null;const p=openRef.split(":"),B=botAt(+p[1],+p[2]);if(!B||B.tut)return null;return dormAt(S.t)?"dorm":shieldAt(S.t)?"shield":null;}
+function brkHTML(kind,k){const dorm=kind==="dorm";
+  const txt=dorm?tr("Vous êtes en dormance jusqu’à <b>"+dormEndTxt()+"</b>. Si vous pillez maintenant, vous perdez cette protection pour <b>le reste de la nuit</b> : les rivaux pourront vous attaquer jusqu’à "+dormEndTxt()+".","You are dormant until <b>"+dormEndTxt()+"</b>. If you raid now, you lose this protection for <b>the rest of the night</b>: rivals will be able to attack you until "+dormEndTxt()+".")
+    :tr("Vous êtes protégé jusqu’à <b>"+hhmm(S.shieldR)+"</b>. Si vous pillez maintenant, vous perdez ce bouclier pour <b>le reste de l’heure</b>.","You are protected until <b>"+hhmm(S.shieldR)+"</b>. If you raid now, you lose this shield for <b>the rest of the hour</b>.");
+  return '<div class="kick">'+(dorm?"🌙 "+tr("Dormance","Dormancy"):"🛡 "+tr("Bouclier","Shield"))+"</div><h2>"+tr("Briser votre protection ?","Break your protection?")+"</h2><p>"+txt+'</p><div class="row" style="justify-content:center"><button class="btn" data-act="raidbrk" data-k="'+k+'" style="background:var(--bad);border-color:var(--bad)">'+tr("Briser et piller","Break and raid")+'</button><button class="btn alt" data-act="mclose">'+tr("Garder ma protection","Keep my protection")+"</button></div>";}
 function dormCanChange(){return !S.dormSetR||Date.now()-S.dormSetR>=86400000;}
 function setDorm(h){if(!S)return;h=+h;if(DORM_STARTS.indexOf(h)<0||h===dormH())return;
   if(!dormCanChange()){toast(tr("Vous pourrez la changer à nouveau à ","You can change it again at ")+hhmm(S.dormSetR+86400000));return;}
@@ -63,7 +75,7 @@ function rfxLoop(M){
 }
 function seasonOptHTML(){
   if(!S)return "";const cur=dormH(),can=dormCanChange();
-  let h='<div class="optrow"><span>🌙 '+tr("Dormance","Dormancy")+'<small class="desc">'+tr("8 h par jour où personne ne vous attaque, et où vous n’attaquez personne. Modifiable une fois par 24 h.","8 h a day when nobody attacks you and you attack nobody. Can be changed once every 24 h.")+(can?"":"<br>"+tr("Prochain changement possible à ","Next change possible at ")+hhmm(S.dormSetR+86400000))+'</small></span><select data-dorm="1" aria-label="'+tr("Début de la dormance","Dormancy start")+'"'+(can?"":" disabled")+">"+DORM_STARTS.map(x=>'<option value="'+x+'"'+(x===cur?" selected":"")+">"+hh(x)+" – "+hh(x+DORM_LEN)+"</option>").join("")+"</select></div>";
+  let h='<div class="optrow"><span>🌙 '+tr("Dormance","Dormancy")+'<small class="desc">'+tr("8 h par jour où personne ne vous attaque. Piller pendant ce temps la brise jusqu’au matin. Modifiable une fois par 24 h.","8 h a day when nobody attacks you. Raiding during that time breaks it until morning. Can be changed once every 24 h.")+(can?"":"<br>"+tr("Prochain changement possible à ","Next change possible at ")+hhmm(S.dormSetR+86400000))+'</small></span><select data-dorm="1" aria-label="'+tr("Début de la dormance","Dormancy start")+'"'+(can?"":" disabled")+">"+DORM_STARTS.map(x=>'<option value="'+x+'"'+(x===cur?" selected":"")+">"+hh(x)+" – "+hh(x+DORM_LEN)+"</option>").join("")+"</select></div>";
   const tg=(k,l,d)=>'<div class="optrow"><span>'+l+'<small class="desc">'+d+'</small></span><button class="btn sm'+(rfx(k)?"":" alt")+'" data-act="rfx" data-k="'+k+'" aria-pressed="'+rfx(k)+'">'+(rfx(k)?tr("Activé","On"):tr("Désactivé","Off"))+"</button></div>";
   h+=tg("dodge","💨 "+tr("Réflexe d’esquive","Dodge reflex"),tr("Si une attaque arrive et que votre défense ne tiendrait pas, vos troupes esquivent toutes seules. Un choix fait à la main garde la priorité.","If an attack comes and your defense would not hold, your troops dodge on their own. A choice made by hand takes priority."));
   h+=tg("loop","🔁 "+tr("Récolte en boucle","Harvest loop"),tr("Les collectrices qui reviennent d’un gisement y repartent tant qu’il reste de quoi récolter et assez d’énergie.","Gatherers coming back from a deposit go back as long as there is something left and enough energy."));
@@ -211,6 +223,8 @@ function gazetteText(){const G=gazetteData(),nm=r=>r.me?tr("(vous)","(you)"):(r.
 /* ===== Actions ===== */
 function seasonAct(a,el){
   if(!S)return false;
+  if((a==="raid"||a==="raidgo")&&!seasonAct.brk){const k=brkNeeded();if(k){showModal(brkHTML(k,a));return true;}}
+  if(a==="raidbrk"){dormBreak();closeModal();seasonAct.brk=1;try{act(el.dataset.k==="raidgo"?"raidgo":"raid",el);}finally{seasonAct.brk=0;}return true;}
   if(a==="species"&&el&&el.closest&&el.closest(".pop")&&S.popups.length)S.popups.shift();
   if(a==="species"){speciesShow();return true;}
   if(a==="specdl"){speciesFile((b,n)=>{const u=URL.createObjectURL(b),x=document.createElement("a");x.href=u;x.download=n;document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast(tr("Image enregistrée","Image saved"));});return true;}

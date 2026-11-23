@@ -40,7 +40,7 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123e`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123f`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
 
 ## Robot de test (avant chaque lancement)
 
@@ -85,7 +85,7 @@ Une saison (un serveur) dure **27 jours** de jeu (`SEASON_DAYS` dans `js/01-mond
 - **Mutations visibles** : chaque mutation se dessine sur la cellule (cils, antennes, paroi, poche digestive, plasmides…), et des taches de pigment propres à chaque partie rendent deux cellules toujours différentes.
 - **Mon espèce** (bouton dans l’onglet Évolution) : un nom latin qui change avec le stade de vie, un **cousin fossile réel** (18 animaux documentés, de *Charnia* à *Meganeura*, de l’Ediacarien au Carbonifère) et une **planche** à télécharger ou partager (image 1080 × 1350).
 - **Fossiles de la saison** : 6 fossiles tirés au sort par saison. Si le cousin fossile du joueur en fait partie, il reçoit un petit bonus (5 à 8 %).
-- **Dormance** (⚙ Options) : 8 h par jour, choisies par le joueur (23 h – 7 h par défaut), où personne ne l’attaque et où il n’attaque personne. Modifiable une fois par 24 h.
+- **Dormance** (⚙ Options) : 8 h par jour, choisies par le joueur (23 h – 7 h par défaut), où personne ne l’attaque. S’il pille pendant ce temps, il perd sa protection jusqu’à la fin de la nuit (après confirmation) ; de même, piller pendant le bouclier d’une heure qui suit un pillage subi le brise pour le reste de l’heure. Modifiable une fois par 24 h.
 - **Réflexes** (⚙ Options) : esquive automatique si la défense ne tiendrait pas (activé par défaut), récolte en boucle (désactivée par défaut).
 - **Gazette du serveur** (Rapports › Gazette) : les brèves du jour, le top 3, l’alliance en tête, le pillard le plus redouté, le fossile du jour, et un bouton « Copier pour Discord ».
 
