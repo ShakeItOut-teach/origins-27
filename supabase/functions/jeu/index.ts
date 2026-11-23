@@ -1,6 +1,7 @@
 // Fonction Supabase (Deno) : la porte d'entrée du jeu.
 //   POST /jeu/etat   → l'état à jour du joueur (le crée à sa première visite)
 //   POST /jeu/ordre  → applique un ordre { orderId, order }
+//   POST /jeu/reprendre → après connexion à un compte, y amène la partie anonyme { ancien }
 // Toute la logique est dans packages/server, testée sans Supabase. Ce fichier ne fait que
 // trois choses : reconnaître le joueur, brancher la base, traduire la réponse en HTTP.
 // `../_shared/server.js` est fabriqué par `pnpm server:bundle` avant le déploiement.
@@ -40,6 +41,28 @@ Deno.serve(async (request) => {
   const { data: auth, error: authError } = await admin.auth.getUser(token);
   if (authError !== null || auth.user === null) return json(401, { error: "auth" });
   const playerId = auth.user.id;
+  const path = new URL(request.url).pathname;
+
+  if (path.endsWith("/reprendre")) {
+    const body: unknown = await request.json().catch(() => null);
+    const oldToken =
+      typeof body === "object" && body !== null && "ancien" in body ? String(body.ancien) : "";
+    const { data: previous, error: previousError } = await admin.auth.getUser(oldToken);
+    if (previousError !== null || previous.user === null) return json(400, { error: "ancien" });
+    // Seule la partie d'un compte anonyme, prouvée par son propre jeton, peut être déplacée.
+    if (previous.user.id === playerId || previous.user.is_anonymous !== true) {
+      return json(200, { moved: false });
+    }
+    const { data: moved, error: moveError } = await admin.rpc("transferer", {
+      p_de: previous.user.id,
+      p_vers: playerId,
+    });
+    if (moveError !== null) {
+      console.error(moveError);
+      return json(500, { error: "server" });
+    }
+    return json(200, { moved: moved === true });
+  }
 
   const { data: season, error: seasonError } = await admin
     .from("saisons")
@@ -99,7 +122,6 @@ Deno.serve(async (request) => {
   };
 
   try {
-    const path = new URL(request.url).pathname;
     if (path.endsWith("/etat")) {
       const reply = await handleState(deps, playerId);
       return json(STATUS[reply.status], reply);

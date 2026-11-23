@@ -9,6 +9,8 @@ import type { Order } from "@o27/data";
 import type { Remote } from "./store";
 
 const SESSION_KEY = "o27.session.v1";
+/** La session anonyme d'avant la connexion à un compte : sa partie doit suivre le joueur. */
+const PREVIOUS_KEY = "o27.session.precedente";
 
 export interface ApiDeps {
   /** Adresse du projet, sans barre finale. */
@@ -56,11 +58,18 @@ function readSession(value: unknown): Session | null {
  * Au retour d'un lien reçu par e-mail, l'adresse de la page contient la session du joueur.
  * On la range sur l'appareil. Renvoie vrai si une session a été trouvée.
  */
-export function takeSessionFromHash(hash: string, storage: Pick<Storage, "setItem">): boolean {
+export function takeSessionFromHash(
+  hash: string,
+  storage: Pick<Storage, "getItem" | "setItem">,
+): boolean {
   const params = new URLSearchParams(hash.replace(/^#/, ""));
   const access = params.get("access_token");
   const refresh = params.get("refresh_token");
   if (access === null || refresh === null || access === "" || refresh === "") return false;
+  // On garde la session d'avant : le serveur s'en servira pour amener la partie en cours
+  // sur le compte, si celui-ci n'en a pas encore.
+  const before = storage.getItem(SESSION_KEY);
+  if (before !== null && before !== "") storage.setItem(PREVIOUS_KEY, before);
   storage.setItem(SESSION_KEY, JSON.stringify({ access, refresh } satisfies Session));
   return true;
 }
@@ -144,12 +153,46 @@ export function createApi(deps: ApiDeps): Api {
     return post(`/functions/v1/jeu/${path}`, body, renewed.access);
   };
 
+  /**
+   * Après une connexion par lien : demande au serveur d'amener la partie anonyme d'avant sur
+   * le compte. Sans effet s'il n'y a rien à amener. Une panne laisse tout en place pour
+   * réessayer au prochain appel.
+   */
+  const bringPreviousGame = async (): Promise<void> => {
+    let previous: Session | null;
+    try {
+      previous = readSession(JSON.parse(deps.storage.getItem(PREVIOUS_KEY) ?? "null"));
+    } catch {
+      previous = null;
+    }
+    if (previous === null) return;
+
+    const renewed = await post(
+      "/auth/v1/token?grant_type=refresh_token",
+      { refresh_token: previous.refresh },
+      null,
+    );
+    if (renewed.status === 400 || renewed.status === 401) {
+      // L'ancienne session n'existe plus : plus rien à amener.
+      deps.storage.setItem(PREVIOUS_KEY, "");
+      return;
+    }
+    const fresh = renewed.ok ? readSession(await renewed.json()) : null;
+    if (fresh === null) throw new Error("ancienne session indisponible");
+    deps.storage.setItem(PREVIOUS_KEY, JSON.stringify(fresh));
+
+    const moved = await call("reprendre", { ancien: fresh.access });
+    if (!moved.ok && moved.status !== 400) throw new Error("transfert indisponible");
+    deps.storage.setItem(PREVIOUS_KEY, "");
+  };
+
   const readState = (payload: unknown): PlayerState => {
     if (!isRecord(payload)) throw new Error("réponse illisible");
     return deserializeState(JSON.stringify(payload.state));
   };
 
   const fetchState: Remote["fetchState"] = async () => {
+    await bringPreviousGame();
     const response = await call("etat", {});
     if (!response.ok) throw new Error(`état : ${String(response.status)}`);
     const payload: unknown = await response.json();

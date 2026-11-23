@@ -300,3 +300,62 @@ describe("retrouver sa partie par e-mail", () => {
     expect(takeSessionFromHash("", memory())).toBe(false);
   });
 });
+
+describe("la partie en cours suit le joueur qui se connecte à un compte", () => {
+  const state = createPlayer(5, START, START);
+  const absence = summarizeAbsence(state, state, []);
+
+  function setupLink(options: { transferStatus?: number; oldSessionDead?: boolean } = {}) {
+    const storage = memory({
+      "o27.session.v1": JSON.stringify({ access: "anon", refresh: "Ranon" }),
+    });
+    takeSessionFromHash("#access_token=compte&refresh_token=Rcompte", storage);
+    const calls: { path: string; token: string | null; body: unknown }[] = [];
+    const fetchLike = ((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      const path = url.replace("https://serveur.test", "");
+      const token = new Headers(init?.headers).get("Authorization")?.replace("Bearer ", "") ?? null;
+      const body: unknown = typeof init?.body === "string" ? JSON.parse(init.body) : null;
+      calls.push({ path, token, body });
+      const reply = (status: number, payload: unknown) =>
+        Promise.resolve(new Response(JSON.stringify(payload), { status }));
+      if (path.includes("grant_type=refresh_token")) {
+        return options.oldSessionDead === true
+          ? reply(400, {})
+          : reply(200, { access_token: "anon2", refresh_token: "Ranon2" });
+      }
+      if (path.endsWith("/reprendre")) return reply(options.transferStatus ?? 200, { moved: true });
+      return reply(200, { state, absence });
+    }) as typeof fetch;
+    const api = createApi({ url: "https://serveur.test", key: "k", fetch: fetchLike, storage });
+    return { api, calls, storage };
+  }
+
+  it("demande le transfert avant de lire l'état, avec le jeton du compte et celui de l'anonyme", async () => {
+    const { api, calls, storage } = setupLink();
+    await api.fetchState();
+    const paths = calls.map((call) => call.path.replace(/^.*\//, ""));
+    expect(paths.indexOf("reprendre")).toBeGreaterThan(-1);
+    expect(paths.indexOf("reprendre")).toBeLessThan(paths.indexOf("etat"));
+    const transfer = calls.find((call) => call.path.endsWith("/reprendre"));
+    expect(transfer?.token).toBe("compte");
+    expect(transfer?.body).toEqual({ ancien: "anon2" });
+    expect(storage.getItem("o27.session.precedente")).toBe("");
+
+    await api.fetchState();
+    expect(calls.filter((call) => call.path.endsWith("/reprendre"))).toHaveLength(1);
+  });
+
+  it("en cas de panne, garde l'ancienne session pour réessayer, sans afficher la partie vide", async () => {
+    const { api, storage } = setupLink({ transferStatus: 500 });
+    await expect(api.fetchState()).rejects.toThrow();
+    expect(storage.getItem("o27.session.precedente")).toContain("Ranon2");
+  });
+
+  it("si l'ancienne session n'existe plus, n'insiste pas", async () => {
+    const { api, calls, storage } = setupLink({ oldSessionDead: true });
+    expect((await api.fetchState()).state.seed).toBe(5);
+    expect(calls.some((call) => call.path.endsWith("/reprendre"))).toBe(false);
+    expect(storage.getItem("o27.session.precedente")).toBe("");
+  });
+});

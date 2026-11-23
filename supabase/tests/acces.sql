@@ -133,4 +133,76 @@ begin
 end;
 $$;
 
+-- 5. Transfert de partie : un anonyme qui se connecte à un compte garde sa partie.
+reset role;
+
+insert into auth.users (id, is_anonymous) values
+  ('00000000-0000-4000-8000-00000000000c', true),
+  ('00000000-0000-4000-8000-00000000000d', false),
+  ('00000000-0000-4000-8000-00000000000e', true);
+
+do $$
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+  bob constant uuid := '00000000-0000-4000-8000-00000000000b';
+  carl constant uuid := '00000000-0000-4000-8000-00000000000c';
+  dora constant uuid := '00000000-0000-4000-8000-00000000000d';
+  eve constant uuid := '00000000-0000-4000-8000-00000000000e';
+  ordre constant uuid := '00000000-0000-4000-8000-000000000002';
+  saison bigint;
+begin
+  select id into strict saison from public.saisons order by debut desc limit 1;
+  perform public.enregistrer(carl, saison, 0, '{"counters":{"harvests":12}}', ordre, '{"ok":true}');
+  perform public.enregistrer(eve, saison, 0, '{"counters":{"harvests":5}}', null, null);
+
+  -- Vers un compte sans partie : la partie et ses ordres suivent.
+  if not public.transferer(carl, dora) then
+    raise exception 'ECHEC : transfert refusé vers un compte sans partie';
+  end if;
+  if (select etat -> 'counters' ->> 'harvests' from public.etats_joueur where joueur = dora) <> '12' then
+    raise exception 'ECHEC : la partie n''a pas suivi le joueur';
+  end if;
+  if exists (select 1 from public.etats_joueur where joueur = carl) then
+    raise exception 'ECHEC : la partie existe encore sous l''ancien compte';
+  end if;
+  if (select count(*) from public.ordres where joueur = dora and id = ordre) <> 1 then
+    raise exception 'ECHEC : les ordres déjà traités n''ont pas suivi';
+  end if;
+
+  -- Vers un compte qui a déjà joué : rien ne bouge, sa partie n'est jamais écrasée.
+  if public.transferer(eve, dora) then
+    raise exception 'ECHEC : une partie déjà jouée a été écrasée';
+  end if;
+  if (select etat -> 'counters' ->> 'harvests' from public.etats_joueur where joueur = dora) <> '12' then
+    raise exception 'ECHEC : la partie du compte a changé après un transfert refusé';
+  end if;
+
+  -- D'un compte non anonyme : refusé (on ne déplace pas la partie d'un vrai compte).
+  if public.transferer(dora, alice) then
+    raise exception 'ECHEC : la partie d''un compte non anonyme a été déplacée';
+  end if;
+
+  -- Vers un compte dont la partie est vierge (rien de récolté) : elle est remplacée.
+  if not public.transferer(eve, bob) then
+    raise exception 'ECHEC : transfert refusé vers un compte à la partie vierge';
+  end if;
+  if (select etat -> 'counters' ->> 'harvests' from public.etats_joueur where joueur = bob) <> '5' then
+    raise exception 'ECHEC : la partie vierge n''a pas été remplacée';
+  end if;
+end;
+$$;
+
+-- Un joueur ne peut pas déclencher lui-même un transfert.
+set local role authenticated;
+do $$
+begin
+  begin
+    perform public.transferer(
+      '00000000-0000-4000-8000-00000000000a', '00000000-0000-4000-8000-00000000000b');
+    raise exception 'ECHEC : un joueur appelle la fonction de transfert';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
 rollback;
