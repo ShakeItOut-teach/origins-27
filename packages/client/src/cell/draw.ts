@@ -82,6 +82,7 @@ export const ORGANELLE_ANGLE: Readonly<Record<OrganelleId, number>> = {
   vacuole: (-35 * Math.PI) / 180,
   cilia: (145 * Math.PI) / 180,
   ribosome: (35 * Math.PI) / 180,
+  nursery: (90 * Math.PI) / 180,
 };
 
 const MEMBRANE_POINTS = 72;

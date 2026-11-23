@@ -66,6 +66,8 @@ export const fr = {
   "label.weakness": "Point faible",
   "label.chance": "Chances de victoire",
   "label.party": "Votre groupe",
+  "label.sureIfStruck": "victoire certaine si vous touchez la proie",
+  "hunt.strikeHint": "Votre groupe est sur la proie",
   "action.train": "Faire naître",
   "action.hunt": "Chasser",
   "action.strike": "Touchez la proie !",

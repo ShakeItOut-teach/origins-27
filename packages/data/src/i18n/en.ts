@@ -68,6 +68,8 @@ export const en = {
   "label.weakness": "Weak spot",
   "label.chance": "Chance to win",
   "label.party": "Your group",
+  "label.sureIfStruck": "certain win if you tap the prey",
+  "hunt.strikeHint": "Your group has reached the prey",
   "action.train": "Grow",
   "action.hunt": "Hunt",
   "action.strike": "Tap the prey!",

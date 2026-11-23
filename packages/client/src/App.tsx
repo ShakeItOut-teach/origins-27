@@ -1,5 +1,6 @@
 import {
   MICRO,
+  nextMutationPrice,
   capacity,
   describeCreature,
   levelCost,
@@ -7,8 +8,8 @@ import {
   productionRate,
 } from "@o27/core";
 import type { AbsenceSummary, PlayerState } from "@o27/core";
-import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS } from "@o27/data";
-import type { MutationId, OrganelleId, ResourceId, TextKey } from "@o27/data";
+import { BALANCE, MAX_RELEASED_TIER, MUTATION_IDS, ORGANELLE_IDS, RESOURCE_IDS } from "@o27/data";
+import type { MutationId, Order, OrganelleId, ResourceId, TextKey } from "@o27/data";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
 import type { Account } from "./game/api";
@@ -19,6 +20,7 @@ import { isVisible } from "./game/unlock";
 import { AccountSheet } from "./ui/AccountSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
+import { TroopPanel } from "./ui/TroopPanel";
 
 interface Props {
   readonly store: GameStore;
@@ -34,6 +36,7 @@ const SLOT_POSITION: Readonly<Record<OrganelleId, { left: string; top: string }>
   vacuole: { left: "83%", top: "27%" },
   cilia: { left: "17%", top: "73%" },
   ribosome: { left: "83%", top: "73%" },
+  nursery: { left: "50%", top: "88%" },
 };
 
 function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number): boolean {
@@ -46,6 +49,12 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [view, setView] = useState<"cell" | "map">("cell");
   /** Butin perdu au dernier retour, faute de place : on le dit, une fois. */
   const [loss, setLoss] = useState<{ resource: ResourceId; amount: number } | null>(null);
+  /** Résultat de la dernière chasse rentrée. */
+  const [huntNote, setHuntNote] = useState<{
+    won: boolean;
+    gained: number;
+    losses: number;
+  } | null>(null);
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const t = (key: TextKey): string => translate(lang, key);
   const [selected, setSelected] = useState<OrganelleId | null>(null);
@@ -66,6 +75,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           }
           if (event.type === "expeditionReturned" && event.lost >= MICRO) {
             setLoss({ resource: event.resource, amount: event.lost });
+          }
+          if (event.type === "huntReturned" && !event.cancelled) {
+            setHuntNote({ won: event.won, gained: event.gained, losses: event.losses });
           }
         }
       }),
@@ -94,7 +106,18 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
 
   const show = (element: Parameters<typeof isVisible>[0]): boolean =>
     isVisible(element, state.tier);
-  const counters: ResourceId[] = show("bricksCounter") ? ["sugar", "bricks"] : ["sugar"];
+  const counters: ResourceId[] = ["sugar"];
+  if (show("bricksCounter")) counters.push("bricks");
+  if (show("hunt")) counters.push("proteins");
+  const hunt = state.hunt;
+  /** Le groupe est face à la proie : le joueur peut la toucher. */
+  const strikeLeft =
+    hunt !== null && !hunt.cancelled && hunt.outcome === null && state.now >= hunt.arrivesAt
+      ? hunt.resolveAt - state.now
+      : null;
+  const mutationPrice = nextMutationPrice(state);
+  const canMutate =
+    show("hunt") && state.mutationOffer === null && state.mutations.length < MUTATION_IDS.length;
   const slots = ORGANELLE_IDS.filter((id) => BALANCE.organelles[id].tier <= state.tier);
   const choosing =
     absence === null && reveal === null && state.mutationOffer !== null && show("mutationChoice");
@@ -156,7 +179,8 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               <span className="counter-label">{full ? t("state.full") : t(`resource.${id}`)}</span>
               {show("productionRate") && rate > 0 && (
                 <span className="counter-rate">
-                  +{formatRate(rate, lang)} {t("label.perSecond")}
+                  +{formatRate(rate, lang)}
+                  {show("energy") ? "/s" : ` ${t("label.perSecond")}`}
                 </span>
               )}
             </div>
@@ -180,6 +204,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           state={state}
           hue={creature.hue}
           lang={lang}
+          showPrey={show("hunt")}
           onOrder={(order) => store.send(order).ok}
         />
       )}
@@ -238,6 +263,68 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         </div>
       )}
 
+      {canMutate && (
+        <button
+          type="button"
+          className="mutate"
+          disabled={state.resources.proteins < mutationPrice}
+          data-testid="mutate"
+          onClick={() => {
+            store.send({ type: "buyMutation" });
+          }}
+        >
+          {t("action.mutate")} · <ResourceIcon id="proteins" />
+          {formatAmount(mutationPrice, lang)}
+        </button>
+      )}
+
+      {strikeLeft !== null && (
+        <button
+          type="button"
+          className="strike"
+          data-testid="strike"
+          onClick={() => {
+            store.send({ type: "strikeHunt" });
+          }}
+        >
+          <strong>{t("action.strike")}</strong>
+          <span>
+            {t("hunt.strikeHint")} · {formatDuration(strikeLeft)}
+          </span>
+        </button>
+      )}
+
+      {huntNote !== null && (
+        <div
+          className={`loss${huntNote.won ? " is-good" : ""}`}
+          role="status"
+          data-testid="hunt-note"
+        >
+          <strong>
+            {huntNote.won ? t("hunt.won") : t("hunt.lost")}
+            {huntNote.won && (
+              <>
+                {" · "}
+                <ResourceIcon id="proteins" />+{formatAmount(huntNote.gained, lang)}
+              </>
+            )}
+          </strong>
+          <span>
+            {t("hunt.losses")} : {huntNote.losses}
+          </span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setHuntNote(null);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {loss !== null && (
         <div className="loss" role="status" data-testid="loss">
           <strong>
@@ -269,6 +356,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           }}
           onAct={(order) => {
             if (store.send(order).ok) setSelected(null);
+          }}
+          onOrder={(order) => {
+            store.send(order);
           }}
         />
       )}
@@ -352,13 +442,15 @@ interface SheetProps {
   readonly id: OrganelleId;
   readonly lang: Lang;
   readonly canUpgrade: boolean;
+  /** Un ordre qui laisse la fiche ouverte (faire naître une cellule fille). */
+  readonly onOrder: (order: Order) => void;
   readonly onClose: () => void;
   readonly onAct: (
     order: { type: "build"; organelle: OrganelleId } | { type: "upgrade"; organelle: OrganelleId },
   ) => void;
 }
 
-function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct }: SheetProps) {
+function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }: SheetProps) {
   const t = (key: TextKey): string => translate(lang, key);
   const level = state.organelles[id];
   const building = state.construction?.organelle === id ? state.construction : null;
@@ -396,6 +488,9 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct }: SheetPr
           </button>
         </div>
         <p className="sheet-role">{t(`organelle.${id}.role`)}</p>
+        {id === "nursery" && level > 0 && (
+          <TroopPanel state={state} lang={lang} onOrder={onOrder} />
+        )}
 
         {building && (
           <p className="sheet-building">

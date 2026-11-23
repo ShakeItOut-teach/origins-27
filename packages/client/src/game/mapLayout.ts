@@ -1,13 +1,19 @@
 /**
- * Où dessiner chaque lieu sur la lame.
- * On garde la vraie direction de chaque lieu, mais la distance à l'écran dépend seulement de
- * sa bande (proche, moyen, loin) : la carte reste lisible et les boutons ne se chevauchent pas.
+ * Où dessiner chaque lieu et chaque proie sur la lame.
+ * On garde la vraie direction de chacun, mais la distance à l'écran dépend seulement de sa
+ * bande (proche, moyen, loin) : la carte reste lisible et les boutons ne se chevauchent pas.
  * Ceci n'est que de l'affichage : aucune règle du jeu ne dépend de ces positions.
  */
-import type { Place } from "@o27/core";
 
-export interface PlacedPlace {
-  readonly place: Place;
+/** Tout ce qui se pose sur la goutte : une position dans le monde et une bande de distance. */
+export interface Spot {
+  readonly x: number;
+  readonly y: number;
+  readonly band: number;
+}
+
+export interface Placed<T extends Spot> {
+  readonly item: T;
   /** Position sur la lame, de 0 à 1 (0,5 ; 0,5 = la cellule au centre). */
   readonly x: number;
   readonly y: number;
@@ -15,22 +21,22 @@ export interface PlacedPlace {
 
 /** Rayon de chaque bande, en part de la largeur de la lame. */
 const BAND_RADIUS = [0.19, 0.3, 0.41] as const;
-/** Écart minimal entre deux lieux, en part de la largeur de la lame. */
-export const MIN_GAP = 0.16;
+/** Écart minimal entre deux boutons, en part de la largeur de la lame. */
+export const MIN_GAP = 0.15;
 
-export function layoutPlaces(places: readonly Place[]): readonly PlacedPlace[] {
-  const items = places.map((place) => ({
-    place,
-    angle: Math.atan2(place.y, place.x),
-    radius: BAND_RADIUS[Math.min(place.band, BAND_RADIUS.length - 1)] ?? 0.41,
+export function layoutSpots<T extends Spot>(spots: readonly T[]): readonly Placed<T>[] {
+  const items = spots.map((item) => ({
+    item,
+    angle: Math.atan2(item.y, item.x),
+    radius: BAND_RADIUS[Math.min(item.band, BAND_RADIUS.length - 1)] ?? 0.41,
   }));
-  const point = (item: { angle: number; radius: number }) => ({
-    x: 0.5 + Math.cos(item.angle) * item.radius,
-    y: 0.5 + Math.sin(item.angle) * item.radius,
+  const point = (entry: { angle: number; radius: number }) => ({
+    x: 0.5 + Math.cos(entry.angle) * entry.radius,
+    y: 0.5 + Math.sin(entry.angle) * entry.radius,
   });
 
-  // On écarte petit à petit, en tournant, les lieux qui se touchent.
-  for (let pass = 0; pass < 80; pass++) {
+  // On écarte petit à petit, en tournant, ceux qui se touchent.
+  for (let pass = 0; pass < 400; pass++) {
     let moved = false;
     for (let i = 0; i < items.length; i++) {
       for (let j = i + 1; j < items.length; j++) {
@@ -43,7 +49,7 @@ export function layoutPlaces(places: readonly Place[]): readonly PlacedPlace[] {
         let delta = b.angle - a.angle;
         while (delta > Math.PI) delta -= 2 * Math.PI;
         while (delta < -Math.PI) delta += 2 * Math.PI;
-        const push = delta >= 0 ? 0.06 : -0.06;
+        const push = delta >= 0 ? 0.04 : -0.04;
         a.angle -= push;
         b.angle += push;
         moved = true;
@@ -52,28 +58,32 @@ export function layoutPlaces(places: readonly Place[]): readonly PlacedPlace[] {
     if (!moved) break;
   }
 
-  return items.map((item) => ({ place: item.place, ...point(item) }));
+  return items.map((entry) => ({ item: entry.item, ...point(entry) }));
 }
 
 /**
- * Où en est le filament, de 0 (dans la cellule) à 1 (sur le lieu).
- * À l'aller il s'éloigne, au retour il revient ; rappelé, il revient en accéléré.
+ * Où en est un filament, de 0 (dans la cellule) à 1 (sur sa cible).
+ * `arrivesAt` et `leavesAt` encadrent le temps passé sur place (nul pour une expédition).
+ * Rappelé, il revient en accéléré depuis l'endroit où il se trouvait.
  */
 export function filamentReach(
   trip: {
     readonly startedAt: number;
+    readonly arrivesAt: number;
+    readonly leavesAt: number;
     readonly returnsAt: number;
     readonly cancelled: boolean;
   },
-  fullDurationMs: number,
   cancelSpeedup: number,
   now: number,
 ): number {
-  const half = fullDurationMs / 2;
-  if (half <= 0) return 0;
+  const out = trip.arrivesAt - trip.startedAt;
+  if (out <= 0) return 0;
   const remaining = Math.max(0, trip.returnsAt - now);
-  const fromHome = trip.cancelled
-    ? remaining * cancelSpeedup
-    : Math.min(Math.max(0, now - trip.startedAt), remaining);
-  return Math.max(0, Math.min(1, fromHome / half));
+  if (trip.cancelled) return Math.max(0, Math.min(1, (remaining * cancelSpeedup) / out));
+  if (now <= trip.startedAt) return 0;
+  if (now < trip.arrivesAt) return (now - trip.startedAt) / out;
+  if (now <= trip.leavesAt) return 1;
+  const back = trip.returnsAt - trip.leavesAt;
+  return back <= 0 ? 0 : Math.max(0, Math.min(1, remaining / back));
 }

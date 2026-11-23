@@ -88,3 +88,43 @@ Ce qui change, c'est que le jeu le dit :
 
 Repère : passer la Réserve au niveau 2 coûte 96 sucres et 30 briques, soit deux expéditions
 proches ; elle passe alors de 200 à 320 places.
+
+## 2026-11-24 — Palier 4 : premiers chiffres des troupes et de la chasse
+
+**Ce qui est posé.** Pouponnière : 10 cellules filles, +5 par niveau. Cellules : chasseuse
+30 sucres ; cuirassée 20 sucres + 10 briques ; rapide 25 sucres + 5 briques ; 20 secondes
+chacune. Proies : force 6 / 15 / 35, pour 5 / 15 / 40 protéines, en 1 / 3 / 10 minutes et
+1 / 2 / 3 points d'énergie. Fenêtre du toucher : 8 secondes. Mutations suivantes : 20, 50,
+puis 100 protéines.
+
+**Mesure avec les chiffres de la conception** (Pouponnière à 200 sucres, 60 briques, 2 minutes) :
+le palier 4 s'ouvre au retour de la cinquième expédition, c'est-à-dire quand l'énergie est
+presque vide. Le robot appliqué attendait 15 à 20 minutes avant de pouvoir envoyer sa première
+chasse : la nouveauté s'ouvrait sans qu'on puisse y toucher.
+
+**Changements.**
+
+- **Chaque nouveau palier remplit la jauge d'énergie.** C'est une règle nouvelle, pas un chiffre :
+  elle vaut pour tous les paliers à venir.
+- Pouponnière ramenée à 150 sucres, 40 briques, 90 secondes.
+
+**Mesure après** (8 graines) :
+
+| Robot                             | Première chasse                    | Première victoire                          | Deuxième mutation |
+| --------------------------------- | ---------------------------------- | ------------------------------------------ | ----------------- |
+| Appliqué, touche la proie         | 3 min 30 à 5 min après l'ouverture | environ 1 minute plus tard, aucune défaite | 30 min à 1 h 20   |
+| Débutant, ne touche jamais        | 3 à 6 min                          | parfois après une ou deux défaites         | 20 min à 1 h 30   |
+| Absent (2 minutes toutes les 8 h) | le deuxième jour                   | le deuxième jour                           | pas en 48 h       |
+
+Aucune chasse n'a laissé un robot sans cellule fille (minimum observé : 5).
+
+**Reste à surveiller.**
+
+- Une fois l'énergie vide, il ne reste qu'à attendre (jusqu'à 19 minutes mesurées pour le robot
+  appliqué). C'est la fin naturelle d'une session, voulue par la conception, mais rien ne le
+  dit au joueur : il faudra un mot à l'écran (« revenez dans 20 minutes »).
+- Le joueur qui ne passe que deux minutes toutes les 8 heures avance très lentement. Ce n'est
+  sans doute pas un vrai profil ; à revoir avec des données de vrais joueurs.
+- Débutant et appliqué atteignent la deuxième mutation en des temps voisins : le toucher évite
+  les défaites, mais ne fait pas gagner beaucoup de temps. À surveiller si l'on veut que la
+  présence soit mieux récompensée.

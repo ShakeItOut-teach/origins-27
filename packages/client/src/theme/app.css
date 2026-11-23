@@ -692,3 +692,189 @@ p {
 .counters:has(.counter-energy) .counter-rate {
   font-size: 11px;
 }
+
+/* Palier 4 : cellules filles, proies, combat */
+.icon-proteins {
+  color: var(--algae);
+}
+
+.icon-troop,
+.icon-prey {
+  flex: none;
+}
+
+.place-prey {
+  color: var(--algae);
+  background: color-mix(in srgb, var(--lens-edge) 55%, transparent);
+  border-color: var(--algae);
+  border-radius: 38% 62% 55% 45%;
+}
+
+.place.is-fighting {
+  border-color: var(--on-dark);
+  animation: breathe 0.6s ease-in-out infinite;
+}
+
+.counters:has(.counter-energy):has([data-testid="counter-proteins"]) {
+  gap: var(--space-3);
+}
+
+.counters:has(.counter-energy):has([data-testid="counter-proteins"]) .counter-value {
+  font-size: 24px;
+}
+
+.counters:has(.counter-energy):has([data-testid="counter-proteins"]) .counter-label {
+  font-size: 15px;
+}
+
+.troops,
+.party {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.troops-head {
+  font-family: var(--font-title);
+  font-style: italic;
+  font-size: 18px;
+}
+
+.troop-row,
+.party-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.troop-name small {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: var(--space-2);
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.troop-name small svg {
+  width: 14px;
+  height: 14px;
+}
+
+.troop-count,
+.party-count {
+  min-width: 2ch;
+  text-align: center;
+  font-family: var(--font-number);
+  font-size: 18px;
+}
+
+.troop-row .cost {
+  font-size: 14px;
+}
+
+.troop-row .cost svg {
+  width: 14px;
+  height: 14px;
+}
+
+.step {
+  width: var(--touch);
+  height: var(--touch);
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-number);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.weakness {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.chance {
+  font-size: 17px;
+}
+
+.chance strong {
+  font-family: var(--font-number);
+  font-size: 22px;
+}
+
+.chance-sure {
+  color: var(--algae);
+  font-size: 14px;
+}
+
+.button-strike {
+  background: var(--algae);
+}
+
+.mutate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch);
+  padding: 0 var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.mutate:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Le moment du combat : un grand bouton impossible à manquer */
+.strike {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: max(var(--space-4), env(safe-area-inset-bottom));
+  z-index: 9;
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  min-height: 64px;
+  padding: var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-big);
+  background: var(--algae);
+  color: var(--paper);
+  font-family: var(--font-text);
+  cursor: pointer;
+  animation: breathe 0.8s ease-in-out infinite;
+}
+
+.strike strong {
+  font-size: 20px;
+}
+
+.strike span {
+  font-size: 14px;
+}
+
+.loss.is-good {
+  border-color: var(--algae);
+  color: var(--algae);
+}
+
+.loss.is-good .close {
+  color: var(--algae);
+}
