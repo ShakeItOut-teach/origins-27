@@ -66,7 +66,7 @@ export function AccountSheet({ account, lang, onClose }: Props) {
           event.stopPropagation();
         }}
       >
-        <div className="sheet-head">
+        <div className="sheet-head sheet-head-plain">
           <div>
             <h2>{t("account.title")}</h2>
           </div>

@@ -547,3 +547,7 @@ p {
   color: var(--ink-soft);
   font-size: 14px;
 }
+
+.sheet-head-plain {
+  grid-template-columns: 1fr auto;
+}
