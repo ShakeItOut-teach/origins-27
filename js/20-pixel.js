@@ -75,3 +75,6 @@ function drawCellStage(){
 
 function sizeStage(){const st=$("pxstage");if(!st)return;const va=$("viewarea"),s=Math.max(240,Math.min(va.clientWidth-12,va.clientHeight-12)),dpr=window.devicePixelRatio||1,u=Math.max(1,Math.floor(s*dpr/CELL_RES+1e-3)),css=CELL_RES*u/dpr;st.style.width=css+"px";st.style.height=css+"px";const t=$("pxart");if(t&&t._src)upscale(t._src,t,css);}
 
+/* Thème : « lab » (carnet de laboratoire, par défaut) ou « abyss » (l'ancien thème sombre). */
+function getTheme(){try{return localStorage.getItem("o27-theme")==="abyss"?"abyss":"lab";}catch(e){return "lab";}}
+function setTheme(th){document.body.classList.toggle("lab",th==="lab");try{localStorage.setItem("o27-theme",th);}catch(e){}const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=th==="lab"?"#f3ecdc":"#02060b";dirty=true;}

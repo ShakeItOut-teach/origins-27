@@ -1,0 +1,228 @@
+/* Direction B · Carnet de laboratoire.
+   L'interface devient le carnet d'un naturaliste : papier quadrillé, encre, éosine.
+   Les vues vivantes (carte, cellule, écran titre) restent sombres : ce sont des lames
+   observées au microscope, collées dans le carnet avec un cadre d'encre.
+   Tout est rangé sous body.lab ; sans cette classe, le style « Abysses » d'origine s'applique. */
+body.lab{
+  --paper:#f3ecdc;
+  --sheet:#fbf7ec;
+  --ink:#1d2433;
+  --abyss:#f3ecdc;
+  --deep:#efe7d4;
+  --panel:#fbf7ec;
+  --line:#cdbf9f;
+  --text:#1d2433;
+  --muted:#5a6273;
+  --lume:#a8402c;       /* éosine : l'action */
+  --algue:#3f7d5c;      /* la vie, les gains */
+  --iode:#d9a441;       /* les récompenses */
+  --gold:#d9a441;
+  --lame:#4a6fa5;
+  --atp:#8a6512;
+  --prot:#b3541e;
+  --lip:#a3346b;
+  --nuc:#4a6fa5;
+  --bad:#b8321f;
+  --t-tox:#5f7d12;--t-pha:#2a6f9a;--t-par:#7d3fae;--t-enz:#b5561c;--t-har:#5a6273;
+  --font-display:"Instrument Serif",Georgia,"Times New Roman",serif;
+  color-scheme:light;
+  font-synthesis:none;
+  background-color:var(--paper);
+  background-image:linear-gradient(rgba(29,36,51,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(29,36,51,.055) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+body.lab ::selection{background:#e7b9ab}
+body.lab button:focus-visible,body.lab [tabindex]:focus-visible{outline-color:var(--ink)}
+
+/* Titres à l'encre, en sérif */
+body.lab h1{font:400 26px/1 var(--font-display);letter-spacing:.005em}
+body.lab h1 small{color:var(--lume)}
+body.lab h2{font-weight:400;font-size:21px;line-height:1.15}
+body.lab .pop h2{font-size:27px}
+body.lab h3{color:var(--muted);font-family:var(--font-mono);font-weight:500;font-size:11px}
+
+/* Bandeaux : feuilles posées sur le carnet */
+body.lab header{background:var(--sheet);border-bottom:2px solid var(--ink)}
+body.lab .souche-chip{border-color:var(--ink)}
+body.lab .clock{color:var(--lume)}
+body.lab .seg{border:1.5px solid var(--ink);border-radius:4px}
+body.lab .seg button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+body.lab .ghost{border:1.5px solid var(--ink);border-radius:4px;color:var(--ink);background:var(--sheet)}
+body.lab .ghost:hover{background:#fff}
+body.lab .resbar{background:var(--ink);gap:2px;border-bottom:2px solid var(--ink)}
+body.lab .res{background:var(--sheet)}
+body.lab .res .k{color:var(--muted);font-family:var(--font-mono)}
+body.lab .strip{background:transparent;border-bottom:1px solid var(--line);color:var(--muted)}
+body.lab .strip .pb{background:#ddd1b6}
+body.lab .strip .pb i{background:var(--algue)}
+body.lab .goal{background:#fff;border:1.5px solid var(--ink);border-radius:4px;box-shadow:2px 2px 0 var(--ink)}
+body.lab .hint{background:#fbf0d4;border:1.5px solid var(--iode);border-radius:4px}
+body.lab .hint.wait{background:transparent;border-color:var(--line)}
+body.lab nav.tabs{background:var(--sheet);border-bottom:2px solid var(--ink)}
+body.lab nav.tabs button{color:var(--muted)}
+body.lab nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--lume)}
+body.lab aside{background:var(--paper);border-left:2px solid var(--ink)}
+
+/* Fiches et cartes : papier, contour d'encre, ombre dure */
+body.lab .card,body.lab .strain,body.lab .statlegend,body.lab .mutbar,body.lab .dcard{background:var(--sheet);border:1.5px solid var(--ink);border-radius:4px;box-shadow:3px 3px 0 var(--ink)}
+body.lab .unit,body.lab .lm,body.lab .tutres div,body.lab .armystats div{background:var(--sheet);border-color:var(--ink);border-radius:4px}
+body.lab .unit{border-left:4px solid var(--uc)}
+body.lab .mnode{background:var(--sheet);border-color:var(--ink);border-radius:4px}
+body.lab .mnode.st-owned{background:#e4efe5}
+body.lab .mut{background:var(--sheet)}
+body.lab .linrow.on{background:#fff}
+body.lab .win,body.lab .quick{background:#f6e3dc;border:1.5px solid var(--lume);border-radius:4px}
+body.lab .em.got{background:#e6ebf4}
+body.lab .stash,body.lab .lgrew{background:#fbf0d4;border-color:var(--iode)}
+body.lab .lm.ready{border-color:var(--iode);box-shadow:3px 3px 0 var(--iode)}
+body.lab .lm.ready .lmp .pb i{background:var(--iode)}
+body.lab .rkbig{background:var(--sheet);border:1.5px solid var(--ink);border-radius:4px}
+body.lab .heroart{background:radial-gradient(circle at 50% 45%,#12323f,#03080f 70%);border:2px solid var(--ink);border-radius:4px;box-shadow:4px 4px 0 var(--ink)}
+body.lab .dart{border:1.5px solid var(--ink)}
+
+/* Boutons : éosine, contour encre, ombre dure qui s'enfonce au clic */
+body.lab .btn{background:var(--lume);color:#fff;border:2px solid var(--ink);border-radius:4px;box-shadow:3px 3px 0 var(--ink);text-transform:none;letter-spacing:0}
+body.lab .btn:hover:not(:disabled){background:#93351f}
+body.lab .btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+body.lab .btn:disabled{background:#e4dac3;color:#7d7766;border-color:#b7aa8b;box-shadow:none}
+body.lab .btn.alt{background:var(--sheet);color:var(--ink);border:2px solid var(--ink)}
+body.lab .btn.alt:hover:not(:disabled){background:#fff}
+body.lab .btn.alt:disabled{background:transparent;border-color:#b7aa8b;color:#7d7766}
+body.lab .btn.danger{background:var(--sheet);color:var(--bad);border-color:var(--bad);box-shadow:3px 3px 0 var(--bad)}
+body.lab .btn.gold,body.lab .btn.chest{background:var(--iode);color:var(--ink)}
+body.lab.pixel .btn{text-transform:none;letter-spacing:0}
+body.lab.pixel .card,body.lab.pixel .pop,body.lab.pixel .strain{border-width:2px;box-shadow:4px 4px 0 var(--ink)}
+body.lab.pixel .heroart{box-shadow:4px 4px 0 var(--ink)}
+body.lab .stepper button,body.lab .comp button{background:var(--sheet);border:1.5px solid var(--ink);border-radius:4px}
+body.lab .lnk{color:var(--lume)}
+
+/* Onglets secondaires */
+body.lab .mtabs,body.lab .subtabs{border:1.5px solid var(--ink);border-radius:4px;background:var(--sheet)}
+body.lab .mtabs button[aria-pressed="true"],body.lab .subtabs button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+body.lab .mtabs i,body.lab .subtabs i.live,body.lab .badge.live{background:var(--algue);color:#fff}
+body.lab .subtabs i.red,body.lab .badge.red{background:var(--bad);color:#fff}
+body.lab .badge.new{background:var(--iode);color:var(--ink)}
+body.lab .seg2 button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+body.lab .rkchips button{border-color:var(--ink);color:var(--ink);border-radius:4px}
+body.lab .rkchips button[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+body.lab .timeline span{border-color:var(--line)}
+body.lab .timeline span.on{border-color:var(--lume);color:var(--lume);background:#fff}
+
+/* Barres de progression */
+body.lab .bar,body.lab .xpbar,body.lab .lmp .pb,body.lab .tutrun,body.lab .dq .bar{background:#ddd1b6}
+body.lab .bar i,body.lab .lmp .pb i{background:var(--algue)}
+body.lab .xpbar i{background:var(--iode)}
+body.lab .fbar{background:#e9b8ad}
+body.lab .fbar i{background:#8fc3a3}
+body.lab .fbar span{color:var(--ink);text-shadow:none}
+
+/* Journal et classement, comme des lignes de cahier */
+body.lab .log li{border-top:1px dashed var(--line)}
+body.lab .log li.good span{color:var(--algue)}
+body.lab table.rank td,body.lab table.rank th{border-bottom:1px dashed var(--line)}
+body.lab table.rank tr.me td{background:#f6e3dc;color:var(--lume)}
+body.lab table.rank tr.go:hover td{background:#fff}
+body.lab .rep.fresh{background:#f6e3dc}
+
+/* Or des récompenses : de l'iode, lisible sur papier */
+body.lab .bqn,body.lab .enpill,body.lab .tutpill,body.lab .dday.now{color:#8a6512}
+body.lab .dday.now{border-color:var(--iode);box-shadow:0 0 0 1px var(--iode)}
+body.lab .accb{border-color:var(--iode);background:#fbf0d4;color:#6e500c}
+body.lab .lmpill.on{background:var(--iode);color:var(--ink);border-color:var(--ink)}
+body.lab .protw{color:var(--lame)}
+
+/* Les vues vivantes : des lames sous le microscope */
+body.lab canvas{border:2px solid var(--ink);border-radius:4px;box-shadow:4px 4px 0 var(--ink)}
+body.lab .pxstage canvas,body.lab .pxc{box-shadow:none}
+body.lab .viewarea>svg{filter:drop-shadow(4px 4px 0 var(--ink))}
+body.lab .depthtag{background:var(--sheet);border:1.5px solid var(--ink);color:var(--ink);border-radius:3px}
+body.lab .depthtag .lbar{background:#ddd1b6}
+body.lab .depthtag .lbar i{background:var(--iode)}
+body.lab .mapctl button{background:var(--sheet);border:1.5px solid var(--ink);color:var(--ink);border-radius:4px;box-shadow:2px 2px 0 var(--ink)}
+body.lab .mapctl button.auto{background:#fbf0d4;border-color:var(--ink);color:#6e500c}
+body.lab .intro .art,body.lab .strain .portrait{border:2px solid var(--ink);border-radius:4px}
+
+/* Fenêtres, bulles, notifications */
+body.lab #modal{background:rgba(29,36,51,.45)}
+body.lab .pop,body.lab .fbk-box{background:var(--sheet);border:2px solid var(--ink);border-radius:6px;box-shadow:6px 6px 0 var(--ink)}
+body.lab .pop .kick{color:var(--lume)}
+body.lab .fbk-q textarea,body.lab #svcode{background:#fff;border:1.5px solid var(--ink);color:var(--ink);border-radius:4px}
+body.lab #fbk{background:rgba(29,36,51,.45)}
+body.lab #tip{background:var(--sheet);border:1.5px solid var(--ink);color:var(--ink);border-radius:4px;box-shadow:3px 3px 0 var(--ink)}
+body.lab .toast{background:var(--ink);color:var(--sheet);border-color:var(--ink);border-radius:4px;box-shadow:3px 3px 0 rgba(29,36,51,.35)}
+body.lab #tour .hole{border-color:var(--lume);box-shadow:0 0 0 9999px rgba(29,36,51,.55)}
+body.lab #tour .tbub,body.lab #coach .cbub{background:var(--sheet);border:2px solid var(--ink);border-radius:6px;box-shadow:5px 5px 0 var(--lume)}
+body.lab #coach .cm{background:rgba(29,36,51,.38)}
+body.lab #coach .cring{border-color:var(--lume);box-shadow:0 0 0 3px rgba(168,64,44,.25)}
+body.lab #coach .kick,body.lab #tour .kick{color:var(--lume)}
+@media (max-width:860px){
+  body.lab aside{border-left:0;border-top:2px solid var(--ink);background:var(--paper);box-shadow:0 -6px 0 rgba(29,36,51,.12)}
+  body.lab .sheet-close{background:var(--ink);color:var(--sheet)}
+  body.lab nav.tabs{border-top:2px solid var(--ink);border-bottom:0}
+}
+
+/* Écran titre : la page de garde du carnet, avec le spécimen en photo */
+body.lab .picker{background:rgba(243,236,220,.97)}
+body.lab .picker.title{background:#02060b}
+body.lab .title .tscrim{background:linear-gradient(90deg,var(--paper) 0%,var(--paper) 46%,rgba(243,236,220,0) 46.1%);border-right:0}
+body.lab .title .tscrim::after{content:"";position:absolute;top:0;bottom:0;left:46%;width:3px;background:var(--ink)}
+body.lab .title .tscrim::before{content:"";position:absolute;inset:0 54% 0 0;background-image:linear-gradient(rgba(29,36,51,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(29,36,51,.06) 1px,transparent 1px);background-size:24px 24px}
+body.lab .title .tin{margin:0;max-width:46%;padding:40px 40px 28px 48px;color:var(--ink)}
+body.lab .tkick{color:var(--lume)}
+body.lab .tlogo{font:400 clamp(62px,9vw,124px)/.86 var(--font-display);letter-spacing:-.01em;background:none;color:var(--ink);filter:none;-webkit-text-fill-color:currentColor}
+body.lab .tlogo span{font-style:italic;font-size:.7em;vertical-align:.32em;background:none;color:var(--lume);-webkit-text-fill-color:currentColor}
+body.lab .thook{font:400 italic clamp(21px,2.4vw,28px)/1.25 var(--font-display);color:var(--ink)}
+body.lab .tbadges .tb1{background:var(--algue);color:#fff;box-shadow:2px 2px 0 var(--ink);border:1.5px solid var(--ink);border-radius:4px}
+body.lab .tbadges .tb2{background:var(--iode);color:var(--ink);box-shadow:2px 2px 0 var(--ink);border:1.5px solid var(--ink);border-radius:4px}
+body.lab .tbadges small,body.lab .tsub{color:#3b4356}
+body.lab .tfeats{grid-template-columns:1fr 1fr}
+body.lab .tfeat{background:var(--sheet);backdrop-filter:none;-webkit-backdrop-filter:none;border:1.5px solid var(--ink);border-radius:4px;box-shadow:3px 3px 0 var(--ink)}
+body.lab .tfeat h3{font:400 21px var(--font-display);color:var(--ink);text-transform:none;letter-spacing:0}
+body.lab .tfoot{color:var(--muted)}
+body.lab .tfb{color:var(--lume)}
+body.lab .title .tcta .btn{font-size:16px;padding:11px 20px}
+@media (max-width:760px){
+  body.lab .picker.title{background-color:var(--paper);background-image:linear-gradient(rgba(29,36,51,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(29,36,51,.06) 1px,transparent 1px);background-size:24px 24px}
+  body.lab .title .tscrim{display:none}
+  body.lab .title .tbg{position:absolute;bottom:auto;height:36vh;overflow:hidden;border-bottom:3px solid var(--ink)}
+  body.lab .title .tbg>*{width:100%!important;height:100%!important;object-fit:cover;object-position:50% 42%}
+  body.lab .title .tin{max-width:none;padding:calc(36vh + 22px) 20px 24px}
+  body.lab .tfeats{grid-template-columns:1fr}
+}
+
+/* Options, alliance */
+body.lab .optrow{border-color:var(--line)}
+body.lab .altech{background:var(--sheet);border-color:var(--ink);border-radius:4px}
+body.lab .altech.rec{background:#fbf0d4;border-color:var(--iode);box-shadow:3px 3px 0 var(--iode)}
+body.lab .alpill{color:var(--lame)}
+body.lab .fxgain{color:var(--algue);text-shadow:1px 1px 0 #fff}
+
+/* La zone de vue entière est la lame : cadre d'encre, ombre dure, marge de papier autour */
+body.lab .viewarea{margin:12px 6px 12px 12px;border:2px solid var(--ink);border-radius:4px;box-shadow:4px 4px 0 var(--ink)}
+body.lab .viewarea canvas{border:0;box-shadow:none;border-radius:0}
+body.lab .viewarea>svg{filter:none}
+@media (max-width:860px){body.lab .viewarea{margin:6px 8px 8px 6px;box-shadow:3px 3px 0 var(--ink)}}
+body.lab .mapcoord{background:var(--sheet);color:var(--ink);border:1.5px solid var(--ink);border-radius:3px;padding:2px 7px}
+body.lab .rwpill.on{color:#8a6512}
+body.lab .mutbar i{filter:brightness(.55) saturate(1.5)}
+body.lab .svgs{fill:#7a7466}
+
+/* Couleurs de catégorie (rangs, évènements, mutations) : assombries à l'encre pour rester lisibles */
+body.lab .rkbadge{color:color-mix(in srgb,var(--rc) 45%,#1d2433)}
+body.lab .tier .thead b{color:color-mix(in srgb,var(--rc) 45%,#1d2433)}
+body.lab .tiers span{color:color-mix(in srgb,var(--tc) 45%,#1d2433)}
+body.lab .evpill{color:color-mix(in srgb,var(--ec) 45%,#1d2433);border-color:color-mix(in srgb,var(--ec) 60%,#1d2433);background:var(--sheet)}
+body.lab .mutdots i,body.lab .mut-h{color:color-mix(in srgb,var(--mc) 45%,#1d2433)}
+body.lab .tfeat p{color:#3b4356}
+body.lab .instpill{border-color:var(--iode);color:#8a6512}
+body.lab .accb.inst{background:var(--iode);color:var(--ink);border-color:var(--ink)}
+body.lab .alstar{color:#b8861c}
+body.lab .alpill{border-color:var(--algue);color:var(--algue)}
+body.lab .alpill.on{background:var(--algue);color:#fff;border-color:var(--ink)}
+body.lab .lmpill{border-color:var(--lame)}
+body.lab .unit b{color:color-mix(in srgb,var(--uc) 45%,#1d2433)}
+/* Le style pixel garde ses sprites nets, mais les titres restent à l'encre du carnet */
+body.lab.pixel h1,body.lab.pixel h2,body.lab.pixel .heroform,body.lab.pixel .pop h2,body.lab.pixel .intro h2,body.lab.pixel .picker h2,body.lab.pixel .strain h3{font-family:var(--font-display);font-weight:400;letter-spacing:0}
+body.lab.pixel .btn{border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+body.lab.pixel .btn:disabled{box-shadow:none;border-color:#b7aa8b}
+body.lab.pixel .btn:active:not(:disabled){box-shadow:1px 1px 0 var(--ink)}

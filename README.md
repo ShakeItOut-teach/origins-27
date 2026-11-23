@@ -40,7 +40,7 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123a`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123b`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
 
 ## Robot de test (avant chaque lancement)
 
@@ -77,6 +77,12 @@ La sauvegarde du joueur n’est jamais touchée : les robots travaillent dans un
 ## Discord
 
 Collez l’invitation du serveur dans `DISCORD_URL`, en haut de `js/26-alliances.js` (par exemple `"https://discord.gg/xxxxxxx"`). Le bouton « Rejoindre le Discord » apparaît alors dans l’écran Alliance et dans ⚙ Options ; la première visite rapporte +15 ⚡, un coffre rare et 300 crédits d’alliance. Vide, le bouton reste caché.
+
+## Identité graphique : le carnet de laboratoire
+
+Le jeu se présente comme le carnet d’un naturaliste : papier quadrillé, encre bleu nuit (`#1D2433`), éosine pour les actions (`#A8402C`), algue pour la vie et les gains (`#3F7D5C`), iode pour les récompenses (`#D9A441`), lame pour l’évolution (`#4A6FA5`). Les titres sont en Instrument Serif, le texte en IBM Plex Sans, les chiffres en IBM Plex Mono. Fiches et boutons ont un contour d’encre et une ombre dure, sans flou.
+
+Les vues vivantes (cellule, carte, écran titre) restent sombres : ce sont les lames observées au microscope, collées dans le carnet avec un cadre d’encre. L’ancien thème sombre « Abysses » reste disponible dans ⚙ Options → Thème. Tout le thème tient dans `css/lab.css`, rangé sous la classe `body.lab`.
 
 ## Options, sauvegarde et application
 
@@ -127,6 +133,7 @@ Le texte tapé est gardé si la fenêtre est fermée. Un seul rappel discret app
 ```
 index.html          la page : en-tête, zones de l’écran, et la liste des scripts à charger
 css/style.css       toute l’apparence (couleurs, mise en page, animations)
+css/lab.css         le thème « Carnet de laboratoire » (par défaut) : papier, encre, éosine ; sans lui, le thème sombre « Abysses »
 js/00-langue.js … js/26-alliances.js   le jeu, découpé par thème (00 : la langue, chargée en premier ; 23 : le guide des premiers pas ; 24 : les missions d’apprentissage ; 25 : les options ; 26 : les alliances)
 apercu.jpg          l’image affichée quand on partage le lien (1200 × 630)
 ```
@@ -138,6 +145,7 @@ Les scripts sont des fichiers JavaScript classiques, chargés **dans l’ordre d
 | Je veux changer… | Fichier |
 |---|---|
 | Les couleurs, la mise en page, une animation | `css/style.css` |
+| Le thème Carnet de laboratoire (papier, encre) | `css/lab.css` |
 | Le choix de la langue, les petits outils de traduction | `js/00-langue.js` |
 | Le monde, les zones, la taille de la carte | `js/01-monde.js` |
 | Les ressources, souches, canaux, organites, gènes | `js/03-regles.js` |

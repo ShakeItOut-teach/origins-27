@@ -77,6 +77,7 @@ function act(a,el){
     S.mig={fx:S.px,fy:S.py,x,y,start:S.t,end:S.t+migTime(d)};toast(tr("Migration lancée","Migration started"));dirty=true;return;}
   if(a==="zoom"){camZoom(+el.dataset.z);return;}
   if(a==="recenter"){cam=null;dirty=true;return;}
+  if(a==="theme"){setTheme(getTheme()==="lab"?"abyss":"lab");if(document.querySelector("#modal.on .optgrid"))showModal(optHTML());return;}
   if(a==="style"){setStyle(document.body.classList.contains("pixel")?"smooth":"pixel");return;}
   if(a==="express"){const id=el.dataset.id;if(nodeBlock(id))return;const c=nodeCost(id);if(!afford(c))return;pay(c);S.research={id,start:S.t,end:S.t+nodeTime(id)};toast(tr("Expression lancée : ","Expression started: ")+NODES[id].name);dqAdd("gene");dirty=true;return;}
   if(a==="cell"){const k=el.dataset.k||"coll",U=UNITS[k];if(!U||!uReq(k))return;const n=el.dataset.n==="max"?maxAfford(U.cost,200):+el.dataset.n;let made=0;for(let i=0;i<n;i++){if(!afford(U.cost))break;pay(U.cost);queueUnit(k);made++;}if(made)dqAdd("units",made);if(made)toast(made+" "+(made>1?U.pl:U.name).toLowerCase()+tr(" en production"," in production"));else showModal(adviceHTML(U.cost));dirty=true;return;}

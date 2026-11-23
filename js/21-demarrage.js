@@ -51,7 +51,7 @@ function load(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return fals
     else if(got.length)S.popups.push(got[got.length-1]);}
   return true;}catch(err){catchUp=null;return false;}}
 
-try{const st=localStorage.getItem("o27-style");document.body.classList.toggle("pixel",st!=="smooth");}catch(e){document.body.classList.add("pixel");}
+setTheme(getTheme());try{const st=localStorage.getItem("o27-style");document.body.classList.toggle("pixel",st!=="smooth");}catch(e){document.body.classList.add("pixel");}
 if(!load())showTitle();
 let lastFrame=performance.now(),lastUI=0,lastSave=0;
 function frame(now){
