@@ -235,3 +235,6 @@ body.lab .gazette h2{font-size:30px;font-style:italic}
 body.lab .fosspill{background:var(--sheet);border:1.5px solid var(--ink);border-radius:3px}
 body.lab .fosspill.on{background:#f6e3b4;box-shadow:2px 2px 0 var(--ink);border-color:var(--ink)}
 body.lab .optrow select{background:var(--sheet);border:1.5px solid var(--ink);border-radius:3px;color:var(--ink)}
+/* Gains en vert algue (la planche B : algue = vie, gains), pertes en éosine */
+body.lab .up{color:var(--algue)}
+body.lab #tip .up,body.lab #toasts .up{color:#8fd3a8}

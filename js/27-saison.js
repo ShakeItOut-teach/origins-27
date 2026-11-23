@@ -18,20 +18,66 @@ function seasonSeed(){return ((S&&S.seed)||12345)+seasonNo()*7919;}
 function seasonDay(){return Math.min(SEASON_DAYS,dayIdx(S.t)+1);}
 function seasonLeft(){return Math.max(0,SEASON_DAYS*1440-S.t);}
 function seasonTick(){
+  if(S&&S.bots)crisisTick();
   if(!S||S.seasonEnd||S.tut!=null||S.t<SEASON_DAYS*1440)return;
   const rk=myRank("pow"),L=leagueOf(rk),sp=speciesInfo();
   S.seasonEnd={t:S.t,rank:rk,league:L[2]};
-  const entry={season:seasonNo(),name:sp.name,cousin:sp.cousin.name,rank:rk,of:S.bots.length+1,league:L[1]+" "+L[2],stage:LIFE[S.stage||1]||"",muts:(S.muts||[]).length,date:new Date().toISOString().slice(0,10)};
+  const entry={season:seasonNo(),name:sp.name,cousin:sp.cousin.name,rank:rk,of:S.bots.length+1,league:L[1]+" "+L[2],crisis:crisisBadge()?tr("Survivant : ","Survivor: ")+crisisBadge().name:"",stage:LIFE[S.stage||1]||"",muts:(S.muts||[]).length,date:new Date().toISOString().slice(0,10)};
   try{const M=museum();M.push(entry);localStorage.setItem(MUSEUM_KEY,JSON.stringify(M.slice(-60)));}catch(e){}
   log("🏛 "+tr("Fin de la saison ","End of season ")+seasonNo()+" : "+sp.name+tr(" entre au Muséum."," enters the Museum."),"rare");
   popup({kick:tr("Jour ","Day ")+SEASON_DAYS+tr(" · fin de la saison "," · end of season ")+seasonNo(),title:tr("Votre espèce entre au Muséum","Your species enters the Museum"),body:seasonEndHTML(entry)});
   dirty=true;
 }
 function seasonEndHTML(e){
-  return '<p class="specname"><i>'+esc(e.name)+"</i></p><p>"+tr("Classement final : ","Final ranking: ")+"<b>"+e.rank+tr("e","th")+"</b> / "+e.of+" · "+e.league+tr(" · cousin fossile : "," · fossil cousin: ")+"<b>"+esc(e.cousin)+"</b>.</p>"+
+  return '<p class="specname"><i>'+esc(e.name)+"</i></p><p>"+tr("Classement final : ","Final ranking: ")+"<b>"+e.rank+tr("e","th")+"</b> / "+e.of+" · "+e.league+tr(" · cousin fossile : "," · fossil cousin: ")+"<b>"+esc(e.cousin)+"</b>"+(e.crisis?" · 🏅 "+esc(e.crisis):"")+".</p>"+
   '<p class="desc">'+tr("Vous pouvez continuer à jouer cette partie (prolongation, sans classement de saison) ou ouvrir la saison suivante : une nouvelle carte, de nouveaux rivaux et de nouveaux fossiles en vitrine. Votre planche reste au Muséum.","You can keep playing this game (extra time, no season ranking) or open the next season: a new map, new rivals and new fossils on display. Your plate stays in the Museum.")+"</p>"+
   '<div class="row" style="justify-content:center"><button class="btn" data-act="species">'+tr("Voir la planche","See the plate")+'</button><button class="btn alt" data-act="newseason">'+tr("Ouvrir la saison ","Open season ")+(e.season+1)+"</button></div>";
 }
+
+/* ===== Grande crise : une par saison, annoncée 48 h avant, 24 h de jeu =====
+   Rien de durable n’est détruit : seule la production est freinée, et d’autant plus que l’on est haut au classement.
+   Les 30 % derniers en profitent (+10 %) : après les grandes extinctions, les petits repeuplent les niches libérées.
+   Deux mutations de la bonne famille divisent le malus par deux : la crise se prépare. */
+const CRISIS_DAY=18,CRISIS_WARN=2*1440,CRISIS_LEN=1440;
+const CRISES={
+  glace:{ic:"❄",name:tr("Glaciation","Glaciation"),fam:"R",col:"#78bee6",desc:tr("Les eaux se refroidissent : tout le métabolisme ralentit.","The waters cool down: all metabolism slows."),adv:tr("Mutations de résilience (paroi épaisse, métabolisme frugal, capsule de mucus, membrane plissée)","Resilience mutations (thick wall, frugal metabolism, mucus capsule, folded membrane)")},
+  anox:{ic:"🫧",name:tr("Anoxie","Anoxia"),fam:"E",col:"#a99bff",desc:tr("L’oxygène disparaît des eaux : la respiration s’essouffle.","Oxygen vanishes from the waters: respiration falters."),adv:tr("Mutations de métabolisme (pompe surnuméraire, chaperonnes, réplication rapide, plasmide voyageur)","Metabolism mutations (extra pump, chaperones, fast replication, roaming plasmid)")},
+  meteo:{ic:"☄",name:tr("Impact de météorite","Meteor impact"),fam:"M",col:"#ff9e6b",desc:tr("Un impact trouble les eaux et coupe la lumière.","An impact clouds the waters and cuts off the light."),adv:tr("Mutations de mobilité (cils battants, pigment, chimiorécepteurs, vésicule de gaz)","Mobility mutations (beating cilia, pigment, chemoreceptors, gas vesicle)")}
+};
+function crisisType(){const k=Object.keys(CRISES);return k[Math.floor(mulberry32(seasonSeed()^0x2545f491)()*k.length)];}
+function crisisStart(){return (CRISIS_DAY-1)*1440;}
+function crisisPhase(t){if(!S||S.tut!=null)return null;t=t==null?S.t:t;const s=crisisStart();if(t<s-CRISIS_WARN)return null;if(t<s)return "warn";if(t<s+CRISIS_LEN)return "on";return "done";}
+function crisisRankP(){/* place au classement entre 0 (premier) et 1 (dernier), recalculée toutes les 30 min de jeu */
+  const k=Math.floor(S.t/30);if(S.crP&&S.crP.k===k)return S.crP.p;
+  if(crisisRankP.busy)return S.crP?S.crP.p:0.5;/* le classement appelle mods() : pas de boucle */
+  crisisRankP.busy=1;try{const n=S.bots.length+1,p=n>1?(myRank("pow")-1)/(n-1):0;S.crP={k,p};return p;}finally{crisisRankP.busy=0;}}
+function crisisAdapted(){return mutCount(CRISES[crisisType()].fam)>=2;}
+function crisisEffect(p){if(p>=0.7)return 0.10;return -0.25*Math.pow(1-p,1.5);}
+function crisisMine(){const p=crisisRankP();let e=crisisEffect(p);if(e<0&&crisisAdapted())e/=2;return Math.round(e*1000)/1000;}
+function crisisMods(m){if(crisisPhase()!=="on")return;const e=crisisMine();["atpPct","protPct","lipPct","nucPct"].forEach(k=>m[k]=(m[k]||0)+e);}
+function crisisTick(){
+  const ph=crisisPhase(),C=CRISES[crisisType()];if(!ph)return;
+  if(ph!=="done"&&!S.crWarned){S.crWarned=1;log(C.ic+" "+tr("Alerte : ","Alert: ")+C.name+tr(" au jour "," on day ")+CRISIS_DAY+".","bad");popup({kick:C.ic+" "+tr("Grande crise annoncée","Great crisis announced"),title:C.name+tr(" au jour "," on day ")+CRISIS_DAY,body:crisisInfoHTML(true)});}
+  if(ph==="on"&&!S.crOn){S.crOn=1;log(C.ic+" "+C.name+tr(" : la crise commence pour 24 h."," : the crisis begins, for 24 h."),"bad");popup({kick:C.ic+" "+tr("Grande crise","Great crisis"),title:C.name,body:crisisInfoHTML(false)});}
+  if(ph==="done"&&S.crOn&&!S.crDone){S.crDone={type:crisisType(),eff:crisisMine()};
+    /* les rivaux aussi ont perdu (ou gagné) une journée de production : le classement se resserre */
+    const rows=rkRows("pow"),n=rows.length;rows.forEach((r,i)=>{if(r.me)return;const e=crisisEffect(n>1?i/(n-1):0);r.b.g=Math.max(0.3,r.b.g*(1+e/CRISIS_DAY));});S.crP=null;
+    log("🏅 "+tr("Vous avez survécu à la crise : ","You survived the crisis: ")+C.name+".","rare");
+    popup({kick:"🏅 "+tr("Fin de la crise","End of the crisis"),title:tr("Survivant : ","Survivor: ")+C.name,body:"<p>"+tr("La production revient à la normale. Votre espèce porte désormais le badge <b>Survivant</b> sur sa planche et au Muséum.","Production is back to normal. Your species now wears the <b>Survivor</b> badge on its plate and in the Museum.")+"</p>"});}
+}
+function crisisInfoHTML(warn){
+  const C=CRISES[crisisType()],p=crisisRankP(),e0=crisisEffect(p),ad=crisisAdapted(),e=crisisMine(),pct=v=>(v>0?"+":"−")+Math.round(Math.abs(v)*100)+PCT;
+  let h='<p>'+C.desc+" "+(warn?tr("Elle commencera au <b>jour ","It will begin on <b>day ")+CRISIS_DAY+tr("</b> et durera 24 h de jeu.","</b> and last 24 game hours."):tr("Elle dure 24 h de jeu.","It lasts 24 game hours."))+"</p>";
+  h+='<p>'+tr("Rien n’est détruit : seule la production de ressources change pendant la crise, selon votre place au classement. Les plus gros sont les plus touchés ; les 30 % derniers en profitent.","Nothing is destroyed: only resource production changes during the crisis, depending on your ranking. The biggest are hit hardest; the bottom 30% benefit.")+"</p>";
+  h+='<div class="fosscard"><div class="kick">'+tr("Pour vous","For you")+"</div><b>"+(e>=0?'<span class="up">'+pct(e)+"</span>":'<span class="neg">'+pct(e)+"</span>")+"</b> "+tr("de production","production")+(e0<0?(ad?'<p class="up">✔ '+tr("Votre espèce est adaptée : malus divisé par deux.","Your species is adapted: penalty halved.")+"</p>":'<p>'+tr("Pour diviser ce malus par deux : avoir au moins 2 ","To halve this penalty: have at least 2 ")+C.adv+".</p>"):"")+"</div>";
+  return h;
+}
+function crisisPill(){const ph=crisisPhase();if(!ph||ph==="done")return "";const C=CRISES[crisisType()],e=crisisMine();
+  return '<button class="evpill" style="--ec:'+C.col+'" data-act="crisis">'+C.ic+" "+C.name+" · "+(ph==="warn"?tr("dans ","in ")+'<span data-end="'+crisisStart()+'"></span>':tr("en cours · ","ongoing · ")+(e>=0?"+":"−")+Math.round(Math.abs(e)*100)+PCT+' · <span data-end="'+(crisisStart()+CRISIS_LEN)+'"></span>')+"</button>";}
+function crisisGazette(){const ph=crisisPhase(),C=CRISES[crisisType()];if(!ph)return "";
+  if(ph==="done")return S.crDone?'<p class="desc">🏅 '+tr("Le serveur a traversé la crise : ","The server went through the crisis: ")+C.name+".</p>":"";
+  return '<div class="fosscard"><div class="kick">'+C.ic+" "+(ph==="warn"?tr("Alerte météo des abysses","Abyss weather alert"):tr("Crise en cours","Crisis ongoing"))+"</div><b>"+C.name+"</b> "+(ph==="warn"?tr("au jour ","on day ")+CRISIS_DAY:tr("jusqu’à demain","until tomorrow"))+"<p>"+C.desc+" "+tr("Les espèces adaptées : ","Adapted species: ")+C.adv.toLowerCase()+".</p></div>";}
+function crisisBadge(){return S&&S.crDone?CRISES[S.crDone.type]:null;}
 
 /* ===== Dormance : 8 h choisies par le joueur (heure réelle) ===== */
 function dormH(){return S&&S.dormH!=null?S.dormH:23;}
@@ -154,11 +200,11 @@ function speciesInfo(){
   const v={name,cousin,match:Math.round(ranked[0].s*100),show,inShow:show.indexOf(cousin.id)>=0,P};
   SPC={key,S,v};return v;
 }
-function seasonMods(m){if(!S||!S.nodes)return;const sp=speciesInfo();if(sp.inShow){const e=sp.cousin.eff;for(const k in e)m[k]=(m[k]||0)+e[k];}}
+function seasonMods(m){if(!S||!S.nodes)return;crisisMods(m);const sp=speciesInfo();if(sp.inShow){const e=sp.cousin.eff;for(const k in e)m[k]=(m[k]||0)+e[k];}}
 function speciesBarHTML(){if(!S)return "";const sp=speciesInfo();return '<button class="mutbar specbar" data-act="species"><span>🔬 '+tr("Mon espèce","My species")+" : <i>"+esc(sp.name)+"</i></span><span>"+tr("cousin fossile ","fossil cousin ")+"<b>"+esc(sp.cousin.name)+"</b>"+(sp.inShow?' <span class="up">'+tr("★ en vitrine cette saison","★ on display this season")+"</span>":"")+'</span><span class="muted">'+tr("Voir la planche →","See the plate →")+"</span></button>";}
 function speciesHTML(){
   const sp=speciesInfo(),c=sp.cousin;
-  let h='<div class="kick">'+tr("Saison ","Season ")+seasonNo()+" · "+tr("jour ","day ")+seasonDay()+"/"+SEASON_DAYS+"</div><h2><i>"+esc(sp.name)+'</i></h2><div class="specwrap"><div class="specimg" id="specimg"><span class="muted">'+tr("Préparation de la planche…","Preparing the plate…")+'</span></div><div class="specinfo">';
+  let h='<div class="kick">'+tr("Saison ","Season ")+seasonNo()+" · "+tr("jour ","day ")+seasonDay()+"/"+SEASON_DAYS+"</div><h2><i>"+esc(sp.name)+"</i></h2>"+(crisisBadge()?'<p class="up" style="text-align:center">🏅 '+tr("Survivant : ","Survivor: ")+crisisBadge().name+"</p>":"")+'<div class="specwrap"><div class="specimg" id="specimg"><span class="muted">'+tr("Préparation de la planche…","Preparing the plate…")+'</span></div><div class="specinfo">';
   h+='<div class="fosscard"><div class="kick">'+tr("Cousin fossile","Fossil cousin")+" · "+sp.match+tr(" % de ressemblance","% resemblance")+"</div><b>"+esc(c.name)+'</b> <span class="muted">'+ERAS[c.era]+" · −"+c.ma+" Ma</span><p>"+c.fact+"</p>"+(sp.inShow?'<p class="up">★ '+tr("En vitrine cette saison : ","On display this season: ")+fxList(c.eff).replace(/<\/?ul[^>]*>/g,"").replace(/<\/?li[^>]*>/g,"")+"</p>":'<p class="desc">'+tr("Pas en vitrine cette saison : faites évoluer votre espèce vers l’un des fossiles ci-dessous pour un petit bonus.","Not on display this season: evolve your species toward one of the fossils below for a small bonus.")+"</p>")+"</div>";
   h+='<h3>'+tr("Fossiles de la saison ","Fossils of season ")+seasonNo()+'</h3><div class="fossrow">'+sp.show.map(id=>{const f=FOS_BY[id],lock=f.era>Math.max(1,S.stage||1);return '<span class="fosspill'+(id===c.id?" on":"")+(lock?" lock":"")+'" title="'+esc(ERAS[f.era]+" · −"+f.ma+" Ma")+'">'+esc(f.name)+"<small>"+ERAS[f.era]+(lock?tr(" · plus tard"," · later"):"")+"</small></span>";}).join("")+"</div>";
   h+='<p class="desc">'+tr("Votre espèce ressemble au fossile le plus proche de vos choix (mutations, gènes, émergences). Les fossiles plus récents s’ouvrent quand vous changez de stade de vie.","Your species resembles the fossil closest to your choices (mutations, genes, emergences). More recent fossils open up as you change life stage.")+"</p>";
@@ -180,6 +226,7 @@ function speciesCard(cb){
     g.save();g.beginPath();g.arc(cx,cy,R-4,0,Math.PI*2);g.clip();g.imageSmoothingEnabled=false;const sc=2.6,sz=CELL_RES*sc;g.drawImage(cell,cx-sz/2,cy-sz/2,sz,sz);g.restore();
     g.textAlign="center";g.fillStyle=INK;g.font='italic 84px "Instrument Serif", serif';g.fillText(sp.name,cx,800);
     g.fillStyle=MUT;g.font='30px "IBM Plex Sans", sans-serif';g.fillText(tr("Souche ","Strain ")+SOUCHES[S.souche].name+" · "+(LIFE[S.stage||1]||"")+" · "+tr("rang ","rank ")+myRank("pow")+" / "+(S.bots.length+1),cx,846);
+    {const B=crisisBadge();if(B){const t=tr("SURVIVANT · ","SURVIVOR · ")+B.name.toUpperCase();g.font='600 22px "IBM Plex Mono", monospace';const w=g.measureText(t).width+36;g.fillStyle="#d9a441";g.fillRect(W2-76-w,120,w,40);g.strokeStyle=INK;g.lineWidth=3;g.strokeRect(W2-76-w,120,w,40);g.fillStyle=INK;g.textAlign="left";g.fillText(t,W2-76-w+18,148);g.textAlign="center";}}
     g.textAlign="left";let y=910;g.fillStyle=RED;g.font='500 22px "IBM Plex Mono", monospace';g.fillText(tr("COUSIN FOSSILE","FOSSIL COUSIN"),90,y);
     g.fillStyle=INK;g.font='italic 52px "Instrument Serif", serif';g.fillText(sp.cousin.name,90,y+52);g.fillStyle=MUT;g.font='26px "IBM Plex Sans", sans-serif';g.fillText(ERAS[sp.cousin.era]+" · −"+sp.cousin.ma+" Ma · "+sp.match+tr(" % de ressemblance","% resemblance"),90,y+92);
     g.fillStyle=INK;g.font='26px "IBM Plex Sans", sans-serif';const n=wrapText(g,sp.cousin.fact,90,y+134,W2-180,34);
@@ -209,6 +256,7 @@ function gazetteHTML(){
   let h='<div class="card gazette"><div class="kick">'+tr("Gazette du serveur · saison ","Server gazette · season ")+seasonNo()+" · "+tr("jour ","day ")+G.d+"/"+SEASON_DAYS+"</div>";
   h+="<h2>"+(G.news.length?esc(G.news[0]):tr("Calme plat dans les abysses","Dead calm in the abyss"))+"</h2>";
   h+='<p class="desc">'+(G.left>0?tr("Fin de la saison dans ","Season ends in ")+G.left+tr(" jour"+(G.left>1?"s":"")," day"+(G.left>1?"s":""))+".":tr("La saison est terminée : prolongation.","The season is over: extra time."))+"</p>";
+  h+=crisisGazette();
   h+='<div class="gzcols"><div><h3>'+tr("Les plus puissants","The most powerful")+"</h3><ol>"+G.top.map(r=>"<li>"+gzName(r)+' <span class="muted">'+fmt(r.v)+"</span></li>").join("")+"</ol></div>";
   h+="<div><h3>"+tr("Alliance en tête","Leading alliance")+"</h3><p><b>"+esc(G.al?G.al.n:"—")+"</b>"+(G.al?' <span class="muted">'+G.al.m+tr(" membres"," members")+"</span>":"")+"</p><h3>"+tr("Pillard le plus redouté","Most feared raider")+"</h3><p><b>"+esc(G.raider?G.raider.name:"—")+"</b>"+(G.raider?' <span class="muted">'+fmt(G.raider.lw||0)+tr(" pillés"," raided")+"</span>":"")+"</p></div></div>";
   h+="<h3>"+tr("Votre journée","Your day")+"</h3><p>"+tr("Rang ","Rank ")+"<b>"+G.rk+"</b> · "+G.L[1]+" "+G.L[2]+" · "+G.wins+tr(" victoire"+(G.wins>1?"s":"")," win"+(G.wins>1?"s":""))+", "+G.loss+tr(" défaite"+(G.loss>1?"s":"")," loss"+(G.loss>1?"es":""))+".</p>";
@@ -225,6 +273,7 @@ function seasonAct(a,el){
   if(!S)return false;
   if((a==="raid"||a==="raidgo")&&!seasonAct.brk){const k=brkNeeded();if(k){showModal(brkHTML(k,a));return true;}}
   if(a==="raidbrk"){dormBreak();closeModal();seasonAct.brk=1;try{act(el.dataset.k==="raidgo"?"raidgo":"raid",el);}finally{seasonAct.brk=0;}return true;}
+  if(a==="crisis"){const C=CRISES[crisisType()];showModal('<div class="kick">'+C.ic+" "+tr("Grande crise","Great crisis")+"</div><h2>"+C.name+"</h2>"+crisisInfoHTML(crisisPhase()==="warn")+'<div class="row" style="justify-content:center"><button class="btn alt" data-act="mclose">'+tr("Fermer","Close")+"</button></div>");return true;}
   if(a==="species"&&el&&el.closest&&el.closest(".pop")&&S.popups.length)S.popups.shift();
   if(a==="species"){speciesShow();return true;}
   if(a==="specdl"){speciesFile((b,n)=>{const u=URL.createObjectURL(b),x=document.createElement("a");x.href=u;x.download=n;document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast(tr("Image enregistrée","Image saved"));});return true;}

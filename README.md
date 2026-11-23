@@ -40,7 +40,7 @@ La partie est sauvegardée dans le navigateur (localStorage), sur l’appareil u
 
 ## Mettre une nouvelle version en ligne
 
-Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123f`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
+Dans `index.html`, chaque script et la feuille de style portent un numéro de version (`?v=20261123g`). À chaque mise en ligne, changez ce numéro partout (rechercher-remplacer) : sinon le navigateur des joueurs peut garder d’anciens fichiers en mémoire, les mélanger avec les nouveaux, et le jeu ne démarre pas.
 
 ## Robot de test (avant chaque lancement)
 
@@ -88,6 +88,7 @@ Une saison (un serveur) dure **27 jours** de jeu (`SEASON_DAYS` dans `js/01-mond
 - **Dormance** (⚙ Options) : 8 h par jour, choisies par le joueur (23 h – 7 h par défaut), où personne ne l’attaque. S’il pille pendant ce temps, il perd sa protection jusqu’à la fin de la nuit (après confirmation) ; de même, piller pendant le bouclier d’une heure qui suit un pillage subi le brise pour le reste de l’heure. Modifiable une fois par 24 h.
 - **Réflexes** (⚙ Options) : esquive automatique si la défense ne tiendrait pas (activé par défaut), récolte en boucle (désactivée par défaut).
 - **Gazette du serveur** (Rapports › Gazette) : les brèves du jour, le top 3, l’alliance en tête, le pillard le plus redouté, le fossile du jour, et un bouton « Copier pour Discord ».
+- **Grande crise** (une par saison, au jour 18, annoncée 48 h avant) : glaciation, anoxie ou impact de météorite, tirée au sort par saison. Pendant 24 h de jeu, rien n’est détruit : seule la production change selon le classement (−25 % pour le premier, environ −9 % au milieu, +10 % pour les 30 % derniers). Deux mutations de la bonne famille divisent le malus par deux. Les rivaux subissent la même règle, ce qui resserre le classement. Les survivants gagnent un badge sur leur planche et au Muséum. Réglages : `CRISIS_DAY`, `crisisEffect()` dans `js/27-saison.js`.
 
 ## Identité graphique : le carnet de laboratoire
 
