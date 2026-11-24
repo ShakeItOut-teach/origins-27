@@ -30,7 +30,8 @@ Rise of Kingdoms et The Ants tiennent leurs joueurs des mois avec les mêmes res
 ## Ce que le joueur vit
 
 1. Après son premier combat contre un rival (jour 3 au plus tôt) : **« L'océan s'ouvre. »**
-2. **Voir l'océan** : une carte de profondeurs. Sa cellule est au bord, dans les abysses, à
+2. **Voir l'océan** : une carte de profondeurs, qui occupe tout l'écran (demande du
+   propriétaire : pas d'oculaire rond qui la réduise). Ses ressources restent affichées en haut. Sa cellule est au bord, dans les abysses, à
    plus de 4 000 m de fond. Des cercles de niveau marquent 4 000 m, 1 000 m, 200 m, puis la
    terre ferme au centre. L'eau s'éclaircit en remontant.
 3. Autour de lui : les autres organismes, espacés de plusieurs cases, et des **gisements**.

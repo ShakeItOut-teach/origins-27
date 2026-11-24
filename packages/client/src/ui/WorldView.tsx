@@ -19,7 +19,7 @@ import {
 import type { Deposit, PlayerState } from "@o27/core";
 import { BALANCE, RESOURCE_IDS } from "@o27/data";
 import type { Order, TextKey } from "@o27/data";
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { OceanCanvas } from "../cell/OceanCanvas";
 import type { OceanScene } from "../cell/OceanCanvas";
@@ -59,6 +59,22 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
   const [camera, setCamera] = useState<WorldCamera>({ x: home.x, y: home.y, span: SPAN.start });
   const [selected, setSelected] = useState<string | null>(null);
   const [rising, setRising] = useState(false);
+  // L'océan occupe tout l'écran : on mesure sa forme pour que les cases restent carrées.
+  const frame = useRef<HTMLElement>(null);
+  const [aspect, setAspect] = useState(1);
+  useLayoutEffect(() => {
+    const element = frame.current;
+    if (element === null) return;
+    const measure = (): void => {
+      setAspect(element.clientHeight / Math.max(1, element.clientWidth));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
   const day = seasonDay(state, state.now);
   const rivals = oceanRivals(state);
   const deposits = oceanDeposits(state.worldSeed, state.now);
@@ -77,7 +93,7 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
   const onMove = (event: ReactPointerEvent<HTMLDivElement>): void => {
     const before = fingers.current.get(event.pointerId);
     if (before === undefined) return;
-    const size = event.currentTarget.clientWidth;
+    const size = Math.min(event.currentTarget.clientWidth, event.currentTarget.clientHeight);
     const now = { x: event.clientX, y: event.clientY };
     const other = [...fingers.current.entries()].find(([id]) => id !== event.pointerId)?.[1];
     if (other !== undefined) {
@@ -186,13 +202,13 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
 
   const touchable = camera.span <= TOUCH_SPAN;
   const seen = (x: number, y: number): { x: number; y: number } | null => {
-    const point = project(camera, x, y);
+    const point = project(camera, x, y, aspect);
     return point.x < 0.04 || point.x > 0.96 || point.y < 0.04 || point.y > 0.96 ? null : point;
   };
   const openRival = rivals.find((rival) => rival.id === selected) ?? null;
   const openDeposit = deposits.find((deposit) => deposit.id === selected) ?? null;
   const openPredator = predators.find((predator) => predator.id === selected) ?? null;
-  const mine = project(camera, home.x, home.y);
+  const mine = project(camera, home.x, home.y, aspect);
   const offer = migrateOffer(state, state.now);
 
   // La profondeur de chaque frontière, écrite là où elle passe le plus près du regard.
@@ -208,7 +224,12 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
 
   return (
     <>
-      <section className="lens lens-world" data-testid="world" aria-label={t("label.world")}>
+      <section
+        ref={frame}
+        className="lens lens-world"
+        data-testid="world"
+        aria-label={t("label.world")}
+      >
         <div
           className="world-clip"
           onPointerDown={onDown}
@@ -222,7 +243,7 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
         >
           <OceanCanvas scene={scene} />
           {borders.map((border) => {
-            const spot = labelSpot(camera, border.radius);
+            const spot = labelSpot(camera, border.radius, aspect);
             if (spot.x < 0.12 || spot.x > 0.88 || spot.y < 0.1 || spot.y > 0.9) return null;
             return (
               <span
@@ -343,6 +364,18 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
               {t("label.worldHint")}
             </p>
           )}
+        </div>
+        <div className="world-hud" data-testid="world-hud">
+          {RESOURCE_IDS.map((id) => (
+            <span key={id} className="world-hud-item">
+              <ResourceIcon id={id} />
+              {formatAmount(state.resources[id], lang)}
+            </span>
+          ))}
+          <span className="world-hud-item">
+            <EnergyIcon />
+            {state.energy}/{BALANCE.energy.max}
+          </span>
         </div>
         <button type="button" className="lens-pill" data-testid="world-back" onClick={onBack}>
           {t("action.worldBack")}

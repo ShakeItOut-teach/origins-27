@@ -1230,10 +1230,87 @@ p {
 }
 
 /* La grande carte */
+/* L'océan occupe tout l'écran : pas d'oculaire, la carte va d'un bord à l'autre. */
+.lens.lens-world {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  width: auto;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--lens-edge);
+}
+
+.lens-world .lens-canvas {
+  border-radius: 0;
+}
+
+.world-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-3) var(--space-2);
+  background: color-mix(in srgb, var(--lens-edge) 82%, transparent);
+  color: var(--on-dark);
+  font-family: var(--font-number);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.world-hud-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.lens-world .lens-pill {
+  top: calc(52px + env(safe-area-inset-top));
+  left: var(--space-3);
+}
+
+.lens-world .lens-pill-right {
+  left: auto;
+  right: var(--space-3);
+}
+
+.lens-world .lens-corner {
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+}
+
+.lens-world .lens-corner-left {
+  left: var(--space-3);
+}
+
+.lens-world .lens-corner-right {
+  right: var(--space-3);
+}
+
+.lens-world .world-place {
+  bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+}
+
+/* Les notes de résultat restent lisibles par-dessus l'océan. */
+.page:has(.lens-world) .loss {
+  position: fixed;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 8;
+  width: auto;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
 .world-clip {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
+  border-radius: 0;
   overflow: hidden;
   touch-action: none;
   cursor: grab;

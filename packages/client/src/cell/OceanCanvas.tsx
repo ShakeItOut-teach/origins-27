@@ -139,18 +139,20 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
             app.resize();
           }
           const current = sceneRef.current;
-          const size = Math.min(app.screen.width, app.screen.height);
+          const wide = app.screen.width;
+          const high = app.screen.height;
+          const size = Math.min(wide, high);
           const cell = size / current.camera.span;
           const t = (reducedMotion ? 0.12 : 1) * (performance.now() / 1000);
           const at = (x: number, y: number) => {
-            const point = project(current.camera, x, y);
-            return { x: point.x * size, y: point.y * size };
+            const point = project(current.camera, x, y, high / wide);
+            return { x: point.x * wide, y: point.y * high };
           };
           const inView = (point: { x: number; y: number }, margin: number): boolean =>
             point.x > -margin &&
             point.y > -margin &&
-            point.x < size + margin &&
-            point.y < size + margin;
+            point.x < wide + margin &&
+            point.y < high + margin;
           graphics.clear();
 
           // L'eau : un dégradé continu, du noir des abysses au bleu du rivage.
@@ -226,9 +228,9 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
           });
 
           // La neige marine : de fines particules qui descendent sans fin.
-          for (let index = 0; index < 46; index++) {
-            const fall = (grain(index, 3) * size + t * (4 + (index % 5) * 2.5)) % size;
-            const drift = (grain(index, 11) * size + Math.sin(t * 0.4 + index) * 6 + size) % size;
+          for (let index = 0; index < 70; index++) {
+            const fall = (grain(index, 3) * high + t * (4 + (index % 5) * 2.5)) % high;
+            const drift = (grain(index, 11) * wide + Math.sin(t * 0.4 + index) * 6 + wide) % wide;
             graphics
               .circle(drift, fall, 0.6 + (index % 3) * 0.35)
               .fill({ color: light, alpha: 0.1 + (index % 4) * 0.03 });

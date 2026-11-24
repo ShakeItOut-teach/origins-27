@@ -34,6 +34,17 @@ describe("le cadrage de la grande carte", () => {
     expect(lost.y).toBeLessThanOrEqual(126);
   });
 
+  it("sur un écran en hauteur ou en largeur, une case reste carrée", () => {
+    const view: WorldCamera = { x: 0, y: 0, span: 40 };
+    // Écran deux fois plus haut que large : 40 cases en largeur, 80 en hauteur.
+    expect(project(view, 20, 0, 2).x).toBeCloseTo(1);
+    expect(project(view, 0, 40, 2).y).toBeCloseTo(1);
+    // Écran deux fois plus large que haut : 40 cases en hauteur, 80 en largeur.
+    expect(project(view, 40, 0, 0.5).x).toBeCloseTo(1);
+    expect(project(view, 0, 20, 0.5).y).toBeCloseTo(1);
+    expect(labelSpot(view, 30, 2)).toEqual(project(view, 0, -30, 2));
+  });
+
   it("de très loin, l'océan entier est centré dans la lame", () => {
     let far: WorldCamera = { x: 100, y: -90, span: SPAN.start };
     for (let i = 0; i < 30; i++) far = zoomCamera(far, 1.6);

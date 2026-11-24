@@ -7,7 +7,7 @@ export interface WorldCamera {
   /** Centre de la vue, en cases de l'océan. */
   readonly x: number;
   readonly y: number;
-  /** Nombre de cases visibles d'un bord à l'autre de la lame. */
+  /** Nombre de cases visibles d'un bord à l'autre de l'écran, dans son petit côté. */
   readonly span: number;
 }
 
@@ -41,15 +41,22 @@ export function panCamera(camera: WorldCamera, dx: number, dy: number): WorldCam
   });
 }
 
-/** Position d'une case sur la lame, de 0 à 1 (0,5 ; 0,5 = le centre de la vue). */
+/**
+ * Position d'une case à l'écran, de 0 à 1 dans chaque sens (0,5 ; 0,5 = le centre de la vue).
+ * `aspect` est la hauteur de l'écran divisée par sa largeur : une case reste carrée, et le
+ * recul se compte toujours dans le petit côté.
+ */
 export function project(
   camera: WorldCamera,
   column: number,
   row: number,
+  aspect = 1,
 ): { readonly x: number; readonly y: number } {
+  const wide = aspect >= 1 ? camera.span : camera.span / aspect;
+  const high = aspect >= 1 ? camera.span * aspect : camera.span;
   return {
-    x: 0.5 + (column - camera.x) / camera.span,
-    y: 0.5 + (row - camera.y) / camera.span,
+    x: 0.5 + (column - camera.x) / wide,
+    y: 0.5 + (row - camera.y) / high,
   };
 }
 
@@ -60,9 +67,10 @@ export function project(
 export function labelSpot(
   camera: WorldCamera,
   radius: number,
+  aspect = 1,
 ): { readonly x: number; readonly y: number } {
   const length = Math.hypot(camera.x, camera.y);
   const ux = length < 1 ? 0 : camera.x / length;
   const uy = length < 1 ? -1 : camera.y / length;
-  return project(camera, ux * radius, uy * radius);
+  return project(camera, ux * radius, uy * radius, aspect);
 }
