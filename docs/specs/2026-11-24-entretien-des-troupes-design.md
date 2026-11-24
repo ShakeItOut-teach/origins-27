@@ -34,8 +34,10 @@ L'âge du serveur est affiché en haut de l'écran : « Jour 7 / 27 ».
 
 ## Limites connues
 
-- Les rivaux, les proies et les prédateurs ont été réglés pour 35 cellules filles au plus :
-  avec une grande armée, ils deviennent trop faciles, et le joueur prend vite la tête des
-  classements. Leur force devra suivre (troupes de rang supérieur, rivaux qui grossissent).
+- Rivaux, proies et prédateurs ont été renforcés le jour même pour suivre les grandes armées
+  (voir le journal d'équilibrage). Ces chiffres n'ont pas encore été joués sur une saison.
+- La réserve de sucre est petite face à ce que mange une grande armée : en pratique, la
+  taille d'une armée est fixée par la production, pas par le pillage. Pour que le pillage
+  nourrisse une armée, il faudra de plus grandes réserves et de plus gros butins.
 - Le butin d'une attaque reste limité par ce que le rival possède, pas par la charge.
 - Un seul type de ressource est consommé : le sucre.

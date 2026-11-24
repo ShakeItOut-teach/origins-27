@@ -290,3 +290,27 @@ saison jouée par les robots.
 Mesure à l'écran : 50 cellules filles avec une Centrale de niveau 1 donnent −0,2 sucre par
 seconde, et une puissance de 900 qui place le joueur premier du classement au jour 7. Les
 organismes simulés sont donc trop faibles face à une armée sans plafond : à reprendre.
+
+## 2026-11-24 — Forces relevées après la fin du plafond
+
+Une Centrale nourrit 33 cellules filles par niveau, soit 166 au niveau 5. Les forces étaient
+réglées pour 35 au plus.
+
+| Réglage                     | Avant             | Après             |
+| --------------------------- | ----------------- | ----------------- |
+| Garde d'un rival moyen      | 6 + 2 par jour    | 12 + 7 par jour   |
+| Attaque d'un rival moyen    | 4 + 2 par jour    | 8 + 5 par jour    |
+| Proies (force)              | 6, 15, 35         | 6, 25, 70         |
+| Proies (protéines)          | 5, 15, 40         | 5, 25, 70         |
+| Prédateurs (force, abysses) | 12, 25, 45        | 30, 80, 180       |
+| Prédateurs (protéines)      | 20, 45, 90        | 30, 90, 220       |
+| Puissance par cellule fille | 8                 | 5                 |
+| Puissance d'un organisme    | 150 + 60 par jour | 200 + 60 par jour |
+
+Ce que cela donne, garde d'un rival moyen des abysses : 19 au jour 2, 54 au jour 7, 131 au
+jour 18, 194 au jour 27 ; multipliée par 1,3 à 2,2 en remontant. Vérifié par test : 35
+cellules ne battent plus un rival moyen du jour 7 une fois sur deux ; 20 cellules du bon type
+suffisent le jour de l'ouverture ; une armée de 166 garde plus d'une chance sur deux au
+jour 18 dans les abysses, et entre 25 et 50 % contre un rival moyen de la zone éclairée au
+dernier jour. La première proie n'a pas changé : le débutant gagne toujours sa première
+chasse. Le butin des rivaux n'a pas été relevé : la réserve ne pourrait pas le contenir.

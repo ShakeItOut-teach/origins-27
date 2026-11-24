@@ -15,7 +15,7 @@ la biologie, et un dessin de la carte inspiré du réel.
 ## Règles
 
 - **Puissance de la cellule** : 20 par niveau d'organite, 30 par mutation, 100 par zone
-  remontée. **Puissance des troupes** : 8 par cellule fille, à la maison comme en sortie.
+  remontée. **Puissance des troupes** : 5 par cellule fille, à la maison comme en sortie.
 - **Cinq classements** : puissance totale, cellule, troupes, pillards (tout ce qui a été pris
   à des rivaux), défense (attaques repoussées). À score égal, le joueur passe devant.
 - **Organismes simulés** : leur score grandit chaque jour, selon leur tempérament et leur
@@ -26,7 +26,7 @@ la biologie, et un dessin de la carte inspiré du réel.
   3 pour un Superprédateur, 2, 1,5, 1,1, 0,8, et 0,5 pour le Plancton.
 - **Prédateurs** : environ 130 sur la carte, visibles par tous, remplacés toutes les
   12 heures. Trois animaux réels du Cambrien, du plus faible au plus fort : Ottoia,
-  Opabinia, Anomalocaris. Force 12, 25 et 45 dans les abysses, pour 20, 45 et 90 protéines ;
+  Opabinia, Anomalocaris. Force 30, 80 et 180 dans les abysses, pour 30, 90 et 220 protéines ;
   plus haut, ils sont plus forts et plus nourrissants, comme les rivaux. Le combat est celui
   d'une chasse ; un prédateur vaincu ne revient pas pour ce joueur.
 
