@@ -2572,3 +2572,43 @@ p.season-next {
     transition: none;
   }
 }
+
+/* Le concours de la semaine */
+.contest-bands {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.contest-bands li {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--grid);
+}
+
+.contest-bands li.is-mine {
+  background: color-mix(in srgb, var(--iodine) 26%, transparent);
+}
+
+.contest-loot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font-family: var(--font-number);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.contest-loot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chest-stage.is-contest {
+  --chest-tone: var(--iodine);
+}

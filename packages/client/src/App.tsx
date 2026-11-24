@@ -1,6 +1,7 @@
 import {
   MICRO,
   allianceToday,
+  contestBoard,
   attackWarning,
   helpRequests,
   leviathanThreat,
@@ -62,6 +63,7 @@ import { CalendarSheet, openingName } from "./ui/CalendarSheet";
 import { ChestOverlay } from "./ui/ChestOverlay";
 import type { ChestLoot, ChestTone } from "./ui/ChestOverlay";
 import { CompanionSheet, companionName } from "./ui/CompanionSheet";
+import { ContestSheet } from "./ui/ContestSheet";
 import { EvolutionPanel } from "./ui/EvolutionPanel";
 import { GenomeSheet } from "./ui/GenomeSheet";
 import { LexiconSheet } from "./ui/LexiconSheet";
@@ -146,6 +148,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [allianceOpen, setAllianceOpen] = useState(false);
   const [gazetteOpen, setGazetteOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
+  const [contestOpen, setContestOpen] = useState(false);
+  /** Le rang obtenu au concours qui vient de finir. */
+  const [contestRank, setContestRank] = useState<number | null>(null);
   /** Le coffre que le joueur est en train d'ouvrir, et un compteur pour repartir d'un coffre fermé. */
   const [opening, setOpening] = useState<Opening | null>(null);
   const [openingCount, setOpeningCount] = useState(0);
@@ -207,6 +212,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
           if (event.type === "companionTamed") setTamed(true);
+          if (event.type === "contestEnded") setContestRank(event.rank);
           if (event.type === "allianceJoined") {
             setEnlisted({ banner: event.banner, auto: event.auto });
           }
@@ -344,6 +350,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
     threat.strikesAt - state.now <= BALANCE.rivals.incoming.warningMinutes * 60_000;
   const alarm = warning !== null || strikeSoon || state.now - hitAt < ALARM_FLASH_MS;
   const newReports = state.reports.filter((report) => report.at > reportsSeen).length;
+  const contest = show("contest") ? contestBoard(state) : null;
   const allianceToDo =
     show("alliances") && state.alliance !== null
       ? (allianceToday(state).gift ? 0 : 1) + (helpRequests(state) > 0 ? 1 : 0)
@@ -793,6 +800,47 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setGenomeOpen(false);
           }}
         />
+      )}
+      {contest !== null && (
+        <button
+          type="button"
+          className="quests-open contest-open"
+          data-testid="contest-open"
+          onClick={() => {
+            setContestOpen(true);
+          }}
+        >
+          {t("label.contest")}
+          <span className="badge">
+            {t("contest.rank").replace("{n}", String(contest.mine.rank))} ·{" "}
+            {formatCountdown(contest.endsAt - state.now, lang)}
+          </span>
+        </button>
+      )}
+      {show("contest") && contestOpen && (
+        <ContestSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setContestOpen(false);
+          }}
+        />
+      )}
+      {contestRank !== null && (
+        <div className="loss is-good" role="status" data-testid="contest-note">
+          <strong>{t("contest.ended")}</strong>
+          <span>{t("contest.endedRank").replace("{n}", String(contestRank))}</span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setContestRank(null);
+            }}
+          >
+            ×
+          </button>
+        </div>
       )}
       {show("rivals") && (
         <button

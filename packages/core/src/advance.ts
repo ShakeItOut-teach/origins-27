@@ -3,6 +3,7 @@ import { ensureAlliance } from "./alliance";
 import { allianceDue } from "./banners";
 import { trackDaily } from "./daily";
 import { earnChest } from "./chests";
+import { contestStep } from "./contest";
 import { anoxiaEdge } from "./events";
 import { leviathanDue, leviathanStrike } from "./leviathan";
 import { leagueStep } from "./power";
@@ -341,7 +342,10 @@ export function advance(state: PlayerState, now: number): Step {
     events.push(...step.events);
     const tiers = evaluateTier(step.state, at);
     events.push(...tiers.events);
-    const allied = ensureAlliance(tiers.state, at);
+    const joined = ensureAlliance(tiers.state, at);
+    events.push(...joined.events);
+    // Le concours de la semaine : on y entre, et chaque semaine qui s'achève est jugée à minuit.
+    const allied = contestStep(joined.state, at);
     events.push(...allied.events);
     const fresh = events.slice(seen);
     current = trackReports(
@@ -351,7 +355,9 @@ export function advance(state: PlayerState, now: number): Step {
   }
   const step = evaluateTier(settle(produce(current, now), now), now);
   events.push(...step.events);
-  const allied = ensureAlliance(step.state, now);
+  const joined = ensureAlliance(step.state, now);
+  events.push(...joined.events);
+  const allied = contestStep(joined.state, now);
   events.push(...allied.events);
   return { state: ensureIncoming(ensureQuests(allied.state, now), now), events };
 }

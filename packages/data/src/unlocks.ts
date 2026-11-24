@@ -64,7 +64,7 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
     tier: 7,
     condition: null,
     minDay: 4,
-    ui: ["power", "ranking", "leagues", "predators", "evolutions"],
+    ui: ["power", "ranking", "leagues", "contest", "predators", "evolutions"],
     orders: ["huntPredator", "research"],
   },
   {

@@ -15,7 +15,7 @@ export interface ChestLoot {
 }
 
 /** D'où vient le coffre : sa couleur en dépend. */
-export type ChestTone = "quest" | "challenge" | "league" | "leviathan" | "gift";
+export type ChestTone = "quest" | "challenge" | "league" | "leviathan" | "contest" | "gift";
 
 interface Props {
   readonly lang: Lang;

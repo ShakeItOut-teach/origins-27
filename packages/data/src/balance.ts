@@ -521,6 +521,19 @@ export const BALANCE: Balance = BalanceSchema.parse({
     },
     anoxia: { weight: 20, hours: 16, radius: 9, productionPercent: -30, guardPercent: -30 },
   },
+  contest: {
+    tier: 7,
+    days: 7,
+    top: 50,
+    themes: ["power", "troops", "loot", "power"],
+    rewards: [
+      { toRank: 1, boosts: 10, sugar: 1500, bricks: 1000, proteins: 300 },
+      { toRank: 3, boosts: 6, sugar: 1000, bricks: 700, proteins: 200 },
+      { toRank: 10, boosts: 4, sugar: 700, bricks: 450, proteins: 120 },
+      { toRank: 25, boosts: 2, sugar: 400, bricks: 250, proteins: 60 },
+      { toRank: 50, boosts: 1, sugar: 250, bricks: 150, proteins: 30 },
+    ],
+  },
   rewardChests: { kept: 30 },
   boost: { minutes: 60 },
   alliance: {

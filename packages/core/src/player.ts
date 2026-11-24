@@ -60,6 +60,7 @@ export function createPlayer(
     boosts: 0,
     reports: [],
     chests: [],
+    contest: null,
     companion: null,
     taming: null,
     evolutions: fill(EVOLUTION_IDS, 0),
@@ -191,6 +192,7 @@ export function serializeState(state: PlayerState): string {
           },
     daily: { day: state.daily.day, wins: state.daily.wins, losses: state.daily.losses },
     boosts: state.boosts,
+    contest: state.contest === null ? null : { week: state.contest.week, base: state.contest.base },
     chests: state.chests.map((chest) => ({
       kind: chest.kind,
       at: chest.at,
@@ -753,6 +755,11 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     boosts: isCount(raw.boosts) ? raw.boosts : 0,
     reports: raw.reports === undefined ? [] : readReports(raw.reports),
     chests: raw.chests === undefined ? [] : readChests(raw.chests),
+    // Avant les concours : le joueur y entrera au prochain passage du temps.
+    contest:
+      isRecord(raw.contest) && isCount(raw.contest.week) && isCount(raw.contest.base)
+        ? { week: raw.contest.week, base: raw.contest.base }
+        : null,
     // Avant le compagnon : personne à apprivoiser, personne en route.
     companion: version < 10 ? null : readCompanion(raw.companion),
     taming: version < 10 || !isCount(raw.taming) ? null : raw.taming,

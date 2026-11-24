@@ -14,6 +14,7 @@ import {
   ORDER_TYPES,
   ORGANELLE_IDS,
   QUEST_IDS,
+  RANKING_IDS,
   RESOURCE_IDS,
   TROOP_IDS,
   STAT_IDS,
@@ -515,6 +516,31 @@ export const BalanceSchema = z.strictObject({
       productionPercent: z.number().int().min(-90).max(-1),
       guardPercent: z.number().int().min(-90).max(-1),
     }),
+  }),
+  /**
+   * Le concours de la semaine : tous les organismes sont classés sur leur progression, et les
+   * premiers reçoivent un coffre. Les récompenses vont du premier rang au dernier rang primé.
+   */
+  contest: z.strictObject({
+    tier: positiveInt,
+    /** Durée d'un concours, en jours. */
+    days: positiveInt,
+    /** Nombre de places récompensées. */
+    top: positiveInt,
+    /** Ce que l'on mesure, semaine après semaine. */
+    themes: z.array(z.enum(RANKING_IDS)).min(1),
+    rewards: z
+      .array(
+        z.strictObject({
+          /** Cette ligne vaut jusqu'à ce rang compris. */
+          toRank: positiveInt,
+          boosts: nonNegativeInt,
+          sugar: nonNegativeInt,
+          bricks: nonNegativeInt,
+          proteins: nonNegativeInt,
+        }),
+      )
+      .min(1),
   }),
   /** Coffres de récompense : au-delà de ce nombre en attente, le plus ancien s'ouvre tout seul. */
   rewardChests: z.strictObject({ kept: positiveInt }),

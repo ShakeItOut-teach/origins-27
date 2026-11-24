@@ -124,6 +124,14 @@ export {
 } from "./alliance";
 export type { BannerRow } from "./alliance";
 export { HARVESTS_KEPT, REPORTS_KEPT } from "./reports";
+export {
+  contestBoard,
+  contestProgress,
+  contestRewardFor,
+  contestTheme,
+  contestWeek,
+} from "./contest";
+export type { ContestBoard, ContestReward, ContestRow } from "./contest";
 export { fossilOfDay, gazette } from "./gazette";
 export type { Gazette, GazetteNews } from "./gazette";
 export { findPredator, oceanPredators, predatorOffer } from "./predators";

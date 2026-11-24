@@ -14,6 +14,7 @@ import type {
   ChestReward,
   PreyKind,
   QuestId,
+  RankingId,
   ResourceId,
   TroopId,
 } from "@o27/data";
@@ -212,6 +213,11 @@ export interface PlayerState {
   readonly boosts: number;
   /** Le journal, du plus récent au plus ancien. */
   readonly reports: readonly Report[];
+  /**
+   * Le concours de la semaine auquel le joueur participe : sa semaine, et son score au départ
+   * (sa progression se mesure à partir de là). `null` hors concours.
+   */
+  readonly contest: { readonly week: number; readonly base: number } | null;
   /** Les coffres de récompense à ouvrir, du plus ancien au plus récent. */
   readonly chests: readonly RewardChest[];
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
@@ -432,6 +438,15 @@ export type GameEvent =
   | { readonly type: "leviathanRepelled"; readonly at: number; readonly event: string }
   | { readonly type: "boostGained"; readonly at: number; readonly count: number }
   | { readonly type: "chestEarned"; readonly at: number; readonly kind: RewardChestKind }
+  /** Un concours de la semaine s'achève : le rang du joueur et sa progression. */
+  | {
+      readonly type: "contestEnded";
+      readonly at: number;
+      readonly week: number;
+      readonly theme: RankingId;
+      readonly rank: number;
+      readonly score: number;
+    }
   | {
       readonly type: "rewardOpened";
       readonly at: number;

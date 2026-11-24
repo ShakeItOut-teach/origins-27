@@ -127,6 +127,7 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
     case "boostUsed":
     case "chestEarned":
     case "rewardOpened":
+    case "contestEnded":
       return 0;
     case "troopBorn":
       return id === "trainCells" ? 1 : 0;

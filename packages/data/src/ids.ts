@@ -169,7 +169,7 @@ export const BOOST_TARGETS = ["construction", "research"] as const;
 export type BoostTarget = (typeof BOOST_TARGETS)[number];
 
 /** Les coffres de récompense : d'où ils viennent. */
-export const REWARD_CHEST_KINDS = ["quest", "challenge", "league", "leviathan"] as const;
+export const REWARD_CHEST_KINDS = ["quest", "challenge", "league", "leviathan", "contest"] as const;
 export type RewardChestKind = (typeof REWARD_CHEST_KINDS)[number];
 
 /** Les sortes de rapports du journal. */
@@ -341,6 +341,7 @@ export const UI_ELEMENT_IDS = [
   "rank2Troops",
   "ranking",
   "leagues",
+  "contest",
   "zoneEvents",
   "gazette",
   "speciesSheet",

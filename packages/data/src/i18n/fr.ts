@@ -657,6 +657,25 @@ export const fr = {
   "chest.kind.leviathan": "Coffre du Léviathan",
   "chest.kind.gift": "Cadeau d’alliance",
   "action.nextChest": "Coffre suivant ({n})",
+  "label.contest": "Concours",
+  "contest.title": "Concours de la semaine",
+  "contest.text":
+    "Tous les organismes de l’océan sont classés sur leur progression de la semaine. Les cinquante premiers gagnent un coffre.",
+  "contest.theme.power": "Croissance : puissance gagnée, cellule et armée",
+  "contest.theme.cell": "Bâtisseurs : puissance de la cellule gagnée",
+  "contest.theme.troops": "Armée : puissance des troupes gagnée",
+  "contest.theme.loot": "Pillage : butin pris aux autres",
+  "contest.theme.defense": "Rempart : attaques repoussées",
+  "contest.yours": "Votre progression",
+  "contest.rank": "rang {n}",
+  "contest.rewards": "Récompenses",
+  "contest.band": "Rang {a}",
+  "contest.bandTo": "Rangs {a} à {b}",
+  "contest.boosts": "Accélérateurs : {n}",
+  "contest.top": "Les {n} premiers",
+  "contest.ended": "Concours terminé",
+  "contest.endedRank": "Vous finissez au rang {n}.",
+  "chest.kind.contest": "Coffre du concours",
 } as const;
 
 export type TextKey = keyof typeof fr;
