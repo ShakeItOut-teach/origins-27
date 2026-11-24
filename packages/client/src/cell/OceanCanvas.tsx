@@ -134,7 +134,7 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
       })
       .then(() => {
         if (disposed) {
-          app.destroy(true);
+          app.destroy({ removeView: true });
           return;
         }
         ready = true;
@@ -368,7 +368,9 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
 
     return () => {
       disposed = true;
-      if (ready) app.destroy(true);
+      // On ne détruit que le canevas. `destroy(true)` vidait aussi les réserves que PixiJS
+      // partage entre toutes les lames, et la lame voisine plantait en redessinant.
+      if (ready) app.destroy({ removeView: true });
     };
   }, []);
 
