@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { floating, panCamera, project, SPAN, TOUCH_SPAN, zoomCamera } from "./worldView";
+import { labelSpot, panCamera, project, SPAN, TOUCH_SPAN, zoomCamera } from "./worldView";
 import type { WorldCamera } from "./worldView";
 
 describe("le cadrage de la grande carte", () => {
@@ -30,18 +30,22 @@ describe("le cadrage de la grande carte", () => {
     expect(project(moved, 2, -1).x).toBeCloseTo(1);
     let lost = camera;
     for (let i = 0; i < 50; i++) lost = panCamera(lost, -1, -1);
-    expect(lost.x).toBeLessThanOrEqual(13);
-    expect(lost.y).toBeLessThanOrEqual(13);
+    expect(lost.x).toBeLessThanOrEqual(126);
+    expect(lost.y).toBeLessThanOrEqual(126);
   });
 
-  it("un organisme flotte près de sa case, toujours au même endroit", () => {
-    for (let column = -11; column <= 11; column++) {
-      for (let row = -11; row <= 11; row++) {
-        const spot = floating(column, row);
-        expect(Math.abs(spot.column - column)).toBeLessThan(0.23);
-        expect(Math.abs(spot.row - row)).toBeLessThan(0.23);
-        expect(floating(column, row)).toEqual(spot);
-      }
-    }
+  it("de très loin, l'océan entier est centré dans la lame", () => {
+    let far: WorldCamera = { x: 100, y: -90, span: SPAN.start };
+    for (let i = 0; i < 30; i++) far = zoomCamera(far, 1.6);
+    expect(far.span).toBe(SPAN.max);
+    expect(far.x).toBeCloseTo(0);
+    expect(far.y).toBeCloseTo(0);
+  });
+
+  it("la profondeur d'un cercle s'écrit là où il passe le plus près du regard", () => {
+    const east: WorldCamera = { x: 100, y: 0, span: 30 };
+    expect(labelSpot(east, 98)).toEqual(project(east, 98, 0));
+    const centre: WorldCamera = { x: 0, y: 0, span: 264 };
+    expect(labelSpot(centre, 50)).toEqual(project(centre, 0, -50));
   });
 });

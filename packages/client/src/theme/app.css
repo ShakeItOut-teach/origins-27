@@ -1288,6 +1288,62 @@ p {
   cursor: pointer;
 }
 
+.lens-pill-right {
+  left: auto;
+  right: -6px;
+  background: var(--iodine);
+}
+
+.organism-deposit {
+  border-radius: 8px;
+  border-color: color-mix(in srgb, var(--iodine) 70%, transparent);
+}
+
+.lens-world .organism {
+  border-color: transparent;
+}
+
+.lens-world .organism.is-target {
+  border-color: var(--iodine);
+}
+
+.isobath {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--lens-edge) 70%, transparent);
+  color: var(--on-dark);
+  font-family: var(--font-number);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.isobath-day {
+  display: block;
+  opacity: 0.75;
+}
+
+.world-place {
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 4px 10px;
+  border: var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-number);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .lens-corner {
   position: absolute;
   bottom: -6px;

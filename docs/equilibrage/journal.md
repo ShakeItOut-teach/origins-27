@@ -240,3 +240,24 @@ du nouveau joueur jusqu'au palier 6, perdue à sa première attaque envoyée.
 Le classement, les ligues et la Gazette passent au palier 7 (5 combats contre des rivaux,
 jour 4). À surveiller : avec 48 cibles, le joueur trouve toujours un organisme faible ; il
 faudra peut-être que les plus riches soient aussi les mieux gardés.
+
+## 2026-11-24 — Palier 6 refait : l'océan
+
+La carte en grille (portée 3 cases, +15 % de butin par pas) est retirée. Premiers chiffres de
+l'océan :
+
+| Réglage                   | Valeur                                                   |
+| ------------------------- | -------------------------------------------------------- |
+| Rayon du monde            | 124 cases ; terre ferme : 20 cases                       |
+| Ouverture des zones       | jours 1, 6, 12, 18                                       |
+| Places par zone           | 500, 450, 380, 300                                       |
+| Richesse par zone         | 100 %, 140 %, 190 %, 250 %                               |
+| Garde des rivaux par zone | 100 %, 130 %, 170 %, 220 %                               |
+| Chargement (abysses)      | 300 sucres, 100 briques ou 20 protéines, pour 2 énergies |
+| Gisement neuf             | 12 chargements, vidé par les autres en 3 à 8 heures      |
+| Trajet vers un gisement   | 12 s par case, aller simple ; 1 minute au moins          |
+| Trajet d'attaque          | 4 minutes par tranche de 8 cases                         |
+| Remonter                  | 300/150/40, puis 450/300/90, puis 600/450/160            |
+
+À surveiller : la garde des rivaux près de la surface dépasse ce que 35 cellules de rang 1
+peuvent battre. C'est voulu : les troupes de rang supérieur arrivent aux paliers suivants.

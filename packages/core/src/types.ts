@@ -119,7 +119,7 @@ export interface DailyQuests {
 }
 
 export interface PlayerState {
-  readonly version: 5;
+  readonly version: 6;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -168,6 +168,10 @@ export interface PlayerState {
   readonly nightOffUntil: number;
   /** Instant à partir duquel l'heure de la nuit peut être changée. */
   readonly nightReadyAt: number;
+  /** Zone de l'océan où vit le joueur : 0 = les abysses, puis de plus en plus près de la surface. */
+  readonly zone: number;
+  /** Ce que le joueur a déjà pris dans chaque gisement encore présent, en millionièmes d'unité. */
+  readonly taken: Readonly<Record<string, number>>;
 }
 
 export type GameEvent =
@@ -273,6 +277,7 @@ export type GameEvent =
       readonly cancelled: boolean;
     }
   /** Un rival a attaqué le joueur et a été repoussé. */
+  | { readonly type: "migrated"; readonly at: number; readonly zone: number }
   | { readonly type: "attackRepelled"; readonly at: number; readonly rival: string }
   /** Un rival a attaqué le joueur et a pris une part de ses réserves. */
   | {
@@ -320,7 +325,10 @@ export type OrderErrorCode =
   | "alreadySpied"
   | "noRaid"
   | "awayResting"
-  | "nightResting";
+  | "nightResting"
+  | "zoneClosed"
+  | "depleted"
+  | "surface";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

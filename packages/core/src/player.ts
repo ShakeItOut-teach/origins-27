@@ -42,7 +42,9 @@ export function createPlayer(
 ): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 5,
+    version: 6,
+    zone: 0,
+    taken: {},
     quests: null,
     raid: null,
     spiedUntil: {},
@@ -185,6 +187,12 @@ export function serializeState(state: PlayerState): string {
         .sort()
         .map((id) => [id, state.placeReadyAt[id]]),
     ),
+    zone: state.zone,
+    taken: Object.fromEntries(
+      Object.keys(state.taken)
+        .sort()
+        .map((id) => [id, state.taken[id]]),
+    ),
     quests:
       state.quests === null
         ? null
@@ -318,7 +326,7 @@ function readConstruction(value: unknown): Construction | null {
   return { organelle, toLevel, endsAt };
 }
 
-const PLACE_ID = /^(h:|r:)?-?\d{1,6}:-?\d{1,6}$/;
+const PLACE_ID = /^((h:|r:)?-?\d{1,6}:-?\d{1,6}|o:\d{1,4}|d:-?\d{1,4}:-?\d{1,4}:\d{1,9})$/;
 
 function readExpedition(value: unknown): Expedition | null {
   if (value === null) return null;
@@ -514,7 +522,7 @@ export function needsWorldPlace(text: string): boolean {
 export function deserializeState(text: string, world?: WorldPlace): PlayerState {
   const raw: unknown = JSON.parse(text);
   const version = raw !== null && isRecord(raw) ? raw.version : undefined;
-  if (!isRecord(raw) || typeof version !== "number" || ![1, 2, 3, 4, 5].includes(version)) {
+  if (!isRecord(raw) || typeof version !== "number" || ![1, 2, 3, 4, 5, 6].includes(version)) {
     throw new TypeError("sauvegarde invalide : version");
   }
   const old = version === 1;
@@ -537,7 +545,11 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     throw new TypeError("sauvegarde invalide : carte");
   }
   return {
-    version: 5,
+    version: 6,
+    // Avant l'océan : le joueur est dans les abysses et n'a touché à aucun gisement.
+    zone:
+      version < 6 || !isCount(raw.zone) ? 0 : Math.min(raw.zone, BALANCE.ocean.zones.length - 1),
+    taken: version < 6 ? {} : readPlaceTimes(raw.taken),
     // Avant les rivaux : ni attaque en cours, ni espionnage, ni protection.
     raid: version < 5 ? null : readRaid(raw.raid),
     spiedUntil: version < 5 ? {} : readPlaceTimes(raw.spiedUntil),

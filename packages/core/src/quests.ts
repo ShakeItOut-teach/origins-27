@@ -108,6 +108,8 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
       }
       return 0;
     }
+    case "migrated":
+      return 0;
     case "troopBorn":
       return id === "trainCells" ? 1 : 0;
     case "huntResolved":

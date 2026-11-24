@@ -9,6 +9,7 @@ import { openChest, trackQuests } from "./quests";
 import { dropShield, goAway, raidOffer, reachableRivals, resolveRaid, setNight } from "./rivals";
 import { MICRO } from "./types";
 import { drawMutationOffer, orderTier } from "./unlock";
+import { ZONE_COUNT, cellIn, findDeposit, gatherOffer, migrateOffer } from "./ocean";
 import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
 
 type Outcome =
@@ -106,6 +107,70 @@ function sendExpedition(state: PlayerState, placeId: string): Outcome {
       },
     },
     events: [{ type: "expeditionSent", at: state.now, place: placeId, returnsAt }],
+  };
+}
+
+/** Récolter un gisement commun : ce que l'on charge n'est plus là pour les autres. */
+function gather(state: PlayerState, depositId: string): Outcome {
+  if (state.expedition !== null) return { error: "busy" };
+  const deposit = findDeposit(state.worldSeed, depositId, state.now);
+  if (deposit === null) return { error: "unknownPlace" };
+  if (deposit.zone > state.zone) return { error: "zoneClosed" };
+  const offer = gatherOffer(state, deposit, state.now);
+  if (offer.loot <= 0) return { error: "depleted" };
+  if (state.energy < offer.energy) return { error: "noEnergy" };
+  const returnsAt = state.now + offer.durationMs;
+  // On oublie au passage les gisements disparus : la liste ne grossit pas sans fin.
+  const taken: Record<string, number> = {};
+  for (const [id, amount] of Object.entries(state.taken)) {
+    if (findDeposit(state.worldSeed, id, state.now) !== null) taken[id] = amount;
+  }
+  taken[depositId] = (taken[depositId] ?? 0) + offer.loot;
+  return {
+    state: {
+      ...state,
+      energy: state.energy - offer.energy,
+      taken,
+      expedition: {
+        place: depositId,
+        kind: deposit.kind,
+        loot: offer.loot,
+        energy: offer.energy,
+        restMs: 0,
+        startedAt: state.now,
+        returnsAt,
+        cancelled: false,
+      },
+    },
+    events: [{ type: "expeditionSent", at: state.now, place: depositId, returnsAt }],
+  };
+}
+
+/** Remonter d'une zone : la cellule s'installe plus près de la surface, pour de bon. */
+function migrate(state: PlayerState): Outcome {
+  const offer = migrateOffer(state, state.now);
+  if (offer === null || offer.zone >= ZONE_COUNT) return { error: "surface" };
+  if (!offer.open) return { error: "zoneClosed" };
+  // On ne déménage pas en laissant des cellules dehors.
+  if (state.expedition !== null || state.hunt !== null || state.raid !== null) {
+    return { error: "busy" };
+  }
+  if (RESOURCE_IDS.some((id) => state.resources[id] < offer.cost[id])) {
+    return { error: "insufficient" };
+  }
+  // La case d'arrivée existe : on le vérifie avant de payer.
+  cellIn(state.worldSeed, state.slot, offer.zone);
+  return {
+    state: {
+      ...state,
+      zone: offer.zone,
+      resources: {
+        sugar: state.resources.sugar - offer.cost.sugar,
+        bricks: state.resources.bricks - offer.cost.bricks,
+        proteins: state.resources.proteins - offer.cost.proteins,
+      },
+    },
+    events: [{ type: "migrated", at: state.now, zone: offer.zone }],
   };
 }
 
@@ -388,6 +453,10 @@ function execute(state: PlayerState, order: Order): Outcome {
       return startAway(state);
     case "setNight":
       return chooseNight(state, order.minute);
+    case "gather":
+      return gather(state, order.deposit);
+    case "migrate":
+      return migrate(state);
   }
 }
 

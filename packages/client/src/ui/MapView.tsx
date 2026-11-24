@@ -13,13 +13,13 @@ import type { Place, PlayerState, Prey } from "@o27/core";
 import { BALANCE, PLACE_RESOURCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { Order, TextKey, TroopId } from "@o27/data";
 import { useMemo, useState } from "react";
-import type { ReactNode } from "react";
 import { MapCanvas } from "../cell/MapCanvas";
 import type { MapScene } from "../cell/MapCanvas";
 import { filamentReach, layoutSpots } from "../game/mapLayout";
 import { formatAmount, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { EnergyIcon, PreyIcon, ResourceIcon, TroopIcon } from "./icons";
+import { SheetFrame } from "./SheetFrame";
 import { WorldView } from "./WorldView";
 
 interface Props {
@@ -208,43 +208,6 @@ interface SheetProps {
   readonly lang: Lang;
   readonly onClose: () => void;
   readonly onOrder: (order: Order) => void;
-}
-
-function SheetFrame(props: {
-  readonly title: string;
-  readonly testId: string;
-  readonly closeLabel: string;
-  readonly onClose: () => void;
-  readonly children: ReactNode;
-}) {
-  return (
-    <div className="veil veil-bottom" onClick={props.onClose}>
-      <div
-        className="sheet"
-        role="dialog"
-        aria-modal="true"
-        data-testid={props.testId}
-        onClick={(event) => {
-          event.stopPropagation();
-        }}
-      >
-        <div className="sheet-head sheet-head-plain">
-          <div>
-            <h2>{props.title}</h2>
-          </div>
-          <button
-            type="button"
-            className="close"
-            aria-label={props.closeLabel}
-            onClick={props.onClose}
-          >
-            ×
-          </button>
-        </div>
-        {props.children}
-      </div>
-    </div>
-  );
 }
 
 /** Fiche d'un lieu : un gain, une durée, un coût, un bouton. */

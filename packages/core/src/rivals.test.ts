@@ -8,9 +8,7 @@ import {
   createPlayer,
   DAY_MS,
   defensePower,
-  cellSlot,
   deserializeState,
-  farLootPercent,
   isNewcomer,
   loadLoot,
   nightEnd,
@@ -19,11 +17,7 @@ import {
   partySize,
   raidChance,
   raidOffer,
-  reachableRivals,
   rivalStats,
-  slotCell,
-  worldOrganisms,
-  worldRivals,
   serializeState,
   troopCapacity,
   troopsOwned,
@@ -667,7 +661,7 @@ describe("garanties du moteur avec les rivaux", () => {
       organelles: Object.fromEntries(Object.entries(organelles).filter(([key]) => key !== "wall")),
     });
     const back = deserializeState(text);
-    expect(back.version).toBe(5);
+    expect(back.version).toBe(6);
     expect(back.organelles.wall).toBe(0);
     expect(back.nextRaidAt).toBeNull();
     expect(back.troops.hunter).toBe(3);
@@ -684,61 +678,7 @@ describe("garanties du moteur avec les rivaux", () => {
   });
 });
 
-describe("la grande carte (palier 6)", () => {
-  const WORLD = BALANCE.rivals.world;
-
-  it("chaque case de la spirale retrouve son numéro de place", () => {
-    for (let slot = 0; slot < 1000; slot++) {
-      const cell = slotCell(slot);
-      expect(cellSlot(cell.x, cell.y)).toBe(slot);
-    }
-  });
-
-  it("tout joueur voit ses voisins et les organismes à portée, sans doublon ni lui-même", () => {
-    expect(worldRivals(27, 0)).toHaveLength((2 * WORLD.reach + 1) ** 2 - 1);
-    for (let slot = 0; slot < BALANCE.world.organisms; slot += 7) {
-      const seen = worldRivals(27, slot);
-      const ids = seen.map((entry) => entry.id);
-      expect(new Set(ids).size).toBe(ids.length);
-      const home = slotCell(slot);
-      expect(ids).not.toContain(`r:${String(home.x)}:${String(home.y)}`);
-      for (const near of visibleRivals(27, slot)) expect(ids).toContain(near.id);
-      expect(seen.length).toBeGreaterThanOrEqual(8);
-      seen.forEach((entry, index) => {
-        expect(entry.steps).toBeGreaterThanOrEqual(1);
-        expect(entry.steps).toBeLessThanOrEqual(2 * WORLD.reach);
-        expect(entry.steps).toBeGreaterThanOrEqual(seen[index - 1]?.steps ?? 0);
-      });
-    }
-    expect(worldOrganisms(27)).toHaveLength(BALANCE.world.organisms);
-  });
-
-  it("avant le palier 6 on n'atteint que ses voisins ; ensuite, plus loin, plus long, plus riche", () => {
-    const before = atTier5({ hunter: 6 });
-    const distant = worldRivals(before.worldSeed, before.slot).find((entry) => entry.steps === 4);
-    if (distant === undefined) throw new Error("pas d'organisme lointain");
-    expect(refusal(before, raid(distant, party({ hunter: 6 })), T0)).toBe("unknownRival");
-    expect(refusal(before, { type: "spyRival", rival: distant.id }, T0)).toBe("unknownRival");
-
-    const after = { ...before, tier: WORLD.tier };
-    expect(reachableRivals(after)).toBe(worldRivals(after.worldSeed, after.slot));
-    ok(after, { type: "spyRival", rival: distant.id }, T0);
-    const sent = ok(after, raid(distant, party({ hunter: 6 })), T0);
-    const offer = raidOffer(after, distant, T0);
-    expect(offer.durationMs).toBe(
-      (4 * BALANCE.rivals.raid.stepSeconds + BALANCE.hunt.strikeWindowSeconds) * 1000,
-    );
-    expect(sent.raid?.returnsAt).toBe(T0 + offer.durationMs);
-    // Deux pas au-delà du voisinage : deux fois le supplément.
-    expect(farLootPercent(4)).toBe(100 + 2 * WORLD.farLootPercent);
-    expect(farLootPercent(1)).toBe(100);
-    expect(farLootPercent(2)).toBe(100);
-    const plain = rivalStats(distant, 2);
-    expect(raidOffer({ ...after, now: T0 }, distant, T0).sugar).toBe(
-      Math.floor((plain.sugar * farLootPercent(4)) / 100),
-    );
-  });
-
+describe("la fin de la protection (palier 6)", () => {
   it("au palier 6, le nouveau joueur n'est plus protégé : une attaque est programmée", () => {
     const state = newcomer({ hunter: 3 });
     const fought = { ...state, counters: { ...state.counters, rivalFights: 1 } };

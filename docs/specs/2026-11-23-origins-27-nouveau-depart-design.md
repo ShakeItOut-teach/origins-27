@@ -35,7 +35,7 @@ autorise, et la mise en scène du déblocage.
 | 3      | Première mutation                                      | —             | La carte proche, envoyer récolter ; énergie                                      |
 | 4      | 5 récoltes sur la carte                                | —             | Premières troupes, chasse de proies neutres ; coffres et quêtes du jour          |
 | 5      | Première chasse gagnée                                 | Jour 2        | Rivaux, espionnage, pillage, défense et esquive, protections                     |
-| 6      | Premier combat contre un rival                         | Jour 3        | La grande carte : la goutte entière, piller plus loin                            |
+| 6      | Premier combat contre un rival                         | Jour 3        | L'océan : zones de profondeur, gisements communs, remonter vers le centre        |
 | 7      | 5 combats contre des rivaux                            | Jour 4        | Classement, ligues, Gazette                                                      |
 | 8      | Entrée en ligue                                        | Jour 5        | Alliances : dons, entraide, technologies                                         |
 | 9      | —                                                      | Jour 9        | Tout est en place : rangs supérieurs, crise de saison (jour 18), course à l'APEX |

@@ -48,9 +48,10 @@ function comeBack(state: PlayerState, expedition: Expedition): Step {
     counters: expedition.cancelled
       ? state.counters
       : { ...state.counters, mapHarvests: state.counters.mapHarvests + 1 },
-    placeReadyAt: expedition.cancelled
-      ? state.placeReadyAt
-      : { ...state.placeReadyAt, [expedition.place]: expedition.returnsAt + expedition.restMs },
+    placeReadyAt:
+      expedition.cancelled || expedition.place.startsWith("d:")
+        ? state.placeReadyAt
+        : { ...state.placeReadyAt, [expedition.place]: expedition.returnsAt + expedition.restMs },
   };
   return {
     state: next,

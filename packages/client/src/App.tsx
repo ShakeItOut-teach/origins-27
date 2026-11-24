@@ -1,7 +1,7 @@
 import {
   MICRO,
   nextMutationPrice,
-  visibleRivals,
+  rivalName as nameOfRival,
   capacity,
   describeCreature,
   levelCost,
@@ -186,8 +186,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
     raid !== null && !raid.cancelled && raid.outcome === null && state.now >= raid.arrivesAt
       ? raid.resolveAt - state.now
       : null;
-  const rivalName = (id: string): string =>
-    visibleRivals(state.worldSeed, state.slot).find((rival) => rival.id === id)?.name ?? "";
+  const rivalName = (id: string): string => nameOfRival(state, id);
 
   if (!store.isReady()) {
     return <main className="page" data-tier="loading" aria-busy="true" />;

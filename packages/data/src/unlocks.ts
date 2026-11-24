@@ -48,8 +48,8 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
     tier: 6,
     condition: { counter: "rivalFights", atLeast: 1 },
     minDay: 3,
-    ui: ["worldMap"],
-    orders: [],
+    ui: ["worldMap", "deposits", "migration"],
+    orders: ["gather", "migrate"],
   },
   {
     tier: 7,

@@ -60,7 +60,9 @@ export function CellCanvas({ scene, label, onTap }: Props) {
         element.appendChild(app.canvas);
         app.stage.addChild(graphics);
         app.ticker.add(() => {
-          if (element.offsetParent === null) return;
+          // Cachée, une lame ne dessine rien : PixiJS ne doit pas rejouer un ancien dessin.
+          graphics.visible = element.offsetParent !== null;
+          if (!graphics.visible) return;
           if (
             app.screen.width !== element.clientWidth ||
             app.screen.height !== element.clientHeight

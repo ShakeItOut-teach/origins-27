@@ -213,15 +213,71 @@ export const BalanceSchema = z.strictObject({
     away: z.strictObject({ hours: positiveInt, restHours: positiveInt }),
     /** Bouclier de nuit : sa durée chaque jour, et le délai avant de pouvoir changer d'heure. */
     night: z.strictObject({ hours: z.number().int().min(1).max(23), changeHours: positiveInt }),
-    /**
-     * La grande carte : à partir de ce palier, on atteint tout organisme à cette distance (en
-     * cases). Au-delà de deux pas, chaque pas de plus grossit le butin de ce pourcentage.
-     */
-    world: z.strictObject({
-      tier: positiveInt,
-      reach: positiveInt,
-      farLootPercent: z.number().int().min(0).max(100),
+  }),
+  /**
+   * L'océan : un disque. On naît au bord, dans les abysses ; la terre ferme est au centre.
+   * Les zones sont rangées de la plus profonde à la plus proche de la surface.
+   */
+  ocean: z.strictObject({
+    /** Palier où le joueur découvre l'océan. */
+    tier: positiveInt,
+    /** Rayon de la terre ferme, au centre, en cases. */
+    landRadius: positiveInt,
+    /** Profondeur au rivage de la terre ferme, en mètres. */
+    shoreDepth: nonNegativeInt,
+    zones: z
+      .array(
+        z.strictObject({
+          /** Rayon extérieur de la zone, en cases. */
+          outer: positiveInt,
+          /** Profondeur au bord extérieur, en mètres. */
+          depth: positiveInt,
+          /** Écart entre deux organismes voisins, en cases. */
+          pitch: z.number().int().min(3),
+          /** Jour de saison où la zone s'ouvre. */
+          openDay: positiveInt,
+          /** Richesse des gisements et du butin, en pourcentage de celle des abysses. */
+          richPercent: positiveInt,
+          /** Force des gardes, en pourcentage de celle des abysses. */
+          guardPercent: positiveInt,
+          /** Nombre d'organismes qui y trouvent une place. */
+          entrants: positiveInt,
+        }),
+      )
+      .min(2),
+    /** Les organismes simulés montent dans une zone étalés sur ce nombre de jours. */
+    riseSpreadDays: positiveInt,
+    /** Un « pas » de trajet d'attaque vaut ce nombre de cases. */
+    cellsPerStep: positiveInt,
+    /** Les gisements : communs à tous, ils se vident puis d'autres apparaissent ailleurs. */
+    deposit: z.strictObject({
+      /** Côté des secteurs qui portent chacun au plus un gisement, en cases. */
+      sector: positiveInt,
+      chancePercent: z.number().int().min(1).max(100),
+      /** Durée d'un cycle : un gisement neuf peut apparaître dans le secteur à chaque cycle. */
+      epochHours: positiveInt,
+      /** Un gisement est vidé par les autres en une part du cycle, au moins celle-ci. */
+      minLifePercent: z.number().int().min(10).max(100),
+      /** Un gisement neuf contient ce nombre de chargements. */
+      loads: positiveInt,
+      /** Un chargement dans les abysses, par sorte de gisement. */
+      load: z.strictObject({
+        sugarCluster: positiveInt,
+        debris: positiveInt,
+        carcass: positiveInt,
+      }),
+      /** Part des gisements de sucre, puis de briques ; le reste donne des protéines. */
+      sugarPercent: z.number().int().min(1).max(98),
+      bricksPercent: z.number().int().min(1).max(98),
+      energy: positiveInt,
+      /** Durée de trajet par case, aller simple. */
+      secondsPerCell: positiveInt,
+      minSeconds: positiveInt,
     }),
+    /** Prix pour remonter dans la zone suivante : une ligne par frontière. */
+    migrate: z.array(
+      z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
+    ),
   }),
   /** Prix en protéines de chaque nouvelle mutation ; le dernier prix vaut pour toutes les suivantes. */
   mutationPrices: z.array(positiveInt).min(1),
@@ -311,6 +367,13 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("goAway") }),
   /** Choisir l'heure de son bouclier de nuit : la minute du jour (temps universel) où il commence. */
   z.strictObject({ type: z.literal("setNight"), minute: z.number().int().min(0).max(1439) }),
+  /** Récolter un gisement commun, désigné par son secteur et son cycle : « d:colonne:ligne:cycle ». */
+  z.strictObject({
+    type: z.literal("gather"),
+    deposit: z.string().regex(/^d:-?d{1,4}:-?d{1,4}:d{1,9}$/),
+  }),
+  /** Remonter d'une zone vers la surface. */
+  z.strictObject({ type: z.literal("migrate") }),
 ]);
 export type Order = z.infer<typeof OrderSchema>;
 

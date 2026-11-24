@@ -14,7 +14,10 @@ import {
   visiblePlaces,
   visiblePrey,
   reachableRivals,
-  visibleRivals,
+  nearRivals,
+  oceanDeposits,
+  playerCell,
+  cellDistance,
   winChance,
 } from "@o27/core";
 import type { PlayerState } from "@o27/core";
@@ -281,14 +284,12 @@ export function simulate(
       // Tant qu'un rival est ouvert, il garde de quoi l'attaquer : le pillage passe avant le reste.
       const raidReserve =
         state.tier >= 5 &&
-        visibleRivals(state.worldSeed, state.slot).some(
-          (rival) => (state.placeReadyAt[rival.id] ?? 0) <= now,
-        )
+        nearRivals(state).some((rival) => (state.placeReadyAt[rival.id] ?? 0) <= now)
           ? BALANCE.rivals.raid.energy
           : 0;
       if (state.tier >= 5 && state.hunt === null && state.raid === null) {
         let best: { id: string; chance: number } | null = null;
-        for (const rival of reachableRivals(state)) {
+        for (const rival of reachableRivals(state).slice(0, 12)) {
           if ((state.placeReadyAt[rival.id] ?? 0) > now) continue;
           const chance = winChance(state.troops, rival.kind, raidOffer(state, rival, now).guard);
           if (best === null || chance > best.chance) best = { id: rival.id, chance };
@@ -337,6 +338,24 @@ export function simulate(
             send({ type: "sendHunt", prey: prey.id, party: state.troops }, now)
           ) {
             firstHuntSeconds ??= second;
+            acted = true;
+          }
+        }
+      }
+      // Océan : toutes les cinq minutes, le robot remonte s'il le peut, puis récolte le
+      // gisement commun le plus proche de chez lui.
+      if (state.tier >= BALANCE.ocean.tier && second % 300 === 0) {
+        if (send({ type: "migrate" }, now)) acted = true;
+        if (
+          state.expedition === null &&
+          state.energy - raidReserve >= BALANCE.ocean.deposit.energy
+        ) {
+          const home = playerCell(state);
+          const zone = state.zone;
+          const [nearest] = oceanDeposits(state.worldSeed, now)
+            .filter((deposit) => deposit.zone <= zone)
+            .sort((one, other) => cellDistance(home, one) - cellDistance(home, other));
+          if (nearest !== undefined && send({ type: "gather", deposit: nearest.id }, now)) {
             acted = true;
           }
         }

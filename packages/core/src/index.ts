@@ -37,14 +37,36 @@ export {
   protectedUntil,
   raidChance,
   raidOffer,
-  farLootPercent,
+  nearRivals,
+  oceanRivals,
   reachableRivals,
+  rivalName,
   rivalStats,
   visibleRivals,
-  worldOrganisms,
-  worldRivals,
 } from "./rivals";
-export type { Organism, RaidOffer, Rival, RivalStats } from "./rivals";
+export type { RaidOffer, Rival, RivalStats } from "./rivals";
+export {
+  ZONE_COUNT,
+  cellDistance,
+  cellIn,
+  depositLeft,
+  depositLoad,
+  depthAt,
+  findDeposit,
+  gatherOffer,
+  migrateOffer,
+  oceanDeposits,
+  oceanOrganisms,
+  oceanRadius,
+  organismZone,
+  playerCell,
+  rankOf,
+  ringCells,
+  zoneAt,
+  zoneInner,
+  zoneOpenDay,
+} from "./ocean";
+export type { Deposit, GatherOffer, MigrateOffer, OceanOrganism } from "./ocean";
 export { evaluateTier, orderTier, seasonDay } from "./unlock";
 export {
   capacity,

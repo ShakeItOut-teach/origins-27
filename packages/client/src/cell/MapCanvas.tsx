@@ -76,7 +76,9 @@ export function MapCanvas({ scene }: { readonly scene: MapScene }) {
         app.stage.addChild(graphics);
         app.ticker.add(() => {
           // Une lame cachée ne se redessine pas ; créée cachée, elle n'a pas encore de taille.
-          if (element.offsetParent === null) return;
+          // Cachée, une lame ne dessine rien : PixiJS ne doit pas rejouer un ancien dessin.
+          graphics.visible = element.offsetParent !== null;
+          if (!graphics.visible) return;
           if (
             app.screen.width !== element.clientWidth ||
             app.screen.height !== element.clientHeight

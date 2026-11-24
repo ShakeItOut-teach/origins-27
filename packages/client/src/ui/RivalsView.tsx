@@ -1,20 +1,20 @@
 import {
   MICRO,
   defensePower,
-  farLootPercent,
+  depthAt,
+  nearRivals,
   isNewcomer,
   protectedUntil,
   partySize,
   raidChance,
   raidOffer,
-  visibleRivals,
   winChance,
 } from "@o27/core";
 import type { PlayerState, Rival } from "@o27/core";
 import { BALANCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { Order, TextKey, TroopId } from "@o27/data";
 import { useState } from "react";
-import { formatAmount, formatAway, formatDuration, translate } from "../game/text";
+import { formatAmount, formatAway, formatDepth, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { EnergyIcon, ResourceIcon, TroopIcon } from "./icons";
 
@@ -34,7 +34,7 @@ function guardRange(guard: number): { low: number; high: number } {
 export function RivalsView({ state, lang, onOrder }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const [selected, setSelected] = useState<string | null>(null);
-  const rivals = visibleRivals(state.worldSeed, state.slot);
+  const rivals = nearRivals(state);
   const raid = state.raid;
   const shieldLeft = protectedUntil(state, state.now) - state.now;
   // L'heure de la nuit est gardée en temps universel ; le joueur la choisit à son heure locale.
@@ -258,9 +258,10 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
           </span>
         </div>
 
-        {farLootPercent(rival.steps) > 100 && (
-          <p className="sheet-role" data-testid="rival-far">
-            {t("label.farLoot").replace("{n}", String(farLootPercent(rival.steps) - 100))}
+        {state.tier >= BALANCE.ocean.tier && (
+          <p className="sheet-role" data-testid="rival-zone">
+            {t(`zone.${String(rival.zone)}.name` as TextKey)} ·{" "}
+            {t("label.depth").replace("{n}", formatDepth(depthAt(rival.x, rival.y), lang))}
           </p>
         )}
 

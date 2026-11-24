@@ -73,15 +73,18 @@ export const ORDER_TYPES = [
   "cancelRaid",
   "goAway",
   "setNight",
+  "gather",
+  "migrate",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
 /** Les sortes de lieux de la carte, et ce que chacune rapporte. */
-export const PLACE_KINDS = ["sugarCluster", "debris"] as const;
+export const PLACE_KINDS = ["sugarCluster", "debris", "carcass"] as const;
 export type PlaceKind = (typeof PLACE_KINDS)[number];
 export const PLACE_RESOURCE: Readonly<Record<PlaceKind, ResourceId>> = {
   sugarCluster: "sugar",
   debris: "bricks",
+  carcass: "proteins",
 };
 
 /** Les cellules filles, et la sorte de proie contre laquelle chacune compte double. */
@@ -151,6 +154,8 @@ export const UI_ELEMENT_IDS = [
   "defense",
   "protections",
   "worldMap",
+  "deposits",
+  "migration",
   "ranking",
   "leagues",
   "gazette",

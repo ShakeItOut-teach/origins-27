@@ -28,6 +28,11 @@ export function formatRate(microPerMs: number, lang: Lang): string {
 }
 
 /** Une durée courte : « 45 s », « 1 min 30 ». */
+/** Une profondeur en mètres, avec l'espace des milliers de la langue. */
+export function formatDepth(metres: number, lang: Lang): string {
+  return new Intl.NumberFormat(lang === "fr" ? "fr-FR" : "en-US").format(metres);
+}
+
 export function formatDuration(ms: number): string {
   const seconds = Math.max(0, Math.ceil(ms / 1000));
   if (seconds < 60) return `${String(seconds)} s`;

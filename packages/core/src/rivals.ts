@@ -11,7 +11,10 @@ import type { Rng } from "./rng";
 import { MICRO } from "./types";
 import type { GameEvent, PlayerState, Raid, Step } from "./types";
 import { seasonDay } from "./unlock";
-import { cellSlot, slotCell } from "./world";
+import { cellDistance, oceanOrganisms, organismHue, playerCell } from "./ocean";
+import type { OceanOrganism } from "./ocean";
+import { slotCell } from "./world";
+import type { Point } from "./world";
 
 const HOUR_MS = 3_600_000;
 
@@ -29,6 +32,11 @@ export interface Rival {
   readonly far: boolean;
   /** Sa valeur par rapport à un rival moyen, en pourcentage. */
   readonly temper: number;
+  /** Sa zone dans l'océan (0 = les abysses) : plus haut, il est plus riche et mieux gardé. */
+  readonly zone: number;
+  /** Sa case. */
+  readonly x: number;
+  readonly y: number;
 }
 
 export interface RivalStats {
@@ -65,6 +73,9 @@ function rivalAt(worldSeed: number, column: number, row: number, steps: number):
     steps,
     far: steps >= 2,
     temper: temperMinPercent + rng.int(temperMaxPercent - temperMinPercent + 1),
+    zone: 0,
+    x: column,
+    y: row,
   };
 }
 
@@ -87,85 +98,104 @@ export function visibleRivals(worldSeed: number, slot: number): readonly Rival[]
   );
 }
 
-let lastWorldKey = "";
-let lastWorld: readonly Rival[] = [];
+/** Un organisme de l'océan : son nom et son tempérament ne dépendent que de sa place. */
+function organismAt(
+  worldSeed: number,
+  organism: OceanOrganism,
+  home: Point,
+): Rival & { readonly distance: number } {
+  const rng = cellRng(worldSeed, organism.slot, 0x4f1b);
+  const pickFrom = (list: readonly string[]): string => list[rng.int(list.length)] ?? "";
+  const { temperMinPercent, temperMaxPercent } = BALANCE.rivals;
+  const name = `${pickFrom(NAME_START)}${pickFrom(NAME_MIDDLE)}${pickFrom(NAME_END)}`;
+  const kind = PREY_KINDS[rng.int(PREY_KINDS.length)] ?? "soft";
+  const temper = temperMinPercent + rng.int(temperMaxPercent - temperMinPercent + 1);
+  const distance = cellDistance(home, organism);
+  const steps = Math.max(1, Math.ceil(distance / BALANCE.ocean.cellsPerStep));
+  return {
+    id: `o:${String(organism.slot)}`,
+    name,
+    hue: organism.hue,
+    kind,
+    steps,
+    far: steps >= 2,
+    temper,
+    zone: organism.zone,
+    x: organism.x,
+    y: organism.y,
+    distance,
+  };
+}
+
+let lastOceanKey = "";
+let lastOcean: readonly Rival[] = [];
 
 /**
- * La grande carte : tous les organismes à portée du joueur, du plus proche au plus lointain.
- * Les huit cases voisines comptent toujours ; plus loin, seules les places de la goutte.
+ * L'océan : tous les organismes que le joueur peut atteindre, du plus proche au plus lointain.
+ * Ce sont ceux de sa zone et des zones plus profondes ; plus haut, il faut d'abord remonter.
  */
-export function worldRivals(worldSeed: number, slot: number): readonly Rival[] {
-  const key = `${String(worldSeed)}/${String(slot)}`;
-  if (key === lastWorldKey) return lastWorld;
-  const reach = BALANCE.rivals.world.reach;
-  const home = slotCell(slot);
-  const found: Rival[] = [];
-  for (let dx = -reach; dx <= reach; dx++) {
-    for (let dy = -reach; dy <= reach; dy++) {
-      if (dx === 0 && dy === 0) continue;
-      const close = Math.max(Math.abs(dx), Math.abs(dy)) === 1;
-      if (!close && cellSlot(home.x + dx, home.y + dy) >= BALANCE.world.organisms) continue;
-      found.push(rivalAt(worldSeed, home.x + dx, home.y + dy, Math.abs(dx) + Math.abs(dy)));
-    }
+export function oceanRivals(state: PlayerState): readonly Rival[] {
+  const day = seasonDay(state, state.now);
+  const key = [state.worldSeed, state.slot, state.zone, day].join("/");
+  if (key === lastOceanKey) return lastOcean;
+  const home = playerCell(state);
+  const found: (Rival & { readonly distance: number })[] = [];
+  for (const organism of oceanOrganisms(state.worldSeed, day)) {
+    if (organism.slot === state.slot || organism.zone > state.zone) continue;
+    // Un organisme simulé cède sa case au joueur qui s'y installe.
+    if (organism.x === home.x && organism.y === home.y) continue;
+    found.push(organismAt(state.worldSeed, organism, home));
   }
-  found.sort((a, b) => a.steps - b.steps || (a.id < b.id ? -1 : 1));
-  lastWorldKey = key;
-  lastWorld = found;
+  found.sort((one, other) => one.distance - other.distance || (one.id < other.id ? -1 : 1));
+  lastOceanKey = key;
+  lastOcean = found;
   return found;
 }
 
 /** Les organismes que le joueur peut espionner et attaquer, selon son palier. */
 export function reachableRivals(state: PlayerState): readonly Rival[] {
-  return state.tier >= BALANCE.rivals.world.tier
-    ? worldRivals(state.worldSeed, state.slot)
+  return state.tier >= BALANCE.ocean.tier
+    ? oceanRivals(state)
     : visibleRivals(state.worldSeed, state.slot);
 }
 
-export interface Organism {
-  readonly slot: number;
-  /** Sa case dans la goutte. */
-  readonly column: number;
-  readonly row: number;
-  readonly hue: number;
+/** Les plus proches voisins : ceux de la liste « Les rivaux », et ceux qui viennent attaquer. */
+export function nearRivals(state: PlayerState): readonly Rival[] {
+  return reachableRivals(state).slice(0, BALANCE.rivals.count);
 }
 
-let lastDotsSeed = -1;
-let lastDots: readonly Organism[] = [];
-
-/** Toutes les places de la goutte, pour la dessiner en entier. */
-export function worldOrganisms(worldSeed: number): readonly Organism[] {
-  if (worldSeed === lastDotsSeed) return lastDots;
-  const dots: Organism[] = [];
-  for (let slot = 0; slot < BALANCE.world.organisms; slot++) {
-    const cell = slotCell(slot);
-    dots.push({
-      slot,
-      column: cell.x,
-      row: cell.y,
-      hue: rivalAt(worldSeed, cell.x, cell.y, 0).hue,
-    });
+/** Le nom d'un organisme, d'après son identifiant ; vide s'il est inconnu. */
+export function rivalName(state: PlayerState, id: string): string {
+  const ocean = /^o:(\d{1,4})$/.exec(id);
+  if (ocean !== null) {
+    const slot = Number(ocean[1]);
+    return organismAt(
+      state.worldSeed,
+      { slot, x: 0, y: 0, zone: 0, hue: organismHue(state.worldSeed, slot) },
+      { x: 0, y: 0 },
+    ).name;
   }
-  lastDotsSeed = worldSeed;
-  lastDots = dots;
-  return dots;
-}
-
-/** Ce que le butin d'un organisme vaut en plus quand il est loin, en pourcentage. */
-export function farLootPercent(steps: number): number {
-  return 100 + BALANCE.rivals.world.farLootPercent * Math.max(0, steps - 2);
+  return visibleRivals(state.worldSeed, state.slot).find((rival) => rival.id === id)?.name ?? "";
 }
 
 /** Force et butin d'un rival un jour donné : il grandit avec la saison. */
 export function rivalStats(rival: Rival, day: number): RivalStats {
   const data = BALANCE.rivals;
-  const grown = (line: { base: number; perDay: number }): number =>
-    Math.max(1, Math.round(((line.base + line.perDay * (day - 1)) * rival.temper) / 100));
+  const zone = BALANCE.ocean.zones[rival.zone];
+  const grown = (line: { base: number; perDay: number }, percent: number): number =>
+    Math.max(
+      1,
+      Math.round(((line.base + line.perDay * (day - 1)) * rival.temper * percent) / 10_000),
+    );
+  // Près de la surface, les organismes sont plus riches et mieux gardés.
+  const guard = zone?.guardPercent ?? 100;
+  const rich = zone?.richPercent ?? 100;
   return {
-    guard: grown(data.guard),
-    attack: grown(data.attack),
-    sugar: grown(data.sugar),
-    bricks: grown(data.bricks),
-    proteins: grown(data.proteins),
+    guard: grown(data.guard, guard),
+    attack: grown(data.attack, guard),
+    sugar: grown(data.sugar, rich),
+    bricks: grown(data.bricks, rich),
+    proteins: grown(data.proteins, rich),
   };
 }
 
@@ -181,14 +211,10 @@ export function raidOffer(state: PlayerState, rival: Rival, at: number): RaidOff
   const raid = BALANCE.rivals.raid;
   const seconds = raid.stepSeconds * rival.steps + BALANCE.hunt.strikeWindowSeconds;
   const stats = rivalStats(rival, seasonDay(state, at));
-  // Aller loin paie : le butin grossit avec la distance.
-  const far = (amount: number): number => Math.floor((amount * farLootPercent(rival.steps)) / 100);
   return {
     ...stats,
-    sugar: far(stats.sugar),
-    bricks: far(stats.bricks),
     // On ne peut jamais prendre qu'une part des protéines d'un organisme.
-    proteins: far(Math.floor((stats.proteins * raid.proteinSharePercent) / 100)),
+    proteins: Math.floor((stats.proteins * raid.proteinSharePercent) / 100),
     energy: raid.energy,
     durationMs: seconds * 1000,
     restMs: raid.restHours * HOUR_MS,
@@ -405,7 +431,11 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
   const night = nightEnd(state, at);
   if (night > at)
     return { state: { ...state, nextRaidAt: night + nextDelay(state, at) }, events: [] };
-  const rivals = visibleRivals(state.worldSeed, state.slot);
+  const rivals = nearRivals(state);
+  // Personne autour : on regardera de nouveau plus tard.
+  if (rivals.length === 0) {
+    return { state: { ...state, nextRaidAt: at + nextDelay(state, at) }, events: [] };
+  }
   const rng = createRng(
     (state.seed ^ 0x51ed270b ^ Math.imul(Math.floor(at / 1000), 0x85ebca6b)) >>> 0,
   );
