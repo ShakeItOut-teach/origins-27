@@ -113,6 +113,8 @@ export interface AbsenceSummary {
   /** Attaques de rivaux pendant l'absence : repoussées, et subies. */
   readonly attacksRepelled: number;
   readonly attacksSuffered: number;
+  /** Cellules filles mortes de faim pendant l'absence. */
+  readonly troopsStarved: number;
 }
 
 /** Ce qui s'est passé entre deux états, pour l'écran « pendant votre absence ». */
@@ -134,6 +136,10 @@ export function summarizeAbsence(
     tiersReached: events.flatMap((event) => (event.type === "tierReached" ? [event.tier] : [])),
     attacksRepelled: events.filter((event) => event.type === "attackRepelled").length,
     attacksSuffered: events.filter((event) => event.type === "attackSuffered").length,
+    troopsStarved: events.reduce(
+      (sum, event) => sum + (event.type === "troopsStarved" ? event.count : 0),
+      0,
+    ),
     expeditionsBack: events.filter(
       (event) => event.type === "expeditionReturned" && !event.cancelled,
     ).length,

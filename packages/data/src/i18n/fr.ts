@@ -56,7 +56,8 @@ export const fr = {
 
   "resource.proteins": "Protéines",
   "organelle.nursery.name": "Pouponnière",
-  "organelle.nursery.role": "Fait naître des cellules filles, pour chasser.",
+  "organelle.nursery.role":
+    "Fait naître des cellules filles, autant que vous pouvez en nourrir. Chaque niveau accélère les naissances.",
   "unlock.4.title": "Votre cellule apprend à se diviser",
   "unlock.4.text": "Construisez la Pouponnière, puis chassez les proies de la goutte.",
   "troop.hunter.name": "Chasseuse",
@@ -237,6 +238,13 @@ export const fr = {
   "lexicon.soft": "Une cellule molle, qui rampe.",
   "lexicon.aggressive": "Un cilié qui attaque d’autres cellules.",
   "lexicon.fleeing": "Une cellule nageuse, difficile à rattraper.",
+  "label.upkeep": "Entretien",
+  "label.upkeepText":
+    "Chaque cellule fille consomme du sucre. Si la réserve tombe à zéro, les cellules en trop meurent de faim.",
+  "state.starving": "Vous dépensez plus de sucre que vous n’en produisez.",
+  "starve.title": "Famine",
+  "starve.text": "Cellules filles mortes de faim",
+  "absence.starved": "Cellules filles mortes de faim",
   "raid.won": "Attaque réussie",
   "raid.lost": "Attaque repoussée",
   "incoming.repelled": "Vos cellules ont repoussé",

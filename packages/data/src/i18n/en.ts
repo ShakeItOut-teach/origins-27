@@ -58,7 +58,8 @@ export const en = {
 
   "resource.proteins": "Proteins",
   "organelle.nursery.name": "Nursery",
-  "organelle.nursery.role": "Grows daughter cells, to go hunting.",
+  "organelle.nursery.role":
+    "Grows daughter cells, as many as you can feed. Each level speeds up births.",
   "unlock.4.title": "Your cell learns to divide",
   "unlock.4.text": "Build the Nursery, then hunt the prey in the drop.",
   "troop.hunter.name": "Hunter",
@@ -236,6 +237,13 @@ export const en = {
   "lexicon.soft": "A soft cell that crawls.",
   "lexicon.aggressive": "A ciliate that attacks other cells.",
   "lexicon.fleeing": "A swimming cell, hard to catch.",
+  "label.upkeep": "Upkeep",
+  "label.upkeepText":
+    "Each daughter cell uses up sugar. If the store drops to zero, the cells you cannot feed starve.",
+  "state.starving": "You are spending more sugar than you make.",
+  "starve.title": "Famine",
+  "starve.text": "Daughter cells starved",
+  "absence.starved": "Daughter cells starved",
   "raid.won": "Attack won",
   "raid.lost": "Attack pushed back",
   "incoming.repelled": "Your cells pushed back",

@@ -2,7 +2,7 @@
 import { leagueStep } from "./power";
 import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import { capacity, productionRate } from "./stats";
-import { partySize, resolveHunt } from "./hunt";
+import { partySize, resolveHunt, trainMs, upkeepRate } from "./hunt";
 import { ensureQuests, renewQuests, trackQuests } from "./quests";
 import { ensureIncoming, raidBack, resolveIncoming, resolveRaid } from "./rivals";
 import type { Construction, Expedition, GameEvent, Hunt, PlayerState, Step } from "./types";
@@ -17,11 +17,54 @@ function produce(state: PlayerState, to: number): PlayerState {
   const resources = { ...state.resources };
   for (const id of RESOURCE_IDS) {
     const current = state.resources[id];
-    const filled = Math.min(capacity(state, id), current + productionRate(state, id) * elapsed);
-    // Un stock déjà au-dessus du plafond n'est jamais réduit.
-    resources[id] = Math.max(current, filled);
+    // Les cellules filles se nourrissent de sucre : la production peut devenir une dépense.
+    const rate = productionRate(state, id) - (id === "sugar" ? upkeepRate(state) : 0);
+    resources[id] =
+      rate >= 0
+        ? // Un stock déjà au-dessus du plafond n'est jamais réduit.
+          Math.max(current, Math.min(capacity(state, id), current + rate * elapsed))
+        : Math.max(0, current + rate * elapsed);
   }
   return { ...state, now: to, resources };
+}
+
+/**
+ * Instant de la prochaine vague de famine : le premier multiple de l'intervalle après que la
+ * réserve de sucre s'est vidée. Jamais, si la production suffit ou s'il n'y a personne à la
+ * maison. Entre la réserve vide et la vague, le joueur a le temps de réagir.
+ */
+function hungerAt(state: PlayerState): number {
+  const rate = productionRate(state, "sugar") - upkeepRate(state);
+  if (rate >= 0 || partySize(state.troops) === 0) return Number.POSITIVE_INFINITY;
+  const emptyAt = state.now + Math.ceil(state.resources.sugar / -rate);
+  const wave = BALANCE.troopUpkeep.famineSeconds * 1000;
+  return (Math.floor(emptyAt / wave) + 1) * wave;
+}
+
+/**
+ * Une vague de famine : la réserve est vide et la cellule ne peut plus nourrir tout le monde.
+ * Une part des cellules filles à la maison meurt, jamais plus qu'il n'en faut pour que la
+ * production suffise de nouveau. Les plus nombreuses partent d'abord.
+ */
+function starve(state: PlayerState, at: number): Step {
+  const data = BALANCE.troopUpkeep;
+  const deficit = upkeepRate(state) - productionRate(state, "sugar");
+  const troops: Record<(typeof TROOP_IDS)[number], number> = { ...state.troops };
+  const home = partySize(troops);
+  const count = Math.min(
+    home,
+    Math.ceil(deficit / data.milliPerSecond),
+    Math.max(1, Math.ceil((home * data.faminePercent) / 100)),
+  );
+  for (let left = count; left > 0; left--) {
+    let biggest: (typeof TROOP_IDS)[number] = "hunter";
+    for (const id of TROOP_IDS) if (troops[id] > troops[biggest]) biggest = id;
+    troops[biggest] -= 1;
+  }
+  return {
+    state: { ...state, troops },
+    events: count > 0 ? [{ type: "troopsStarved", at, count }] : [],
+  };
 }
 
 function complete(state: PlayerState, construction: Construction): PlayerState {
@@ -74,7 +117,6 @@ function comeBack(state: PlayerState, expedition: Expedition): Step {
 function born(state: PlayerState): Step {
   const training = state.training;
   if (training === null) return { state, events: [] };
-  const seconds = BALANCE.troops[training.troop].seconds;
   return {
     state: {
       ...state,
@@ -85,7 +127,7 @@ function born(state: PlayerState): Step {
           : {
               ...training,
               remaining: training.remaining - 1,
-              nextAt: training.nextAt + seconds * 1000,
+              nextAt: training.nextAt + trainMs(state, training.troop),
             },
     },
     events: [{ type: "troopBorn", at: training.nextAt, troop: training.troop }],
@@ -180,7 +222,8 @@ export function advance(state: PlayerState, now: number): Step {
     // Chaque minuit de saison est un événement : les quêtes changent, et un palier qui
     // attendait son jour s'ouvre à cet instant précis, pas « quand le joueur revient ».
     const midnight = current.seasonStart + seasonDay(current, current.now) * DAY_MS;
-    const at = Math.min(buildEnd, birth, tripEnd, huntAt, raidAt, attackAt, midnight);
+    const hunger = hungerAt(current);
+    const at = Math.min(buildEnd, birth, tripEnd, huntAt, raidAt, attackAt, midnight, hunger);
     if (at > now) break;
     const seen = events.length;
     const ready = produce(current, at);
@@ -225,8 +268,10 @@ export function advance(state: PlayerState, now: number): Step {
               proteins: capacity(ready, "proteins") - ready.resources.proteins,
             })
           : resolveRaid(ready, raid, at, false);
-    } else {
+    } else if (attackAt === at) {
       step = resolveIncoming(ready, at);
+    } else {
+      step = starve(ready, at);
     }
     events.push(...step.events);
     const tiers = evaluateTier(step.state, at);

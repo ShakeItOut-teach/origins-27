@@ -48,7 +48,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
       buildSeconds: 90,
       upgradeBricks: 80,
       maxLevel: 5,
-      effect: { kind: "troopCapacity", base: 10, addPerLevel: 5 },
+      effect: { kind: "trainingSpeed", percentPerLevel: 25 },
     },
     wall: {
       tier: 5,
@@ -74,6 +74,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     armored: { cost: { sugar: 20, bricks: 10 }, seconds: 20 },
     swift: { cost: { sugar: 25, bricks: 5 }, seconds: 20 },
   },
+  troopUpkeep: { milliPerSecond: 15, famineSeconds: 60, faminePercent: 10 },
   hunt: {
     strongMultiplier: 2,
     strikeWindowSeconds: 8,

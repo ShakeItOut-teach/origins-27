@@ -41,6 +41,9 @@ export const STAT_IDS = [
 ] as const;
 export type StatId = (typeof STAT_IDS)[number];
 
+/** Durée d'une saison, en jours : l'âge du serveur va de 1 à ce nombre. */
+export const SEASON_DAYS = 27;
+
 /** Ce que le joueur a accompli. Les conditions de déblocage portent sur ces compteurs. */
 export const COUNTER_IDS = [
   "harvests",

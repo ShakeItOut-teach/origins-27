@@ -277,3 +277,16 @@ Mesure à l'écran, jour 7, une cellule de 10 niveaux d'organites et 20 cellules
 puissance 410 avec 5 par cellule fille, rang 435 sur 500, et 496 sur 500 au classement des
 troupes. Passé à 8 par cellule fille pour que les troupes pèsent. À reprendre après une
 saison jouée par les robots.
+
+## 2026-11-24 — Entretien des troupes, fin du plafond
+
+| Réglage                   | Avant                              | Après                                                              |
+| ------------------------- | ---------------------------------- | ------------------------------------------------------------------ |
+| Nombre de cellules filles | 10 au niveau 1, +5 par niveau (35) | sans plafond                                                       |
+| Effet du Centrosome       | place pour les cellules filles     | naissances 25 % plus rapides par niveau                            |
+| Entretien                 | aucun                              | 0,015 sucre par seconde et par cellule                             |
+| Famine                    | —                                  | réserve vide : 10 % des cellules à la maison meurent chaque minute |
+
+Mesure à l'écran : 50 cellules filles avec une Centrale de niveau 1 donnent −0,2 sucre par
+seconde, et une puissance de 900 qui place le joueur premier du classement au jour 7. Les
+organismes simulés sont donc trop faibles face à une armée sans plafond : à reprendre.

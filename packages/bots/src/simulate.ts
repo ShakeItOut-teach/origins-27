@@ -9,7 +9,8 @@ import {
   placeOffer,
   preyOffer,
   raidOffer,
-  troopCapacity,
+  canTrain,
+  productionRate,
   troopsOwned,
   visiblePlaces,
   visiblePrey,
@@ -306,13 +307,17 @@ export function simulate(
       }
       // Chasse : le robot vise la proie disponible la plus proche, fait naître le type de
       // cellule qui compte double contre elle, puis envoie tout son monde.
-      if (state.tier >= 4 && troopCapacity(state) > 0) {
+      if (state.tier >= 4 && canTrain(state)) {
         const prey = visiblePrey(state.worldSeed, state.slot).find(
           (entry) => (state.placeReadyAt[entry.id] ?? 0) <= now,
         );
         if (prey !== undefined) {
           const strong = TROOP_IDS.find((id) => STRONG_AGAINST[id] === prey.kind) ?? "hunter";
-          const room = troopCapacity(state) - troopsOwned(state);
+          // Pas de plafond : le robot s'arrête à ce que sa production nourrit, dix au moins.
+          const fed = Math.floor(
+            productionRate(state, "sugar") / BALANCE.troopUpkeep.milliPerSecond,
+          );
+          const room = Math.max(10, Math.min(60, fed)) - troopsOwned(state);
           if (state.training === null && room > 0) {
             const cost = BALANCE.troops[strong].cost;
             const affordable = Math.min(

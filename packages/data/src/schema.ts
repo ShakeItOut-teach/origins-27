@@ -28,8 +28,11 @@ export const OrganelleEffectSchema = z.discriminatedUnion("kind", [
   }),
   z.strictObject({ kind: z.literal("storage"), addPerLevel: positiveInt }),
   z.strictObject({ kind: z.literal("tapYield"), addPercentPerLevel: positiveInt }),
-  /** Nombre maximal de cellules filles : `base` au niveau 1, puis `addPerLevel` par niveau. */
-  z.strictObject({ kind: z.literal("troopCapacity"), base: positiveInt, addPerLevel: positiveInt }),
+  /**
+   * Fait naître les cellules filles, sans limite de nombre. Chaque niveau au-delà du premier
+   * accélère les naissances de ce pourcentage.
+   */
+  z.strictObject({ kind: z.literal("trainingSpeed"), percentPerLevel: positiveInt }),
   /** Points de défense ajoutés par niveau, contre les attaques des rivaux. */
   z.strictObject({ kind: z.literal("defense"), perLevel: positiveInt }),
 ]);
@@ -112,6 +115,20 @@ export const BalanceSchema = z.strictObject({
     armored: z.strictObject({ cost: CostSchema, seconds: positiveInt }),
     swift: z.strictObject({ cost: CostSchema, seconds: positiveInt }),
   } satisfies Record<(typeof TROOP_IDS)[number], unknown>),
+  /**
+   * L'entretien : chaque cellule fille vivante consomme du sucre, en millièmes d'unité par
+   * seconde. C'est ce qui limite la taille d'une armée, et non plus un plafond.
+   */
+  troopUpkeep: z.strictObject({
+    milliPerSecond: positiveInt,
+    /**
+     * La famine : réserve vide, les cellules en trop meurent par vagues, à chaque multiple de
+     * cet intervalle. Le joueur a donc toujours un moment pour réagir.
+     */
+    famineSeconds: positiveInt,
+    /** Part des cellules à la maison qui meurent à chaque vague (au moins une). */
+    faminePercent: z.number().int().min(1).max(100),
+  }),
   hunt: z.strictObject({
     /** Une cellule du bon type contre la bonne proie compte ce nombre de fois. */
     strongMultiplier: positiveInt,

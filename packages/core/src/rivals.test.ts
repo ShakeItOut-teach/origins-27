@@ -19,7 +19,6 @@ import {
   raidOffer,
   rivalStats,
   serializeState,
-  troopCapacity,
   troopsOwned,
   visiblePrey,
   visibleRivals,
@@ -65,7 +64,7 @@ function newcomer(troops: Partial<Record<TroopId, number>> = {}, seed = 7): Play
       huntsWon: 1,
     },
     mutations: ["thrift"],
-    organelles: { ...base.organelles, vacuole: 5, nursery: 3 },
+    organelles: { ...base.organelles, mitochondrion: 1, vacuole: 5, nursery: 3 },
     resources: { sugar: 400 * MICRO, bricks: 200 * MICRO, proteins: 10 * MICRO },
     troops: party(troops),
   };
@@ -308,7 +307,12 @@ describe("attaquer un rival", () => {
     let checked = 0;
     for (let seed = 1; seed <= 60 && checked < 5; seed++) {
       const start = atTier5({ [strong]: 14 }, seed);
-      const empty: PlayerState = { ...start, resources: { sugar: 0, bricks: 0, proteins: 0 } };
+      // Ni réserve ni production : tout ce qui rentre vient du butin.
+      const empty: PlayerState = {
+        ...start,
+        organelles: { ...start.organelles, mitochondrion: 0 },
+        resources: { sugar: 0, bricks: 0, proteins: 0 },
+      };
       const offer = raidOffer(empty, target, T0);
       const sent = ok(empty, raid(target, party({ [strong]: 14 })), T0);
       const struck = ok(sent, { type: "strikeRaid" }, sent.raid?.arrivesAt ?? T0);
@@ -329,8 +333,10 @@ describe("attaquer un rival", () => {
         "rivalClosed",
       );
       const reopened = T0 + offer.durationMs + offer.restMs;
+      // Le temps que le rival se rouvre, il faut de quoi nourrir ses cellules filles.
+      const fed = { ...home, organelles: { ...home.organelles, mitochondrion: 1 } };
       expect(
-        refusal(advance(home, reopened).state, raid(target, party({ [strong]: 1 })), reopened),
+        refusal(advance(fed, reopened).state, raid(target, party({ [strong]: 1 })), reopened),
       ).toBeNull();
     }
     expect(checked).toBe(5);
@@ -341,7 +347,12 @@ describe("attaquer un rival", () => {
     let defeats = 0;
     for (let seed = 1; seed <= 40; seed++) {
       const start = atTier5({ [weak]: 3 }, seed);
-      const empty: PlayerState = { ...start, resources: { sugar: 0, bricks: 0, proteins: 0 } };
+      // Ni réserve ni production : tout ce qui rentre vient du butin.
+      const empty: PlayerState = {
+        ...start,
+        organelles: { ...start.organelles, mitochondrion: 0 },
+        resources: { sugar: 0, bricks: 0, proteins: 0 },
+      };
       const offer = raidOffer(empty, target, T0);
       const home = advance(
         ok(empty, raid(target, party({ [weak]: 3 })), T0),
@@ -602,7 +613,7 @@ describe("garanties du moteur avec les rivaux", () => {
           const result = applyOrder(state, next, now);
           state = result.ok ? result.state : advance(state, now).state;
           for (const id of TROOP_IDS) expect(state.troops[id]).toBeGreaterThanOrEqual(0);
-          expect(troopsOwned(state)).toBeLessThanOrEqual(troopCapacity(state));
+          expect(troopsOwned(state)).toBeGreaterThanOrEqual(0);
           expect(state.resources.sugar).toBeGreaterThanOrEqual(0);
           expect(state.resources.bricks).toBeGreaterThanOrEqual(0);
           expect(state.resources.proteins).toBeGreaterThanOrEqual(0);

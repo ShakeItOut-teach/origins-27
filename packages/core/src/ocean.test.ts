@@ -67,7 +67,7 @@ function atTier6(day: number, zone = 0): PlayerState {
         rivalFights: 1,
       },
       mutations: ["thrift"],
-      organelles: { ...base.organelles, vacuole: 5, nursery: 3 },
+      organelles: { ...base.organelles, mitochondrion: 1, vacuole: 5, nursery: 3 },
       resources: { sugar: 100 * MICRO, bricks: 100 * MICRO, proteins: 10 * MICRO },
       troops: { hunter: 6, armored: 0, swift: 0 },
       shieldUntil: now + 20 * DAY_MS,

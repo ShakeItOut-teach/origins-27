@@ -16,8 +16,10 @@ import {
   preyOffer,
   serializeState,
   strikeChance,
-  troopCapacity,
+  canTrain,
+  trainMs,
   troopsOwned,
+  upkeepRate,
   unattendedChance,
   visiblePrey,
   winChance,
@@ -150,20 +152,25 @@ describe("force, chances et pertes", () => {
 });
 
 describe("la Pouponnière", () => {
-  it("s'ouvre au palier 4 et fixe le nombre de cellules filles", () => {
+  it("s'ouvre au palier 4 ; chaque niveau accélère les naissances", () => {
     const state = atTier4();
-    expect(troopCapacity(state)).toBe(10);
-    expect(troopCapacity({ ...state, organelles: { ...state.organelles, nursery: 3 } })).toBe(20);
-    expect(troopCapacity({ ...state, organelles: { ...state.organelles, nursery: 0 } })).toBe(0);
+    expect(canTrain(state)).toBe(true);
+    expect(canTrain({ ...state, organelles: { ...state.organelles, nursery: 0 } })).toBe(false);
+    const base = BALANCE.troops.hunter.seconds * 1000;
+    expect(trainMs({ ...state, organelles: { ...state.organelles, nursery: 1 } }, "hunter")).toBe(
+      base,
+    );
+    const fast = trainMs({ ...state, organelles: { ...state.organelles, nursery: 5 } }, "hunter");
+    expect(fast).toBe(Math.floor(base / 2));
     const tier3 = { ...state, tier: 3, counters: { ...state.counters, mapHarvests: 0 } };
     expect(refusal(tier3, { type: "build", organelle: "nursery" }, T0)).toBe("locked");
     expect(refusal(tier3, { type: "trainTroop", troop: "hunter", count: 1 }, T0)).toBe("locked");
   });
 
   it("les cellules filles naissent l'une après l'autre, payées d'avance", () => {
-    const seconds = BALANCE.troops.swift.seconds * 1000;
     const cost = BALANCE.troops.swift.cost;
     const start = atTier4();
+    const seconds = trainMs(start, "swift");
     const ordered = ok(start, { type: "trainTroop", troop: "swift", count: 3 }, T0);
     expect(ordered.resources.sugar).toBe(start.resources.sugar - 3 * cost.sugar * MICRO);
     expect(ordered.resources.bricks).toBe(start.resources.bricks - 3 * cost.bricks * MICRO);
@@ -177,7 +184,7 @@ describe("la Pouponnière", () => {
     expect(done.events.filter((event) => event.type === "troopBorn")).toHaveLength(3);
   });
 
-  it("refuse : sans Pouponnière, pendant une naissance, au-delà de la place, sans ressources", () => {
+  it("refuse : sans Pouponnière, pendant une naissance, sans ressources", () => {
     const start = atTier4();
     const noNursery = { ...start, organelles: { ...start.organelles, nursery: 0 } };
     expect(refusal(noNursery, { type: "trainTroop", troop: "hunter", count: 1 }, T0)).toBe(
@@ -185,26 +192,115 @@ describe("la Pouponnière", () => {
     );
     const busy = ok(start, { type: "trainTroop", troop: "hunter", count: 1 }, T0);
     expect(refusal(busy, { type: "trainTroop", troop: "hunter", count: 1 }, T0)).toBe("busy");
-    expect(refusal(start, { type: "trainTroop", troop: "hunter", count: 11 }, T0)).toBe(
-      "troopsFull",
-    );
-    expect(
-      refusal(atTier4({ swift: 8 }), { type: "trainTroop", troop: "hunter", count: 3 }, T0),
-    ).toBe("troopsFull");
     const poor = { ...start, resources: { sugar: MICRO, bricks: 0, proteins: 0 } };
     expect(refusal(poor, { type: "trainTroop", troop: "hunter", count: 1 }, T0)).toBe(
       "insufficient",
     );
   });
 
-  it("les cellules parties en chasse comptent toujours dans la place occupée", () => {
+  it("il n'y a plus de plafond : on fait naître autant de cellules qu'on peut en payer", () => {
+    const rich = {
+      ...atTier4({ hunter: 60, swift: 40 }),
+      resources: { sugar: 5000 * MICRO, bricks: 5000 * MICRO, proteins: 0 },
+    };
+    const ordered = ok(rich, { type: "trainTroop", troop: "hunter", count: 20 }, T0);
+    expect(troopsOwned(ordered)).toBe(120);
+  });
+
+  it("les cellules parties en chasse mangent toujours ; celles qui vont naître, pas encore", () => {
+    const perCell = BALANCE.troopUpkeep.milliPerSecond;
     const target = prey(0);
-    const away = ok(atTier4({ hunter: 10 }), hunt(target, party({ hunter: 10 })), T0);
+    const home = atTier4({ hunter: 10 });
+    expect(upkeepRate(home)).toBe(10 * perCell);
+    const away = ok(home, hunt(target, party({ hunter: 10 })), T0);
     expect(away.troops.hunter).toBe(0);
     expect(troopsOwned(away)).toBe(10);
-    expect(refusal(away, { type: "trainTroop", troop: "swift", count: 1 }, T0 + 1)).toBe(
-      "troopsFull",
+    expect(upkeepRate(away)).toBe(10 * perCell);
+    const ordered = ok(home, { type: "trainTroop", troop: "swift", count: 3 }, T0);
+    expect(upkeepRate(ordered)).toBe(10 * perCell);
+  });
+});
+
+describe("l'entretien des cellules filles", () => {
+  const perCell = BALANCE.troopUpkeep.milliPerSecond;
+
+  it("chaque cellule fille consomme du sucre, seconde après seconde", () => {
+    const state = {
+      ...atTier4({ hunter: 10 }),
+      organelles: { ...atTier4().organelles, mitochondrion: 0 },
+      resources: { sugar: 100 * MICRO, bricks: 0, proteins: 0 },
+    };
+    const later = advance(state, T0 + 60_000).state;
+    expect(later.resources.sugar).toBe(100 * MICRO - 10 * perCell * 60_000);
+    expect(later.troops.hunter).toBe(10);
+  });
+
+  it("une cellule qui produit assez garde toute son armée", () => {
+    const state = atTier4({ hunter: 10 });
+    const fed = { ...state, organelles: { ...state.organelles, mitochondrion: 2 } };
+    const later = advance(fed, T0 + 3_600_000);
+    expect(later.state.troops.hunter).toBe(10);
+    expect(later.events.some((event) => event.type === "troopsStarved")).toBe(false);
+    expect(later.state.resources.sugar).toBeGreaterThanOrEqual(fed.resources.sugar);
+  });
+
+  it("réserve vide : la famine frappe par vagues, jusqu'à ce que la production suffise", () => {
+    const base = atTier4({ hunter: 60, swift: 40 });
+    // Une Centrale de niveau 1 nourrit 500 / 15 = 33 cellules filles.
+    const state = {
+      ...base,
+      organelles: { ...base.organelles, mitochondrion: 1 },
+      mutations: [],
+      resources: { sugar: 10 * MICRO, bricks: 0, proteins: 0 },
+    };
+    const fed = Math.floor(500 / perCell);
+    const emptyAt = T0 + Math.ceil((10 * MICRO) / (100 * perCell - 500));
+    const before = advance(state, emptyAt - 1);
+    expect(before.state.troops.hunter + before.state.troops.swift).toBe(100);
+    expect(before.state.resources.sugar).toBeGreaterThan(0);
+
+    // Réserve vide : personne ne meurt tout de suite. La vague arrive à la minute suivante.
+    const wave = BALANCE.troopUpkeep.famineSeconds * 1000;
+    const firstWave = (Math.floor(emptyAt / wave) + 1) * wave;
+    const waiting = advance(state, firstWave - 1);
+    expect(waiting.events.some((event) => event.type === "troopsStarved")).toBe(false);
+    expect(waiting.state.resources.sugar).toBe(0);
+
+    const after = advance(state, firstWave);
+    const starved = after.events.find((event) => event.type === "troopsStarved");
+    const perWave = Math.ceil((100 * BALANCE.troopUpkeep.faminePercent) / 100);
+    expect(starved).toEqual({ type: "troopsStarved", at: firstWave, count: perWave });
+    expect(after.state.troops.hunter + after.state.troops.swift).toBe(100 - perWave);
+    // Les plus nombreuses meurent d'abord.
+    expect(after.state.troops.hunter).toBeLessThan(60);
+
+    // Vague après vague, il ne reste que ce que la cellule peut nourrir ; puis plus personne ne meurt.
+    const settled = advance(state, firstWave + 3_600_000);
+    const dead = settled.events.reduce(
+      (sum, event) => sum + (event.type === "troopsStarved" ? event.count : 0),
+      0,
     );
+    expect(dead).toBe(100 - fed);
+    expect(settled.state.troops.hunter + settled.state.troops.swift).toBe(fed);
+    const muchLater = advance(settled.state, settled.state.now + 86_400_000);
+    expect(muchLater.events.some((event) => event.type === "troopsStarved")).toBe(false);
+  });
+
+  it("les cellules en sortie ne meurent pas en route, mais la famine les attend au retour", () => {
+    const base = atTier4({ hunter: 80 });
+    const state = {
+      ...base,
+      organelles: { ...base.organelles, mitochondrion: 1 },
+      mutations: [],
+      resources: { sugar: 0, bricks: 0, proteins: 0 },
+    };
+    const away = ok(state, hunt(prey(0), party({ hunter: 80 })), T0);
+    const out = advance(away, (away.hunt?.arrivesAt ?? 0) - 1);
+    expect(out.events.some((event) => event.type === "troopsStarved")).toBe(false);
+    expect(partySize(out.state.hunt?.party ?? party({}))).toBe(80);
+    const back = advance(away, (away.hunt?.returnsAt ?? 0) + 3_600_000);
+    expect(back.events.some((event) => event.type === "troopsStarved")).toBe(true);
+    expect(back.state.troops.hunter).toBeLessThanOrEqual(Math.floor(500 / perCell));
   });
 });
 
@@ -426,7 +522,7 @@ describe("garanties du moteur avec la chasse", () => {
     maxLength: 50,
   });
 
-  it("quoi qu'on envoie : rien de négatif, jamais plus de cellules que la Pouponnière n'en loge", () => {
+  it("quoi qu'on envoie : rien de négatif, et jamais de famine tant qu'il reste du sucre", () => {
     fc.assert(
       fc.property(steps, (sequence) => {
         let state = atTier4();
@@ -436,7 +532,7 @@ describe("garanties du moteur avec la chasse", () => {
           const result = applyOrder(state, next, now);
           state = result.ok ? result.state : advance(state, now).state;
           for (const id of TROOP_IDS) expect(state.troops[id]).toBeGreaterThanOrEqual(0);
-          expect(troopsOwned(state)).toBeLessThanOrEqual(troopCapacity(state));
+          expect(troopsOwned(state)).toBeGreaterThanOrEqual(0);
           expect(state.resources.proteins).toBeGreaterThanOrEqual(0);
           expect(state.resources.proteins).toBeLessThanOrEqual(capacity(state, "proteins"));
           expect(state.resources.sugar).toBeGreaterThanOrEqual(0);

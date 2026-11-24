@@ -4,7 +4,9 @@ import {
   leagueOf,
   ranking,
   rivalName as nameOfRival,
+  seasonDay,
   totalPower,
+  upkeepRate,
   capacity,
   describeCreature,
   levelCost,
@@ -12,7 +14,14 @@ import {
   productionRate,
 } from "@o27/core";
 import type { AbsenceSummary, PlayerState } from "@o27/core";
-import { BALANCE, MAX_RELEASED_TIER, MUTATION_IDS, ORGANELLE_IDS, RESOURCE_IDS } from "@o27/data";
+import {
+  BALANCE,
+  MAX_RELEASED_TIER,
+  MUTATION_IDS,
+  ORGANELLE_IDS,
+  RESOURCE_IDS,
+  SEASON_DAYS,
+} from "@o27/data";
 import type { ChestReward, MutationId, Order, OrganelleId, ResourceId, TextKey } from "@o27/data";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
@@ -84,6 +93,8 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [loss, setLoss] = useState<{ resource: ResourceId; amount: number } | null>(null);
   const [questsOpen, setQuestsOpen] = useState(false);
   const [rankingOpen, setRankingOpen] = useState(false);
+  /** Cellules filles mortes de faim depuis la dernière note. */
+  const [starved, setStarved] = useState(0);
   /** Dernière récompense de ligue reçue. */
   const [leagueNote, setLeagueNote] = useState<{
     league: number;
@@ -123,6 +134,10 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
           if (event.type === "chestOpened") setChest(event.loot);
+          if (event.type === "troopsStarved") {
+            const dead = event.count;
+            setStarved((count) => count + dead);
+          }
           if (event.type === "leagueReward") {
             setLeagueNote({ league: event.league, loot: event.loot });
           }
@@ -232,6 +247,10 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       >
         {lang === "fr" ? "EN" : "FR"}
       </button>
+      <p className="season-day" data-testid="season-day">
+        {t("label.day").replace("{n}", String(Math.min(SEASON_DAYS, seasonDay(state, state.now))))}
+        <small> / {SEASON_DAYS}</small>
+      </p>
       <button
         type="button"
         className="lang lexicon-open"
@@ -286,7 +305,8 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       <header className="counters">
         {counters.map((id) => {
           const full = state.resources[id] >= capacity(state, id);
-          const rate = productionRate(state, id);
+          // Ce que la cellule gagne vraiment : sa production, moins ce que mangent les troupes.
+          const rate = productionRate(state, id) - (id === "sugar" ? upkeepRate(state) : 0);
           return (
             <div
               key={id === "sugar" ? `${id}-${String(fullFlash)}` : id}
@@ -296,9 +316,10 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               <ResourceIcon id={id} />
               <span className="counter-value">{formatAmount(state.resources[id], lang)}</span>
               <span className="counter-label">{full ? t("state.full") : t(`resource.${id}`)}</span>
-              {show("productionRate") && rate > 0 && (
-                <span className="counter-rate">
-                  +{formatRate(rate, lang)}
+              {show("productionRate") && rate !== 0 && (
+                <span className={`counter-rate${rate < 0 ? " is-negative" : ""}`}>
+                  {rate > 0 ? "+" : "−"}
+                  {formatRate(Math.abs(rate), lang)}
                   {show("energy") ? "/s" : ` ${t("label.perSecond")}`}
                 </span>
               )}
@@ -423,6 +444,24 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setRankingOpen(false);
           }}
         />
+      )}
+      {starved > 0 && (
+        <div className="loss" role="status" data-testid="starve-note">
+          <strong>{t("starve.title")}</strong>
+          <span>
+            {t("starve.text")} : {starved}
+          </span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setStarved(0);
+            }}
+          >
+            ×
+          </button>
+        </div>
       )}
       {leagueNote !== null && (
         <div className="loss is-good is-chest" role="status" data-testid="league-note">
@@ -733,6 +772,11 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               {((absence.attacksRepelled as number | undefined) ?? 0) > 0 && (
                 <li>
                   {t("absence.repelled")} : {absence.attacksRepelled}
+                </li>
+              )}
+              {((absence.troopsStarved as number | undefined) ?? 0) > 0 && (
+                <li>
+                  {t("absence.starved")} : {absence.troopsStarved}
                 </li>
               )}
               {((absence.attacksSuffered as number | undefined) ?? 0) > 0 && (

@@ -16,7 +16,8 @@ export const frScience = {
   "organelle.ribosome.name": "Réticulum",
   "organelle.ribosome.role": "Un réseau de membranes : il fabrique les lipides, de quoi bâtir.",
   "organelle.nursery.name": "Centrosome",
-  "organelle.nursery.role": "Il organise la division : des cellules filles naissent, pour chasser.",
+  "organelle.nursery.role":
+    "Il organise la division : des cellules filles naissent, autant que vous pouvez en nourrir. Chaque niveau accélère les naissances.",
   "mutation.fastMetabolism.effect": "L’ATP se produit plus vite.",
   "mutation.digestivePouch.effect": "Les lipides se fabriquent plus vite.",
   "place.sugarCluster.name": "Amas de nutriments",
@@ -30,6 +31,9 @@ export const frScience = {
   "quest.upgradeStore": "Améliorez la Vacuole",
   "quest.bricksFromMap": "Rapportez {n} lipides de la goutte",
   "quest.sugarFromMap": "Rapportez {n} ATP de la goutte",
+  "label.upkeepText":
+    "Chaque cellule fille consomme de l’ATP. Si la vacuole tombe à zéro, les cellules en trop meurent de faim.",
+  "state.starving": "Vous dépensez plus d’ATP que vous n’en produisez.",
   "troop.hunter.name": "Phagocyte",
   "troop.armored.name": "Dinoflagellé cuirassé",
   "troop.swift.name": "Flagellé",
@@ -48,7 +52,8 @@ export const enScience = {
   "organelle.ribosome.name": "Reticulum",
   "organelle.ribosome.role": "A network of membranes: it makes lipids, the building material.",
   "organelle.nursery.name": "Centrosome",
-  "organelle.nursery.role": "It organises division: daughter cells are born, to go hunting.",
+  "organelle.nursery.role":
+    "It organises division: daughter cells are born, as many as you can feed. Each level speeds up births.",
   "mutation.fastMetabolism.effect": "ATP is produced faster.",
   "mutation.digestivePouch.effect": "Lipids are made faster.",
   "place.sugarCluster.name": "Nutrient cluster",
@@ -62,6 +67,9 @@ export const enScience = {
   "quest.upgradeStore": "Upgrade the Vacuole",
   "quest.bricksFromMap": "Bring back {n} lipids from the drop",
   "quest.sugarFromMap": "Bring back {n} ATP from the drop",
+  "label.upkeepText":
+    "Each daughter cell uses up ATP. If the vacuole drops to zero, the cells you cannot feed starve.",
+  "state.starving": "You are spending more ATP than you make.",
   "troop.hunter.name": "Phagocyte",
   "troop.armored.name": "Armoured dinoflagellate",
   "troop.swift.name": "Flagellate",

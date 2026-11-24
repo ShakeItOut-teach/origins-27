@@ -63,17 +63,37 @@ export function lossesFor(party: Party, chance: number, won: boolean): Record<Tr
   return lost;
 }
 
-/** Nombre maximal de cellules filles, fixé par la Pouponnière. */
-export function troopCapacity(state: PlayerState): number {
-  let total = 0;
+/** Accélération des naissances, en pourcentage ; `null` tant que rien ne fait naître de cellules. */
+function trainingBonus(state: PlayerState): number | null {
+  let bonus: number | null = null;
   for (const id of ORGANELLE_IDS) {
     const effect = BALANCE.organelles[id].effect;
     const level = state.organelles[id];
-    if (effect.kind === "troopCapacity" && level > 0) {
-      total += effect.base + effect.addPerLevel * (level - 1);
+    if (effect.kind === "trainingSpeed" && level > 0) {
+      bonus = (bonus ?? 0) + effect.percentPerLevel * (level - 1);
     }
   }
-  return total;
+  return bonus;
+}
+
+/** Le joueur peut-il faire naître des cellules filles ? Leur nombre n'a pas de plafond. */
+export function canTrain(state: PlayerState): boolean {
+  return trainingBonus(state) !== null;
+}
+
+/** Durée d'une naissance, en millisecondes : plus courte quand l'organite monte de niveau. */
+export function trainMs(state: PlayerState, troop: TroopId): number {
+  const bonus = trainingBonus(state) ?? 0;
+  return Math.max(1000, Math.floor((BALANCE.troops[troop].seconds * 100_000) / (100 + bonus)));
+}
+
+/**
+ * Ce que les cellules filles vivantes consomment, à la maison comme en sortie, en
+ * millionièmes de sucre par milliseconde. C'est l'entretien qui limite la taille d'une armée.
+ */
+export function upkeepRate(state: PlayerState): number {
+  const alive = troopsOwned(state) - (state.training?.remaining ?? 0);
+  return alive * BALANCE.troopUpkeep.milliPerSecond;
 }
 
 /** Toutes les cellules filles du joueur : à la maison, en chasse, et celles qui vont naître. */

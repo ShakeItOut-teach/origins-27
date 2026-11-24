@@ -87,6 +87,58 @@ p {
   color: var(--algae);
 }
 
+.counter-rate.is-negative {
+  color: var(--eosin);
+}
+
+/* L'âge du serveur : le jour de la saison, toujours visible. */
+.season-day {
+  position: fixed;
+  top: max(var(--space-2), env(safe-area-inset-top));
+  left: calc(var(--space-2) + var(--touch) + var(--space-1));
+  z-index: 5;
+  margin: 0;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.upkeep {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  font-size: 14px;
+}
+
+.upkeep small {
+  flex-basis: 100%;
+  color: var(--ink-soft);
+}
+
+.upkeep.is-starving strong,
+.upkeep.is-starving small {
+  color: var(--eosin);
+}
+
+.train-buttons {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.train-buttons .step {
+  width: auto;
+  min-width: var(--touch);
+  padding: 0 var(--space-2);
+  font-size: 16px;
+}
+
 .counter.is-full .counter-label {
   color: var(--eosin);
 }

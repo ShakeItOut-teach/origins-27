@@ -278,6 +278,8 @@ export type GameEvent =
     }
   /** Un rival a attaqué le joueur et a été repoussé. */
   | { readonly type: "migrated"; readonly at: number; readonly zone: number }
+  /** Des cellules filles sont mortes de faim : la réserve de sucre était vide. */
+  | { readonly type: "troopsStarved"; readonly at: number; readonly count: number }
   | {
       readonly type: "leagueReward";
       readonly at: number;

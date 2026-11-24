@@ -4,7 +4,7 @@ import type { MutationId, Order, OrganelleId, TroopId } from "@o27/data";
 import { advance } from "./advance";
 import { capacity, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
-import { partySize, resolveHunt, troopCapacity, troopsOwned } from "./hunt";
+import { canTrain, partySize, resolveHunt, trainMs } from "./hunt";
 import { openChest, trackQuests } from "./quests";
 import { dropShield, goAway, raidOffer, reachableRivals, resolveRaid, setNight } from "./rivals";
 import { MICRO } from "./types";
@@ -192,9 +192,8 @@ function cancelExpedition(state: PlayerState): Outcome {
 }
 
 function trainTroop(state: PlayerState, troop: TroopId, count: number): Outcome {
-  if (troopCapacity(state) === 0) return { error: "notBuilt" };
+  if (!canTrain(state)) return { error: "notBuilt" };
   if (state.training !== null) return { error: "busy" };
-  if (troopsOwned(state) + count > troopCapacity(state)) return { error: "troopsFull" };
   const data = BALANCE.troops[troop];
   const sugar = data.cost.sugar * MICRO * count;
   const bricks = data.cost.bricks * MICRO * count;
@@ -209,7 +208,7 @@ function trainTroop(state: PlayerState, troop: TroopId, count: number): Outcome 
         sugar: state.resources.sugar - sugar,
         bricks: state.resources.bricks - bricks,
       },
-      training: { troop, remaining: count, nextAt: state.now + data.seconds * 1000 },
+      training: { troop, remaining: count, nextAt: state.now + trainMs(state, troop) },
     },
     events: [],
   };

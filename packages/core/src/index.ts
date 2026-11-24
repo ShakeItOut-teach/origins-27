@@ -22,8 +22,10 @@ export {
   partyPower,
   partySize,
   strikeChance,
-  troopCapacity,
+  canTrain,
+  trainMs,
   troopsOwned,
+  upkeepRate,
   unattendedChance,
   winChance,
 } from "./hunt";
