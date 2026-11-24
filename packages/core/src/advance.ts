@@ -5,6 +5,7 @@ import { trackDaily } from "./daily";
 import { anoxiaEdge } from "./events";
 import { leviathanDue, leviathanStrike } from "./leviathan";
 import { leagueStep } from "./power";
+import { trackReports } from "./reports";
 import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import type { GeneFamily } from "@o27/data";
 import { capacity, modifierPercent, productionRate } from "./stats";
@@ -157,11 +158,14 @@ function huntBack(state: PlayerState, hunt: Hunt): Step {
     ? Math.floor((hunt.proteins * (100 + modifierPercent(state, "huntProteins"))) / 100)
     : 0;
   const gained = Math.min(room, promised);
+  // Un Léviathan vaincu laisse de quoi hâter un chantier ou une évolution.
+  const boosts = won && hunt.prey.startsWith("e:") ? BALANCE.events.leviathan.boosts : 0;
   return {
     state: {
       ...state,
       hunt: null,
       taming: null,
+      boosts: state.boosts + boosts,
       // Le prédateur visé a été battu sans être tué : il suit le groupe jusqu'à la cellule.
       companion:
         won && state.taming !== null && state.companion === null
@@ -189,6 +193,7 @@ function huntBack(state: PlayerState, hunt: Hunt): Step {
         losses: partySize(losses),
         cancelled: hunt.cancelled,
       },
+      ...(boosts > 0 ? [{ type: "boostGained" as const, at: hunt.returnsAt, count: boosts }] : []),
     ],
   };
 }
@@ -335,8 +340,8 @@ export function advance(state: PlayerState, now: number): Step {
     const allied = ensureAlliance(tiers.state, at);
     events.push(...allied.events);
     const fresh = events.slice(seen);
-    current = trackDaily(
-      trackQuests(ensureIncoming(ensureQuests(allied.state, at), at), fresh),
+    current = trackReports(
+      trackDaily(trackQuests(ensureIncoming(ensureQuests(allied.state, at), at), fresh), fresh),
       fresh,
     );
   }

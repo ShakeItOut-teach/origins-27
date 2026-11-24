@@ -317,6 +317,15 @@ describe("océan et alliances", () => {
       order: { type: "spyRival", rival: neighbour.id },
     });
     expect(spied.status).toBe("done");
+    // L'accélérateur passe la validation ; sans accélérateur en réserve, le moteur le refuse.
+    const boost = await handleOrder(deps, ALICE, {
+      orderId: id(66),
+      order: { type: "useBoost", target: "construction" },
+    });
+    expect(boost).toMatchObject({ status: "done", outcome: { ok: false, error: "noBoost" } });
+    if (boost.status !== "done") return;
+    // Le journal a suivi le joueur côté serveur.
+    expect(Array.isArray(boost.state.reports)).toBe(true);
     const wrong = await handleOrder(deps, ALICE, {
       orderId: id(65),
       order: { type: "joinAlliance", banner: "pirates" },

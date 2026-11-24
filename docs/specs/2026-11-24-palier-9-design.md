@@ -85,6 +85,24 @@ pillard le plus redouté, la journée du joueur (rang, ligue, victoires et défa
 et **le fossile du jour** : 27 fossiles réels, un par jour de saison, dans un ordre différent à
 chaque saison (stromatolithes, Dickinsonia, Opabinia, Tiktaalik, cœlacanthe…).
 
+## Accélérateur, alerte et rapports
+
+Demandés par le propriétaire le 2026-11-24, après la première mise en ligne du palier.
+
+- **Accélérateur.** Vaincre un Léviathan en donne un. Il retire une heure au chantier ou à
+  l'évolution en cours (bouton « Accélérer » dans la fiche de l'organite et dans le Noyau).
+  Aujourd'hui un chantier dure au plus un quart d'heure : un accélérateur termine donc
+  n'importe quel chantier ; il pèse surtout sur les évolutions de haut niveau.
+- **Alerte.** Dix minutes avant qu'un rival n'attaque, le joueur est prévenu : un bandeau
+  « Une attaque approche » avec le compte à rebours, et les bords de l'écran qui rougissent.
+  Ils rougissent aussi dix minutes avant une frappe du Léviathan, et quelques secondes après
+  un coup reçu. Pas d'alerte si l'attaque doit tomber pendant la nuit protégée du joueur.
+- **Rapports.** Un journal tenu par le moteur, dans l'état du joueur : on le retrouve sur un
+  autre appareil et après une longue absence. Il garde les 40 derniers rapports (15 récoltes
+  au plus) : attaques envoyées, attaques subies, chasses, récoltes dans la goutte et dans
+  l'océan, frappes du Léviathan, famines. Trois onglets : Tous, Combats, Récoltes. Le bouton
+  « Rapports » porte le nombre de rapports pas encore lus.
+
 ## Dans le code
 
 - `data` : `ZONE_EVENT_KINDS`, `BANNER_IDS`, `ALLIANCE_TECH_IDS`, `ALLIANCE_SHOP_IDS`,

@@ -1,6 +1,7 @@
 import {
   MICRO,
   allianceToday,
+  attackWarning,
   helpRequests,
   leviathanThreat,
   playerAnoxia,
@@ -55,6 +56,7 @@ import { AccountSheet } from "./ui/AccountSheet";
 import { AllianceSheet, bannerLabel, bannerTag } from "./ui/AllianceSheet";
 import { EventsSheet } from "./ui/EventsSheet";
 import { GazetteSheet } from "./ui/GazetteSheet";
+import { JournalSheet } from "./ui/JournalSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
 import { CalendarSheet, openingName } from "./ui/CalendarSheet";
@@ -75,6 +77,11 @@ interface Props {
   /** Absent quand le jeu tourne sans serveur. */
   readonly account: Account | null;
 }
+
+/** Où l'appareil retient l'heure du dernier rapport lu. */
+const REPORTS_SEEN_KEY = "o27.rapports.vus";
+/** Durée du rougeoiement après un coup reçu. */
+const ALARM_FLASH_MS = 6000;
 
 /** Position de chaque emplacement sur la lame, en pourcentage. */
 const SLOT_POSITION: Readonly<Record<OrganelleId, { left: string; top: string }>> = {
@@ -133,6 +140,14 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [chestIsGift, setChestIsGift] = useState(false);
   const [allianceOpen, setAllianceOpen] = useState(false);
   const [gazetteOpen, setGazetteOpen] = useState(false);
+  const [journalOpen, setJournalOpen] = useState(false);
+  /** Instant du dernier rapport que le joueur a vu : les suivants sont « nouveaux ». */
+  const [reportsSeen, setReportsSeen] = useState(
+    () => Number(window.localStorage.getItem(REPORTS_SEEN_KEY)) || 0,
+  );
+  /** Instant de la dernière attaque subie : l'écran rougit quelques secondes. */
+  const [hitAt, setHitAt] = useState(0);
+  const [boostWon, setBoostWon] = useState(false);
   /** La bannière qui vient d'accueillir le joueur, et s'il a été recruté d'office. */
   const [enlisted, setEnlisted] = useState<{ banner: BannerId; auto: boolean } | null>(null);
   /** La dernière frappe du Léviathan : repoussée, ou ce qu'elle a coûté. */
@@ -201,6 +216,10 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               proteins: Math.floor(event.loot.proteins / MICRO),
               energy: event.energy,
             });
+          }
+          if (event.type === "boostGained") setBoostWon(true);
+          if (event.type === "attackSuffered" || event.type === "leviathanStruck") {
+            setHitAt(event.at);
           }
           if (event.type === "leviathanRepelled") {
             setBeastNote({ repelled: true, sugar: 0, bricks: 0, proteins: 0, troopsLost: 0 });
@@ -329,6 +348,13 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const eventCount = show("zoneEvents")
     ? visibleEvents(state).filter((event) => event.zone <= state.zone).length
     : 0;
+  // L'écran rougit quand une attaque approche, quand le Léviathan va frapper, ou juste après un coup reçu.
+  const warning = show("rivals") ? attackWarning(state) : null;
+  const strikeSoon =
+    threat !== null &&
+    threat.strikesAt - state.now <= BALANCE.rivals.incoming.warningMinutes * 60_000;
+  const alarm = warning !== null || strikeSoon || state.now - hitAt < ALARM_FLASH_MS;
+  const newReports = state.reports.filter((report) => report.at > reportsSeen).length;
   const allianceToDo =
     show("alliances") && state.alliance !== null
       ? (allianceToday(state).gift ? 0 : 1) + (helpRequests(state) > 0 ? 1 : 0)
@@ -461,6 +487,15 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             {t("label.in")} {formatCountdown(upcoming.at - state.now, lang)}
           </span>
         </button>
+      )}
+      {alarm && <div className="alarm" data-testid="alarm" aria-hidden="true" />}
+      {warning !== null && (
+        <p className="season-next is-danger" role="alert" data-testid="attack-strip">
+          <strong>{t("alarm.attack")}</strong>
+          <span className="season-next-left">
+            {t("label.in")} {formatCountdown(warning - state.now, lang)}
+          </span>
+        </p>
       )}
       {anoxia !== null && (
         <button
@@ -755,6 +790,49 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setGenomeOpen(false);
           }}
         />
+      )}
+      {show("rivals") && (
+        <button
+          type="button"
+          className={`quests-open journal-open${newReports > 0 ? " has-chest" : ""}`}
+          data-testid="journal-open"
+          onClick={() => {
+            setJournalOpen(true);
+            // Tout ce qui est affiché est lu : l'appareil s'en souvient.
+            setReportsSeen(state.now);
+            window.localStorage.setItem(REPORTS_SEEN_KEY, String(state.now));
+          }}
+        >
+          {t("label.reports")}
+          {newReports > 0 && <span className="badge">{newReports}</span>}
+        </button>
+      )}
+      {show("rivals") && journalOpen && (
+        <JournalSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setJournalOpen(false);
+          }}
+        />
+      )}
+      {boostWon && (
+        <div className="loss is-good" role="status" data-testid="boost-note">
+          <strong>{t("boost.gained")}</strong>
+          <span>
+            {t("boost.text").replace("{t}", formatAway(BALANCE.boost.minutes * 60_000, lang))}
+          </span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setBoostWon(false);
+            }}
+          >
+            ×
+          </button>
+        </div>
       )}
       {show("zoneEvents") && (
         <button
@@ -1259,6 +1337,19 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }
           <p className="sheet-building">
             {t("state.building")} · {formatDuration(building.endsAt - state.now)}
           </p>
+        )}
+        {building && state.boosts > 0 && (
+          <button
+            type="button"
+            className="button button-small button-quiet"
+            data-testid="boost-construction"
+            onClick={() => {
+              onOrder({ type: "useBoost", target: "construction" });
+            }}
+          >
+            {t("action.boost").replace("{t}", formatAway(BALANCE.boost.minutes * 60_000, lang))} ·{" "}
+            {t("boost.left").replace("{n}", String(state.boosts))}
+          </button>
         )}
 
         {offersAction && (

@@ -2,7 +2,7 @@ import { researchOffer, seasonDraw } from "@o27/core";
 import type { PlayerState } from "@o27/core";
 import { BALANCE, EVOLUTION_BRANCHES, EVOLUTION_IDS, RESOURCE_IDS } from "@o27/data";
 import type { Order, TextKey } from "@o27/data";
-import { formatAmount, formatDuration, translate } from "../game/text";
+import { formatAmount, formatAway, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { ResourceIcon } from "./icons";
 
@@ -32,6 +32,19 @@ export function EvolutionPanel({ state, lang, onOrder }: Props) {
           {t("label.level").toLowerCase()} {running.toLevel} ·{" "}
           {formatDuration(running.endsAt - state.now)}
         </p>
+      )}
+      {running !== null && state.boosts > 0 && (
+        <button
+          type="button"
+          className="button button-small button-quiet"
+          data-testid="boost-research"
+          onClick={() => {
+            onOrder({ type: "useBoost", target: "research" });
+          }}
+        >
+          {t("action.boost").replace("{t}", formatAway(BALANCE.boost.minutes * 60_000, lang))} ·{" "}
+          {t("boost.left").replace("{n}", String(state.boosts))}
+        </button>
       )}
       {EVOLUTION_BRANCHES.map((branch) => (
         <section key={branch} className="branch" data-testid={`branch-${branch}`}>

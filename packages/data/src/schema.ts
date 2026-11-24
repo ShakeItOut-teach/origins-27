@@ -5,6 +5,7 @@ import {
   ALLIANCE_SHOP_IDS,
   ALLIANCE_TECH_IDS,
   BANNER_IDS,
+  BOOST_TARGETS,
   EVOLUTION_BRANCHES,
   EVOLUTION_IDS,
   GENE_FAMILIES,
@@ -342,6 +343,8 @@ export const BalanceSchema = z.strictObject({
       maxHours: positiveInt,
       /** Protection accordée après une attaque subie. */
       shieldHours: positiveInt,
+      /** Le joueur est prévenu ce temps-là avant qu'une attaque n'arrive. */
+      warningMinutes: positiveInt,
       troopLossPercent: z.number().int().min(0).max(90),
     }),
     /** Mode absent : une longue protection, puis un délai avant de pouvoir la reprendre. */
@@ -501,6 +504,8 @@ export const BalanceSchema = z.strictObject({
       /** Énergie dépensée pour l'affronter, et énergie rendue par la victoire. */
       energy: positiveInt,
       energyGain: nonNegativeInt,
+      /** Accélérateurs gagnés en le vainquant. */
+      boosts: nonNegativeInt,
     }),
     /** Zone anoxique : production réduite, gardes affaiblis. Les deux pourcentages sont négatifs. */
     anoxia: z.strictObject({
@@ -511,6 +516,8 @@ export const BalanceSchema = z.strictObject({
       guardPercent: z.number().int().min(-90).max(-1),
     }),
   }),
+  /** Un accélérateur retire ce temps-là au chantier ou à l'évolution en cours. */
+  boost: z.strictObject({ minutes: positiveInt }),
   /** Les alliances : six bannières, des technologies communes, de l'entraide. */
   alliance: z.strictObject({
     tier: positiveInt,
@@ -697,6 +704,8 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("askHelp") }),
   /** Prendre le cadeau d'alliance du jour. */
   z.strictObject({ type: z.literal("claimGift") }),
+  /** Dépenser un accélérateur sur le chantier ou sur l'évolution en cours. */
+  z.strictObject({ type: z.literal("useBoost"), target: z.enum(BOOST_TARGETS) }),
   /** Acheter dans la boutique d'alliance, avec ses crédits. */
   z.strictObject({ type: z.literal("buyAlliance"), item: z.enum(ALLIANCE_SHOP_IDS) }),
   /** Chasser un prédateur de l'océan, désigné par son secteur et son cycle : « p:colonne:ligne:cycle ». */

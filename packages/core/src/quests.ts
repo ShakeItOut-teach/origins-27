@@ -122,6 +122,8 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
     case "allianceBought":
     case "leviathanStruck":
     case "leviathanRepelled":
+    case "boostGained":
+    case "boostUsed":
       return 0;
     case "troopBorn":
       return id === "trainCells" ? 1 : 0;

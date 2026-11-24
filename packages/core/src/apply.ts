@@ -1,6 +1,7 @@
 /** Point d'entrée du moteur : appliquer un ordre du joueur à un instant donné. */
 import { BALANCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import type {
+  BoostTarget,
   EvolutionId,
   GeneFamily,
   MutationId,
@@ -22,6 +23,7 @@ import { capacity, foePower, levelCost, levelDuration, tapYield } from "./stats"
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
 import { canTrain, partyOf, partySize, resolveHunt, trainMs } from "./hunt";
 import { openChest, trackQuests } from "./quests";
+import { trackReports } from "./reports";
 import {
   dropShield,
   goAway,
@@ -604,6 +606,25 @@ function chooseNight(state: PlayerState, minute: number): Outcome {
   return { state: setNight(state, minute, state.now), events: [] };
 }
 
+/** Dépenser un accélérateur : le chantier ou l'évolution en cours finit plus tôt. */
+function useBoost(state: PlayerState, target: BoostTarget): Outcome {
+  if (state.boosts <= 0) return { error: "noBoost" };
+  const running = target === "construction" ? state.construction : state.research;
+  if (running === null) return { error: "nothingToBoost" };
+  const savedMs = Math.min(Math.max(0, running.endsAt - state.now), BALANCE.boost.minutes * 60_000);
+  const endsAt = running.endsAt - savedMs;
+  const boosts = state.boosts - 1;
+  return {
+    state:
+      target === "construction" && state.construction !== null
+        ? { ...state, boosts, construction: { ...state.construction, endsAt } }
+        : state.research !== null
+          ? { ...state, boosts, research: { ...state.research, endsAt } }
+          : state,
+    events: [{ type: "boostUsed", at: state.now, target, savedMs }],
+  };
+}
+
 function claimQuest(state: PlayerState, index: number): Outcome {
   const quest = state.quests?.items[index];
   if (quest === undefined) return { error: "noQuest" };
@@ -666,6 +687,8 @@ function execute(state: PlayerState, order: Order): Outcome {
       return releaseCompanion(state);
     case "huntLeviathan":
       return huntLeviathan(state, order.event, order.party);
+    case "useBoost":
+      return useBoost(state, order.target);
     case "joinAlliance":
     case "donate":
     case "recommend":
@@ -689,7 +712,10 @@ export function applyOrder(state: PlayerState, order: Order, now: number): Order
   if ("error" in outcome) return { ok: false, error: outcome.error };
   // Une expédition rappelée tout près de la cellule peut rentrer dans la même milliseconde.
   const after = advance(
-    trackDaily(trackQuests(outcome.state, outcome.events), outcome.events),
+    trackReports(
+      trackDaily(trackQuests(outcome.state, outcome.events), outcome.events),
+      outcome.events,
+    ),
     now,
   );
   return {

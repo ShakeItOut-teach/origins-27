@@ -164,6 +164,14 @@ export const FOSSIL_AGES = {
 export type FossilId = keyof typeof FOSSIL_AGES;
 export const FOSSIL_IDS = Object.keys(FOSSIL_AGES) as readonly FossilId[];
 
+/** Ce qu'un accélérateur peut hâter : le chantier en cours, ou l'évolution que le Noyau exprime. */
+export const BOOST_TARGETS = ["construction", "research"] as const;
+export type BoostTarget = (typeof BOOST_TARGETS)[number];
+
+/** Les sortes de rapports du journal. */
+export const REPORT_KINDS = ["raid", "defense", "hunt", "harvest", "leviathan", "famine"] as const;
+export type ReportKind = (typeof REPORT_KINDS)[number];
+
 /** Les quatre familles de gènes. Trois gènes d'une même famille ouvrent une lignée. */
 export const GENE_FAMILIES = ["metabolism", "predation", "mobility", "resilience"] as const;
 export type GeneFamily = (typeof GENE_FAMILIES)[number];
@@ -217,6 +225,7 @@ export const ORDER_TYPES = [
   "askHelp",
   "claimGift",
   "buyAlliance",
+  "useBoost",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 

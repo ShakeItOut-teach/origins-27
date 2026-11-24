@@ -2286,3 +2286,92 @@ a.button {
   font-family: var(--font-number);
   font-size: 12px;
 }
+
+/* L'alerte : les bords de l'écran rougissent quand la cellule est menacée ou vient d'être frappée. */
+.alarm {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 3px color-mix(in srgb, var(--eosin) 85%, transparent),
+    inset 0 0 70px 14px color-mix(in srgb, var(--eosin) 55%, transparent);
+  animation: alarm-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes alarm-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alarm {
+    animation: none;
+  }
+}
+
+p.season-next {
+  margin: 0;
+}
+
+/* Le journal des rapports */
+.journal {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal-row {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2) 0 var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--grid);
+  border-left: 3px solid var(--algae);
+}
+
+.journal-row.is-lost {
+  border-left-color: var(--eosin);
+}
+
+.journal-row.is-harvest {
+  border-left-color: var(--iodine);
+}
+
+.journal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: 15px;
+}
+
+.journal-time {
+  flex: none;
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 12px;
+}
+
+.journal-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 13px;
+}
+
+.journal-detail span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

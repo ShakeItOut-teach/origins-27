@@ -503,6 +503,18 @@ export function goAway(state: PlayerState, at: number): PlayerState {
   };
 }
 
+/**
+ * L'attaque qui approche : son heure, si elle tombe dans les minutes qui viennent. Le joueur
+ * est prévenu un peu avant, le temps de réagir. Rien, si elle tombera pendant sa nuit.
+ */
+export function attackWarning(state: PlayerState): number | null {
+  const at = state.nextRaidAt;
+  if (at === null || at < state.now) return null;
+  if (at - state.now > BALANCE.rivals.incoming.warningMinutes * 60_000) return null;
+  if (nightEnd(state, at) > at) return null;
+  return at;
+}
+
 /** Un bouclier de plus : la protection s'allonge, et l'attaque prévue attend qu'elle tombe. */
 export function raiseShield(state: PlayerState, hours: number, at: number): PlayerState {
   const shieldUntil = Math.max(state.shieldUntil, at) + hours * HOUR_MS;

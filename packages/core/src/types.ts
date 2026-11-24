@@ -2,6 +2,8 @@ import type {
   AllianceShopId,
   AllianceTechId,
   BannerId,
+  BoostTarget,
+  ReportKind,
   GeneFamily,
   EvolutionId,
   CounterId,
@@ -51,6 +53,24 @@ export interface Alliance {
   /** La technologie où les membres versent leurs points ; `null` quand tout est au maximum. */
   readonly recommended: AllianceTechId | null;
   readonly syncedAt: number;
+}
+
+/** Une ligne du journal : ce qui est arrivé, à qui, et ce que cela a rapporté ou coûté. */
+export interface Report {
+  readonly at: number;
+  readonly kind: ReportKind;
+  /** Victoire, attaque repoussée, récolte rentrée : vrai. Défaite, pillage subi, famine : faux. */
+  readonly won: boolean;
+  /** L'identifiant du rival, de la proie, du lieu ou de l'événement ; vide pour une famine. */
+  readonly who: string;
+  /** Ce qui a été gagné (attaque, chasse, récolte) ou pris (défense perdue), en millionièmes d'unité. */
+  readonly sugar: number;
+  readonly bricks: number;
+  readonly proteins: number;
+  /** Butin perdu parce que la réserve était pleine. */
+  readonly lost: number;
+  /** Cellules filles perdues. */
+  readonly troops: number;
 }
 
 /** Les combats du jour, pour la Gazette. */
@@ -172,6 +192,10 @@ export interface PlayerState {
   /** L'alliance du joueur ; `null` avant l'ouverture des alliances. */
   readonly alliance: Alliance | null;
   readonly daily: DailyRecord;
+  /** Accélérateurs en réserve : chacun hâte un chantier ou une évolution. */
+  readonly boosts: number;
+  /** Le journal, du plus récent au plus ancien. */
+  readonly reports: readonly Report[];
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -388,6 +412,13 @@ export type GameEvent =
       readonly troopsLost: number;
     }
   | { readonly type: "leviathanRepelled"; readonly at: number; readonly event: string }
+  | { readonly type: "boostGained"; readonly at: number; readonly count: number }
+  | {
+      readonly type: "boostUsed";
+      readonly at: number;
+      readonly target: BoostTarget;
+      readonly savedMs: number;
+    }
   | { readonly type: "attackRepelled"; readonly at: number; readonly rival: string }
   /** Un rival a attaqué le joueur et a pris une part de ses réserves. */
   | {
@@ -458,7 +489,10 @@ export type OrderErrorCode =
   | "noConstruction"
   | "alreadyHelped"
   | "noCredits"
-  | "energyFull";
+  | "energyFull"
+  | "noBoost"
+  /** Ni chantier ni évolution en cours : rien à hâter. */
+  | "nothingToBoost";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

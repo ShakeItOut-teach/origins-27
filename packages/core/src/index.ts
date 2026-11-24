@@ -6,6 +6,7 @@ export type {
   Companion,
   Construction,
   DailyRecord,
+  Report,
   DailyQuests,
   Raid,
   Quest,
@@ -36,6 +37,7 @@ export {
 export type { Party } from "./hunt";
 export { drawQuests, questIsAmount, questsRenewAt } from "./quests";
 export {
+  attackWarning,
   defensePower,
   isAlly,
   isNewcomer,
@@ -120,6 +122,7 @@ export {
   nearestBanner,
 } from "./alliance";
 export type { BannerRow } from "./alliance";
+export { HARVESTS_KEPT, REPORTS_KEPT } from "./reports";
 export { fossilOfDay, gazette } from "./gazette";
 export type { Gazette, GazetteNews } from "./gazette";
 export { findPredator, oceanPredators, predatorOffer } from "./predators";

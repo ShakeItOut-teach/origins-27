@@ -133,6 +133,9 @@ describe("ordres", () => {
     expect(valid({ type: "donate", tech: "pack" })).toBe(true);
     expect(valid({ type: "buyAlliance", item: "shield" })).toBe(true);
     expect(valid({ type: "claimGift" })).toBe(true);
+    expect(valid({ type: "useBoost", target: "research" })).toBe(true);
+    expect(valid({ type: "useBoost", target: "construction" })).toBe(true);
+    expect(valid({ type: "useBoost", target: "hunt" })).toBe(false);
   });
 });
 

@@ -389,3 +389,16 @@ Premier réglage, le même jour : 20 % de chances donnait 54 événements en cou
 qu'un événement compte ; ramené à 14 %, avec un Léviathan et une zone anoxique qui portent un
 peu plus loin (rayons 10 → 12 et 8 → 9). Le Léviathan à 200 + 15 par jour se battait d'un
 toucher avec 120 cellules de rang 1 au jour 10 : passé à 400 + 30 par jour, frappes à 50 %.
+
+## 2026-11-24 — Accélérateur et alerte d'attaque
+
+| Réglage          | Valeur                                                          |
+| ---------------- | --------------------------------------------------------------- |
+| Accélérateur     | 60 minutes de moins sur un chantier ou une évolution            |
+| Léviathan vaincu | +1 accélérateur (en plus de 400 protéines et 5 d'énergie)       |
+| Alerte d'attaque | 10 minutes avant l'arrivée d'un rival ou la frappe du Léviathan |
+| Journal          | 40 rapports gardés, dont 15 récoltes au plus                    |
+
+À surveiller : une heure couvre tous les chantiers actuels (15 minutes au plus). Si les
+chantiers s'allongent aux paliers suivants, l'accélérateur gardera son sens ; sinon, le
+ramener à une part du temps restant.
