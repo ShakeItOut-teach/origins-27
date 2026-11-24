@@ -6,6 +6,8 @@ import {
   ALLIANCE_TECH_IDS,
   BANNER_IDS,
   BOOST_TARGETS,
+  CRISIS_KINDS,
+  DRILL_IDS,
   EVOLUTION_BRANCHES,
   EVOLUTION_IDS,
   GENE_FAMILIES,
@@ -182,6 +184,10 @@ export const BalanceSchema = z.strictObject({
     tardigrade: TroopSchema,
     copepod: TroopSchema,
     salp: TroopSchema,
+    chaetognath: TroopSchema,
+    ostracod: TroopSchema,
+    krill: TroopSchema,
+    larvacean: TroopSchema,
   } satisfies Record<(typeof TROOP_IDS)[number], unknown>),
   /** Les évolutions : ce que le Noyau peut exprimer. */
   research: z.strictObject({
@@ -526,8 +532,8 @@ export const BalanceSchema = z.strictObject({
    * maximum d'origine. Ces niveaux-là coûtent et durent autrement, pour occuper la saison.
    */
   higherRanks: z.strictObject({
-    tier: positiveInt,
-    maxLevel: positiveInt,
+    /** Le niveau maximum des organites, palier après palier. */
+    steps: z.array(z.strictObject({ tier: positiveInt, maxLevel: positiveInt })).min(1),
     /** Croissance du coût et de la durée d'un niveau au suivant, au-delà du maximum d'origine. */
     costGrowthPercent: z.number().int().min(100),
     timeGrowthPercent: z.number().int().min(100),
@@ -535,6 +541,36 @@ export const BalanceSchema = z.strictObject({
     minMinutesPerLevel: positiveInt,
     /** Ce que chaque niveau supérieur d'un organite de réserve ajoute au stockage, en pourcentage. */
     storagePercentPerLevel: positiveInt,
+  }),
+  /**
+   * La recherche militaire : chaque pouvoir se prend niveau après niveau, et chaque niveau coûte
+   * bien plus que le précédent.
+   */
+  drills: z.strictObject({
+    tier: positiveInt,
+    maxLevel: positiveInt,
+    cost: z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
+    costGrowthPercent: z.number().int().min(100),
+    powers: z.record(
+      z.enum(DRILL_IDS),
+      z.strictObject({ stat: z.enum(STAT_IDS), percentPerLevel: z.number().int() }),
+    ),
+  }),
+  /** La crise de saison : annoncée, puis subie par tout l'océan pendant quelques jours. */
+  crisis: z.strictObject({
+    tier: positiveInt,
+    /** Jour de saison où elle commence, sa durée, et combien de jours avant elle est annoncée. */
+    day: positiveInt,
+    days: positiveInt,
+    warningDays: positiveInt,
+    /** Ce que perd le premier du classement, en pourcentage de production. */
+    maxMalusPercent: z.number().int().min(1).max(90),
+    /** À partir de cette place (en millièmes du classement), on ne perd plus : on gagne. */
+    spareFromPermille: z.number().int().min(1).max(1000),
+    bonusPercent: nonNegativeInt,
+    /** Nombre de gènes de la bonne famille qui divisent le malus par deux. */
+    adaptedGenes: positiveInt,
+    kinds: z.record(z.enum(CRISIS_KINDS), z.strictObject({ family: z.enum(GENE_FAMILIES) })),
   }),
   /**
    * Le concours de la semaine : tous les organismes sont classés sur leur progression, et les
@@ -681,6 +717,10 @@ const PartySchema = z.strictObject({
   tardigrade: troopCount.default(0),
   copepod: troopCount.default(0),
   salp: troopCount.default(0),
+  chaetognath: troopCount.default(0),
+  ostracod: troopCount.default(0),
+  krill: troopCount.default(0),
+  larvacean: troopCount.default(0),
 } satisfies Record<(typeof TROOP_IDS)[number], unknown>);
 
 const RIVAL_ID = /^(r:-?\d{1,6}:-?\d{1,6}|o:\d{1,4})$/;
@@ -755,6 +795,10 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("askHelp") }),
   /** Prendre le cadeau d'alliance du jour. */
   z.strictObject({ type: z.literal("claimGift") }),
+  /** Recherche militaire : prendre le niveau suivant d'un pouvoir. */
+  z.strictObject({ type: z.literal("drill"), power: z.enum(DRILL_IDS) }),
+  /** Récolte automatique : au retour d'une récolte, les cellules repartent toutes seules. */
+  z.strictObject({ type: z.literal("setAutoHarvest"), on: z.boolean() }),
   /** Ouvrir un coffre de récompense en attente, désigné par sa place dans la liste. */
   z.strictObject({ type: z.literal("openReward"), index: z.number().int().min(0).max(99) }),
   /** Dépenser un accélérateur sur le chantier ou sur l'évolution en cours. */

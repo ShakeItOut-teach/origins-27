@@ -68,6 +68,7 @@ export const STAT_IDS = [
   "trainTime",
   "attack",
   "gather",
+  "losses",
 ] as const;
 export type StatId = (typeof STAT_IDS)[number];
 
@@ -168,6 +169,14 @@ export const FOSSIL_IDS = Object.keys(FOSSIL_AGES) as readonly FossilId[];
 export const BOOST_TARGETS = ["construction", "research"] as const;
 export type BoostTarget = (typeof BOOST_TARGETS)[number];
 
+/** La recherche militaire : de petits pouvoirs pour les cellules filles, de plus en plus chers. */
+export const DRILL_IDS = ["fury", "guard", "survival", "haste"] as const;
+export type DrillId = (typeof DRILL_IDS)[number];
+
+/** Les crises de saison : une seule par saison, tirée de la graine du monde. */
+export const CRISIS_KINDS = ["glaciation", "anoxia", "meteor"] as const;
+export type CrisisKind = (typeof CRISIS_KINDS)[number];
+
 /** Les coffres de récompense : d'où ils viennent. */
 export const REWARD_CHEST_KINDS = ["quest", "challenge", "league", "leviathan", "contest"] as const;
 export type RewardChestKind = (typeof REWARD_CHEST_KINDS)[number];
@@ -231,6 +240,8 @@ export const ORDER_TYPES = [
   "buyAlliance",
   "useBoost",
   "openReward",
+  "drill",
+  "setAutoHarvest",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
@@ -259,6 +270,10 @@ export const TROOP_IDS = [
   "tardigrade",
   "copepod",
   "salp",
+  "chaetognath",
+  "ostracod",
+  "krill",
+  "larvacean",
 ] as const;
 export type TroopId = (typeof TROOP_IDS)[number];
 export const PREY_KINDS = ["soft", "aggressive", "fleeing"] as const;
@@ -277,6 +292,11 @@ export const STRONG_AGAINST: Readonly<Record<TroopId, PreyKind | null>> = {
   tardigrade: "aggressive",
   copepod: "fleeing",
   salp: null,
+  // Rang 4.
+  chaetognath: "soft",
+  ostracod: "aggressive",
+  krill: "fleeing",
+  larvacean: null,
 };
 
 /**
@@ -333,6 +353,7 @@ export const UI_ELEMENT_IDS = [
   "hunt",
   "chests",
   "dailyQuests",
+  "autoHarvest",
   "rivals",
   "spy",
   "raid",
@@ -348,6 +369,7 @@ export const UI_ELEMENT_IDS = [
   "genome",
   "companion",
   "rank2Troops",
+  "militaryResearch",
   "ranking",
   "leagues",
   "contest",

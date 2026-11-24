@@ -2621,3 +2621,35 @@ p.season-next {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Récolte automatique, recherche militaire, espèce */
+.auto-hint {
+  max-width: 420px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  text-align: center;
+}
+
+.lens-pill.is-on {
+  border-color: var(--algae);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--algae) 35%, transparent);
+}
+
+.drills {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+
+.species-name {
+  margin: 0;
+  font-family: var(--font-title);
+  font-style: italic;
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.species-badge {
+  font-style: italic;
+}

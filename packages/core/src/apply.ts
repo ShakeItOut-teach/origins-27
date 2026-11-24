@@ -2,6 +2,7 @@
 import { BALANCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import type {
   BoostTarget,
+  DrillId,
   EvolutionId,
   GeneFamily,
   MutationId,
@@ -13,9 +14,10 @@ import type {
 import { advance } from "./advance";
 import { allianceOrder } from "./alliance";
 import { openReward } from "./chests";
+import { drillOffer } from "./drills";
 import { trackDaily } from "./daily";
 import { eventCovers, findEvent } from "./events";
-import { gatherOffer, playerDeposit } from "./gather";
+import { gather, sendExpedition } from "./expeditions";
 import { leviathanBeaten, leviathanKind, leviathanOffer } from "./leviathan";
 import { shareOffer } from "./companion";
 import { researchOffer } from "./evolutions";
@@ -39,7 +41,7 @@ import { drawMutationOffer, mutationPool, orderTier } from "./unlock";
 import { ZONE_COUNT, cellIn, migrateOffer, playerCell } from "./ocean";
 import type { PreyOffer } from "./world";
 import { findPredator, predatorOffer } from "./predators";
-import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
+import { cancelReturnMs, preyOffer, visiblePrey } from "./world";
 
 type Outcome =
   | { readonly state: PlayerState; readonly events: readonly GameEvent[] }
@@ -109,69 +111,6 @@ function chooseMutation(state: PlayerState, mutation: MutationId): Outcome {
       counters: { ...state.counters, mutationsChosen: state.counters.mutationsChosen + 1 },
     },
     events: [{ type: "mutationChosen", at: state.now, mutation }],
-  };
-}
-
-function sendExpedition(state: PlayerState, placeId: string): Outcome {
-  if (state.expedition !== null) return { error: "busy" };
-  const place = visiblePlaces(state.worldSeed, state.slot).find((entry) => entry.id === placeId);
-  if (place === undefined) return { error: "unknownPlace" };
-  if ((state.placeReadyAt[placeId] ?? 0) > state.now) return { error: "placeResting" };
-  const offer = placeOffer(place);
-  if (state.energy < offer.energy) return { error: "noEnergy" };
-  const returnsAt = state.now + offer.durationMs;
-  return {
-    state: {
-      ...state,
-      energy: state.energy - offer.energy,
-      expedition: {
-        place: placeId,
-        kind: place.kind,
-        loot: offer.loot,
-        energy: offer.energy,
-        restMs: offer.restMs,
-        startedAt: state.now,
-        returnsAt,
-        cancelled: false,
-      },
-    },
-    events: [{ type: "expeditionSent", at: state.now, place: placeId, returnsAt }],
-  };
-}
-
-/** Récolter un gisement commun : ce que l'on charge n'est plus là pour les autres. */
-function gather(state: PlayerState, depositId: string): Outcome {
-  if (state.expedition !== null) return { error: "busy" };
-  const deposit = playerDeposit(state, depositId, state.now);
-  if (deposit === null) return { error: "unknownPlace" };
-  if (deposit.zone > state.zone) return { error: "zoneClosed" };
-  const offer = gatherOffer(state, deposit, state.now);
-  if (offer.loot <= 0) return { error: "depleted" };
-  if (state.energy < offer.energy) return { error: "noEnergy" };
-  const returnsAt = state.now + offer.durationMs;
-  // On oublie au passage les gisements disparus : la liste ne grossit pas sans fin.
-  const taken: Record<string, number> = {};
-  for (const [id, amount] of Object.entries(state.taken)) {
-    if (playerDeposit(state, id, state.now) !== null) taken[id] = amount;
-  }
-  taken[depositId] = (taken[depositId] ?? 0) + offer.loot;
-  return {
-    state: {
-      ...state,
-      energy: state.energy - offer.energy,
-      taken,
-      expedition: {
-        place: depositId,
-        kind: deposit.kind,
-        loot: offer.loot,
-        energy: offer.energy,
-        restMs: 0,
-        startedAt: state.now,
-        returnsAt,
-        cancelled: false,
-      },
-    },
-    events: [{ type: "expeditionSent", at: state.now, place: depositId, returnsAt }],
   };
 }
 
@@ -626,6 +565,27 @@ function useBoost(state: PlayerState, target: BoostTarget): Outcome {
   };
 }
 
+/** Recherche militaire : payer le niveau suivant d'un pouvoir. Il vaut tout de suite. */
+function drill(state: PlayerState, power: DrillId): Outcome {
+  const offer = drillOffer(state, power);
+  if (offer.blocked !== null) return { error: offer.blocked };
+  if (RESOURCE_IDS.some((id) => state.resources[id] < offer.cost[id])) {
+    return { error: "insufficient" };
+  }
+  return {
+    state: {
+      ...state,
+      resources: {
+        sugar: state.resources.sugar - offer.cost.sugar,
+        bricks: state.resources.bricks - offer.cost.bricks,
+        proteins: state.resources.proteins - offer.cost.proteins,
+      },
+      drills: { ...state.drills, [power]: offer.toLevel },
+    },
+    events: [{ type: "drillLearned", at: state.now, power, level: offer.toLevel }],
+  };
+}
+
 function claimQuest(state: PlayerState, index: number): Outcome {
   const quest = state.quests?.items[index];
   if (quest === undefined) return { error: "noQuest" };
@@ -690,6 +650,10 @@ function execute(state: PlayerState, order: Order): Outcome {
       return huntLeviathan(state, order.event, order.party);
     case "useBoost":
       return useBoost(state, order.target);
+    case "drill":
+      return drill(state, order.power);
+    case "setAutoHarvest":
+      return { state: { ...state, autoHarvest: order.on }, events: [] };
     case "openReward":
       return state.chests[order.index] === undefined
         ? { error: "noChest" }

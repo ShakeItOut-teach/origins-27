@@ -220,6 +220,38 @@ export function TroopIcon({ id }: { readonly id: TroopId }) {
           <path d="M6.5 8h11M6 12h12M6.5 16h11" />
         </svg>
       );
+    case "chaetognath":
+      // Un chétognathe : un corps en flèche, des crochets à la tête, des nageoires en losange.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M12 2v20M12 4l-3-2M12 4l3-2M12 10l-4 3 4 3 4-3zM12 19l-3 3M12 19l3 3" />
+        </svg>
+      );
+    case "ostracod":
+      // Un ostracode : deux valves en haricot, des antennes qui dépassent.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M4 13c0-5 4-8 9-8s7 3 7 7-3 7-8 7-8-2-8-6z" />
+          <path d="M6 13c3-2 9-2 13-1M19 9l3-3M18 7l2-4" />
+        </svg>
+      );
+    case "krill":
+      // Du krill : un corps arqué, de longues antennes, des pattes en peigne.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M4 15c2-6 8-9 14-7 2 1 2 3 0 4-4 1-8 1-10 5" />
+          <path d="M18 8l4-4M17 8l1-5M9 13v4M12 12v4M15 12v3" />
+        </svg>
+      );
+    case "larvacean":
+      // Un appendiculaire : un petit corps dans sa logette de mucus, une queue qui bat.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <circle cx="11" cy="11" r="8" />
+          <circle cx="9" cy="9" r="2" />
+          <path d="M10 11c3 1 5 4 9 9" />
+        </svg>
+      );
   }
 }
 

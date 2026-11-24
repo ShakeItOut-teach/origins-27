@@ -4,6 +4,7 @@ import {
   BANNER_IDS,
   BALANCE,
   COUNTER_IDS,
+  DRILL_IDS,
   MUTATION_IDS,
   ORGANELLE_IDS,
   PLACE_KINDS,
@@ -58,6 +59,8 @@ export function createPlayer(
     alliance: null,
     daily: { day: 0, wins: 0, losses: 0 },
     boosts: 0,
+    drills: fill(DRILL_IDS, 0),
+    autoHarvest: false,
     reports: [],
     chests: [],
     contest: null,
@@ -192,6 +195,8 @@ export function serializeState(state: PlayerState): string {
           },
     daily: { day: state.daily.day, wins: state.daily.wins, losses: state.daily.losses },
     boosts: state.boosts,
+    drills: pick(DRILL_IDS, state.drills),
+    autoHarvest: state.autoHarvest,
     contest: state.contest === null ? null : { week: state.contest.week, base: state.contest.base },
     chests: state.chests.map((chest) => ({
       kind: chest.kind,
@@ -753,6 +758,9 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     daily: version < 11 ? { day: 0, wins: 0, losses: 0 } : readDaily(raw.daily),
     // Avant les accélérateurs et le journal : aucun en réserve, rien de raconté.
     boosts: isCount(raw.boosts) ? raw.boosts : 0,
+    // Avant la recherche militaire et la récolte automatique : rien d'acquis, rien d'enclenché.
+    drills: raw.drills === undefined ? fill(DRILL_IDS, 0) : readCounts(DRILL_IDS, raw.drills),
+    autoHarvest: raw.autoHarvest === true,
     reports: raw.reports === undefined ? [] : readReports(raw.reports),
     chests: raw.chests === undefined ? [] : readChests(raw.chests),
     // Avant les concours : le joueur y entrera au prochain passage du temps.

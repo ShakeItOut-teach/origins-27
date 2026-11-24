@@ -24,6 +24,10 @@ export function partyOf(some: Partial<Record<TroopId, number>> = {}): Record<Tro
     tardigrade: 0,
     copepod: 0,
     salp: 0,
+    chaetognath: 0,
+    ostracod: 0,
+    krill: 0,
+    larvacean: 0,
     ...some,
   };
 }
@@ -142,6 +146,18 @@ export function troopsOwned(state: PlayerState): number {
   return total;
 }
 
+/** Les pertes une fois comptés les pouvoirs qui épargnent des cellules (recherche militaire). */
+export function spared(
+  state: PlayerState,
+  losses: Readonly<Record<TroopId, number>>,
+): Record<TroopId, number> {
+  const percent = Math.max(0, 100 + modifierPercent(state, "losses"));
+  const kept = { ...losses };
+  if (percent === 100) return kept;
+  for (const id of TROOP_IDS) kept[id] = Math.floor((losses[id] * percent) / 100);
+  return kept;
+}
+
 /**
  * Le combat a lieu : soit le joueur vient de toucher la proie, soit la fenêtre est passée et
  * le sort décide. Le tirage consomme la graine du joueur, donc le serveur et l'appareil
@@ -152,7 +168,7 @@ export function resolveHunt(state: PlayerState, hunt: Hunt, at: number, struck: 
   const chance = struck ? strikeChance(base) : unattendedChance(base);
   const rng = createRng(state.rngState);
   const won = rng.int(100) < chance;
-  const losses = lossesFor(hunt.party, base, won);
+  const losses = spared(state, lossesFor(hunt.party, base, won));
   const event: GameEvent = { type: "huntResolved", at, won, struck, losses };
   return {
     state: { ...state, rngState: rng.state, hunt: { ...hunt, outcome: { won, struck, losses } } },

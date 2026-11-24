@@ -56,6 +56,10 @@ export const frScience = {
   "troop.tardigrade.name": "Tardigrade",
   "troop.copepod.name": "Copépode",
   "troop.salp.name": "Salpe",
+  "troop.chaetognath.name": "Chétognathe",
+  "troop.ostracod.name": "Ostracode",
+  "troop.krill.name": "Krill",
+  "troop.larvacean.name": "Appendiculaire",
 } as const satisfies ScienceTexts;
 
 export const enScience = {
@@ -108,6 +112,10 @@ export const enScience = {
   "troop.tardigrade.name": "Tardigrade",
   "troop.copepod.name": "Copepod",
   "troop.salp.name": "Salp",
+  "troop.chaetognath.name": "Arrow worm",
+  "troop.ostracod.name": "Ostracod",
+  "troop.krill.name": "Krill",
+  "troop.larvacean.name": "Larvacean",
 } as const satisfies Record<keyof typeof frScience, string>;
 
 /** Les mots expliqués dans le lexique : la clé du mot, et celle de son explication. */

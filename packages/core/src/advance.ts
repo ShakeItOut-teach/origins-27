@@ -4,6 +4,8 @@ import { allianceDue } from "./banners";
 import { trackDaily } from "./daily";
 import { earnChest } from "./chests";
 import { contestStep } from "./contest";
+import { crisisRate } from "./crisis";
+import { autoHarvest } from "./expeditions";
 import { anoxiaEdge } from "./events";
 import { leviathanDue, leviathanStrike } from "./leviathan";
 import { leagueStep } from "./power";
@@ -19,6 +21,11 @@ import { DAY_MS } from "./types";
 import { evaluateTier, seasonDay } from "./unlock";
 import { energyAt } from "./world";
 
+/** Ce que la cellule produit vraiment : la production, une fois la crise de saison comptée. */
+function made(state: PlayerState, id: "sugar" | "bricks" | "proteins"): number {
+  return crisisRate(state, productionRate(state, id));
+}
+
 /** Produit jusqu'à l'instant `to`, sans dépasser le stockage. */
 function produce(state: PlayerState, to: number): PlayerState {
   const elapsed = to - state.now;
@@ -27,7 +34,7 @@ function produce(state: PlayerState, to: number): PlayerState {
   for (const id of RESOURCE_IDS) {
     const current = state.resources[id];
     // Les cellules filles se nourrissent de sucre : la production peut devenir une dépense.
-    const rate = productionRate(state, id) - (id === "sugar" ? upkeepRate(state) : 0);
+    const rate = made(state, id) - (id === "sugar" ? upkeepRate(state) : 0);
     resources[id] =
       rate >= 0
         ? // Un stock déjà au-dessus du plafond n'est jamais réduit.
@@ -45,7 +52,7 @@ function produce(state: PlayerState, to: number): PlayerState {
 function hungerAt(state: PlayerState): number {
   // Personne à la maison : personne ne peut mourir de faim. On le vérifie d'abord, c'est le cas le plus courant.
   if (partySize(state.troops) === 0) return Number.POSITIVE_INFINITY;
-  const rate = productionRate(state, "sugar") - upkeepRate(state);
+  const rate = made(state, "sugar") - upkeepRate(state);
   if (rate >= 0) return Number.POSITIVE_INFINITY;
   const emptyAt = state.now + Math.ceil(state.resources.sugar / -rate);
   const wave = BALANCE.troopUpkeep.famineSeconds * 1000;
@@ -59,7 +66,7 @@ function hungerAt(state: PlayerState): number {
  */
 function starve(state: PlayerState, at: number): Step {
   const data = BALANCE.troopUpkeep;
-  const deficit = upkeepRate(state) - productionRate(state, "sugar");
+  const deficit = upkeepRate(state) - made(state, "sugar");
   const troops: Record<(typeof TROOP_IDS)[number], number> = { ...state.troops };
   const home = partySize(troops);
   const count = Math.min(
@@ -315,7 +322,11 @@ export function advance(state: PlayerState, now: number): Step {
     } else if (training !== null && birth === at) {
       step = born(ready);
     } else if (expedition !== null && tripEnd === at) {
-      step = comeBack(ready, expedition);
+      const back = comeBack(ready, expedition);
+      // Récolte automatique : sitôt rentrées, les cellules repartent.
+      const again = expedition.cancelled ? null : autoHarvest(back.state, expedition);
+      step =
+        again === null ? back : { state: again.state, events: [...back.events, ...again.events] };
     } else if (hunt !== null && huntAt === at) {
       step =
         hunt.cancelled || hunt.outcome !== null

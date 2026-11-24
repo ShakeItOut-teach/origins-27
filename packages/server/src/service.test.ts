@@ -330,6 +330,17 @@ describe("océan et alliances", () => {
       order: { type: "openReward", index: 0 },
     });
     expect(chest.status).toBe("done");
+    // Recherche militaire et récolte automatique passent aussi par le serveur.
+    const auto = await handleOrder(deps, ALICE, {
+      orderId: id(68),
+      order: { type: "setAutoHarvest", on: true },
+    });
+    expect(auto).toMatchObject({ status: "done", outcome: { ok: true } });
+    const drilled = await handleOrder(deps, ALICE, {
+      orderId: id(69),
+      order: { type: "drill", power: "guard" },
+    });
+    expect(drilled.status).toBe("done");
     // Le journal a suivi le joueur côté serveur.
     expect(Array.isArray(boost.state.reports)).toBe(true);
     const wrong = await handleOrder(deps, ALICE, {

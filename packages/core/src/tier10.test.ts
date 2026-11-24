@@ -20,6 +20,8 @@ import type { PlayerState } from "./index";
 const HOUR = 3_600_000;
 const SEASON = 1_800_000_000_000;
 const RULES = BALANCE.higherRanks;
+/** Le niveau maximum ouvert par le palier 10. */
+const TEN = RULES.steps[0]?.maxLevel ?? 10;
 
 /** Un joueur dont tous les organites sont au niveau 5, à une heure du jour demandé. */
 function player(day: number, mutations: MutationId[] = ["thrift"]): PlayerState {
@@ -60,7 +62,7 @@ describe("palier 10 : les rangs supérieurs", () => {
     const open = advance(before, SEASON + 12 * DAY_MS);
     expect(open.state.tier).toBe(10);
     expect(open.events).toContainEqual({ type: "tierReached", at: SEASON + 12 * DAY_MS, tier: 10 });
-    for (const id of ORGANELLE_IDS) expect(maxLevelOf(open.state, id)).toBe(RULES.maxLevel);
+    for (const id of ORGANELLE_IDS) expect(maxLevelOf(open.state, id)).toBe(TEN);
   });
 
   it("un niveau supérieur est un long chantier, de plus en plus cher, mais moins vite qu'avant", () => {
@@ -73,7 +75,7 @@ describe("palier 10 : les rangs supérieurs", () => {
     expect(tenth).toBeGreaterThan(sixth);
     expect(tenth).toBeLessThan(fifth * 5);
     for (const id of ORGANELLE_IDS) {
-      for (let level = 6; level <= RULES.maxLevel; level++) {
+      for (let level = 6; level <= TEN; level++) {
         expect(levelDuration(state, id, level)).toBeGreaterThanOrEqual(
           ((level - 5) * RULES.minMinutesPerLevel * 60_000 * 80) / 100,
         );
@@ -90,13 +92,13 @@ describe("palier 10 : les rangs supérieurs", () => {
     let state = player(13);
     const rate = productionRate(state, "sugar");
     const store = capacity(state, "sugar");
-    for (let level = 6; level <= RULES.maxLevel; level++) {
+    for (let level = 6; level <= TEN; level++) {
       const sent = applyOrder(state, { type: "upgrade", organelle: "mitochondrion" }, state.now);
       if (!sent.ok) throw new Error(`niveau ${String(level)} refusé : ${sent.error}`);
       state = advance(sent.state, sent.state.construction?.endsAt ?? 0).state;
       state = { ...state, resources: { sugar: 10 ** 11, bricks: 10 ** 11, proteins: 0 } };
     }
-    expect(state.organelles.mitochondrion).toBe(RULES.maxLevel);
+    expect(state.organelles.mitochondrion).toBe(TEN);
     expect(productionRate(state, "sugar")).toBe(rate * 2);
     expect(applyOrder(state, { type: "upgrade", organelle: "mitochondrion" }, state.now)).toEqual({
       ok: false,

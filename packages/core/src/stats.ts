@@ -4,6 +4,7 @@ import type { OrganelleId, ResourceId, StatId } from "@o27/data";
 import { alliancePercent } from "./banners";
 import { companionPercent } from "./companion";
 import { playerAnoxia } from "./events";
+import { drillPercent } from "./drills";
 import { evolutionPercent } from "./evolutions";
 import { lineagePercent } from "./genes";
 import { MICRO } from "./types";
@@ -23,7 +24,8 @@ export function modifierPercent(state: PlayerState, stat: StatId): number {
     lineagePercent(state, stat) +
     evolutionPercent(state, stat) +
     companionPercent(state, stat) +
-    alliancePercent(state, stat);
+    alliancePercent(state, stat) +
+    drillPercent(state, stat);
   for (const id of BONUS_ORGANELLES) {
     const effect = BALANCE.organelles[id].effect;
     if (effect.kind === "bonus" && effect.stat === stat) {
@@ -59,10 +61,11 @@ export function travelMs(state: PlayerState, ms: number): number {
  * rangs supérieurs ouverts.
  */
 export function maxLevelOf(state: PlayerState, organelle: OrganelleId): number {
-  const base = BALANCE.organelles[organelle].maxLevel;
-  return state.tier >= BALANCE.higherRanks.tier
-    ? Math.max(base, BALANCE.higherRanks.maxLevel)
-    : base;
+  let max = BALANCE.organelles[organelle].maxLevel;
+  for (const step of BALANCE.higherRanks.steps) {
+    if (state.tier >= step.tier) max = Math.max(max, step.maxLevel);
+  }
+  return max;
 }
 
 /**

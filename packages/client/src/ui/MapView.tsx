@@ -1,6 +1,6 @@
 import { capacity, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "@o27/core";
 import type { Place, PlayerState, Prey } from "@o27/core";
-import { BALANCE, PLACE_RESOURCE } from "@o27/data";
+import { BALANCE, PLACE_RESOURCE, UNLOCKS } from "@o27/data";
 import type { Order, TextKey } from "@o27/data";
 import { useMemo, useState } from "react";
 import { MapCanvas } from "../cell/MapCanvas";
@@ -38,6 +38,9 @@ type Spot =
 function idOf(spot: Spot): string {
   return spot.type === "place" ? spot.place.id : spot.prey.id;
 }
+
+/** Palier où la récolte automatique s'ouvre : celui de son ordre dans la table de déblocage. */
+const AUTO_TIER = UNLOCKS.find((unlock) => unlock.orders.includes("setAutoHarvest"))?.tier ?? 4;
 
 /** La goutte : la cellule au centre, les lieux et les proies autour. */
 export function MapView(props: Props) {
@@ -178,6 +181,20 @@ export function MapView(props: Props) {
             </button>
           );
         })}
+        {state.tier >= AUTO_TIER && (
+          <button
+            type="button"
+            className={`lens-pill lens-pill-right${state.autoHarvest ? " is-on" : ""}`}
+            aria-pressed={state.autoHarvest}
+            title={t("autoHarvest.text")}
+            data-testid="auto-harvest"
+            onClick={() => {
+              onOrder({ type: "setAutoHarvest", on: !state.autoHarvest });
+            }}
+          >
+            {t("label.autoHarvest")} : {state.autoHarvest ? t("state.on") : t("state.off")}
+          </button>
+        )}
         {showWorld && (
           <button
             type="button"
@@ -191,6 +208,11 @@ export function MapView(props: Props) {
           </button>
         )}
       </section>
+      {state.tier >= AUTO_TIER && !hidden && !world && (
+        <p className="auto-hint" data-testid="auto-hint">
+          {t("autoHarvest.text")}
+        </p>
+      )}
 
       {open !== null && !hidden && !world && open.type === "place" && (
         <PlaceSheet state={state} place={open.place} lang={lang} onClose={close} onOrder={act} />

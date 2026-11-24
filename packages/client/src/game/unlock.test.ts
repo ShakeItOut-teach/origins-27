@@ -51,4 +51,13 @@ describe("ce que l'écran montre à chaque palier", () => {
       expect(isVisible(element, 10)).toBe(false);
     }
   });
+
+  it("palier 11 : la crise et la fiche d'espèce ; la récolte automatique dès le palier 4", () => {
+    expect(isVisible("crisis", 11)).toBe(true);
+    expect(isVisible("speciesSheet", 11)).toBe(true);
+    expect(isVisible("apexRace", 11)).toBe(false);
+    expect(isVisible("autoHarvest", 3)).toBe(false);
+    expect(isVisible("autoHarvest", 4)).toBe(true);
+    expect(isVisible("militaryResearch", 8)).toBe(true);
+  });
 });

@@ -1,5 +1,8 @@
 import {
   MICRO,
+  crisisOf,
+  crisisRate,
+  speciesOf,
   maxLevelOf,
   allianceToday,
   contestBoard,
@@ -72,6 +75,7 @@ import { QuestSheet } from "./ui/QuestSheet";
 import { RankingSheet } from "./ui/RankingSheet";
 import { RaidBubble } from "./ui/RaidBubble";
 import { RivalsView } from "./ui/RivalsView";
+import { CrisisSheet, SpeciesSheet } from "./ui/SeasonSheets";
 import { TroopPanel } from "./ui/TroopPanel";
 
 interface Props {
@@ -150,6 +154,8 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [gazetteOpen, setGazetteOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
   const [contestOpen, setContestOpen] = useState(false);
+  const [crisisOpen, setCrisisOpen] = useState(false);
+  const [speciesOpen, setSpeciesOpen] = useState(false);
   /** Le rang obtenu au concours qui vient de finir. */
   const [contestRank, setContestRank] = useState<number | null>(null);
   /** Le coffre que le joueur est en train d'ouvrir, et un compteur pour repartir d'un coffre fermé. */
@@ -352,6 +358,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const alarm = warning !== null || strikeSoon || state.now - hitAt < ALARM_FLASH_MS;
   const newReports = state.reports.filter((report) => report.at > reportsSeen).length;
   const contest = show("contest") ? contestBoard(state) : null;
+  const crisis = show("crisis") ? crisisOf(state) : null;
   const allianceToDo =
     show("alliances") && state.alliance !== null
       ? (allianceToday(state).gift ? 0 : 1) + (helpRequests(state) > 0 ? 1 : 0)
@@ -469,7 +476,8 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         {counters.map((id) => {
           const full = state.resources[id] >= capacity(state, id);
           // Ce que la cellule gagne vraiment : sa production, moins ce que mangent les troupes.
-          const rate = productionRate(state, id) - (id === "sugar" ? upkeepRate(state) : 0);
+          const rate =
+            crisisRate(state, productionRate(state, id)) - (id === "sugar" ? upkeepRate(state) : 0);
           return (
             <div
               key={id === "sugar" ? `${id}-${String(fullFlash)}` : id}
@@ -531,6 +539,32 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             {t("label.in")} {formatCountdown(warning - state.now, lang)}
           </span>
         </p>
+      )}
+      {crisis !== null && crisis.phase !== "done" && (
+        <button
+          type="button"
+          className="season-next is-danger"
+          data-testid="crisis-strip"
+          onClick={() => {
+            setCrisisOpen(true);
+          }}
+        >
+          <strong>{t(`crisis.${crisis.kind}.name`)}</strong>
+          <span className="season-next-left">
+            {crisis.phase === "warning"
+              ? `${t("crisis.warning")} ${formatCountdown(crisis.startsAt - state.now, lang)}`
+              : `${t("crisis.on")} ${formatCountdown(crisis.endsAt - state.now, lang)}`}
+          </span>
+        </button>
+      )}
+      {show("crisis") && crisisOpen && (
+        <CrisisSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setCrisisOpen(false);
+          }}
+        />
       )}
       {anoxia !== null && (
         <button
@@ -906,6 +940,28 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             if (order.type !== "claimGift") return store.send(order).ok;
             present({ kind: "gift" });
             return true;
+          }}
+        />
+      )}
+      {show("speciesSheet") && (
+        <button
+          type="button"
+          className="quests-open species-open"
+          data-testid="species-open"
+          onClick={() => {
+            setSpeciesOpen(true);
+          }}
+        >
+          {t("label.species")}
+          <span className="badge species-badge">{speciesOf(state).name}</span>
+        </button>
+      )}
+      {show("speciesSheet") && speciesOpen && (
+        <SpeciesSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setSpeciesOpen(false);
           }}
         />
       )}

@@ -129,6 +129,7 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
     case "chestEarned":
     case "rewardOpened":
     case "contestEnded":
+    case "drillLearned":
       return 0;
     case "troopBorn":
       return id === "trainCells" ? 1 : 0;

@@ -3,6 +3,7 @@ import type {
   AllianceTechId,
   BannerId,
   BoostTarget,
+  DrillId,
   ReportKind,
   RewardChestKind,
   GeneFamily,
@@ -209,6 +210,10 @@ export interface PlayerState {
   /** L'alliance du joueur ; `null` avant l'ouverture des alliances. */
   readonly alliance: Alliance | null;
   readonly daily: DailyRecord;
+  /** Niveau de chaque pouvoir de la recherche militaire. */
+  readonly drills: Readonly<Record<DrillId, number>>;
+  /** Récolte automatique : au retour d'une récolte, les cellules repartent toutes seules. */
+  readonly autoHarvest: boolean;
   /** Accélérateurs en réserve : chacun hâte un chantier ou une évolution. */
   readonly boosts: number;
   /** Le journal, du plus récent au plus ancien. */
@@ -437,6 +442,12 @@ export type GameEvent =
     }
   | { readonly type: "leviathanRepelled"; readonly at: number; readonly event: string }
   | { readonly type: "boostGained"; readonly at: number; readonly count: number }
+  | {
+      readonly type: "drillLearned";
+      readonly at: number;
+      readonly power: DrillId;
+      readonly level: number;
+    }
   | { readonly type: "chestEarned"; readonly at: number; readonly kind: RewardChestKind }
   /** Un concours de la semaine s'achève : le rang du joueur et sa progression. */
   | {

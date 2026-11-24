@@ -7,7 +7,7 @@ import { BALANCE, ORGANELLE_IDS, PREY_KINDS, TROOP_IDS } from "@o27/data";
 import type { BannerId, PreyKind, TroopId } from "@o27/data";
 import { allianceTechLevel, bannerOf } from "./banners";
 import { anoxiaAt } from "./events";
-import { lossesFor, partyOf, partySize, winChance } from "./hunt";
+import { lossesFor, partyOf, partySize, spared, winChance } from "./hunt";
 import { modifierPercent, travelMs } from "./stats";
 import { createRng } from "./rng";
 import type { Rng } from "./rng";
@@ -317,7 +317,7 @@ export function resolveRaid(state: PlayerState, raid: Raid, at: number, struck: 
   const base = winChance(raid.party, raid.kind, raid.power);
   const rng = createRng(state.rngState);
   const won = rng.int(100) < raidChance(base, struck);
-  const losses = lossesFor(raid.party, base, won);
+  const losses = spared(state, lossesFor(raid.party, base, won));
   return {
     state: { ...state, rngState: rng.state, raid: { ...raid, outcome: { won, struck, losses } } },
     events: [{ type: "raidResolved", at, won, struck, losses }],

@@ -137,6 +137,10 @@ describe("ordres", () => {
     expect(valid({ type: "useBoost", target: "construction" })).toBe(true);
     expect(valid({ type: "useBoost", target: "hunt" })).toBe(false);
     expect(valid({ type: "openReward", index: 0 })).toBe(true);
+    expect(valid({ type: "drill", power: "fury" })).toBe(true);
+    expect(valid({ type: "drill", power: "magie" })).toBe(false);
+    expect(valid({ type: "setAutoHarvest", on: true })).toBe(true);
+    expect(valid({ type: "setAutoHarvest", on: "oui" })).toBe(false);
     expect(valid({ type: "openReward", index: -1 })).toBe(false);
     expect(valid({ type: "openReward" })).toBe(false);
   });

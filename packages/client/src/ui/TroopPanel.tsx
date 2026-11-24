@@ -1,5 +1,6 @@
 import {
   MICRO,
+  drillOffer,
   genesMissing,
   productionRate,
   trainMs,
@@ -8,7 +9,7 @@ import {
   upkeepRate,
 } from "@o27/core";
 import type { PlayerState } from "@o27/core";
-import { BALANCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
+import { BALANCE, DRILL_IDS, RESOURCE_IDS, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { Order, TextKey } from "@o27/data";
 import { formatAmount, formatDuration, formatRate, translate } from "../game/text";
 import type { Lang } from "../game/text";
@@ -117,6 +118,63 @@ export function TroopPanel({ state, lang, onOrder }: Props) {
           </div>
         );
       })}
+      {state.tier >= BALANCE.drills.tier && (
+        <section className="drills" data-testid="drills">
+          <h3 className="sheet-title">{t("label.drills")}</h3>
+          <p className="sheet-role">{t("drills.text")}</p>
+          {DRILL_IDS.map((id) => {
+            const offer = drillOffer(state, id);
+            const power = BALANCE.drills.powers[id];
+            const level = state.drills[id];
+            const percent = power.percentPerLevel * level;
+            const next = power.percentPerLevel * (level + 1);
+            const poor = RESOURCE_IDS.some((key) => state.resources[key] < offer.cost[key]);
+            const show = (value: number): string =>
+              `${value > 0 ? "+" : "−"}${String(Math.abs(value))} %`;
+            return (
+              <div key={id} className="tech-row" data-testid={`drill-${id}`} data-level={level}>
+                <div className="tech-head">
+                  <strong>{t(`drill.${id}.name`)}</strong>
+                  <span className="tech-level">
+                    {t("label.level")} {level} / {BALANCE.drills.maxLevel}
+                  </span>
+                </div>
+                <p className="tech-effect">
+                  {t(`stat.${power.stat}` as TextKey)} {level > 0 && show(percent)}
+                  {level > 0 && offer.blocked === null && " → "}
+                  {offer.blocked === null && show(next)}
+                </p>
+                {offer.blocked === null && (
+                  <div className="tech-act">
+                    <span className="costs">
+                      {RESOURCE_IDS.map((key) => (
+                        <span
+                          key={key}
+                          className={`cost${state.resources[key] < offer.cost[key] ? " is-missing" : ""}`}
+                        >
+                          <ResourceIcon id={key} />
+                          {formatAmount(offer.cost[key], lang)}
+                        </span>
+                      ))}
+                    </span>
+                    <button
+                      type="button"
+                      className="button button-small"
+                      disabled={poor}
+                      data-testid={`drill-buy-${id}`}
+                      onClick={() => {
+                        onOrder({ type: "drill", power: id });
+                      }}
+                    >
+                      {t("action.drill")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      )}
       {training !== null && (
         <p className="sheet-building" data-testid="training">
           {t("state.born")} · {t(`troop.${training.troop}.name`)}

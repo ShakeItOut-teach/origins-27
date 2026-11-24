@@ -214,7 +214,7 @@ describe("le calendrier de la saison", () => {
       [...calendar.map((entry) => entry.at)].sort((a, b) => a - b),
     );
     expect(calendar.filter((entry) => entry.kind === "tier").map((entry) => entry.day)).toEqual([
-      3, 4, 5, 9, 13,
+      3, 4, 5, 9, 13, 17,
     ]);
     expect(calendar.filter((entry) => entry.kind === "zone").map((entry) => entry.day)).toEqual(
       BALANCE.ocean.zones.slice(1).map((zone) => zone.openDay),
