@@ -255,6 +255,12 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               <small>/{BALANCE.energy.max}</small>
             </span>
             <span className="counter-label">{t("label.energy")}</span>
+            {state.energy < BALANCE.energy.max && (
+              <span className="counter-rate" data-testid="energy-next">
+                +1 ·{" "}
+                {formatDuration(state.energyAt + BALANCE.energy.regenSeconds * 1000 - state.now)}
+              </span>
+            )}
           </div>
         )}
       </header>
