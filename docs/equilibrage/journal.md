@@ -128,3 +128,29 @@ Aucune chasse n'a laissé un robot sans cellule fille (minimum observé : 5).
 - Débutant et appliqué atteignent la deuxième mutation en des temps voisins : le toucher évite
   les défaites, mais ne fait pas gagner beaucoup de temps. À surveiller si l'on veut que la
   présence soit mieux récompensée.
+
+## 2026-11-24 — Chasse sans toucher, quêtes du jour et coffres
+
+**Chasse sans toucher (décision du propriétaire : « un peu plus de défaites, mais marginal »).**
+Laisser le sort décider coûte 10 points de chance (50 % annoncés deviennent 40 %). La fiche de la
+proie affiche ce chiffre-là, puisque c'est celui qui vaut si on ne fait rien.
+
+**Quêtes du jour.** Trois quêtes et un défi par jour de saison, tirés au hasard d'après la graine
+du joueur et le jour : différents pour chacun, sans rotation, jamais ceux de la veille. Douze
+quêtes ordinaires et cinq défis au départ ; l'objectif chiffré est lui aussi tiré dans une
+fourchette. Une quête impossible ce jour-là (Réserve au maximum, plus de mutation à prendre)
+n'est jamais proposée.
+
+**Coffres.** Quête ordinaire : une récompense parmi 80 sucres, 40 briques, 6 protéines ou
+2 points d'énergie. Défi : deux récompenses parmi 200 sucres, 100 briques, 15 protéines ou
+4 points d'énergie. Un coffre est un cadeau : son contenu entre même réserve pleine. Un coffre
+gagné mais pas ouvert s'ouvre tout seul à minuit.
+
+**Mesure** (8 graines, 6 premières heures) : le robot appliqué ouvre au moins deux coffres, le
+débutant au moins un, et le défi n'est pas réussi par tous les débutants.
+
+**À faire quand les rivaux existeront (palier 5).** Ajouter des défis contre d'autres joueurs à
+la même liste : c'est prévu par la structure, il suffit d'une ligne par défi.
+
+**Reste à surveiller.** 6 protéines par coffre ordinaire, c'est un tiers de la première mutation
+payante : à vérifier que les coffres ne remplacent pas la chasse.

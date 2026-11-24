@@ -5,6 +5,7 @@ import {
   MUTATION_IDS,
   ORDER_TYPES,
   ORGANELLE_IDS,
+  QUEST_IDS,
   RESOURCE_IDS,
   TROOP_IDS,
   STAT_IDS,
@@ -131,6 +132,40 @@ export const BalanceSchema = z.strictObject({
       )
       .length(3),
   }),
+  quests: z.strictObject({
+    /** Palier à partir duquel le joueur reçoit des quêtes. */
+    tier: positiveInt,
+    /** Nombre de quêtes ordinaires par jour ; un défi s'y ajoute. */
+    perDay: positiveInt,
+    pool: z.record(
+      z.enum(QUEST_IDS),
+      z.strictObject({
+        /** Palier à partir duquel cette quête peut être tirée. */
+        tier: positiveInt,
+        /** Un défi : facultatif, plus dur, avec un plus gros coffre. */
+        challenge: z.boolean(),
+        /** L'objectif est tiré au hasard entre ces deux bornes, en unités entières. */
+        min: positiveInt,
+        max: positiveInt,
+      }),
+    ),
+  }),
+  /** Contenu possible d'un coffre : une des lignes est tirée au sort (deux pour un défi). */
+  chests: z.strictObject({
+    normal: z.strictObject({
+      sugar: positiveInt,
+      bricks: positiveInt,
+      proteins: positiveInt,
+      energy: positiveInt,
+    }),
+    challenge: z.strictObject({
+      sugar: positiveInt,
+      bricks: positiveInt,
+      proteins: positiveInt,
+      energy: positiveInt,
+    }),
+    challengeDraws: positiveInt,
+  }),
   /** Prix en protéines de chaque nouvelle mutation ; le dernier prix vaut pour toutes les suivantes. */
   mutationPrices: z.array(positiveInt).min(1),
   /** Géométrie de la goutte, en unités de carte. Entiers uniquement. */
@@ -195,6 +230,8 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("strikeHunt") }),
   z.strictObject({ type: z.literal("cancelHunt") }),
   z.strictObject({ type: z.literal("buyMutation") }),
+  /** Ouvrir le coffre d'une quête terminée, désignée par sa position dans la liste du jour. */
+  z.strictObject({ type: z.literal("claimQuest"), index: z.number().int().min(0).max(9) }),
 ]);
 export type Order = z.infer<typeof OrderSchema>;
 

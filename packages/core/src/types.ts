@@ -3,7 +3,9 @@ import type {
   MutationId,
   OrganelleId,
   PlaceKind,
+  ChestReward,
   PreyKind,
+  QuestId,
   ResourceId,
   TroopId,
 } from "@o27/data";
@@ -73,8 +75,25 @@ export interface Hunt {
   readonly cancelled: boolean;
 }
 
+export interface Quest {
+  readonly id: QuestId;
+  /** Objectif et avancement : un nombre de fois, ou une quantité en millionièmes d'unité. */
+  readonly target: number;
+  readonly progress: number;
+  /** Un défi : facultatif, plus dur, avec un plus gros coffre. */
+  readonly challenge: boolean;
+  /** Son coffre a été ouvert. */
+  readonly claimed: boolean;
+}
+
+export interface DailyQuests {
+  /** Jour de saison auquel ces quêtes appartiennent (1 = premier jour). */
+  readonly day: number;
+  readonly items: readonly Quest[];
+}
+
 export interface PlayerState {
-  readonly version: 3;
+  readonly version: 4;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -106,6 +125,8 @@ export interface PlayerState {
   readonly troops: Readonly<Record<TroopId, number>>;
   readonly training: Training | null;
   readonly hunt: Hunt | null;
+  /** Quêtes du jour ; `null` tant que le joueur n'y a pas droit. */
+  readonly quests: DailyQuests | null;
 }
 
 export type GameEvent =
@@ -174,7 +195,15 @@ export type GameEvent =
       readonly losses: number;
       readonly cancelled: boolean;
     }
-  | { readonly type: "mutationBought"; readonly at: number; readonly price: number };
+  | { readonly type: "mutationBought"; readonly at: number; readonly price: number }
+  | {
+      readonly type: "chestOpened";
+      readonly at: number;
+      readonly index: number;
+      readonly challenge: boolean;
+      /** Contenu, en unités entières. */
+      readonly loot: Readonly<Partial<Record<ChestReward, number>>>;
+    };
 
 export type OrderErrorCode =
   /** L'heure fournie est antérieure à l'état. */
@@ -202,7 +231,10 @@ export type OrderErrorCode =
   | "notFighting"
   | "tooLate"
   | "offerPending"
-  | "noMoreMutations";
+  | "noMoreMutations"
+  | "noQuest"
+  | "questNotDone"
+  | "alreadyClaimed";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

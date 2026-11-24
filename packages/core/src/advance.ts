@@ -2,6 +2,7 @@
 import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import { capacity, productionRate } from "./stats";
 import { partySize, resolveHunt } from "./hunt";
+import { ensureQuests, questsRenewAt, renewQuests, trackQuests } from "./quests";
 import type { Construction, Expedition, GameEvent, Hunt, PlayerState, Step } from "./types";
 import { evaluateTier } from "./unlock";
 import { energyAt } from "./world";
@@ -157,8 +158,18 @@ export function advance(state: PlayerState, now: number): Step {
     const tripEnd = expedition?.returnsAt ?? Number.POSITIVE_INFINITY;
     const birth = training?.nextAt ?? Number.POSITIVE_INFINITY;
     const huntAt = huntDue(hunt);
-    const at = Math.min(buildEnd, tripEnd, birth, huntAt);
+    const renewAt = questsRenewAt(current);
+    const at = Math.min(buildEnd, tripEnd, birth, huntAt, renewAt);
     if (at > now) break;
+    // Minuit passe avant tout le reste : ce qui arrive à minuit pile compte pour le nouveau jour.
+    if (renewAt === at) {
+      // L'énergie est d'abord mise à jour : le coffre ouvert à minuit s'ajoute à la vraie jauge.
+      const renewed = renewQuests(settle(produce(current, at), at), at);
+      current = renewed.state;
+      events.push(...renewed.events);
+      continue;
+    }
+    const seen = events.length;
     // À la même milliseconde, l'ordre est fixe : chantier, naissance, expédition, chasse.
     // Le chantier passe d'abord : la réserve agrandie accueille le butin.
     if (training !== null && birth === at && buildEnd > at) {
@@ -187,10 +198,10 @@ export function advance(state: PlayerState, now: number): Step {
       events.push(...back.events);
     }
     const step = evaluateTier(current, at);
-    current = step.state;
     events.push(...step.events);
+    current = trackQuests(ensureQuests(step.state, at), events.slice(seen));
   }
   const step = evaluateTier(settle(produce(current, now), now), now);
   events.push(...step.events);
-  return { state: step.state, events };
+  return { state: ensureQuests(step.state, now), events };
 }

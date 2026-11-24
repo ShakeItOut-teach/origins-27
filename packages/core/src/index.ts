@@ -3,6 +3,8 @@ export type { Rng } from "./rng";
 export { MICRO, DAY_MS } from "./types";
 export type {
   Construction,
+  DailyQuests,
+  Quest,
   Expedition,
   GameEvent,
   Hunt,
@@ -25,6 +27,7 @@ export {
   winChance,
 } from "./hunt";
 export type { Party } from "./hunt";
+export { drawQuests, questIsAmount, questsRenewAt } from "./quests";
 export { evaluateTier, orderTier, seasonDay } from "./unlock";
 export {
   capacity,

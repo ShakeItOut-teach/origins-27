@@ -6,12 +6,21 @@ import {
   ORGANELLE_IDS,
   PLACE_KINDS,
   PREY_KINDS,
+  QUEST_IDS,
   RESOURCE_IDS,
   TROOP_IDS,
 } from "@o27/data";
 import type { CounterId, MutationId, OrganelleId, ResourceId, TraitId } from "@o27/data";
 import { createRng } from "./rng";
-import type { Construction, Expedition, GameEvent, Hunt, PlayerState, Training } from "./types";
+import type {
+  Construction,
+  DailyQuests,
+  Expedition,
+  GameEvent,
+  Hunt,
+  PlayerState,
+  Training,
+} from "./types";
 
 function fill<K extends string>(keys: readonly K[], value: number): Record<K, number> {
   return Object.fromEntries(keys.map((key) => [key, value])) as Record<K, number>;
@@ -32,7 +41,8 @@ export function createPlayer(
 ): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 3,
+    version: 4,
+    quests: null,
     worldSeed: (world?.worldSeed ?? seed) >>> 0,
     slot: world?.slot ?? 0,
     energy: BALANCE.energy.max,
@@ -161,6 +171,19 @@ export function serializeState(state: PlayerState): string {
         .sort()
         .map((id) => [id, state.placeReadyAt[id]]),
     ),
+    quests:
+      state.quests === null
+        ? null
+        : {
+            day: state.quests.day,
+            items: state.quests.items.map((quest) => ({
+              id: quest.id,
+              target: quest.target,
+              progress: quest.progress,
+              challenge: quest.challenge,
+              claimed: quest.claimed,
+            })),
+          },
     troops: pick(TROOP_IDS, state.troops),
     training:
       state.training === null
@@ -342,6 +365,31 @@ function readHunt(value: unknown): Hunt | null {
   };
 }
 
+function readQuests(value: unknown): DailyQuests | null {
+  if (value === null) return null;
+  if (!isRecord(value) || !isCount(value.day) || !Array.isArray(value.items)) {
+    throw new TypeError("sauvegarde invalide : quêtes");
+  }
+  const items = value.items.map((entry: unknown) => {
+    if (!isRecord(entry)) throw new TypeError("sauvegarde invalide : quête");
+    const id = QUEST_IDS.find((known) => known === entry.id);
+    const { target, progress, challenge, claimed } = entry;
+    if (
+      id === undefined ||
+      !isCount(target) ||
+      target < 1 ||
+      !isCount(progress) ||
+      progress > target ||
+      typeof challenge !== "boolean" ||
+      typeof claimed !== "boolean"
+    ) {
+      throw new TypeError("sauvegarde invalide : quête");
+    }
+    return { id, target, progress, challenge, claimed };
+  });
+  return { day: value.day, items };
+}
+
 /** Vrai pour une sauvegarde d'avant la carte : il faudra lui donner une place dans la goutte. */
 export function needsWorldPlace(text: string): boolean {
   const raw: unknown = JSON.parse(text);
@@ -355,12 +403,13 @@ export function needsWorldPlace(text: string): boolean {
  */
 export function deserializeState(text: string, world?: WorldPlace): PlayerState {
   const raw: unknown = JSON.parse(text);
-  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3)) {
+  const version = raw !== null && isRecord(raw) ? raw.version : undefined;
+  if (!isRecord(raw) || typeof version !== "number" || ![1, 2, 3, 4].includes(version)) {
     throw new TypeError("sauvegarde invalide : version");
   }
-  const old = raw.version === 1;
+  const old = version === 1;
   /** Sauvegarde d'avant la chasse : ni protéines, ni Pouponnière, ni cellules filles. */
-  const beforeHunt = raw.version !== 3;
+  const beforeHunt = version < 3;
   const { seed, rngState, seasonStart, now, tier, tapBudgetAt } = raw;
   if (
     !isCount(seed) ||
@@ -378,7 +427,9 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     throw new TypeError("sauvegarde invalide : carte");
   }
   return {
-    version: 3,
+    version: 4,
+    // Avant les quêtes : le joueur en recevra dès que le temps avancera.
+    quests: version < 4 ? null : readQuests(raw.quests),
     troops: beforeHunt ? fill(TROOP_IDS, 0) : readCounts(TROOP_IDS, raw.troops),
     training: beforeHunt ? null : readTraining(raw.training),
     hunt: beforeHunt ? null : readHunt(raw.hunt),

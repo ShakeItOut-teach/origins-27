@@ -84,6 +84,9 @@ export interface Report {
   readonly secondMutationSeconds: number | null;
   readonly huntsWon: number;
   readonly huntsLost: number;
+  /** Coffres de quêtes ouverts, dont ceux des défis. */
+  readonly chestsOpened: number;
+  readonly challengeChestsOpened: number;
   /** Le plus petit nombre de cellules filles qu'il lui soit resté après une chasse. */
   readonly fewestTroopsAfterHunt: number | null;
   /** Énergie restante à la fin. */
@@ -116,6 +119,8 @@ export function simulate(
   let firstHuntWonSeconds: number | null = null;
   let secondMutationSeconds: number | null = null;
   let huntsLost = 0;
+  let chestsOpened = 0;
+  let challengeChestsOpened = 0;
   let fewestTroops: number | null = null;
   let clock = 0;
   let mutationSeconds: number | null = null;
@@ -131,6 +136,10 @@ export function simulate(
       if (event.type === "expeditionReturned" && "lost" in event && "gained" in event) {
         lootLost += Number(event.lost);
         lootGained += Number(event.gained);
+      }
+      if (event.type === "chestOpened" && "challenge" in event) {
+        chestsOpened += 1;
+        if (event.challenge === true) challengeChestsOpened += 1;
       }
       if (event.type === "huntReturned" && "won" in event && "cancelled" in event) {
         if (event.cancelled === true) continue;
@@ -185,6 +194,12 @@ export function simulate(
     }
 
     if (second % profile.decisionEverySeconds === 0) {
+      // Le robot ouvre ses coffres dès qu'une quête est finie.
+      (state.quests?.items ?? []).forEach((quest, index) => {
+        if (!quest.claimed && quest.progress >= quest.target) {
+          if (send({ type: "claimQuest", index }, now)) acted = true;
+        }
+      });
       const [choice] = state.mutationOffer ?? [];
       if (choice !== undefined && send({ type: "chooseMutation", mutation: choice }, now)) {
         if (mutationSeconds !== null) secondMutationSeconds ??= second;
@@ -311,6 +326,8 @@ export function simulate(
     secondMutationSeconds,
     huntsWon: state.counters.huntsWon,
     huntsLost,
+    chestsOpened,
+    challengeChestsOpened,
     fewestTroopsAfterHunt: fewestTroops,
     energyLeft: state.energy,
     lootGained: Math.floor(lootGained / 1_000_000),

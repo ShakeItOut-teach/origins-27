@@ -59,6 +59,7 @@ export const ORDER_TYPES = [
   "strikeHunt",
   "cancelHunt",
   "buyMutation",
+  "claimQuest",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
@@ -80,6 +81,36 @@ export const STRONG_AGAINST: Readonly<Record<TroopId, PreyKind>> = {
   armored: "aggressive",
   swift: "fleeing",
 };
+
+/**
+ * Les quêtes du jour. Chacune rappelle un geste du jeu ; les dernières sont des défis,
+ * facultatifs et mieux récompensés. Pour en ajouter une : un nom ici, une ligne dans
+ * l'équilibrage, un texte, et la règle de progression dans le moteur.
+ */
+export const QUEST_IDS = [
+  "tapSugar",
+  "build",
+  "upgradeStore",
+  "expeditions",
+  "bricksFromMap",
+  "sugarFromMap",
+  "farExpedition",
+  "trainCells",
+  "winHunts",
+  "strikeWin",
+  "cleanHunt",
+  "mutate",
+  "challengeFarHunt",
+  "challengeHunts",
+  "challengeExpeditions",
+  "challengeStrikes",
+  "challengeCleanHunts",
+] as const;
+export type QuestId = (typeof QUEST_IDS)[number];
+
+/** Ce qu'un coffre peut contenir. */
+export const CHEST_REWARDS = ["sugar", "bricks", "proteins", "energy"] as const;
+export type ChestReward = (typeof CHEST_REWARDS)[number];
 
 /** Les éléments d'interface soumis au déblocage. */
 export const UI_ELEMENT_IDS = [

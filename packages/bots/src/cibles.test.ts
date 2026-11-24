@@ -164,3 +164,27 @@ describe("cibles d'équilibrage du palier 4 (troupes et chasse)", () => {
     }
   });
 });
+
+describe("cibles des quêtes du jour", () => {
+  it("un joueur appliqué ouvre au moins deux coffres dans ses six premières heures", () => {
+    for (const seed of SEEDS) {
+      const report = simulate(PROFILES.applique, seed, 6 * HOUR, { huntsWon: 99 });
+      expect(report.chestsOpened).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("un débutant en ouvre au moins un : les quêtes ne sont pas réservées aux meilleurs", () => {
+    for (const seed of SEEDS) {
+      const report = simulate(PROFILES.debutant, seed, 6 * HOUR, { huntsWon: 99 });
+      expect(report.chestsOpened).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("le défi reste un défi : il n'est pas réussi par tout le monde dès le premier jour", () => {
+    const wins = SEEDS.filter(
+      (seed) =>
+        simulate(PROFILES.debutant, seed, 6 * HOUR, { huntsWon: 99 }).challengeChestsOpened > 0,
+    ).length;
+    expect(wins).toBeLessThan(SEEDS.length);
+  });
+});

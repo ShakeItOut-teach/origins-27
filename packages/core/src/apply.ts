@@ -5,6 +5,7 @@ import { advance } from "./advance";
 import { capacity, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
 import { partySize, resolveHunt, troopCapacity, troopsOwned } from "./hunt";
+import { openChest, trackQuests } from "./quests";
 import { MICRO } from "./types";
 import { drawMutationOffer, orderTier } from "./unlock";
 import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
@@ -239,6 +240,14 @@ function buyMutation(state: PlayerState): Outcome {
   };
 }
 
+function claimQuest(state: PlayerState, index: number): Outcome {
+  const quest = state.quests?.items[index];
+  if (quest === undefined) return { error: "noQuest" };
+  if (quest.claimed) return { error: "alreadyClaimed" };
+  if (quest.progress < quest.target) return { error: "questNotDone" };
+  return openChest(state, index, state.now);
+}
+
 function execute(state: PlayerState, order: Order): Outcome {
   switch (order.type) {
     case "harvest":
@@ -263,6 +272,8 @@ function execute(state: PlayerState, order: Order): Outcome {
       return cancelHunt(state);
     case "buyMutation":
       return buyMutation(state);
+    case "claimQuest":
+      return claimQuest(state, order.index);
   }
 }
 
@@ -277,7 +288,7 @@ export function applyOrder(state: PlayerState, order: Order, now: number): Order
   const outcome = execute(before.state, order);
   if ("error" in outcome) return { ok: false, error: outcome.error };
   // Une expédition rappelée tout près de la cellule peut rentrer dans la même milliseconde.
-  const after = advance(outcome.state, now);
+  const after = advance(trackQuests(outcome.state, outcome.events), now);
   return {
     ok: true,
     state: after.state,

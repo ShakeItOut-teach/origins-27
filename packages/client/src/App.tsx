@@ -9,7 +9,7 @@ import {
 } from "@o27/core";
 import type { AbsenceSummary, PlayerState } from "@o27/core";
 import { BALANCE, MAX_RELEASED_TIER, MUTATION_IDS, ORGANELLE_IDS, RESOURCE_IDS } from "@o27/data";
-import type { MutationId, Order, OrganelleId, ResourceId, TextKey } from "@o27/data";
+import type { ChestReward, MutationId, Order, OrganelleId, ResourceId, TextKey } from "@o27/data";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
 import type { Account } from "./game/api";
@@ -20,6 +20,7 @@ import { isVisible } from "./game/unlock";
 import { AccountSheet } from "./ui/AccountSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
+import { QuestSheet } from "./ui/QuestSheet";
 import { TroopPanel } from "./ui/TroopPanel";
 
 interface Props {
@@ -49,6 +50,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [view, setView] = useState<"cell" | "map">("cell");
   /** Butin perdu au dernier retour, faute de place : on le dit, une fois. */
   const [loss, setLoss] = useState<{ resource: ResourceId; amount: number } | null>(null);
+  const [questsOpen, setQuestsOpen] = useState(false);
+  /** Contenu du dernier coffre ouvert. */
+  const [chest, setChest] = useState<Readonly<Partial<Record<ChestReward, number>>> | null>(null);
   /** Résultat de la dernière chasse rentrée. */
   const [huntNote, setHuntNote] = useState<{
     won: boolean;
@@ -76,6 +80,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           if (event.type === "expeditionReturned" && event.lost >= MICRO) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
+          if (event.type === "chestOpened") setChest(event.loot);
           if (event.type === "huntReturned" && !event.cancelled) {
             setHuntNote({ won: event.won, gained: event.gained, losses: event.losses });
           }
@@ -115,6 +120,11 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
     hunt !== null && !hunt.cancelled && hunt.outcome === null && state.now >= hunt.arrivesAt
       ? hunt.resolveAt - state.now
       : null;
+  const quests = show("dailyQuests") ? state.quests : null;
+  const chestsReady = (quests?.items ?? []).filter(
+    (quest) => !quest.claimed && quest.progress >= quest.target,
+  ).length;
+  const questsDone = (quests?.items ?? []).filter((quest) => quest.progress >= quest.target).length;
   const mutationPrice = nextMutationPrice(state);
   const canMutate =
     show("hunt") && state.mutationOffer === null && state.mutations.length < MUTATION_IDS.length;
@@ -260,6 +270,66 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               {t(`view.${id}`)}
             </button>
           ))}
+        </div>
+      )}
+
+      {quests !== null && (
+        <button
+          type="button"
+          className={`quests-open${chestsReady > 0 ? " has-chest" : ""}`}
+          data-testid="quests-open"
+          onClick={() => {
+            setQuestsOpen(true);
+          }}
+        >
+          {t("label.quests")} · {questsDone}/{quests.items.length}
+          {chestsReady > 0 && (
+            <span className="badge">
+              {t("label.chestReady")} {chestsReady}
+            </span>
+          )}
+        </button>
+      )}
+      {quests !== null && questsOpen && (
+        <QuestSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setQuestsOpen(false);
+          }}
+          onOrder={(order) => {
+            store.send(order);
+          }}
+        />
+      )}
+
+      {chest !== null && (
+        <div className="loss is-good is-chest" role="status" data-testid="chest-note">
+          <strong>{t("chest.title")}</strong>
+          <span className="chest-loot">
+            {(["sugar", "bricks", "proteins"] as const)
+              .filter((id) => chest[id] !== undefined)
+              .map((id) => (
+                <span key={id}>
+                  <ResourceIcon id={id} />+{chest[id]}
+                </span>
+              ))}
+            {chest.energy !== undefined && (
+              <span>
+                <EnergyIcon />+{chest.energy} {t("chest.energy")}
+              </span>
+            )}
+          </span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setChest(null);
+            }}
+          >
+            ×
+          </button>
         </div>
       )}
 
