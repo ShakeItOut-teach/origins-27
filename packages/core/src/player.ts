@@ -48,6 +48,7 @@ export function createPlayer(
     spiedUntil: {},
     shieldUntil: 0,
     nextRaidAt: null,
+    awayReadyAt: 0,
     worldSeed: (world?.worldSeed ?? seed) >>> 0,
     slot: world?.slot ?? 0,
     energy: BALANCE.energy.max,
@@ -228,6 +229,7 @@ export function serializeState(state: PlayerState): string {
     ),
     shieldUntil: state.shieldUntil,
     nextRaidAt: state.nextRaidAt,
+    awayReadyAt: state.awayReadyAt,
     troops: pick(TROOP_IDS, state.troops),
     training:
       state.training === null
@@ -535,6 +537,8 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     spiedUntil: version < 5 ? {} : readPlaceTimes(raw.spiedUntil),
     shieldUntil: version < 5 || !isCount(raw.shieldUntil) ? 0 : raw.shieldUntil,
     nextRaidAt: version < 5 || !isCount(raw.nextRaidAt) ? null : raw.nextRaidAt,
+    // Une sauvegarde d'avant le mode absent ne l'a jamais utilisé.
+    awayReadyAt: isCount(raw.awayReadyAt) ? raw.awayReadyAt : 0,
     // Avant les quêtes : le joueur en recevra dès que le temps avancera.
     quests: version < 4 ? null : readQuests(raw.quests),
     troops: beforeHunt ? fill(TROOP_IDS, 0) : readCounts(TROOP_IDS, raw.troops),

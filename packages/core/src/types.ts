@@ -160,6 +160,8 @@ export interface PlayerState {
   readonly shieldUntil: number;
   /** Instant de la prochaine attaque subie ; `null` avant le palier des rivaux. */
   readonly nextRaidAt: number | null;
+  /** Instant à partir duquel le mode absent peut être repris. */
+  readonly awayReadyAt: number;
 }
 
 export type GameEvent =
@@ -273,6 +275,7 @@ export type GameEvent =
       readonly rival: string;
       readonly sugar: number;
       readonly bricks: number;
+      readonly proteins: number;
       readonly troopsLost: number;
     };
 
@@ -309,7 +312,8 @@ export type OrderErrorCode =
   | "unknownRival"
   | "rivalClosed"
   | "alreadySpied"
-  | "noRaid";
+  | "noRaid"
+  | "awayResting";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

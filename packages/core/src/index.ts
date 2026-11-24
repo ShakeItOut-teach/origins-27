@@ -29,7 +29,7 @@ export {
 } from "./hunt";
 export type { Party } from "./hunt";
 export { drawQuests, questIsAmount, questsRenewAt } from "./quests";
-export { defensePower, raidChance, raidOffer, rivalStats, visibleRivals } from "./rivals";
+export { defensePower, loadLoot, raidChance, raidOffer, rivalStats, visibleRivals } from "./rivals";
 export type { RaidOffer, Rival, RivalStats } from "./rivals";
 export { evaluateTier, orderTier, seasonDay } from "./unlock";
 export {

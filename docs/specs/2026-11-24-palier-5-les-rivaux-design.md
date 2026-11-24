@@ -96,3 +96,21 @@ gagner plusieurs attaques (défis, donc gros coffre) — ce que le propriétaire
 
 Vrais joueurs contre vrais joueurs, classement, ligues, gazette, alliances, vengeance,
 messages entre joueurs.
+
+## Révision du 24 novembre 2026 (décisions du propriétaire)
+
+Ces règles remplacent celles du dessus quand elles se contredisent.
+
+- **Butin** : le vainqueur repart avec tout ce que ses survivantes peuvent porter. Le sucre et
+  les briques d'abord ; les protéines en dernier, et jamais plus de 20 % de celles de la victime.
+  La même règle vaut quand le joueur est attaqué.
+- **Protections** : 12 heures à l'arrivée, 1 heure après une attaque subie. **Attaquer fait
+  tomber toute protection.**
+- **Mode absent** : 3 jours de protection, à la demande. Attaquer y met fin. Il ne peut être
+  repris qu'un jour après sa fin prévue.
+- **Le toucher** : une bulle de protéines s'échappe du combat. Il faut l'attraper avant qu'elle
+  sorte de l'écran (moins de 2 secondes, deux bulles par combat). Elle ajoute 15 points de chance.
+- **Force des rivaux** : elle grandit deux fois moins vite, pour qu'un joueur qui fait naître
+  des cellules reste capable de piller jusqu'à la fin de la saison.
+- **Prévenir l'attaqué** : une note à l'écran, et une ligne dans le résumé d'absence. Les
+  notifications sur le téléphone ne sont pas encore faites.

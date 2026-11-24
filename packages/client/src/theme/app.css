@@ -1120,3 +1120,65 @@ p {
 .counters:has(.counter-energy):has([data-testid="counter-proteins"]) {
   margin-top: var(--space-5);
 }
+
+/* La bulle à attraper pendant une attaque */
+.strike.is-hint {
+  cursor: default;
+  animation: none;
+  pointer-events: none;
+}
+
+.bubble {
+  position: fixed;
+  left: calc(50% - 32px);
+  top: calc(45% - 32px);
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: var(--line);
+  border-radius: 50%;
+  box-shadow: var(--shadow-big);
+  background: var(--paper);
+  color: var(--eosin);
+  cursor: pointer;
+  touch-action: none;
+  animation: bubble-fly linear both;
+}
+
+.bubble svg {
+  width: 30px;
+  height: 30px;
+}
+
+@keyframes bubble-fly {
+  from {
+    transform: translate(0, 0) scale(0.6);
+  }
+
+  15% {
+    transform: translate(calc(var(--bubble-x) * 0.1), calc(var(--bubble-y) * 0.1)) scale(1);
+  }
+
+  to {
+    transform: translate(var(--bubble-x), var(--bubble-y)) scale(1);
+  }
+}
+
+.away-hint {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.sheet-building.is-warning {
+  color: var(--eosin);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: none;
+    transform: translate(calc(var(--bubble-x) * 0.35), calc(var(--bubble-y) * 0.35));
+  }
+}

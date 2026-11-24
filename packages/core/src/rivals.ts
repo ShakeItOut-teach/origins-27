@@ -113,8 +113,11 @@ export function raidOffer(state: PlayerState, rival: Rival, at: number): RaidOff
   const raid = BALANCE.rivals.raid;
   const seconds =
     (rival.far ? raid.farSeconds : raid.nearSeconds) + BALANCE.hunt.strikeWindowSeconds;
+  const stats = rivalStats(rival, seasonDay(state, at));
   return {
-    ...rivalStats(rival, seasonDay(state, at)),
+    ...stats,
+    // On ne peut jamais prendre qu'une part des protéines d'un organisme.
+    proteins: Math.floor((stats.proteins * raid.proteinSharePercent) / 100),
     energy: raid.energy,
     durationMs: seconds * 1000,
     restMs: raid.restHours * HOUR_MS,
@@ -148,6 +151,32 @@ export function resolveRaid(state: PlayerState, raid: Raid, at: number, struck: 
   };
 }
 
+export interface Loot {
+  readonly sugar: number;
+  readonly bricks: number;
+  readonly proteins: number;
+}
+
+/**
+ * Ce qu'un groupe emporte : tout ce qu'il peut porter. Une brique pèse deux sucres. Le sucre
+ * et les briques se partagent la charge ; les protéines ne se chargent qu'en dernier, s'il
+ * reste de la place.
+ */
+export function loadLoot(carry: number, available: Loot): Loot {
+  const raid = BALANCE.rivals.raid;
+  const weight = available.sugar + 2 * available.bricks;
+  const share = (amount: number): number =>
+    weight <= carry ? amount : Math.floor((amount * carry) / weight);
+  const sugar = share(available.sugar);
+  const bricks = share(available.bricks);
+  const left = Math.max(0, carry - sugar - 2 * bricks);
+  return {
+    sugar,
+    bricks,
+    proteins: Math.min(available.proteins, Math.floor(left / raid.proteinWeight)),
+  };
+}
+
 /** Le groupe d'attaque est rentré : survivantes à la maison, butin dans la réserve. */
 export function raidBack(
   state: PlayerState,
@@ -162,14 +191,9 @@ export function raidBack(
   // Chaque survivante porte une charge limitée ; une brique pèse deux sucres.
   const survivors = partySize(raid.party) - partySize(losses);
   const carry = survivors * BALANCE.rivals.raid.carryPerCell * MICRO;
-  const weight = raid.sugar + 2 * raid.bricks;
-  const share = (amount: number): number =>
-    !won ? 0 : weight <= carry ? amount : Math.floor((amount * carry) / weight);
-  const taken = {
-    sugar: share(raid.sugar),
-    bricks: share(raid.bricks),
-    proteins: share(raid.proteins),
-  };
+  const taken = won
+    ? loadLoot(carry, { sugar: raid.sugar, bricks: raid.bricks, proteins: raid.proteins })
+    : { sugar: 0, bricks: 0, proteins: 0 };
   const gained = {
     sugar: Math.min(Math.max(0, room.sugar), taken.sugar),
     bricks: Math.min(Math.max(0, room.bricks), taken.bricks),
@@ -223,6 +247,29 @@ function nextDelay(state: PlayerState, at: number): number {
   return minutes * 60_000;
 }
 
+/** Attaquer fait tomber toute protection : les rivaux peuvent revenir plus tôt. */
+export function dropShield(state: PlayerState, at: number): PlayerState {
+  if (state.shieldUntil <= at) return state;
+  const soon = at + nextDelay(state, at);
+  return {
+    ...state,
+    shieldUntil: at,
+    nextRaidAt: state.nextRaidAt === null ? null : Math.min(state.nextRaidAt, soon),
+  };
+}
+
+/** Mode absent : une longue protection. On ne peut la reprendre qu'après un délai. */
+export function goAway(state: PlayerState, at: number): PlayerState {
+  const away = BALANCE.rivals.away;
+  const shieldUntil = at + away.hours * HOUR_MS;
+  return {
+    ...state,
+    shieldUntil,
+    nextRaidAt: shieldUntil + nextDelay(state, at),
+    awayReadyAt: shieldUntil + away.restHours * HOUR_MS,
+  };
+}
+
 /** Protège un joueur qui arrive au palier des rivaux et programme la première attaque. */
 export function ensureIncoming(state: PlayerState, at: number): PlayerState {
   if (state.nextRaidAt !== null || state.tier < BALANCE.organelles.wall.tier) return state;
@@ -251,9 +298,14 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
     };
   }
 
+  // L'attaquant repart avec tout ce que ses survivantes peuvent porter : la moitié des siennes.
   const incoming = BALANCE.rivals.incoming;
-  const sugar = Math.floor((state.resources.sugar * incoming.lossPercent) / 100);
-  const bricks = Math.floor((state.resources.bricks * incoming.lossPercent) / 100);
+  const raid = BALANCE.rivals.raid;
+  const { sugar, bricks, proteins } = loadLoot(Math.ceil(attack / 2) * raid.carryPerCell * MICRO, {
+    sugar: state.resources.sugar,
+    bricks: state.resources.bricks,
+    proteins: Math.floor((state.resources.proteins * raid.proteinSharePercent) / 100),
+  });
   const troops: Record<TroopId, number> = { ...state.troops };
   let toLose = Math.floor((partySize(troops) * incoming.troopLossPercent) / 100);
   const troopsLost = toLose;
@@ -270,6 +322,7 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
     rival: attacker.id,
     sugar,
     bricks,
+    proteins,
     troopsLost,
   };
   return {
@@ -278,9 +331,9 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
       counters,
       troops,
       resources: {
-        ...state.resources,
         sugar: state.resources.sugar - sugar,
         bricks: state.resources.bricks - bricks,
+        proteins: state.resources.proteins - proteins,
       },
       shieldUntil,
       nextRaidAt: shieldUntil + nextDelay(state, at),

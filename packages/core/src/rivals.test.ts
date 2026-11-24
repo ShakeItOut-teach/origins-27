@@ -9,6 +9,7 @@ import {
   DAY_MS,
   defensePower,
   deserializeState,
+  loadLoot,
   MICRO,
   partySize,
   raidChance,
@@ -354,7 +355,8 @@ describe("être attaqué", () => {
     expect(step.state.nextRaidAt).toBeGreaterThan(due);
   });
 
-  it("attaque subie : un cinquième du sucre et des briques, jamais les protéines, puis protection", () => {
+  it("attaque subie : l'attaquant emporte ce qu'il peut porter, les protéines en dernier, puis une heure de protection", () => {
+    const RAID = BALANCE.rivals.raid;
     let suffered = 0;
     for (let seed = 1; seed <= 60; seed++) {
       const state = atTier5({ hunter: 5 }, seed);
@@ -364,19 +366,81 @@ describe("être attaqué", () => {
       const event = step.events.find((entry) => entry.type === "attackSuffered");
       if (event?.type !== "attackSuffered") continue;
       suffered += 1;
-      const loss = INCOMING.lossPercent;
-      expect(event.sugar).toBe(Math.floor((before.resources.sugar * loss) / 100));
+      const attacker = visibleRivals(state.worldSeed, state.slot).find(
+        (entry) => entry.id === event.rival,
+      );
+      if (attacker === undefined) throw new Error("attaquant inconnu");
+      const attack = rivalStats(
+        attacker,
+        1 + Math.floor((due - state.seasonStart) / (24 * HOUR)),
+      ).attack;
+      const carry = Math.ceil(attack / 2) * RAID.carryPerCell * MICRO;
+      const weight = event.sugar + 2 * event.bricks + RAID.proteinWeight * event.proteins;
+      expect(weight).toBeLessThanOrEqual(carry);
+      expect(event.sugar + event.bricks).toBeGreaterThan(0);
+      expect(event.proteins).toBeLessThanOrEqual(
+        Math.floor((before.resources.proteins * RAID.proteinSharePercent) / 100),
+      );
       expect(step.state.resources.sugar).toBe(before.resources.sugar - event.sugar);
       expect(step.state.resources.bricks).toBe(before.resources.bricks - event.bricks);
-      expect(step.state.resources.proteins).toBe(before.resources.proteins);
+      expect(step.state.resources.proteins).toBe(before.resources.proteins - event.proteins);
       expect(partySize(step.state.troops)).toBe(5 - event.troopsLost);
       expect(event.troopsLost).toBe(Math.floor((5 * INCOMING.troopLossPercent) / 100));
       expect(step.state.shieldUntil).toBe(due + INCOMING.shieldHours * HOUR);
+      expect(INCOMING.shieldHours).toBe(1);
       expect(step.state.nextRaidAt).toBeGreaterThanOrEqual(
         step.state.shieldUntil + INCOMING.minHours * HOUR,
       );
     }
     expect(suffered).toBeGreaterThan(5);
+  });
+
+  it("le butin : sucre et briques d'abord, les protéines seulement s'il reste de la place", () => {
+    const RAID = BALANCE.rivals.raid;
+    const stock = { sugar: 100 * MICRO, bricks: 50 * MICRO, proteins: 10 * MICRO };
+    // Trop peu de charge : rien pour les protéines.
+    const small = loadLoot(100 * MICRO, stock);
+    expect(small.proteins).toBe(0);
+    expect(small.sugar + 2 * small.bricks).toBeLessThanOrEqual(100 * MICRO);
+    expect(small.sugar).toBeGreaterThan(0);
+    expect(small.bricks).toBeGreaterThan(0);
+    // Assez de charge pour tout le sucre et toutes les briques, et un peu de protéines.
+    const medium = loadLoot((200 + 2 * RAID.proteinWeight) * MICRO, stock);
+    expect(medium).toEqual({ sugar: 100 * MICRO, bricks: 50 * MICRO, proteins: 2 * MICRO });
+    // Charge énorme : on ne prend jamais plus que ce qu'il y a.
+    expect(loadLoot(100_000 * MICRO, stock)).toEqual(stock);
+  });
+
+  it("attaquer fait tomber la protection, et les rivaux peuvent revenir plus tôt", () => {
+    const state = atTier5({ hunter: 6 });
+    expect(state.shieldUntil).toBeGreaterThan(T0);
+    const sent = ok(state, raid(rival(), party({ hunter: 6 })), T0);
+    expect(sent.shieldUntil).toBe(T0);
+    expect(sent.nextRaidAt).toBeLessThanOrEqual(T0 + INCOMING.maxHours * HOUR);
+    expect(sent.nextRaidAt).toBeGreaterThanOrEqual(T0 + INCOMING.minHours * HOUR);
+    // Espionner, en revanche, ne coûte pas la protection.
+    const spied = ok(state, { type: "spyRival", rival: rival().id }, T0);
+    expect(spied.shieldUntil).toBe(state.shieldUntil);
+  });
+
+  it("mode absent : trois jours de protection, perdus à la première attaque, puis un délai", () => {
+    const AWAY = BALANCE.rivals.away;
+    const state = atTier5({ hunter: 6 });
+    const away = ok(state, { type: "goAway" }, T0);
+    expect(away.shieldUntil).toBe(T0 + AWAY.hours * HOUR);
+    expect(away.nextRaidAt).toBeGreaterThanOrEqual(away.shieldUntil + INCOMING.minHours * HOUR);
+    const quiet = advance(away, away.shieldUntil);
+    expect(attacks(quiet.events)).toHaveLength(0);
+    // On ne peut pas le reprendre tout de suite, même une fois fini.
+    expect(refusal(away, { type: "goAway" }, T0 + HOUR)).toBe("awayResting");
+    expect(refusal(quiet.state, { type: "goAway" }, away.shieldUntil)).toBe("awayResting");
+    const rested = away.shieldUntil + AWAY.restHours * HOUR;
+    expect(refusal(advance(away, rested).state, { type: "goAway" }, rested)).toBeNull();
+    // Attaquer pendant le mode absent y met fin, sans rendre le droit de le reprendre.
+    const sent = ok(away, raid(rival(), party({ hunter: 6 })), T0 + HOUR);
+    expect(sent.shieldUntil).toBe(T0 + HOUR);
+    expect(refusal(sent, { type: "goAway" }, T0 + HOUR)).toBe("busy");
+    expect(deserializeState(serializeState(away))).toEqual(away);
   });
 
   it("une bonne défense repousse bien plus souvent qu'une cellule nue", () => {

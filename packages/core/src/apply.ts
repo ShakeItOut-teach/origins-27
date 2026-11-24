@@ -6,7 +6,7 @@ import { capacity, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
 import { partySize, resolveHunt, troopCapacity, troopsOwned } from "./hunt";
 import { openChest, trackQuests } from "./quests";
-import { raidOffer, resolveRaid, visibleRivals } from "./rivals";
+import { dropShield, goAway, raidOffer, resolveRaid, visibleRivals } from "./rivals";
 import { MICRO } from "./types";
 import { drawMutationOffer, orderTier } from "./unlock";
 import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
@@ -279,7 +279,8 @@ function sendRaid(
   for (const id of TROOP_IDS) troops[id] -= party[id];
   return {
     state: {
-      ...state,
+      // Qui attaque n'est plus protégé.
+      ...dropShield(state, state.now),
       energy: state.energy - offer.energy,
       troops,
       raid: {
@@ -329,6 +330,13 @@ function cancelRaid(state: PlayerState): Outcome {
   };
 }
 
+/** Passer en mode absent. Impossible avec un groupe parti attaquer, ou trop tôt après le précédent. */
+function startAway(state: PlayerState): Outcome {
+  if (state.raid !== null) return { error: "busy" };
+  if (state.awayReadyAt > state.now) return { error: "awayResting" };
+  return { state: goAway(state, state.now), events: [] };
+}
+
 function claimQuest(state: PlayerState, index: number): Outcome {
   const quest = state.quests?.items[index];
   if (quest === undefined) return { error: "noQuest" };
@@ -371,6 +379,8 @@ function execute(state: PlayerState, order: Order): Outcome {
       return strikeRaid(state);
     case "cancelRaid":
       return cancelRaid(state);
+    case "goAway":
+      return startAway(state);
   }
 }
 

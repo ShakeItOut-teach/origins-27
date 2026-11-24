@@ -190,3 +190,34 @@ pile, pas « au retour du joueur » : c'était un défaut, révélé par les tes
 - La garde des rivaux grandit de 4 par jour : au jour 20, un rival moyen a une garde de 84,
   hors de portée d'une Pouponnière de niveau 5 (30 cellules, 60 de force au mieux). C'est
   voulu comme plafond provisoire, mais il faudra des troupes plus fortes ou des alliés avant.
+
+## 2026-11-24 — Les rivaux, revus pour le pillage (décisions du propriétaire)
+
+Le propriétaire veut que le jeu soit aimé pour ses combats entre joueurs. Les règles changent :
+
+| Réglage                            | Avant                        | Après                                              |
+| ---------------------------------- | ---------------------------- | -------------------------------------------------- |
+| Garde d'un rival                   | 8 + 4 par jour               | 6 + 2 par jour                                     |
+| Attaque d'un rival                 | 5 + 3 par jour               | 4 + 2 par jour                                     |
+| Butin en sucre d'un rival          | 120 + 40 par jour            | 150 + 60 par jour                                  |
+| Butin en briques                   | 60 + 20 par jour             | 80 + 30 par jour                                   |
+| Protéines d'un rival               | 6 + 2 (tout)                 | 40 + 15 de réserve, dont 20 % au plus à prendre    |
+| Charge d'une cellule               | 40                           | 50                                                 |
+| Rival fermé après un pillage       | 6 h                          | 2 h                                                |
+| Protection après une attaque subie | 8 h                          | 1 h                                                |
+| Ce que prend une attaque subie     | 20 % du sucre et des briques | tout ce que les survivantes de l'attaquant portent |
+| Protéines volées chez le joueur    | jamais                       | en dernier, 20 % au plus                           |
+| Attaquer quand on est protégé      | sans effet                   | fait tomber la protection                          |
+| Mode absent                        | n'existait pas               | 3 jours de protection, puis 1 jour d'attente       |
+
+Au jour 27, un rival moyen a 58 de garde (41 à 75 selon son tempérament) : trente cellules du
+bon type en valent 60. Avant, il en avait 112.
+
+Mesure (robot appliqué, 3 jours, graine 1) : 3 attaques envoyées avant, 74 après (54 gagnées,
+20 perdues), une fois que le robot garde 2 points d'énergie pour attaquer.
+
+Le toucher devient une bulle de protéines : deux bulles par combat, visibles 1,8 seconde
+chacune, qui filent du centre vers le bord de l'écran. En attraper une ajoute 15 points de chance.
+
+Reste à régler : la réserve plafonne le butin (le robot perd encore une part de ce qu'il
+rapporte), donc piller ne rend pas encore plus riche que produire.

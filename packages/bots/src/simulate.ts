@@ -277,6 +277,14 @@ export function simulate(
       }
       // Rivaux : le robot attaque le voisin ouvert contre lequel il a le plus de chances,
       // s'il en a au moins une sur deux. Sinon il continue de chasser.
+      // Tant qu'un rival est ouvert, il garde de quoi l'attaquer : le pillage passe avant le reste.
+      const raidReserve =
+        state.tier >= 5 &&
+        visibleRivals(state.worldSeed, state.slot).some(
+          (rival) => (state.placeReadyAt[rival.id] ?? 0) <= now,
+        )
+          ? BALANCE.rivals.raid.energy
+          : 0;
       if (state.tier >= 5 && state.hunt === null && state.raid === null) {
         let best: { id: string; chance: number } | null = null;
         for (const rival of visibleRivals(state.worldSeed, state.slot)) {
@@ -324,7 +332,7 @@ export function simulate(
             state.hunt === null &&
             state.raid === null &&
             ready &&
-            state.energy >= offer.energy &&
+            state.energy >= offer.energy + raidReserve &&
             send({ type: "sendHunt", prey: prey.id, party: state.troops }, now)
           ) {
             firstHuntSeconds ??= second;
@@ -336,7 +344,8 @@ export function simulate(
       if (state.tier >= 3 && state.expedition === null) {
         const open = visiblePlaces(state.worldSeed, state.slot).filter(
           (place) =>
-            (state.placeReadyAt[place.id] ?? 0) <= now && placeOffer(place).energy <= state.energy,
+            (state.placeReadyAt[place.id] ?? 0) <= now &&
+            placeOffer(place).energy <= state.energy - raidReserve,
         );
         const fits = open.find((place) => {
           const offer = placeOffer(place);

@@ -35,6 +35,7 @@ export function RivalsView({ state, lang, onOrder }: Props) {
   const raid = state.raid;
   const shieldLeft = state.shieldUntil - state.now;
   const open = rivals.find((rival) => rival.id === selected) ?? null;
+  const awayRest = state.awayReadyAt - state.now;
 
   return (
     <section className="rivals" data-testid="rivals">
@@ -47,6 +48,28 @@ export function RivalsView({ state, lang, onOrder }: Props) {
             ? `${t("label.shield")} ${formatAway(shieldLeft, lang)}`
             : t("label.nextRaid")}
         </p>
+        {awayRest > 0 ? (
+          shieldLeft <= 0 && (
+            <p className="away-hint" data-testid="away-rest">
+              {t("label.awayResting")} {formatAway(awayRest, lang)}
+            </p>
+          )
+        ) : (
+          <>
+            <button
+              type="button"
+              className="button button-quiet"
+              disabled={raid !== null}
+              data-testid="away"
+              onClick={() => {
+                onOrder({ type: "goAway" });
+              }}
+            >
+              {t("action.away")}
+            </button>
+            <p className="away-hint">{t("label.awayHint")}</p>
+          </>
+        )}
       </div>
 
       <ul className="rival-list">
@@ -289,6 +312,11 @@ function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps) {
             {blocked !== null && (
               <p className="sheet-building" data-testid="rival-status">
                 {blocked}
+              </p>
+            )}
+            {blocked === null && state.shieldUntil > state.now && (
+              <p className="sheet-building is-warning" data-testid="shield-drop">
+                {t("label.shieldDrop")}
               </p>
             )}
             <button

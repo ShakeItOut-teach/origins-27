@@ -22,6 +22,7 @@ import { AccountSheet } from "./ui/AccountSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
 import { QuestSheet } from "./ui/QuestSheet";
+import { RaidBubble } from "./ui/RaidBubble";
 import { RivalsView } from "./ui/RivalsView";
 import { TroopPanel } from "./ui/TroopPanel";
 
@@ -62,6 +63,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
     repelled: boolean;
     sugar: number;
     bricks: number;
+    proteins: number;
     troopsLost: number;
   } | null>(null);
   /** Butin perdu au dernier retour, faute de place : on le dit, une fois. */
@@ -105,6 +107,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               repelled: true,
               sugar: 0,
               bricks: 0,
+              proteins: 0,
               troopsLost: 0,
             });
           }
@@ -114,6 +117,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               repelled: false,
               sugar: event.sugar,
               bricks: event.bricks,
+              proteins: event.proteins,
               troopsLost: event.troopsLost,
             });
           }
@@ -426,20 +430,26 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       )}
 
       {raidStrikeLeft !== null && (
-        <button
-          type="button"
-          className="strike"
-          data-testid="strike-raid"
-          onClick={() => {
-            store.send({ type: "strikeRaid" });
-          }}
-        >
-          <strong>{t("action.strikeRaid")}</strong>
-          <span>
-            {t("raid.strikeHint")} {raid === null ? "" : rivalName(raid.rival)} ·{" "}
-            {formatDuration(raidStrikeLeft)}
-          </span>
-        </button>
+        <>
+          <div className="strike is-hint" role="status" data-testid="strike-raid">
+            <strong>{t("action.strikeRaid")}</strong>
+            <span>
+              {t("raid.strikeHint")} {raid === null ? "" : rivalName(raid.rival)} ·{" "}
+              {formatDuration(raidStrikeLeft)}
+            </span>
+          </div>
+          {raid !== null && (
+            <RaidBubble
+              key={raid.arrivesAt}
+              fightStart={raid.arrivesAt}
+              elapsedMs={state.now - raid.arrivesAt}
+              label={t("label.bubble")}
+              onCatch={() => {
+                store.send({ type: "strikeRaid" });
+              }}
+            />
+          )}
+        </>
       )}
 
       {raidNote !== null && (
@@ -496,6 +506,12 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
                 <ResourceIcon id="bricks" />
                 {formatAmount(attackNote.bricks, lang)}
               </span>
+              {attackNote.proteins >= MICRO && (
+                <span>
+                  <ResourceIcon id="proteins" />
+                  {formatAmount(attackNote.proteins, lang)}
+                </span>
+              )}
               <span>
                 {t("hunt.losses")} : {attackNote.troopsLost}
               </span>

@@ -71,6 +71,7 @@ export const ORDER_TYPES = [
   "sendRaid",
   "strikeRaid",
   "cancelRaid",
+  "goAway",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 

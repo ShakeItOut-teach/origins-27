@@ -193,6 +193,10 @@ export const BalanceSchema = z.strictObject({
       carryPerCell: positiveInt,
       /** Après un pillage, le rival se referme ce nombre d'heures. */
       restHours: positiveInt,
+      /** Poids d'une protéine, en unités de sucre. Les protéines se chargent en dernier. */
+      proteinWeight: positiveInt,
+      /** Part des protéines d'un organisme qu'un pillage peut prendre, au plus. */
+      proteinSharePercent: z.number().int().min(0).max(100),
     }),
     spy: z.strictObject({ energy: positiveInt, hours: positiveInt }),
     /** Les attaques que le joueur subit. */
@@ -204,10 +208,10 @@ export const BalanceSchema = z.strictObject({
       maxHours: positiveInt,
       /** Protection accordée après une attaque subie. */
       shieldHours: positiveInt,
-      /** Part du sucre et des briques perdue quand l'attaque passe. */
-      lossPercent: z.number().int().min(1).max(90),
       troopLossPercent: z.number().int().min(0).max(90),
     }),
+    /** Mode absent : une longue protection, puis un délai avant de pouvoir la reprendre. */
+    away: z.strictObject({ hours: positiveInt, restHours: positiveInt }),
   }),
   /** Prix en protéines de chaque nouvelle mutation ; le dernier prix vaut pour toutes les suivantes. */
   mutationPrices: z.array(positiveInt).min(1),
@@ -291,6 +295,8 @@ export const OrderSchema = z.discriminatedUnion("type", [
   }),
   z.strictObject({ type: z.literal("strikeRaid") }),
   z.strictObject({ type: z.literal("cancelRaid") }),
+  /** Passer en mode absent : une longue protection, que la première attaque envoyée fait tomber. */
+  z.strictObject({ type: z.literal("goAway") }),
 ]);
 export type Order = z.infer<typeof OrderSchema>;
 
