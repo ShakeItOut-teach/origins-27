@@ -1,5 +1,6 @@
 import {
   MICRO,
+  maxLevelOf,
   allianceToday,
   contestBoard,
   attackWarning,
@@ -1330,7 +1331,7 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }
   const t = (key: TextKey): string => translate(lang, key);
   const level = state.organelles[id];
   const building = state.construction?.organelle === id ? state.construction : null;
-  const maxed = level >= BALANCE.organelles[id].maxLevel;
+  const maxed = level >= maxLevelOf(state, id);
   const offersAction = !building && (level === 0 || (canUpgrade && !maxed));
   const toLevel = level + 1;
   const cost = levelCost(state, id, toLevel);

@@ -2612,3 +2612,12 @@ p.season-next {
 .chest-stage.is-contest {
   --chest-tone: var(--iodine);
 }
+
+/* Toute fiche défile quand elle dépasse l'écran : aucune ne doit couper son contenu. */
+.sheet {
+  max-height: 88vh;
+  max-height: 88dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}

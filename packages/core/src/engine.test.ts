@@ -91,7 +91,7 @@ describe("palier 0 : une cellule, un geste", () => {
     const result = applyOrder(fresh(), { type: "harvest", taps: 1 }, T0);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.state.resources.sugar).toBe(BALANCE.tap.yield * MICRO);
+    expect(result.state.resources.sugar).toBe(BALANCE.tap.yieldMilli * 1000);
     expect(result.state.tier).toBe(0);
     expect(result.events.map((e) => e.type)).toEqual(["harvested"]);
 
@@ -136,7 +136,7 @@ describe("palier 1 : construire", () => {
   });
 
   it("la construction coûte, dure, puis produit", () => {
-    const start = give(atTier1(), 10);
+    const start = give(atTier1(), 1);
     const building = ok(start, { type: "build", organelle: "mitochondrion" }, T0);
     expect(building.resources.sugar).toBe(0);
     expect(building.construction?.endsAt).toBe(T0 + 5000);
@@ -162,10 +162,11 @@ describe("palier 1 : construire", () => {
     );
   });
 
-  it("la réserve agrandit le stockage et les cils augmentent le toucher", () => {
+  it("la réserve agrandit le stockage ; rien n'augmente le toucher, qui vaut un dixième", () => {
     const state = atTier2();
     expect(capacity(state, "sugar")).toBe((BALANCE.baseStorage.sugar + 120) * MICRO);
-    expect(tapYield(state)).toBe(2 * BALANCE.tap.yield * MICRO);
+    expect(tapYield()).toBe(MICRO / 10);
+    expect(BALANCE.organelles.cilia.effect.kind).toBe("bonus");
   });
 });
 
@@ -250,7 +251,7 @@ describe("temps", () => {
   });
 
   it("résume une absence", () => {
-    const before = ok(give(atTier1(), 10), { type: "build", organelle: "mitochondrion" }, T0);
+    const before = ok(give(atTier1(), 1), { type: "build", organelle: "mitochondrion" }, T0);
     const step = advance(before, T0 + 8 * 3_600_000);
     const summary = summarizeAbsence(before, step.state, step.events);
     expect(summary.elapsedMs).toBe(8 * 3_600_000);

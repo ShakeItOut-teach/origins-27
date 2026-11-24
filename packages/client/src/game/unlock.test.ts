@@ -44,4 +44,11 @@ describe("ce que l'écran montre à chaque palier", () => {
       expect(isVisible(element, 9)).toBe(false);
     }
   });
+
+  it("palier 10 : s'ajoutent les rangs supérieurs ; la crise et l'APEX attendent", () => {
+    expect(isVisible("higherRanks", 10)).toBe(true);
+    for (const element of ["speciesSheet", "crisis", "apexRace"] as const) {
+      expect(isVisible(element, 10)).toBe(false);
+    }
+  });
 });

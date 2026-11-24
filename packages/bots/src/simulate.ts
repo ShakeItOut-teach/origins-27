@@ -376,9 +376,13 @@ export function simulate(
         );
         const fits = open.find((place) => {
           const offer = placeOffer(place);
-          return capacity(state, offer.resource) - state.resources[offer.resource] >= offer.loot;
+          // Il compte aussi ce que la cellule produira pendant le trajet.
+          const made = productionRate(state, offer.resource) * offer.durationMs;
+          const room = capacity(state, offer.resource) - state.resources[offer.resource];
+          return room - made >= offer.loot;
         });
-        const target = profile.careful ? (fits ?? open[0]) : open[0];
+        // Le soigneux attend qu'un butin tienne dans sa réserve plutôt que d'en perdre.
+        const target = profile.careful ? fits : open[0];
         if (target !== undefined && send({ type: "sendExpedition", place: target.id }, now)) {
           firstExpeditionSeconds ??= second;
           acted = true;

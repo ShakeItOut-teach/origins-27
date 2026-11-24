@@ -54,6 +54,32 @@ export function travelMs(state: PlayerState, ms: number): number {
   return Math.max(1000, applyPercent(ms, modifierPercent(state, "travelTime")));
 }
 
+/**
+ * Niveau maximum d'un organite pour ce joueur : celui d'origine, puis davantage une fois les
+ * rangs supérieurs ouverts.
+ */
+export function maxLevelOf(state: PlayerState, organelle: OrganelleId): number {
+  const base = BALANCE.organelles[organelle].maxLevel;
+  return state.tier >= BALANCE.higherRanks.tier
+    ? Math.max(base, BALANCE.higherRanks.maxLevel)
+    : base;
+}
+
+/**
+ * Grandit de niveau en niveau jusqu'à `toLevel` : d'abord au rythme d'origine, puis, au-delà
+ * du niveau maximum d'origine, au rythme des rangs supérieurs.
+ */
+function growLevels(
+  base: number,
+  earlyPercent: number,
+  latePercent: number,
+  steps: number,
+  earlySteps: number,
+): number {
+  const early = Math.max(0, Math.min(steps, earlySteps));
+  return grow(grow(base, earlyPercent, early), latePercent, Math.max(0, steps - early));
+}
+
 /** Multiplie `times` fois par `growthPercent` %, en arrondissant vers le bas à chaque pas. */
 function grow(base: number, growthPercent: number, times: number): number {
   let value = base;
@@ -88,21 +114,26 @@ export function productionRate(state: PlayerState, resource: ResourceId): number
 /** Quantité maximale stockable, en millionièmes d'unité. */
 export function capacity(state: PlayerState, resource: ResourceId): number {
   let units = BALANCE.baseStorage[resource];
+  let higher = 0;
   for (const id of ORGANELLE_IDS) {
     const effect = BALANCE.organelles[id].effect;
-    if (effect.kind === "storage") units += effect.addPerLevel * state.organelles[id];
+    if (effect.kind === "storage") {
+      const level = state.organelles[id];
+      units += effect.addPerLevel * level;
+      // Au-delà du niveau maximum d'origine, chaque niveau agrandit toute la réserve.
+      higher += Math.max(0, level - BALANCE.organelles[id].maxLevel);
+    }
   }
-  return applyPercent(units * MICRO, modifierPercent(state, "storage"));
+  const grown = Math.floor(
+    (units * (100 + higher * BALANCE.higherRanks.storagePercentPerLevel)) / 100,
+  );
+  return applyPercent(grown * MICRO, modifierPercent(state, "storage"));
 }
 
 /** Gain d'un toucher, en millionièmes d'unité. */
-export function tapYield(state: PlayerState): number {
-  let percent = modifierPercent(state, "tapYield");
-  for (const id of ORGANELLE_IDS) {
-    const effect = BALANCE.organelles[id].effect;
-    if (effect.kind === "tapYield") percent += effect.addPercentPerLevel * state.organelles[id];
-  }
-  return applyPercent(BALANCE.tap.yield * MICRO, percent);
+export function tapYield(): number {
+  // Toujours le même : aucun organite, aucune mutation ne le change.
+  return BALANCE.tap.yieldMilli * 1000;
 }
 
 /** Coût pour amener un organite au niveau `toLevel` (1 = construction), en millionièmes. */
@@ -113,11 +144,18 @@ export function levelCost(
 ): Readonly<Record<ResourceId, number>> {
   const data = BALANCE.organelles[organelle];
   const growth = BALANCE.upgrade.costGrowthPercent;
-  const sugar = grow(data.buildCost.sugar * MICRO, growth, toLevel - 1);
+  const late = BALANCE.higherRanks.costGrowthPercent;
+  const sugar = growLevels(
+    data.buildCost.sugar * MICRO,
+    growth,
+    late,
+    toLevel - 1,
+    data.maxLevel - 1,
+  );
   const bricks =
     toLevel <= 1
       ? data.buildCost.bricks * MICRO
-      : grow(data.upgradeBricks * MICRO, growth, toLevel - 2);
+      : growLevels(data.upgradeBricks * MICRO, growth, late, toLevel - 2, data.maxLevel - 2);
   const percent = modifierPercent(state, "buildCost");
   return {
     sugar: applyPercent(sugar, percent),
@@ -128,7 +166,16 @@ export function levelCost(
 
 /** Durée du chantier pour amener un organite au niveau `toLevel`, en millisecondes. */
 export function levelDuration(state: PlayerState, organelle: OrganelleId, toLevel: number): number {
-  const base = BALANCE.organelles[organelle].buildSeconds * 1000;
-  const grown = grow(base, BALANCE.upgrade.timeGrowthPercent, toLevel - 1);
-  return Math.max(1000, applyPercent(grown, modifierPercent(state, "buildTime")));
+  const data = BALANCE.organelles[organelle];
+  const grown = growLevels(
+    data.buildSeconds * 1000,
+    BALANCE.upgrade.timeGrowthPercent,
+    BALANCE.higherRanks.timeGrowthPercent,
+    toLevel - 1,
+    data.maxLevel - 1,
+  );
+  // Un niveau supérieur est un vrai chantier : il dure au moins une demi-heure par rang.
+  const floor =
+    Math.max(0, toLevel - data.maxLevel) * BALANCE.higherRanks.minMinutesPerLevel * 60_000;
+  return Math.max(1000, applyPercent(Math.max(grown, floor), modifierPercent(state, "buildTime")));
 }

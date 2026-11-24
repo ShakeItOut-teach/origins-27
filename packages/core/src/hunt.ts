@@ -20,6 +20,10 @@ export function partyOf(some: Partial<Record<TroopId, number>> = {}): Record<Tro
     guardian: 0,
     scout: 0,
     carrier: 0,
+    rotifer: 0,
+    tardigrade: 0,
+    copepod: 0,
+    salp: 0,
     ...some,
   };
 }

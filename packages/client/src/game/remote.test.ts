@@ -106,7 +106,7 @@ describe("jeu branché sur le serveur", () => {
       await vi.advanceTimersByTimeAsync(120);
       expect(store.send({ type: "harvest", taps: 1 }).ok).toBe(true);
     }
-    expect(store.getState().resources.sugar).toBe(5 * MICRO);
+    expect(store.getState().resources.sugar).toBe((5 * MICRO) / 10);
 
     await vi.advanceTimersByTimeAsync(1500);
     const taps = server.received.map((entry) =>
@@ -125,9 +125,9 @@ describe("jeu branché sur le serveur", () => {
     await vi.advanceTimersByTimeAsync(200);
 
     store.send({ type: "harvest", taps: 1 });
-    expect(store.getState().resources.sugar).toBe(MICRO);
+    expect(store.getState().resources.sugar).toBe(MICRO / 10);
     await vi.advanceTimersByTimeAsync(1500);
-    expect(store.getState().resources.sugar).toBe(8 * MICRO);
+    expect(store.getState().resources.sugar).toBe(7 * MICRO + MICRO / 10);
     stop();
   });
 
@@ -156,9 +156,9 @@ describe("jeu branché sur le serveur", () => {
     store.send({ type: "harvest", taps: 1 });
     await vi.advanceTimersByTimeAsync(1000);
     store.send({ type: "harvest", taps: 1 });
-    expect(store.getState().resources.sugar).toBe(2 * MICRO);
+    expect(store.getState().resources.sugar).toBe((2 * MICRO) / 10);
     await vi.advanceTimersByTimeAsync(10_000);
-    expect(store.getState().resources.sugar).toBe(2 * MICRO);
+    expect(store.getState().resources.sugar).toBe((2 * MICRO) / 10);
     expect(server.getState().counters.harvests).toBe(2);
     stop();
   });

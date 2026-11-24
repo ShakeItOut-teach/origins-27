@@ -188,6 +188,38 @@ export function TroopIcon({ id }: { readonly id: TroopId }) {
           <path d="M12 17c0 3 3 3 3 5M9 9h6" />
         </svg>
       );
+    case "rotifer":
+      // Un rotifère : un corps en cloche, sa couronne de cils, son pied fourchu.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M7 6c0 6 1 10 5 12 4-2 5-6 5-12z" />
+          <path d="M6 5c1-2 3-2 3 0M15 5c0-2 2-2 3 0M12 18v3M12 21l-2 2M12 21l2 2" />
+        </svg>
+      );
+    case "tardigrade":
+      // Un tardigrade : un corps dodu en segments, huit pattes courtes.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M4 12c0-4 3-6 8-6s8 2 8 6-3 5-8 5-8-1-8-5z" />
+          <path d="M9 6.5v10M14 6.2v10.6M6 16l-1 4M10 17l-1 4M14 17l1 4M18 16l1 4" />
+        </svg>
+      );
+    case "copepod":
+      // Un copépode : un corps en goutte, deux longues antennes, une queue fourchue.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M12 4c3 0 4 3 4 6s-2 6-4 8c-2-2-4-5-4-8s1-6 4-6z" />
+          <path d="M9 6C6 5 4 6 2 9M15 6c3-1 5 0 7 3M12 18l-2 4M12 18l2 4" />
+        </svg>
+      );
+    case "salp":
+      // Une salpe : un tonneau transparent, cerclé de bandes musculaires.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <rect x="6" y="3" width="12" height="18" rx="6" />
+          <path d="M6.5 8h11M6 12h12M6.5 16h11" />
+        </svg>
+      );
   }
 }
 

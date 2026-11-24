@@ -20,6 +20,7 @@ import {
   isAlly,
   leagueOf,
   levelCost,
+  maxLevelOf,
   leviathanKind,
   leviathanOffer,
   leviathanThreat,
@@ -212,7 +213,7 @@ export function simulateHuman(options: HumanOptions): HumanReport {
     let wanted = false;
     for (const id of open) {
       const level = state.organelles[id];
-      if (level >= BALANCE.organelles[id].maxLevel) continue;
+      if (level >= maxLevelOf(state, id)) continue;
       wanted = true;
       const cost = levelCost(state, id, level + 1);
       // Trop cher pour la réserve : il faut d'abord agrandir la Vacuole.
@@ -494,7 +495,7 @@ export function simulateHuman(options: HumanOptions): HumanReport {
     pass(seasonStart + day * DAY_MS - 60_000);
 
     const open = ORGANELLE_IDS.filter((id) => BALANCE.organelles[id].tier <= state.tier);
-    const maxed = open.filter((id) => state.organelles[id] >= BALANCE.organelles[id].maxLevel);
+    const maxed = open.filter((id) => state.organelles[id] >= maxLevelOf(state, id));
     const evolutions = EVOLUTION_IDS.filter((id) => !draw.dormant.includes(id));
     reach("premier organite au niveau maximum", maxed.length > 0);
     reach("tous les organites au niveau maximum", state.tier >= 7 && maxed.length === open.length);

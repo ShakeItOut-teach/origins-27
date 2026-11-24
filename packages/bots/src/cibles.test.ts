@@ -107,8 +107,8 @@ describe("cibles d'équilibrage du palier 3 (la carte)", () => {
   it("une expédition proche rapporte plus que le même temps passé à toucher la cellule", () => {
     const near = BALANCE.expedition.bands[0];
     if (near === undefined) throw new Error("bande attendue");
-    // Un débutant touche une fois par seconde, pour 1 sucre.
-    expect(near.sugar).toBeGreaterThanOrEqual(near.seconds * BALANCE.tap.yield * 1.5);
+    // Toucher ne rapporte qu'un dixième : une expédition vaut toujours bien mieux.
+    expect(near.sugar).toBeGreaterThanOrEqual((near.seconds * BALANCE.tap.yieldMilli * 15) / 1000);
   });
 });
 

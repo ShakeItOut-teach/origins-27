@@ -120,15 +120,19 @@ describe("les classements", () => {
 
   it("plus fort, on monte ; les organismes simulés grandissent avec la saison", () => {
     const weak = player(7, 5);
-    const strong = {
+    const strong = { ...weak, troops: partyOf({ toxic: 300 }) };
+    expect(ranking(strong, "power").mine.rank).toBeLessThan(ranking(weak, "power").mine.rank);
+    expect(ranking(strong, "troops").mine.rank).toBeLessThan(ranking(weak, "troops").mine.rank);
+    // Une cellule mieux bâtie ne change rien au classement des troupes.
+    const built = {
       ...weak,
       organelles: { ...weak.organelles, mitochondrion: 5, cilia: 5, ribosome: 5, wall: 5 },
     };
-    expect(ranking(strong, "power").mine.rank).toBeLessThan(ranking(weak, "power").mine.rank);
-    expect(ranking(strong, "cell").mine.rank).toBeLessThan(ranking(weak, "cell").mine.rank);
-    expect(ranking(strong, "troops").mine.rank).toBe(ranking(weak, "troops").mine.rank);
-    const later = { ...weak, now: weak.now + 10 * DAY_MS };
-    expect(ranking(later, "power").mine.rank).toBeGreaterThan(ranking(weak, "power").mine.rank);
+    expect(ranking(built, "cell").mine.score).toBeGreaterThan(ranking(weak, "cell").mine.score);
+    expect(ranking(built, "troops").mine.rank).toBe(ranking(weak, "troops").mine.rank);
+    // Sans rien faire pendant dix jours, on se fait dépasser.
+    const later = { ...strong, now: strong.now + 10 * DAY_MS };
+    expect(ranking(later, "power").mine.rank).toBeGreaterThan(ranking(strong, "power").mine.rank);
   });
 
   it("piller et repousser des attaques font monter dans leurs classements", () => {

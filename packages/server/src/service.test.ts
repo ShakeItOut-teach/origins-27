@@ -45,7 +45,7 @@ describe("ordre", () => {
     expect(reply.status).toBe("done");
     if (reply.status !== "done") return;
     expect(reply.outcome.ok).toBe(true);
-    expect(reply.state.resources.sugar).toBe(MICRO);
+    expect(reply.state.resources.sugar).toBe(MICRO / 10);
     expect(reply.state.seed).toBe(42);
   });
 
@@ -58,7 +58,7 @@ describe("ordre", () => {
     expect(again.status).toBe("done");
     if (first.status !== "done" || again.status !== "done") return;
     expect(again.outcome).toEqual(first.outcome);
-    expect(again.state.resources.sugar).toBe(MICRO);
+    expect(again.state.resources.sugar).toBe(MICRO / 10);
     expect(again.state.counters.harvests).toBe(1);
   });
 
@@ -104,7 +104,7 @@ describe("ordre", () => {
     expect(final.status).toBe("done");
     if (final.status !== "done") return;
     expect(final.state.counters.harvests).toBe(4);
-    expect(final.state.resources.sugar).toBe(4 * MICRO);
+    expect(final.state.resources.sugar).toBe((4 * MICRO) / 10);
   });
 
   it("deux envois simultanés du même ordre ne comptent qu'une fois", async () => {

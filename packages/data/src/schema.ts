@@ -108,8 +108,8 @@ export const TroopSchema = z.strictObject({
 
 export const BalanceSchema = z.strictObject({
   tap: z.strictObject({
-    /** Unités gagnées par toucher. */
-    yield: positiveInt,
+    /** Millièmes d'unité gagnés par toucher (100 = un dixième). Rien ne l'augmente : toucher occupe, sans remplacer la production. */
+    yieldMilli: positiveInt,
     /** Délai minimal entre deux touchers comptés, en millisecondes. */
     minIntervalMs: positiveInt,
     /** Nombre de touchers qu'on peut envoyer d'un coup après une pause. */
@@ -178,6 +178,10 @@ export const BalanceSchema = z.strictObject({
     guardian: TroopSchema,
     scout: TroopSchema,
     carrier: TroopSchema,
+    rotifer: TroopSchema,
+    tardigrade: TroopSchema,
+    copepod: TroopSchema,
+    salp: TroopSchema,
   } satisfies Record<(typeof TROOP_IDS)[number], unknown>),
   /** Les évolutions : ce que le Noyau peut exprimer. */
   research: z.strictObject({
@@ -518,6 +522,21 @@ export const BalanceSchema = z.strictObject({
     }),
   }),
   /**
+   * Les rangs supérieurs : passé leur palier, les organites montent au-delà de leur niveau
+   * maximum d'origine. Ces niveaux-là coûtent et durent autrement, pour occuper la saison.
+   */
+  higherRanks: z.strictObject({
+    tier: positiveInt,
+    maxLevel: positiveInt,
+    /** Croissance du coût et de la durée d'un niveau au suivant, au-delà du maximum d'origine. */
+    costGrowthPercent: z.number().int().min(100),
+    timeGrowthPercent: z.number().int().min(100),
+    /** Un niveau supérieur dure au moins cela, multiplié par son rang au-dessus du maximum d'origine. */
+    minMinutesPerLevel: positiveInt,
+    /** Ce que chaque niveau supérieur d'un organite de réserve ajoute au stockage, en pourcentage. */
+    storagePercentPerLevel: positiveInt,
+  }),
+  /**
    * Le concours de la semaine : tous les organismes sont classés sur leur progression, et les
    * premiers reçoivent un coffre. Les récompenses vont du premier rang au dernier rang primé.
    */
@@ -658,6 +677,10 @@ const PartySchema = z.strictObject({
   guardian: troopCount.default(0),
   scout: troopCount.default(0),
   carrier: troopCount.default(0),
+  rotifer: troopCount.default(0),
+  tardigrade: troopCount.default(0),
+  copepod: troopCount.default(0),
+  salp: troopCount.default(0),
 } satisfies Record<(typeof TROOP_IDS)[number], unknown>);
 
 const RIVAL_ID = /^(r:-?\d{1,6}:-?\d{1,6}|o:\d{1,4})$/;

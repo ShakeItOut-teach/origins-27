@@ -52,6 +52,10 @@ export const frScience = {
   "event.eruption.name": "Éruption hydrothermale",
   "event.anoxia.name": "Zone anoxique",
   "state.anoxic": "Zone anoxique : votre production baisse de 30 %",
+  "troop.rotifer.name": "Rotifère",
+  "troop.tardigrade.name": "Tardigrade",
+  "troop.copepod.name": "Copépode",
+  "troop.salp.name": "Salpe",
 } as const satisfies ScienceTexts;
 
 export const enScience = {
@@ -100,6 +104,10 @@ export const enScience = {
   "event.eruption.name": "Hydrothermal eruption",
   "event.anoxia.name": "Anoxic zone",
   "state.anoxic": "Anoxic zone: your production is down 30%",
+  "troop.rotifer.name": "Rotifer",
+  "troop.tardigrade.name": "Tardigrade",
+  "troop.copepod.name": "Copepod",
+  "troop.salp.name": "Salp",
 } as const satisfies Record<keyof typeof frScience, string>;
 
 /** Les mots expliqués dans le lexique : la clé du mot, et celle de son explication. */

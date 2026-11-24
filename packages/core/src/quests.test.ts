@@ -170,9 +170,9 @@ describe("progression des quêtes", () => {
       "tapSugar",
       5,
     ]);
-    const once = ok(start, { type: "harvest", taps: 3 }, T0 + 5000);
+    const once = ok(start, { type: "harvest", taps: 30 }, T0 + 5000);
     expect(quest(once).progress).toBe(3 * MICRO);
-    const more = ok(once, { type: "harvest", taps: 10 }, T0 + 10_000);
+    const more = ok(once, { type: "harvest", taps: 30 }, T0 + 10_000);
     expect(quest(more).progress).toBe(5 * MICRO);
   });
 
@@ -279,7 +279,7 @@ describe("coffres", () => {
       ["tapSugar", 2],
       ["challengeHunts", 3],
     );
-    return ok(start, { type: "harvest", taps: 5 }, T0 + 5000);
+    return ok(start, { type: "harvest", taps: 20 }, T0 + 5000);
   };
 
   it("une quête terminée donne un coffre, à ouvrir une seule fois", () => {

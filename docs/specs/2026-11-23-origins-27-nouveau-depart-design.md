@@ -39,7 +39,9 @@ autorise, et la mise en scène du déblocage.
 | 7      | — (date seule)                                         | Jour 4        | Puissance, classements, ligues, prédateurs ; Noyau et évolutions          |
 | 8      | — (date seule)                                         | Jour 5        | Familles de gènes, lignées, cellules filles de rang 2                     |
 | 9      | — (date seule)                                         | Jour 9        | Événements de zone, alliances, Gazette                                    |
-| 10     | — (date seule)                                         | Jour 13       | À venir : rangs supérieurs, crise, course à l'APEX                        |
+| 10     | — (date seule)                                         | Jour 13       | Rangs supérieurs : niveaux 6 à 10, cellules filles de rang 3              |
+| 11     | — (date seule)                                         | Jour 17       | À venir : crise de saison, fiche d'espèce, rang 4                         |
+| 12     | — (date seule)                                         | Jour 21       | À venir : course à l'APEX, rang 5                                         |
 
 Règles :
 

@@ -20,7 +20,7 @@ import { leviathanBeaten, leviathanKind, leviathanOffer } from "./leviathan";
 import { shareOffer } from "./companion";
 import { researchOffer } from "./evolutions";
 import { troopUnlocked } from "./genes";
-import { capacity, foePower, levelCost, levelDuration, tapYield } from "./stats";
+import { capacity, foePower, levelCost, levelDuration, maxLevelOf, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
 import { canTrain, partyOf, partySize, resolveHunt, trainMs } from "./hunt";
 import { openChest, trackQuests } from "./quests";
@@ -54,7 +54,7 @@ function harvest(state: PlayerState, taps: number): Outcome {
   if (allowed <= 0) return { error: "tooFast" };
   const room = capacity(state, "sugar") - state.resources.sugar;
   if (room <= 0) return { error: "storageFull" };
-  const amount = Math.min(room, allowed * tapYield(state));
+  const amount = Math.min(room, allowed * tapYield());
   return {
     state: {
       ...state,
@@ -94,7 +94,7 @@ function build(state: PlayerState, organelle: OrganelleId): Outcome {
 function upgrade(state: PlayerState, organelle: OrganelleId): Outcome {
   const level = state.organelles[organelle];
   if (level === 0) return { error: "notBuilt" };
-  if (level >= BALANCE.organelles[organelle].maxLevel) return { error: "maxLevel" };
+  if (level >= maxLevelOf(state, organelle)) return { error: "maxLevel" };
   return startConstruction(state, organelle, level + 1);
 }
 

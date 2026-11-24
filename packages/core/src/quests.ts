@@ -7,6 +7,7 @@
 import { BALANCE, CHEST_REWARDS, MUTATION_IDS, QUEST_IDS } from "@o27/data";
 import type { ChestReward, QuestId } from "@o27/data";
 import { earnChest } from "./chests";
+import { maxLevelOf } from "./stats";
 import { createRng } from "./rng";
 import type { Rng } from "./rng";
 import { DAY_MS, MICRO } from "./types";
@@ -34,7 +35,7 @@ function seeded(seed: number, day: number, salt: number): Rng {
 function feasible(state: PlayerState, id: QuestId): boolean {
   if (BALANCE.quests.pool[id].tier > state.tier) return false;
   if (id === "mutate") return state.mutations.length < MUTATION_IDS.length;
-  if (id === "upgradeStore") return state.organelles.vacuole < BALANCE.organelles.vacuole.maxLevel;
+  if (id === "upgradeStore") return state.organelles.vacuole < maxLevelOf(state, "vacuole");
   return true;
 }
 

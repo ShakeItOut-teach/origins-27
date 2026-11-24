@@ -255,6 +255,10 @@ export const TROOP_IDS = [
   "guardian",
   "scout",
   "carrier",
+  "rotifer",
+  "tardigrade",
+  "copepod",
+  "salp",
 ] as const;
 export type TroopId = (typeof TROOP_IDS)[number];
 export const PREY_KINDS = ["soft", "aggressive", "fleeing"] as const;
@@ -268,6 +272,11 @@ export const STRONG_AGAINST: Readonly<Record<TroopId, PreyKind | null>> = {
   scout: "fleeing",
   // La porteuse n'est forte contre personne : elle porte.
   carrier: null,
+  // Rang 3 : de vrais animaux, minuscules mais redoutables.
+  rotifer: "soft",
+  tardigrade: "aggressive",
+  copepod: "fleeing",
+  salp: null,
 };
 
 /**

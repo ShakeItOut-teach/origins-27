@@ -6,13 +6,13 @@ import { BalanceSchema } from "./schema";
 import type { Balance } from "./schema";
 
 export const BALANCE: Balance = BalanceSchema.parse({
-  tap: { yield: 1, minIntervalMs: 100, burst: 30 },
+  tap: { yieldMilli: 100, minIntervalMs: 100, burst: 30 },
   baseStorage: { sugar: 80, bricks: 100, proteins: 100 },
   upgrade: { costGrowthPercent: 160, timeGrowthPercent: 150 },
   organelles: {
     mitochondrion: {
       tier: 1,
-      buildCost: { sugar: 10, bricks: 0 },
+      buildCost: { sugar: 1, bricks: 0 },
       buildSeconds: 5,
       upgradeBricks: 20,
       maxLevel: 5,
@@ -28,11 +28,11 @@ export const BALANCE: Balance = BalanceSchema.parse({
     },
     cilia: {
       tier: 1,
-      buildCost: { sugar: 150, bricks: 0 },
-      buildSeconds: 90,
+      buildCost: { sugar: 70, bricks: 0 },
+      buildSeconds: 60,
       upgradeBricks: 40,
       maxLevel: 5,
-      effect: { kind: "tapYield", addPercentPerLevel: 100 },
+      effect: { kind: "bonus", stat: "travelTime", percentPerLevel: -4 },
     },
     ribosome: {
       tier: 2,
@@ -84,7 +84,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     },
   },
   mutations: {
-    swiftCilia: { stat: "tapYield", percent: 50, trait: "longCilia", family: "mobility", tier: 2 },
+    swiftCilia: { stat: "gather", percent: 15, trait: "longCilia", family: "mobility", tier: 2 },
     thickWall: { stat: "storage", percent: 25, trait: "thickWall", family: "resilience", tier: 2 },
     fastMetabolism: {
       stat: "sugarProduction",
@@ -328,6 +328,54 @@ export const BALANCE: Balance = BalanceSchema.parse({
       carry: 6,
       upkeep: 2,
     },
+    rotifer: {
+      tier: 10,
+      family: "predation",
+      genes: 3,
+      cost: { sugar: 220, bricks: 90 },
+      proteins: 12,
+      seconds: 150,
+      power: 9,
+      defense: 2,
+      carry: 2,
+      upkeep: 3,
+    },
+    tardigrade: {
+      tier: 10,
+      family: "resilience",
+      genes: 3,
+      cost: { sugar: 160, bricks: 160 },
+      proteins: 12,
+      seconds: 150,
+      power: 4,
+      defense: 12,
+      carry: 2,
+      upkeep: 3,
+    },
+    copepod: {
+      tier: 10,
+      family: "mobility",
+      genes: 3,
+      cost: { sugar: 200, bricks: 90 },
+      proteins: 12,
+      seconds: 120,
+      power: 7,
+      defense: 2,
+      carry: 5,
+      upkeep: 3,
+    },
+    salp: {
+      tier: 10,
+      family: "metabolism",
+      genes: 3,
+      cost: { sugar: 180, bricks: 140 },
+      proteins: 8,
+      seconds: 150,
+      power: 2,
+      defense: 5,
+      carry: 14,
+      upkeep: 3,
+    },
   },
   troopUpkeep: { milliPerSecond: 15, famineSeconds: 60, faminePercent: 10 },
   hunt: {
@@ -345,7 +393,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     tier: 4,
     perDay: 3,
     pool: {
-      tapSugar: { tier: 4, challenge: false, min: 60, max: 150 },
+      tapSugar: { tier: 4, challenge: false, min: 5, max: 12 },
       build: { tier: 4, challenge: false, min: 1, max: 2 },
       upgradeStore: { tier: 4, challenge: false, min: 1, max: 1 },
       expeditions: { tier: 4, challenge: false, min: 2, max: 4 },
@@ -474,7 +522,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
   },
   ranking: {
     tier: 7,
-    power: { base: 200, perDay: 60 },
+    power: { base: 700, perDay: 160 },
     zonePercent: 15,
     lootPerDay: 150,
     defensePerHundredDays: 60,
@@ -520,6 +568,14 @@ export const BALANCE: Balance = BalanceSchema.parse({
       boosts: 1,
     },
     anoxia: { weight: 20, hours: 16, radius: 9, productionPercent: -30, guardPercent: -30 },
+  },
+  higherRanks: {
+    tier: 10,
+    maxLevel: 10,
+    costGrowthPercent: 130,
+    timeGrowthPercent: 170,
+    minMinutesPerLevel: 30,
+    storagePercentPerLevel: 60,
   },
   contest: {
     tier: 7,

@@ -165,6 +165,7 @@ export {
   foePower,
   levelCost,
   levelDuration,
+  maxLevelOf,
   modifierPercent,
   productionRate,
   tapYield,

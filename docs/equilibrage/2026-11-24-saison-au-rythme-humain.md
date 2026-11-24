@@ -80,3 +80,33 @@ se feraient entre eux.
 | Jours 21 à 27 sans but         | Crise de saison, puis course à l'APEX                                                                        | paliers 11, 12  |
 
 Pour rejouer la mesure : le test `packages/bots/src/human.test.ts` fait tourner la même saison.
+
+## Après le palier 10 (mesure du 2026-11-25)
+
+Même joueur, mêmes graines, avec les rangs supérieurs (niveaux 6 à 10 au jour 13, cellules
+filles de rang 3), des organismes simulés plus forts (700 de puissance au départ, 160 de plus
+par jour) et le toucher ramené à un dixième.
+
+| Jour | Puissance | Rang (sur 500) | Niveaux d'organites | Cellules filles | ATP par seconde | Réserve | Connexions sans rien à lancer |
+| ---- | --------- | -------------- | ------------------- | --------------- | --------------- | ------- | ----------------------------- |
+| 5    | 1 625     | 71             | 40                  | 25              | 3,5             | 850     | 0                             |
+| 9    | 2 387     | 167            | 44                  | 49              | 3,9             | 1 149   | 0 (10 faute de ressources)    |
+| 13   | 3 292     | 179            | 55                  | 78              | 8,5             | 2 394   | 0                             |
+| 15   | 4 652     | 44             | 83                  | 142             | 8,6             | 9 574   | 0                             |
+| 18   | 7 280     | 1              | 90 (maximum)        | 333             | 8,6             | 9 779   | 10 sur 10                     |
+| 21   | 6 417     | 97             | 90                  | 264             | 8,7             | 9 779   | 10 sur 10                     |
+| 27   | 4 330     | 471            | 90                  | 97              | 8,7             | 9 984   | 10 sur 10                     |
+
+Ce que cela change :
+
+- **Le classement a un enjeu.** Le joueur n'est plus premier d'office : il oscille entre la
+  1re et la 180e place selon ce qu'il construit, et le concours n'est plus gagné d'avance.
+- **Le palier 10 occupe cinq jours**, du jour 13 au jour 18 : les quarante-cinq niveaux
+  supérieurs sont finis au jour 17 ou 18, l'armée double (de 170 à 330 cellules filles) et les
+  accélérateurs sont enfin dépensés.
+- **Un Léviathan a été vaincu** (jour 20, une saison sur deux) : il redevient un but.
+- **Il reste un vide du jour 18 au jour 27**, et le joueur dégringole au classement en fin de
+  saison, faute de pouvoir encore grandir. C'est la place des paliers 11 (jour 17 : crise de
+  saison, fiche d'espèce, rang 4) et 12 (jour 21 : course à l'APEX, rang 5).
+- **Le creux des jours 8 à 11 est toujours là** : à traiter avec le palier 11, ou en avançant
+  l'ouverture des niveaux supérieurs.
