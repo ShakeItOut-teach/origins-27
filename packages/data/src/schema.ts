@@ -188,6 +188,10 @@ export const BalanceSchema = z.strictObject({
     ostracod: TroopSchema,
     krill: TroopSchema,
     larvacean: TroopSchema,
+    eurypterid: TroopSchema,
+    trilobite: TroopSchema,
+    conodont: TroopSchema,
+    nautiloid: TroopSchema,
   } satisfies Record<(typeof TROOP_IDS)[number], unknown>),
   /** Les évolutions : ce que le Noyau peut exprimer. */
   research: z.strictObject({
@@ -441,6 +445,8 @@ export const BalanceSchema = z.strictObject({
   ranking: z.strictObject({
     tier: positiveInt,
     power: z.strictObject({ base: positiveInt, perDay: positiveInt }),
+    /** À partir de ce jour, les organismes grandissent bien plus vite : rangs supérieurs obligent. */
+    late: z.strictObject({ fromDay: positiveInt, perDay: nonNegativeInt }),
     /** Supplément de puissance par zone remontée, en pourcentage. */
     zonePercent: nonNegativeInt,
     /** Butin pillé par jour par un organisme moyen. */
@@ -541,6 +547,28 @@ export const BalanceSchema = z.strictObject({
     minMinutesPerLevel: positiveInt,
     /** Ce que chaque niveau supérieur d'un organite de réserve ajoute au stockage, en pourcentage. */
     storagePercentPerLevel: positiveInt,
+  }),
+  /** La course à l'APEX : sortir des eaux depuis la dernière zone, et arriver avant les autres. */
+  apex: z.strictObject({
+    tier: positiveInt,
+    /** Niveau du Noyau qu'il faut pour sortir des eaux. */
+    nucleusLevel: positiveInt,
+    cost: z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
+    hours: positiveInt,
+    /** Jour où les premiers organismes simulés sortent des eaux, et combien les suivent par jour. */
+    firstDay: positiveInt,
+    perDay: positiveInt,
+    rewards: z
+      .array(
+        z.strictObject({
+          toPlace: positiveInt,
+          boosts: nonNegativeInt,
+          sugar: nonNegativeInt,
+          bricks: nonNegativeInt,
+          proteins: nonNegativeInt,
+        }),
+      )
+      .min(1),
   }),
   /**
    * La recherche militaire : chaque pouvoir se prend niveau après niveau, et chaque niveau coûte
@@ -721,6 +749,10 @@ const PartySchema = z.strictObject({
   ostracod: troopCount.default(0),
   krill: troopCount.default(0),
   larvacean: troopCount.default(0),
+  eurypterid: troopCount.default(0),
+  trilobite: troopCount.default(0),
+  conodont: troopCount.default(0),
+  nautiloid: troopCount.default(0),
 } satisfies Record<(typeof TROOP_IDS)[number], unknown>);
 
 const RIVAL_ID = /^(r:-?\d{1,6}:-?\d{1,6}|o:\d{1,4})$/;
@@ -797,6 +829,8 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("claimGift") }),
   /** Recherche militaire : prendre le niveau suivant d'un pouvoir. */
   z.strictObject({ type: z.literal("drill"), power: z.enum(DRILL_IDS) }),
+  /** Lancer la sortie des eaux : la course à l'APEX. */
+  z.strictObject({ type: z.literal("leaveWater") }),
   /** Récolte automatique : au retour d'une récolte, les cellules repartent toutes seules. */
   z.strictObject({ type: z.literal("setAutoHarvest"), on: z.boolean() }),
   /** Ouvrir un coffre de récompense en attente, désigné par sa place dans la liste. */

@@ -76,7 +76,11 @@ export function organismScore(
   const defender = 30 + rng.int(141);
   const zone = organismZone(rankOf(worldSeed, slot), day);
   const power = Math.round(
-    ((data.power.base + data.power.perDay * (day - 1)) * temper * (100 + data.zonePercent * zone)) /
+    ((data.power.base +
+      data.power.perDay * (day - 1) +
+      data.late.perDay * Math.max(0, day - data.late.fromDay)) *
+      temper *
+      (100 + data.zonePercent * zone)) /
       10_000,
   );
   const troops = Math.round((power * troopShare) / 100);

@@ -72,13 +72,13 @@ function ok(state: PlayerState, order: Order, now: number): PlayerState {
 }
 
 describe("les familles de gènes", () => {
-  it("chaque famille compte trois gènes, une cellule de rang 2, une de rang 3 et une de rang 4", () => {
+  it("chaque famille compte trois gènes, une cellule de rang 2, puis une par rang jusqu'au rang 5", () => {
     for (const family of GENE_FAMILIES) {
       const genes = MUTATION_IDS.filter((id) => BALANCE.mutations[id].family === family);
       expect(genes).toHaveLength(GENES.lineageGenes);
       const troops = TROOP_IDS.filter((id) => BALANCE.troops[id].family === family);
       // Rang 2 avec deux gènes ; rangs 3 et 4 avec la lignée.
-      expect(troops.map((id) => BALANCE.troops[id].genes)).toEqual([2, 3, 3]);
+      expect(troops.map((id) => BALANCE.troops[id].genes)).toEqual([2, 3, 3, 3]);
     }
   });
 

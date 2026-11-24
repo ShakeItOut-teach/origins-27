@@ -252,6 +252,38 @@ export function TroopIcon({ id }: { readonly id: TroopId }) {
           <path d="M10 11c3 1 5 4 9 9" />
         </svg>
       );
+    case "eurypterid":
+      // Un euryptéride : un corps de scorpion, deux pinces, une queue en pointe.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M12 6c3 0 4 3 4 6s-2 5-4 5-4-2-4-5 1-6 4-6zM12 17v5" />
+          <path d="M9 7C7 5 5 5 4 3M15 7c2-2 4-2 5-4M8 11H4M16 11h4M8 14l-3 2M16 14l3 2" />
+        </svg>
+      );
+    case "trilobite":
+      // Un trilobite : trois lobes, des segments, un bouclier sur la tête.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M12 3c4 0 7 3 7 9s-3 9-7 9-7-3-7-9 3-9 7-9z" />
+          <path d="M9 4v16M15 4v16M5.5 9h13M5 12h14M5.5 15h13M7 18h10" />
+        </svg>
+      );
+    case "conodont":
+      // Un conodonte : un corps d'anguille, de grands yeux, une nageoire au bout.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M3 9c4-4 6 6 10 2s5-5 8-3l-2 3 2 3c-3 1-5-1-8 2s-7 0-10-7z" />
+          <circle cx="6" cy="9" r="1" />
+        </svg>
+      );
+    case "nautiloid":
+      // Un nautiloïde : une coquille enroulée et cloisonnée, des bras devant.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M14 20a8 8 0 1 1 6-13" />
+          <path d="M14 14a3 3 0 1 1 3-5M20 7l2 4M19 9l1 5M17 10v5M8 6v6M11 5l1 5" />
+        </svg>
+      );
   }
 }
 

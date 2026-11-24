@@ -2,6 +2,7 @@
 import { ensureAlliance } from "./alliance";
 import { allianceDue } from "./banners";
 import { trackDaily } from "./daily";
+import { apexDue, apexLand } from "./apex";
 import { earnChest } from "./chests";
 import { contestStep } from "./contest";
 import { crisisRate } from "./crisis";
@@ -269,7 +270,9 @@ export function advance(state: PlayerState, now: number): Step {
     // Instants où les bonus du joueur changent tout seuls : une technologie d'alliance gagne
     // un niveau, une zone anoxique arrive ou se dissipe. On s'y arrête pour produire juste.
     const edge = Math.min(allianceDue(current), anoxiaEdge(current));
+    const apexAt = apexDue(current);
     const at = Math.min(
+      apexAt,
       leviathanAt,
       edge,
       buildEnd,
@@ -343,6 +346,8 @@ export function advance(state: PlayerState, now: number): Step {
           : resolveRaid(ready, raid, at, false);
     } else if (attackAt === at) {
       step = resolveIncoming(ready, at);
+    } else if (apexAt === at) {
+      step = apexLand(ready, at);
     } else if (leviathanAt === at) {
       step = leviathanStrike(ready, at);
     } else if (hunger === at) {

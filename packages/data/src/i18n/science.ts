@@ -60,6 +60,10 @@ export const frScience = {
   "troop.ostracod.name": "Ostracode",
   "troop.krill.name": "Krill",
   "troop.larvacean.name": "Appendiculaire",
+  "troop.eurypterid.name": "Euryptéride",
+  "troop.trilobite.name": "Trilobite",
+  "troop.conodont.name": "Conodonte",
+  "troop.nautiloid.name": "Nautiloïde",
 } as const satisfies ScienceTexts;
 
 export const enScience = {
@@ -116,6 +120,10 @@ export const enScience = {
   "troop.ostracod.name": "Ostracod",
   "troop.krill.name": "Krill",
   "troop.larvacean.name": "Larvacean",
+  "troop.eurypterid.name": "Eurypterid",
+  "troop.trilobite.name": "Trilobite",
+  "troop.conodont.name": "Conodont",
+  "troop.nautiloid.name": "Nautiloid",
 } as const satisfies Record<keyof typeof frScience, string>;
 
 /** Les mots expliqués dans le lexique : la clé du mot, et celle de son explication. */

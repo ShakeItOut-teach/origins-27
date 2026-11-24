@@ -58,6 +58,7 @@ import type { Lang } from "./game/text";
 import { isVisible } from "./game/unlock";
 import { AccountSheet } from "./ui/AccountSheet";
 import { AllianceSheet, bannerLabel, bannerTag } from "./ui/AllianceSheet";
+import { ApexSheet, MuseumSheet } from "./ui/ApexSheets";
 import { EventsSheet } from "./ui/EventsSheet";
 import { GazetteSheet } from "./ui/GazetteSheet";
 import { JournalSheet } from "./ui/JournalSheet";
@@ -155,6 +156,10 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [journalOpen, setJournalOpen] = useState(false);
   const [contestOpen, setContestOpen] = useState(false);
   const [crisisOpen, setCrisisOpen] = useState(false);
+  const [apexOpen, setApexOpen] = useState(false);
+  const [museumOpen, setMuseumOpen] = useState(false);
+  /** La place obtenue en sortant des eaux, quand la lignée vient d'arriver. */
+  const [landed, setLanded] = useState<number | null>(null);
   const [speciesOpen, setSpeciesOpen] = useState(false);
   /** Le rang obtenu au concours qui vient de finir. */
   const [contestRank, setContestRank] = useState<number | null>(null);
@@ -219,6 +224,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
           if (event.type === "companionTamed") setTamed(true);
+          if (event.type === "apexReached") setLanded(event.place);
           if (event.type === "contestEnded") setContestRank(event.rank);
           if (event.type === "allianceJoined") {
             setEnlisted({ banner: event.banner, auto: event.auto });
@@ -962,6 +968,73 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           lang={lang}
           onClose={() => {
             setSpeciesOpen(false);
+          }}
+        />
+      )}
+      {show("apexRace") && (
+        <button
+          type="button"
+          className={`quests-open apex-open${state.apex === null ? " has-chest" : ""}`}
+          data-testid="apex-open"
+          onClick={() => {
+            setApexOpen(true);
+          }}
+        >
+          {t("label.apex")}
+          {state.apex !== null && state.apex.place === 0 && (
+            <span className="badge">{formatCountdown(state.apex.endsAt - state.now, lang)}</span>
+          )}
+          {state.apex !== null && state.apex.place > 0 && (
+            <span className="badge">
+              {t("apex.place").replace("{n}", String(state.apex.place))}
+            </span>
+          )}
+        </button>
+      )}
+      {show("apexRace") && apexOpen && (
+        <ApexSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setApexOpen(false);
+          }}
+          onOrder={(order) => store.send(order).ok}
+        />
+      )}
+      {landed !== null && (
+        <div className="loss is-good" role="status" data-testid="apex-note">
+          <strong>{t("apex.done")}</strong>
+          <span>{t("apex.place").replace("{n}", String(landed))}</span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setLanded(null);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+      {show("museum") && (
+        <button
+          type="button"
+          className="quests-open museum-open"
+          data-testid="museum-open"
+          onClick={() => {
+            setMuseumOpen(true);
+          }}
+        >
+          {t("label.museum")}
+        </button>
+      )}
+      {show("museum") && museumOpen && (
+        <MuseumSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setMuseumOpen(false);
           }}
         />
       )}

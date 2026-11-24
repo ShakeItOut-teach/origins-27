@@ -177,8 +177,29 @@ export type DrillId = (typeof DRILL_IDS)[number];
 export const CRISIS_KINDS = ["glaciation", "anoxia", "meteor"] as const;
 export type CrisisKind = (typeof CRISIS_KINDS)[number];
 
+/** Les lignées de la terre ferme : ce que devient une espèce qui sort des eaux. */
+export const APEX_LINEAGES = [
+  "tyrannosaur",
+  "dromaeosaur",
+  "brachiosaur",
+  "triceratops",
+  "ankylosaur",
+  "stegosaur",
+  "parasaurolophus",
+  "pterosaur",
+  "earlyBird",
+] as const;
+export type ApexLineage = (typeof APEX_LINEAGES)[number];
+
 /** Les coffres de récompense : d'où ils viennent. */
-export const REWARD_CHEST_KINDS = ["quest", "challenge", "league", "leviathan", "contest"] as const;
+export const REWARD_CHEST_KINDS = [
+  "quest",
+  "challenge",
+  "league",
+  "leviathan",
+  "contest",
+  "apex",
+] as const;
 export type RewardChestKind = (typeof REWARD_CHEST_KINDS)[number];
 
 /** Les sortes de rapports du journal. */
@@ -242,6 +263,7 @@ export const ORDER_TYPES = [
   "openReward",
   "drill",
   "setAutoHarvest",
+  "leaveWater",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
@@ -274,6 +296,10 @@ export const TROOP_IDS = [
   "ostracod",
   "krill",
   "larvacean",
+  "eurypterid",
+  "trilobite",
+  "conodont",
+  "nautiloid",
 ] as const;
 export type TroopId = (typeof TROOP_IDS)[number];
 export const PREY_KINDS = ["soft", "aggressive", "fleeing"] as const;
@@ -297,6 +323,11 @@ export const STRONG_AGAINST: Readonly<Record<TroopId, PreyKind | null>> = {
   ostracod: "aggressive",
   krill: "fleeing",
   larvacean: null,
+  // Rang 5 : les premiers grands animaux.
+  eurypterid: "soft",
+  trilobite: "aggressive",
+  conodont: "fleeing",
+  nautiloid: null,
 };
 
 /**
@@ -380,5 +411,6 @@ export const UI_ELEMENT_IDS = [
   "higherRanks",
   "crisis",
   "apexRace",
+  "museum",
 ] as const;
 export type UiElementId = (typeof UI_ELEMENT_IDS)[number];

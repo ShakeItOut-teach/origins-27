@@ -341,6 +341,9 @@ describe("océan et alliances", () => {
       order: { type: "drill", power: "guard" },
     });
     expect(drilled.status).toBe("done");
+    // Sortir des eaux passe la validation ; trop tôt, le moteur le refuse.
+    const apex = await handleOrder(deps, ALICE, { orderId: id(70), order: { type: "leaveWater" } });
+    expect(apex).toMatchObject({ status: "done", outcome: { ok: false, error: "locked" } });
     // Le journal a suivi le joueur côté serveur.
     expect(Array.isArray(boost.state.reports)).toBe(true);
     const wrong = await handleOrder(deps, ALICE, {

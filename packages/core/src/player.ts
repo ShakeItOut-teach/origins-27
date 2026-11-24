@@ -61,6 +61,7 @@ export function createPlayer(
     boosts: 0,
     drills: fill(DRILL_IDS, 0),
     autoHarvest: false,
+    apex: null,
     reports: [],
     chests: [],
     contest: null,
@@ -197,6 +198,7 @@ export function serializeState(state: PlayerState): string {
     boosts: state.boosts,
     drills: pick(DRILL_IDS, state.drills),
     autoHarvest: state.autoHarvest,
+    apex: state.apex === null ? null : { endsAt: state.apex.endsAt, place: state.apex.place },
     contest: state.contest === null ? null : { week: state.contest.week, base: state.contest.base },
     chests: state.chests.map((chest) => ({
       kind: chest.kind,
@@ -761,6 +763,10 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     // Avant la recherche militaire et la récolte automatique : rien d'acquis, rien d'enclenché.
     drills: raw.drills === undefined ? fill(DRILL_IDS, 0) : readCounts(DRILL_IDS, raw.drills),
     autoHarvest: raw.autoHarvest === true,
+    apex:
+      isRecord(raw.apex) && isCount(raw.apex.endsAt) && isCount(raw.apex.place)
+        ? { endsAt: raw.apex.endsAt, place: raw.apex.place }
+        : null,
     reports: raw.reports === undefined ? [] : readReports(raw.reports),
     chests: raw.chests === undefined ? [] : readChests(raw.chests),
     // Avant les concours : le joueur y entrera au prochain passage du temps.

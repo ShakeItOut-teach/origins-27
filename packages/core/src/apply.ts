@@ -13,6 +13,7 @@ import type {
 } from "@o27/data";
 import { advance } from "./advance";
 import { allianceOrder } from "./alliance";
+import { leaveWater } from "./apex";
 import { openReward } from "./chests";
 import { drillOffer } from "./drills";
 import { trackDaily } from "./daily";
@@ -650,6 +651,8 @@ function execute(state: PlayerState, order: Order): Outcome {
       return huntLeviathan(state, order.event, order.party);
     case "useBoost":
       return useBoost(state, order.target);
+    case "leaveWater":
+      return leaveWater(state);
     case "drill":
       return drill(state, order.power);
     case "setAutoHarvest":

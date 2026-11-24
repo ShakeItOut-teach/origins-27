@@ -1,4 +1,5 @@
 import type {
+  ApexLineage,
   AllianceShopId,
   AllianceTechId,
   BannerId,
@@ -210,6 +211,11 @@ export interface PlayerState {
   /** L'alliance du joueur ; `null` avant l'ouverture des alliances. */
   readonly alliance: Alliance | null;
   readonly daily: DailyRecord;
+  /**
+   * La sortie des eaux : quand elle s'achève, et la place obtenue à l'arrivée (0 tant qu'elle
+   * est en cours). `null` tant que le joueur ne l'a pas lancée.
+   */
+  readonly apex: { readonly endsAt: number; readonly place: number } | null;
   /** Niveau de chaque pouvoir de la recherche militaire. */
   readonly drills: Readonly<Record<DrillId, number>>;
   /** Récolte automatique : au retour d'une récolte, les cellules repartent toutes seules. */
@@ -442,6 +448,13 @@ export type GameEvent =
     }
   | { readonly type: "leviathanRepelled"; readonly at: number; readonly event: string }
   | { readonly type: "boostGained"; readonly at: number; readonly count: number }
+  /** La lignée du joueur a pris pied sur la terre ferme. */
+  | {
+      readonly type: "apexReached";
+      readonly at: number;
+      readonly place: number;
+      readonly lineage: ApexLineage;
+    }
   | {
       readonly type: "drillLearned";
       readonly at: number;

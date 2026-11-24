@@ -166,6 +166,7 @@ export function simulateHuman(options: HumanOptions): HumanReport {
     "zone éclairée atteinte": null,
     "premier Léviathan vaincu": null,
     "Officier d'alliance": null,
+    "sortie des eaux": null,
   };
   let today = 1;
   const reach = (name: string, done: boolean): void => {
@@ -209,7 +210,16 @@ export function simulateHuman(options: HumanOptions): HumanReport {
   /** Lance un chantier : ce qui manque d'abord, puis l'amélioration la plus utile. */
   const build = (now: number): "started" | "nothing" | "poor" | "busy" => {
     if (state.construction !== null) return "busy";
-    const open = BUILD_ORDER.filter((id) => BALANCE.organelles[id].tier <= state.tier);
+    // Pour sortir des eaux, il faut un Noyau évolué : il passe alors devant tout le reste.
+    const order: readonly OrganelleId[] =
+      state.tier >= BALANCE.apex.tier - 1
+        ? [
+            "nucleus",
+            "vacuole",
+            ...BUILD_ORDER.filter((id) => id !== "nucleus" && id !== "vacuole"),
+          ]
+        : BUILD_ORDER;
+    const open = order.filter((id) => BALANCE.organelles[id].tier <= state.tier);
     let wanted = false;
     for (const id of open) {
       const level = state.organelles[id];
@@ -260,9 +270,10 @@ export function simulateHuman(options: HumanOptions): HumanReport {
   const train = (now: number): void => {
     if (!canTrain(state) || state.training !== null) return;
     const budget = Math.floor((productionRate(state, "sugar") * 85) / 100);
-    const rank2 = (["toxic", "guardian", "scout", "carrier"] as const).filter((id) =>
-      troopUnlocked(state, id),
-    );
+    // La cellule de plus haut rang que ses gènes lui ouvrent.
+    const rank2 = TROOP_IDS.filter(
+      (id) => BALANCE.troops[id].family !== null && troopUnlocked(state, id),
+    ).sort((one, other) => BALANCE.troops[other].tier - BALANCE.troops[one].tier);
     // Rang 2 dès qu'il est ouvert ; sinon les trois sortes de rang 1, à parts égales.
     const rank1: TroopId = (["hunter", "armored", "swift"] as const).reduce((least, id) =>
       state.troops[id] < state.troops[least] ? id : least,
@@ -415,6 +426,8 @@ export function simulateHuman(options: HumanOptions): HumanReport {
     // Remonter passe avant tout : on ne déménage pas avec des cellules dehors, donc on les attend.
     const move = state.tier >= BALANCE.ocean.tier ? migrateOffer(state, now) : null;
     const moving = move !== null && move.open && affordable(state, move.cost);
+    if (state.tier >= BALANCE.apex.tier && state.apex === null) send({ type: "leaveWater" }, now);
+    if (state.tier >= 4 && !state.autoHarvest) send({ type: "setAutoHarvest", on: true }, now);
     if (moving) send({ type: "migrate" }, now);
     else {
       sortie(now);
@@ -511,6 +524,7 @@ export function simulateHuman(options: HumanOptions): HumanReport {
     reach("zone crépusculaire atteinte", state.zone >= 2);
     reach("zone éclairée atteinte", state.zone >= 3);
     reach("compagnon apprivoisé", state.companion !== null);
+    reach("sortie des eaux", state.apex !== null && state.apex.place > 0);
     const genes =
       state.companion === null
         ? 0

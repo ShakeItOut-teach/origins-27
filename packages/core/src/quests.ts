@@ -130,6 +130,7 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
     case "rewardOpened":
     case "contestEnded":
     case "drillLearned":
+    case "apexReached":
       return 0;
     case "troopBorn":
       return id === "trainCells" ? 1 : 0;

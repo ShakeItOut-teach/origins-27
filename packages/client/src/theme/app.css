@@ -2653,3 +2653,15 @@ p.season-next {
 .species-badge {
   font-style: italic;
 }
+
+.chest-stage.is-apex {
+  --chest-tone: var(--eosin);
+}
+
+/* Aux grands nombres, les compteurs passent à la ligne plutôt que de sortir de l'écran. */
+.counters {
+  max-width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: var(--space-2);
+}
