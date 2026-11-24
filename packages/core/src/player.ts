@@ -10,6 +10,7 @@ import {
   PREY_KINDS,
   QUEST_IDS,
   REPORT_KINDS,
+  REWARD_CHEST_KINDS,
   EVOLUTION_IDS,
   GENE_FAMILIES,
   RESOURCE_IDS,
@@ -21,6 +22,7 @@ import type {
   Alliance,
   DailyRecord,
   Report,
+  RewardChest,
   Companion,
   Research,
   Construction,
@@ -57,6 +59,7 @@ export function createPlayer(
     daily: { day: 0, wins: 0, losses: 0 },
     boosts: 0,
     reports: [],
+    chests: [],
     companion: null,
     taming: null,
     evolutions: fill(EVOLUTION_IDS, 0),
@@ -188,6 +191,16 @@ export function serializeState(state: PlayerState): string {
           },
     daily: { day: state.daily.day, wins: state.daily.wins, losses: state.daily.losses },
     boosts: state.boosts,
+    chests: state.chests.map((chest) => ({
+      kind: chest.kind,
+      at: chest.at,
+      level: chest.level,
+      sugar: chest.sugar,
+      bricks: chest.bricks,
+      proteins: chest.proteins,
+      energy: chest.energy,
+      boosts: chest.boosts,
+    })),
     reports: state.reports.map((report) => ({
       at: report.at,
       kind: report.kind,
@@ -465,6 +478,28 @@ function readDaily(value: unknown): DailyRecord {
 const PLACE_ID =
   /^((h:|r:)?-?\d{1,6}:-?\d{1,6}|o:\d{1,4}|[dpe]:-?\d{1,4}:-?\d{1,4}:\d{1,9}|v:-?\d{1,4}:-?\d{1,4}:\d{1,9}:\d)$/;
 
+function readChests(value: unknown): RewardChest[] {
+  if (!Array.isArray(value)) throw new TypeError("sauvegarde invalide : coffres");
+  return value.map((entry: unknown) => {
+    if (!isRecord(entry)) throw new TypeError("sauvegarde invalide : coffre");
+    const kind = REWARD_CHEST_KINDS.find((id) => id === entry.kind);
+    const { at, level, sugar, bricks, proteins, energy, boosts } = entry;
+    if (
+      kind === undefined ||
+      !isCount(at) ||
+      !isCount(level) ||
+      !isCount(sugar) ||
+      !isCount(bricks) ||
+      !isCount(proteins) ||
+      !isCount(energy) ||
+      !isCount(boosts)
+    ) {
+      throw new TypeError("sauvegarde invalide : coffre");
+    }
+    return { kind, at, level, sugar, bricks, proteins, energy, boosts };
+  });
+}
+
 function readReports(value: unknown): Report[] {
   if (!Array.isArray(value)) throw new TypeError("sauvegarde invalide : rapports");
   return value.map((entry: unknown) => {
@@ -717,6 +752,7 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     // Avant les accélérateurs et le journal : aucun en réserve, rien de raconté.
     boosts: isCount(raw.boosts) ? raw.boosts : 0,
     reports: raw.reports === undefined ? [] : readReports(raw.reports),
+    chests: raw.chests === undefined ? [] : readChests(raw.chests),
     // Avant le compagnon : personne à apprivoiser, personne en route.
     companion: version < 10 ? null : readCompanion(raw.companion),
     taming: version < 10 || !isCount(raw.taming) ? null : raw.taming,

@@ -35,7 +35,15 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
     condition: { counter: "mapHarvests", atLeast: 5 },
     minDay: null,
     ui: ["troops", "hunt", "chests", "dailyQuests"],
-    orders: ["trainTroop", "sendHunt", "strikeHunt", "cancelHunt", "buyMutation", "claimQuest"],
+    orders: [
+      "trainTroop",
+      "sendHunt",
+      "strikeHunt",
+      "cancelHunt",
+      "buyMutation",
+      "claimQuest",
+      "openReward",
+    ],
   },
   {
     tier: 5,

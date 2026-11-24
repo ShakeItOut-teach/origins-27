@@ -97,13 +97,21 @@ describe("l'accélérateur", () => {
     const sent = ok(state, { type: "huntLeviathan", event: event.id, party: state.troops }, at);
     const fought = ok(sent, { type: "strikeHunt" }, sent.hunt?.arrivesAt ?? 0);
     const back = advance(fought, fought.hunt?.returnsAt ?? 0);
-    expect(back.state.boosts).toBe(BALANCE.events.leviathan.boosts);
-    expect(back.events).toContainEqual({
-      type: "boostGained",
-      at: fought.hunt?.returnsAt,
-      count: BALANCE.events.leviathan.boosts,
+    // Il attend dans le coffre du Léviathan : on l'a quand on ouvre le coffre.
+    expect(back.state.boosts).toBe(0);
+    expect(back.state.chests[0]).toMatchObject({
+      kind: "leviathan",
+      boosts: BALANCE.events.leviathan.boosts,
     });
     expect(deserializeState(serializeState(back.state))).toEqual(back.state);
+    const opened = applyOrder(back.state, { type: "openReward", index: 0 }, back.state.now);
+    if (!opened.ok) throw new Error("coffre refusé");
+    expect(opened.state.boosts).toBe(BALANCE.events.leviathan.boosts);
+    expect(opened.events).toContainEqual({
+      type: "boostGained",
+      at: back.state.now,
+      count: BALANCE.events.leviathan.boosts,
+    });
     // Une chasse ordinaire n'en donne pas.
     expect(back.state.reports[0]).toMatchObject({ kind: "hunt", won: true, who: event.id });
   });

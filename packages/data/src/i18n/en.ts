@@ -426,7 +426,7 @@ export const en = {
     "Plankton explodes. Its deposits do not run out, and every harvest in the zone brings half as much again.",
   "event.leviathan.name": "Leviathan",
   "event.leviathan.text":
-    "A giant predator prowls. Every six hours it strikes the cells within its reach: if your defence gives way, it devours a tenth of your daughter cells and of your stock. Defeating it brings a huge amount of proteins and a booster: one hour less on a worksite or an evolution.",
+    "A giant predator prowls. Every six hours it strikes the cells within its reach: if your defence gives way, it devours a tenth of your daughter cells and of your stock. Defeating it brings a chest: a huge amount of proteins, energy and a one-hour booster.",
   "event.anoxia.name": "Zone without oxygen",
   "event.anoxia.text":
     "Oxygen disappears. Cells in the zone produce 30% less, and their guards weaken as much: this is the time to attack them.",
@@ -642,4 +642,12 @@ export const en = {
   "boost.left": "{n} in stock",
   "boost.gained": "Booster won",
   "boost.text": "{t} less on a worksite or an evolution.",
+  "label.chests": "Chests to open",
+  "chest.tap": "Tap the chest to open it",
+  "chest.kind.quest": "Quest chest",
+  "chest.kind.challenge": "Challenge chest",
+  "chest.kind.league": "League chest",
+  "chest.kind.leviathan": "Leviathan chest",
+  "chest.kind.gift": "Alliance gift",
+  "action.nextChest": "Next chest ({n})",
 } as const satisfies Record<TextKey, string>;

@@ -2375,3 +2375,200 @@ p.season-next {
   align-items: center;
   gap: 4px;
 }
+
+/* Le coffre à ouvrir */
+.chest-veil {
+  z-index: 40;
+  background: color-mix(in srgb, var(--ink) 90%, transparent);
+}
+
+.chest-stage {
+  --chest-tone: var(--algae);
+
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  width: min(100%, 340px);
+  color: var(--paper);
+  text-align: center;
+}
+
+.chest-stage.is-challenge,
+.chest-stage.is-league {
+  --chest-tone: var(--iodine);
+}
+
+.chest-stage.is-leviathan {
+  --chest-tone: var(--eosin);
+}
+
+.chest-title {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: 26px;
+}
+
+.chest-box {
+  width: 220px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  animation: chest-wait 1.6s ease-in-out infinite;
+}
+
+.chest-box:disabled {
+  cursor: default;
+  animation: none;
+}
+
+.chest-box svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.chest-body,
+.chest-lid path {
+  fill: var(--paper-deep);
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+
+.chest-strap {
+  fill: var(--chest-tone);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.chest-label {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.chest-lock {
+  fill: var(--iodine);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.chest-inside {
+  fill: var(--ink);
+}
+
+.chest-lid {
+  transform-box: fill-box;
+  transform-origin: 8% 100%;
+  transition: transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.chest-stage.is-open .chest-lid {
+  transform: translateY(-20px) rotate(-14deg);
+}
+
+.chest-rays line {
+  stroke: var(--iodine);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0;
+}
+
+.chest-stage.is-open .chest-rays line {
+  animation: chest-rays 0.9s ease-out 0.15s both;
+}
+
+.chest-hint {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+.chest-items {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chest-items li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-number);
+  font-size: 17px;
+  animation: chest-pop 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  animation-delay: calc(0.3s + var(--chest-order) * 0.14s);
+}
+
+.chest-acts {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+@keyframes chest-wait {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  8% {
+    transform: rotate(-3deg);
+  }
+
+  16% {
+    transform: rotate(3deg);
+  }
+
+  24% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes chest-rays {
+  0% {
+    opacity: 0;
+    stroke-dasharray: 0 80;
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.35;
+    stroke-dasharray: 80 0;
+  }
+}
+
+@keyframes chest-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-26px) scale(0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chest-box,
+  .chest-items li,
+  .chest-stage.is-open .chest-rays line {
+    animation: none;
+  }
+
+  .chest-stage.is-open .chest-rays line {
+    opacity: 0.35;
+  }
+
+  .chest-lid {
+    transition: none;
+  }
+}

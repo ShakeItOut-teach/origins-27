@@ -167,7 +167,11 @@ describe("les ligues", () => {
     const expected = leagueRewardFor(reward.league);
     expect(reward.loot.proteins).toBe(expected.proteins);
     expect(reward.rank).toBeGreaterThanOrEqual(1);
-    expect(step.state.resources.proteins).toBe(state.resources.proteins + expected.proteins);
+    // Elle attend dans un coffre de ligue : rien n'entre tant qu'il n'est pas ouvert.
+    expect(step.state.resources.proteins).toBe(state.resources.proteins);
+    expect(step.state.chests).toEqual([
+      { kind: "league", at: midnight, level: reward.league, ...expected, energy: 0, boosts: 0 },
+    ]);
     expect(step.state.counters.leagueEntered).toBe(1);
     // Deux minuits : deux récompenses.
     const two = advance(state, midnight + DAY_MS);

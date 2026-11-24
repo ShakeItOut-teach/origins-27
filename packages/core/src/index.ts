@@ -7,6 +7,7 @@ export type {
   Construction,
   DailyRecord,
   Report,
+  RewardChest,
   DailyQuests,
   Raid,
   Quest,

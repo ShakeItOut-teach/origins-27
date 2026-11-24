@@ -429,7 +429,7 @@ export const fr = {
     "Le plancton explose. Ses gisements ne se vident pas, et toute récolte dans la zone rapporte moitié plus.",
   "event.leviathan.name": "Léviathan",
   "event.leviathan.text":
-    "Un prédateur géant rôde. Toutes les six heures, il frappe les cellules à sa portée : si votre défense cède, il dévore un dixième de vos cellules filles et de vos réserves. Le vaincre rapporte énormément de protéines et un accélérateur : une heure de moins sur un chantier ou une évolution.",
+    "Un prédateur géant rôde. Toutes les six heures, il frappe les cellules à sa portée : si votre défense cède, il dévore un dixième de vos cellules filles et de vos réserves. Le vaincre rapporte un coffre : énormément de protéines, de l’énergie et un accélérateur d’une heure.",
   "event.anoxia.name": "Zone sans oxygène",
   "event.anoxia.text":
     "L’oxygène disparaît. Les cellules de la zone produisent 30 % de moins, et leurs gardes faiblissent d’autant : c’est le moment de les attaquer.",
@@ -649,6 +649,14 @@ export const fr = {
   "boost.left": "{n} en réserve",
   "boost.gained": "Accélérateur gagné",
   "boost.text": "{t} de moins sur un chantier ou sur une évolution.",
+  "label.chests": "Coffres à ouvrir",
+  "chest.tap": "Touchez le coffre pour l’ouvrir",
+  "chest.kind.quest": "Coffre de quête",
+  "chest.kind.challenge": "Coffre de défi",
+  "chest.kind.league": "Coffre de ligue",
+  "chest.kind.leviathan": "Coffre du Léviathan",
+  "chest.kind.gift": "Cadeau d’alliance",
+  "action.nextChest": "Coffre suivant ({n})",
 } as const;
 
 export type TextKey = keyof typeof fr;

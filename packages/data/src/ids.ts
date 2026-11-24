@@ -168,6 +168,10 @@ export const FOSSIL_IDS = Object.keys(FOSSIL_AGES) as readonly FossilId[];
 export const BOOST_TARGETS = ["construction", "research"] as const;
 export type BoostTarget = (typeof BOOST_TARGETS)[number];
 
+/** Les coffres de récompense : d'où ils viennent. */
+export const REWARD_CHEST_KINDS = ["quest", "challenge", "league", "leviathan"] as const;
+export type RewardChestKind = (typeof REWARD_CHEST_KINDS)[number];
+
 /** Les sortes de rapports du journal. */
 export const REPORT_KINDS = ["raid", "defense", "hunt", "harvest", "leviathan", "famine"] as const;
 export type ReportKind = (typeof REPORT_KINDS)[number];
@@ -226,6 +230,7 @@ export const ORDER_TYPES = [
   "claimGift",
   "buyAlliance",
   "useBoost",
+  "openReward",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 

@@ -136,6 +136,9 @@ describe("ordres", () => {
     expect(valid({ type: "useBoost", target: "research" })).toBe(true);
     expect(valid({ type: "useBoost", target: "construction" })).toBe(true);
     expect(valid({ type: "useBoost", target: "hunt" })).toBe(false);
+    expect(valid({ type: "openReward", index: 0 })).toBe(true);
+    expect(valid({ type: "openReward", index: -1 })).toBe(false);
+    expect(valid({ type: "openReward" })).toBe(false);
   });
 });
 

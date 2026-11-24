@@ -6,6 +6,7 @@
  */
 import { BALANCE, CHEST_REWARDS, MUTATION_IDS, QUEST_IDS } from "@o27/data";
 import type { ChestReward, QuestId } from "@o27/data";
+import { earnChest } from "./chests";
 import { createRng } from "./rng";
 import type { Rng } from "./rng";
 import { DAY_MS, MICRO } from "./types";
@@ -124,6 +125,8 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
     case "leviathanRepelled":
     case "boostGained":
     case "boostUsed":
+    case "chestEarned":
+    case "rewardOpened":
       return 0;
     case "troopBorn":
       return id === "trainCells" ? 1 : 0;
@@ -225,15 +228,26 @@ export function openChest(state: PlayerState, index: number, at: number): Step {
 }
 
 /**
- * Minuit de saison : les coffres gagnés mais pas encore ouverts s'ouvrent tout seuls (rien
- * n'est perdu), puis de nouvelles quêtes sont tirées.
+ * Minuit de saison : les coffres gagnés mais pas encore ouverts sont mis de côté (rien n'est
+ * perdu, et le joueur garde le plaisir de les ouvrir), puis de nouvelles quêtes sont tirées.
  */
 export function renewQuests(state: PlayerState, at: number): Step {
   let current = state;
   const events: GameEvent[] = [];
-  (state.quests?.items ?? []).forEach((quest, index) => {
-    if (quest.claimed || quest.progress < quest.target) return;
-    const step = openChest(current, index, at);
+  const quests = state.quests;
+  (quests?.items ?? []).forEach((quest, index) => {
+    if (quests === null || quest.claimed || quest.progress < quest.target) return;
+    const loot = chestLoot(state, quests.day, index, quest.challenge);
+    const step = earnChest(current, {
+      kind: quest.challenge ? "challenge" : "quest",
+      at,
+      level: 0,
+      sugar: (loot.sugar ?? 0) * MICRO,
+      bricks: (loot.bricks ?? 0) * MICRO,
+      proteins: (loot.proteins ?? 0) * MICRO,
+      energy: loot.energy ?? 0,
+      boosts: 0,
+    });
     current = step.state;
     events.push(...step.events);
   });

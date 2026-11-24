@@ -5,11 +5,11 @@
  */
 import { BALANCE, ORGANELLE_IDS, TROOP_IDS } from "@o27/data";
 import type { RankingId, ResourceId } from "@o27/data";
+import { earnChest } from "./chests";
 import { evolutionLevels } from "./evolutions";
 import { organismZone, rankOf } from "./ocean";
 import { organismProfile } from "./rivals";
 import { createRng } from "./rng";
-import { capacity } from "./stats";
 import { MICRO } from "./types";
 import type { PlayerState, Step } from "./types";
 import { seasonDay } from "./unlock";
@@ -170,27 +170,20 @@ export function leagueRewardFor(league: number): Readonly<Record<ResourceId, num
 }
 
 /**
- * Minuit : le joueur reçoit la récompense de sa ligue, d'après son rang de puissance.
- * Ce qui ne tient pas dans la réserve est perdu.
+ * Minuit : le joueur reçoit la récompense de sa ligue, d'après son rang de puissance, dans un
+ * coffre qu'il ouvrira lui-même.
  */
 export function leagueStep(state: PlayerState, at: number): Step {
   if (state.tier < BALANCE.ranking.tier) return { state, events: [] };
   const { mine, rows } = ranking(state, "power");
   const league = leagueOf(mine.rank, rows.length);
-  const reward = leagueRewardFor(league);
-  const gain = (id: ResourceId): number =>
-    Math.min(Math.max(0, capacity(state, id) - state.resources[id]), reward[id]);
-  const loot = { sugar: gain("sugar"), bricks: gain("bricks"), proteins: gain("proteins") };
+  const loot = leagueRewardFor(league);
+  const earned = earnChest(
+    { ...state, counters: { ...state.counters, leagueEntered: state.counters.leagueEntered + 1 } },
+    { kind: "league", at, level: league, ...loot, energy: 0, boosts: 0 },
+  );
   return {
-    state: {
-      ...state,
-      resources: {
-        sugar: state.resources.sugar + loot.sugar,
-        bricks: state.resources.bricks + loot.bricks,
-        proteins: state.resources.proteins + loot.proteins,
-      },
-      counters: { ...state.counters, leagueEntered: state.counters.leagueEntered + 1 },
-    },
-    events: [{ type: "leagueReward", at, league, rank: mine.rank, loot }],
+    state: earned.state,
+    events: [{ type: "leagueReward", at, league, rank: mine.rank, loot }, ...earned.events],
   };
 }

@@ -521,6 +521,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     },
     anoxia: { weight: 20, hours: 16, radius: 9, productionPercent: -30, guardPercent: -30 },
   },
+  rewardChests: { kept: 30 },
   boost: { minutes: 60 },
   alliance: {
     tier: 9,

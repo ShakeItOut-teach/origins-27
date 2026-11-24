@@ -324,6 +324,12 @@ describe("océan et alliances", () => {
     });
     expect(boost).toMatchObject({ status: "done", outcome: { ok: false, error: "noBoost" } });
     if (boost.status !== "done") return;
+    // Ouvrir un coffre passe la validation ; sans coffre en attente, le moteur le refuse.
+    const chest = await handleOrder(deps, ALICE, {
+      orderId: id(67),
+      order: { type: "openReward", index: 0 },
+    });
+    expect(chest.status).toBe("done");
     // Le journal a suivi le joueur côté serveur.
     expect(Array.isArray(boost.state.reports)).toBe(true);
     const wrong = await handleOrder(deps, ALICE, {

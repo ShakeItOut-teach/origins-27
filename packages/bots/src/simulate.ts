@@ -244,6 +244,8 @@ export function simulate(
           if (send({ type: "claimQuest", index }, now)) acted = true;
         }
       });
+      // Et les coffres de récompense qui l'attendent (ligue, quête de la veille), un par décision.
+      if (state.chests.length > 0 && send({ type: "openReward", index: 0 }, now)) acted = true;
       const [choice] = state.mutationOffer ?? [];
       if (choice !== undefined && send({ type: "chooseMutation", mutation: choice }, now)) {
         if (mutationSeconds !== null) secondMutationSeconds ??= second;

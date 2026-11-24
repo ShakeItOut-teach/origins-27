@@ -516,6 +516,8 @@ export const BalanceSchema = z.strictObject({
       guardPercent: z.number().int().min(-90).max(-1),
     }),
   }),
+  /** Coffres de récompense : au-delà de ce nombre en attente, le plus ancien s'ouvre tout seul. */
+  rewardChests: z.strictObject({ kept: positiveInt }),
   /** Un accélérateur retire ce temps-là au chantier ou à l'évolution en cours. */
   boost: z.strictObject({ minutes: positiveInt }),
   /** Les alliances : six bannières, des technologies communes, de l'entraide. */
@@ -704,6 +706,8 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("askHelp") }),
   /** Prendre le cadeau d'alliance du jour. */
   z.strictObject({ type: z.literal("claimGift") }),
+  /** Ouvrir un coffre de récompense en attente, désigné par sa place dans la liste. */
+  z.strictObject({ type: z.literal("openReward"), index: z.number().int().min(0).max(99) }),
   /** Dépenser un accélérateur sur le chantier ou sur l'évolution en cours. */
   z.strictObject({ type: z.literal("useBoost"), target: z.enum(BOOST_TARGETS) }),
   /** Acheter dans la boutique d'alliance, avec ses crédits. */

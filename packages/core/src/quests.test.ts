@@ -342,14 +342,19 @@ describe("coffres", () => {
     }
   });
 
-  it("à minuit : les coffres gagnés non ouverts s'ouvrent seuls, puis de nouvelles quêtes arrivent", () => {
+  it("à minuit : les coffres gagnés non ouverts sont mis de côté, puis de nouvelles quêtes arrivent", () => {
     const state = done();
     expect(questsRenewAt(state)).toBe(T0 + DAY_MS);
     const almost = advance(state, T0 + DAY_MS - 1);
     expect(almost.state.quests?.day).toBe(1);
     const next = advance(state, T0 + DAY_MS);
     expect(next.state.quests?.day).toBe(2);
-    expect(next.events.filter((event) => event.type === "chestOpened")).toHaveLength(1);
+    // Rien n'est perdu, et rien ne s'ouvre sans le joueur : le coffre l'attend.
+    expect(next.events.filter((event) => event.type === "chestOpened")).toHaveLength(0);
+    expect(next.events.filter((event) => event.type === "chestEarned")).toHaveLength(1);
+    expect(next.state.chests).toHaveLength(1);
+    expect(next.state.chests[0]?.kind).toBe("quest");
+    expect(next.state.resources).toEqual(almost.state.resources);
     expect(next.state.quests?.items.every((entry) => entry.progress === 0)).toBe(true);
   });
 

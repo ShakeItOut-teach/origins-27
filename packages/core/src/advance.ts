@@ -2,6 +2,7 @@
 import { ensureAlliance } from "./alliance";
 import { allianceDue } from "./banners";
 import { trackDaily } from "./daily";
+import { earnChest } from "./chests";
 import { anoxiaEdge } from "./events";
 import { leviathanDue, leviathanStrike } from "./leviathan";
 import { leagueStep } from "./power";
@@ -153,49 +154,52 @@ function huntBack(state: PlayerState, hunt: Hunt): Step {
   const losses = hunt.outcome?.losses ?? partyOf();
   const troops = { ...state.troops };
   for (const id of TROOP_IDS) troops[id] += hunt.party[id] - losses[id];
-  const room = Math.max(0, capacity(state, "proteins") - state.resources.proteins);
   const promised = won
     ? Math.floor((hunt.proteins * (100 + modifierPercent(state, "huntProteins"))) / 100)
     : 0;
-  const gained = Math.min(room, promised);
-  // Un Léviathan vaincu laisse de quoi hâter un chantier ou une évolution.
-  const boosts = won && hunt.prey.startsWith("e:") ? BALANCE.events.leviathan.boosts : 0;
-  return {
-    state: {
-      ...state,
-      hunt: null,
-      taming: null,
-      boosts: state.boosts + boosts,
-      // Le prédateur visé a été battu sans être tué : il suit le groupe jusqu'à la cellule.
-      companion:
-        won && state.taming !== null && state.companion === null
-          ? { species: state.taming, genes: emptyGenes() }
-          : state.companion,
-      troops,
-      // Vaincre un Léviathan redonne du souffle.
-      energy:
-        state.energy +
-        (won && hunt.prey.startsWith("e:") ? BALANCE.events.leviathan.energyGain : 0),
-      resources: { ...state.resources, proteins: state.resources.proteins + gained },
-      counters: won ? { ...state.counters, huntsWon: state.counters.huntsWon + 1 } : state.counters,
-      placeReadyAt: won
-        ? { ...state.placeReadyAt, [hunt.prey]: hunt.returnsAt + hunt.restMs }
-        : state.placeReadyAt,
-    },
-    events: [
-      {
-        type: "huntReturned",
-        at: hunt.returnsAt,
-        prey: hunt.prey,
-        won,
-        gained,
-        lost: promised - gained,
-        losses: partySize(losses),
-        cancelled: hunt.cancelled,
-      },
-      ...(boosts > 0 ? [{ type: "boostGained" as const, at: hunt.returnsAt, count: boosts }] : []),
-    ],
+  // Un Léviathan vaincu ne rentre pas dans la réserve : sa récompense attend dans un coffre.
+  const beast = won && hunt.prey.startsWith("e:");
+  const room = Math.max(0, capacity(state, "proteins") - state.resources.proteins);
+  const gained = beast ? 0 : Math.min(room, promised);
+  const home: PlayerState = {
+    ...state,
+    hunt: null,
+    taming: null,
+    // Le prédateur visé a été battu sans être tué : il suit le groupe jusqu'à la cellule.
+    companion:
+      won && state.taming !== null && state.companion === null
+        ? { species: state.taming, genes: emptyGenes() }
+        : state.companion,
+    troops,
+    resources: { ...state.resources, proteins: state.resources.proteins + gained },
+    counters: won ? { ...state.counters, huntsWon: state.counters.huntsWon + 1 } : state.counters,
+    placeReadyAt: won
+      ? { ...state.placeReadyAt, [hunt.prey]: hunt.returnsAt + hunt.restMs }
+      : state.placeReadyAt,
   };
+  const returned: GameEvent = {
+    type: "huntReturned",
+    at: hunt.returnsAt,
+    prey: hunt.prey,
+    won,
+    gained,
+    lost: beast ? 0 : promised - gained,
+    losses: partySize(losses),
+    cancelled: hunt.cancelled,
+  };
+  if (!beast) return { state: home, events: [returned] };
+  const data = BALANCE.events.leviathan;
+  const chest = earnChest(home, {
+    kind: "leviathan",
+    at: hunt.returnsAt,
+    level: 0,
+    sugar: 0,
+    bricks: 0,
+    proteins: promised,
+    energy: data.energyGain,
+    boosts: data.boosts,
+  });
+  return { state: chest.state, events: [returned, ...chest.events] };
 }
 
 /** Prochain instant où un groupe sorti (chasse ou attaque) demande quelque chose : le combat, puis le retour. */

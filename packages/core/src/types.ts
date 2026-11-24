@@ -4,6 +4,7 @@ import type {
   BannerId,
   BoostTarget,
   ReportKind,
+  RewardChestKind,
   GeneFamily,
   EvolutionId,
   CounterId,
@@ -53,6 +54,21 @@ export interface Alliance {
   /** La technologie où les membres versent leurs points ; `null` quand tout est au maximum. */
   readonly recommended: AllianceTechId | null;
   readonly syncedAt: number;
+}
+
+/** Un coffre de récompense qui attend d'être ouvert. */
+export interface RewardChest {
+  readonly kind: RewardChestKind;
+  /** Instant où il a été gagné. */
+  readonly at: number;
+  /** Pour un coffre de ligue : la ligue (0 = la plus haute). Sinon 0. */
+  readonly level: number;
+  /** Son contenu : ressources en millionièmes d'unité, énergie et accélérateurs en unités. */
+  readonly sugar: number;
+  readonly bricks: number;
+  readonly proteins: number;
+  readonly energy: number;
+  readonly boosts: number;
 }
 
 /** Une ligne du journal : ce qui est arrivé, à qui, et ce que cela a rapporté ou coûté. */
@@ -196,6 +212,8 @@ export interface PlayerState {
   readonly boosts: number;
   /** Le journal, du plus récent au plus ancien. */
   readonly reports: readonly Report[];
+  /** Les coffres de récompense à ouvrir, du plus ancien au plus récent. */
+  readonly chests: readonly RewardChest[];
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -413,6 +431,22 @@ export type GameEvent =
     }
   | { readonly type: "leviathanRepelled"; readonly at: number; readonly event: string }
   | { readonly type: "boostGained"; readonly at: number; readonly count: number }
+  | { readonly type: "chestEarned"; readonly at: number; readonly kind: RewardChestKind }
+  | {
+      readonly type: "rewardOpened";
+      readonly at: number;
+      readonly kind: RewardChestKind;
+      readonly level: number;
+      readonly loot: {
+        readonly sugar: number;
+        readonly bricks: number;
+        readonly proteins: number;
+        readonly energy: number;
+        readonly boosts: number;
+      };
+      /** Ouvert tout seul, parce que le joueur en avait trop en attente. */
+      readonly auto: boolean;
+    }
   | {
       readonly type: "boostUsed";
       readonly at: number;
@@ -490,6 +524,7 @@ export type OrderErrorCode =
   | "alreadyHelped"
   | "noCredits"
   | "energyFull"
+  | "noChest"
   | "noBoost"
   /** Ni chantier ni évolution en cours : rien à hâter. */
   | "nothingToBoost";

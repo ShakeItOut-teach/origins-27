@@ -362,8 +362,24 @@ describe("le Léviathan", () => {
     expect(fought.hunt?.outcome?.won).toBe(true);
     const home = advance(fought, fought.hunt?.returnsAt ?? 0);
     expect(home.state.hunt).toBeNull();
-    expect(home.state.resources.proteins).toBeGreaterThan(state.resources.proteins);
-    expect(home.state.energy).toBe(fought.energy + DATA.leviathan.energyGain);
+    // Sa récompense attend dans un coffre : rien n'entre tant qu'il n'est pas ouvert.
+    expect(home.state.resources.proteins).toBe(state.resources.proteins);
+    expect(home.state.chests).toEqual([
+      {
+        kind: "leviathan",
+        at: fought.hunt?.returnsAt,
+        level: 0,
+        sugar: 0,
+        bricks: 0,
+        proteins: offer.proteins,
+        energy: DATA.leviathan.energyGain,
+        boosts: DATA.leviathan.boosts,
+      },
+    ]);
+    const opened = ok(home.state, { type: "openReward", index: 0 }, home.state.now);
+    expect(opened.resources.proteins).toBe(state.resources.proteins + offer.proteins);
+    expect(opened.energy).toBe(fought.energy + DATA.leviathan.energyGain);
+    expect(opened.chests).toEqual([]);
     expect(leviathanBeaten(home.state, event)).toBe(true);
     expect(leviathanThreat(home.state)).toBeNull();
     const rest = advance(home.state, event.endsAt + HOUR);

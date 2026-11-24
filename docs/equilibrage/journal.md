@@ -402,3 +402,15 @@ toucher avec 120 cellules de rang 1 au jour 10 : passé à 400 + 30 par jour, fr
 À surveiller : une heure couvre tous les chantiers actuels (15 minutes au plus). Si les
 chantiers s'allongent aux paliers suivants, l'accélérateur gardera son sens ; sinon, le
 ramener à une part du temps restant.
+
+## 2026-11-24 — Coffres de récompense
+
+| Réglage             | Valeur                                                                 |
+| ------------------- | ---------------------------------------------------------------------- |
+| Coffres en attente  | 30 au plus ; au-delà, le plus ancien s'ouvre tout seul                 |
+| Coffre de ligue     | la récompense de ligue entière (elle n'est plus rognée par la réserve) |
+| Coffre du Léviathan | protéines de la chasse, 5 d'énergie, 1 accélérateur                    |
+
+Effet à surveiller : les récompenses de ligue et du Léviathan dépassent désormais la réserve
+quand on ouvre le coffre. C'est voulu (« un coffre est un cadeau »), mais cela donne aux
+joueurs un moyen de stocker au-delà du plafond.

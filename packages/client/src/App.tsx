@@ -26,7 +26,6 @@ import type { AbsenceSummary, PlayerState } from "@o27/core";
 import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS, SEASON_DAYS } from "@o27/data";
 import type {
   BannerId,
-  ChestReward,
   EvolutionId,
   GeneFamily,
   MutationId,
@@ -60,6 +59,8 @@ import { JournalSheet } from "./ui/JournalSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
 import { CalendarSheet, openingName } from "./ui/CalendarSheet";
+import { ChestOverlay } from "./ui/ChestOverlay";
+import type { ChestLoot, ChestTone } from "./ui/ChestOverlay";
 import { CompanionSheet, companionName } from "./ui/CompanionSheet";
 import { EvolutionPanel } from "./ui/EvolutionPanel";
 import { GenomeSheet } from "./ui/GenomeSheet";
@@ -77,6 +78,12 @@ interface Props {
   /** Absent quand le jeu tourne sans serveur. */
   readonly account: Account | null;
 }
+
+/** Ce que le joueur ouvre : un coffre en attente, le coffre d'une quête finie, le cadeau d'alliance. */
+type Opening =
+  | { readonly kind: "reward" }
+  | { readonly kind: "quest"; readonly index: number }
+  | { readonly kind: "gift" };
 
 /** Où l'appareil retient l'heure du dernier rapport lu. */
 const REPORTS_SEEN_KEY = "o27.rapports.vus";
@@ -136,18 +143,22 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [companionOpen, setCompanionOpen] = useState(false);
   const [tamed, setTamed] = useState(false);
   const [eventsOpen, setEventsOpen] = useState(false);
-  /** Le dernier coffre ouvert est-il le cadeau du jour de l'alliance ? */
-  const [chestIsGift, setChestIsGift] = useState(false);
   const [allianceOpen, setAllianceOpen] = useState(false);
   const [gazetteOpen, setGazetteOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
+  /** Le coffre que le joueur est en train d'ouvrir, et un compteur pour repartir d'un coffre fermé. */
+  const [opening, setOpening] = useState<Opening | null>(null);
+  const [openingCount, setOpeningCount] = useState(0);
+  const present = (next: Opening): void => {
+    setOpening(next);
+    setOpeningCount((count) => count + 1);
+  };
   /** Instant du dernier rapport que le joueur a vu : les suivants sont « nouveaux ». */
   const [reportsSeen, setReportsSeen] = useState(
     () => Number(window.localStorage.getItem(REPORTS_SEEN_KEY)) || 0,
   );
   /** Instant de la dernière attaque subie : l'écran rougit quelques secondes. */
   const [hitAt, setHitAt] = useState(0);
-  const [boostWon, setBoostWon] = useState(false);
   /** La bannière qui vient d'accueillir le joueur, et s'il a été recruté d'office. */
   const [enlisted, setEnlisted] = useState<{ banner: BannerId; auto: boolean } | null>(null);
   /** La dernière frappe du Léviathan : repoussée, ou ce qu'elle a coûté. */
@@ -163,17 +174,12 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   /** Cellules filles mortes de faim depuis la dernière note. */
   const [starved, setStarved] = useState(0);
   /** Dernière récompense de ligue reçue. */
-  const [leagueNote, setLeagueNote] = useState<{
-    league: number;
-    loot: Readonly<Record<ResourceId, number>>;
-  } | null>(null);
   // Vrais termes de la biologie ou mots simples : le choix du joueur, gardé sur l'appareil.
   const [science, setScienceChoice] = useState(() => savedScience(window.localStorage) ?? true);
   const [termsAsked, setTermsAsked] = useState(() => savedScience(window.localStorage) !== null);
   const [lexiconOpen, setLexiconOpen] = useState(false);
   setScience(science);
   /** Contenu du dernier coffre ouvert. */
-  const [chest, setChest] = useState<Readonly<Partial<Record<ChestReward, number>>> | null>(null);
   /** Résultat de la dernière chasse rentrée. */
   const [huntNote, setHuntNote] = useState<{
     won: boolean;
@@ -200,24 +206,10 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           if (event.type === "expeditionReturned" && event.lost >= MICRO) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
-          if (event.type === "chestOpened") {
-            setChestIsGift(false);
-            setChest(event.loot);
-          }
           if (event.type === "companionTamed") setTamed(true);
           if (event.type === "allianceJoined") {
             setEnlisted({ banner: event.banner, auto: event.auto });
           }
-          if (event.type === "allianceGift") {
-            setChestIsGift(true);
-            setChest({
-              sugar: Math.floor(event.loot.sugar / MICRO),
-              bricks: Math.floor(event.loot.bricks / MICRO),
-              proteins: Math.floor(event.loot.proteins / MICRO),
-              energy: event.energy,
-            });
-          }
-          if (event.type === "boostGained") setBoostWon(true);
           if (event.type === "attackSuffered" || event.type === "leviathanStruck") {
             setHitAt(event.at);
           }
@@ -239,9 +231,6 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           if (event.type === "troopsStarved") {
             const dead = event.count;
             setStarved((count) => count + dead);
-          }
-          if (event.type === "leagueReward") {
-            setLeagueNote({ league: event.league, loot: event.loot });
           }
           if (event.type === "raidReturned" && !event.cancelled) {
             setRaidNote({ won: event.won, gained: event.gained, losses: event.losses });
@@ -359,6 +348,44 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
     show("alliances") && state.alliance !== null
       ? (allianceToday(state).gift ? 0 : 1) + (helpRequests(state) > 0 ? 1 : 0)
       : 0;
+
+  const chestTitle = (): { title: string; tone: ChestTone } => {
+    if (opening?.kind === "gift") return { title: t("chest.kind.gift"), tone: "gift" };
+    if (opening?.kind === "quest") {
+      const tone = state.quests?.items[opening.index]?.challenge === true ? "challenge" : "quest";
+      return { title: t(`chest.kind.${tone}`), tone };
+    }
+    const first = state.chests[0];
+    if (first === undefined) return { title: t("chest.title"), tone: "quest" };
+    const league =
+      first.kind === "league" ? ` · ${t(`league.${String(first.level)}.name` as TextKey)}` : "";
+    return { title: `${t(`chest.kind.${first.kind}`)}${league}`, tone: first.kind };
+  };
+  const openChest = (): ChestLoot | null => {
+    if (opening === null) return null;
+    const order: Order =
+      opening.kind === "reward"
+        ? { type: "openReward", index: 0 }
+        : opening.kind === "quest"
+          ? { type: "claimQuest", index: opening.index }
+          : { type: "claimGift" };
+    const result = store.send(order);
+    if (!result.ok) return null;
+    for (const event of result.events) {
+      if (event.type === "rewardOpened") return event.loot;
+      if (event.type === "allianceGift") return { ...event.loot, energy: event.energy, boosts: 0 };
+      if (event.type === "chestOpened") {
+        return {
+          sugar: (event.loot.sugar ?? 0) * MICRO,
+          bricks: (event.loot.bricks ?? 0) * MICRO,
+          proteins: (event.loot.proteins ?? 0) * MICRO,
+          energy: event.loot.energy ?? 0,
+          boosts: 0,
+        };
+      }
+    }
+    return null;
+  };
 
   if (!store.isReady()) {
     return <main className="page" data-tier="loading" aria-busy="true" />;
@@ -683,30 +710,6 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           </button>
         </div>
       )}
-      {leagueNote !== null && (
-        <div className="loss is-good is-chest" role="status" data-testid="league-note">
-          <strong>
-            {t("league.note")} · {t(`league.${String(leagueNote.league)}.name` as TextKey)}
-          </strong>
-          <span className="chest-loot">
-            {(["sugar", "bricks", "proteins"] as const).map((id) => (
-              <span key={id}>
-                <ResourceIcon id={id} />+{formatAmount(leagueNote.loot[id], lang)}
-              </span>
-            ))}
-          </span>
-          <button
-            type="button"
-            className="close"
-            aria-label={t("action.close")}
-            onClick={() => {
-              setLeagueNote(null);
-            }}
-          >
-            ×
-          </button>
-        </div>
-      )}
       {quests !== null && (
         <button
           type="button"
@@ -732,39 +735,39 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setQuestsOpen(false);
           }}
           onOrder={(order) => {
-            store.send(order);
+            // Un coffre ne s'ouvre pas d'un simple bouton : le joueur le touche lui-même.
+            if (order.type === "claimQuest") present({ kind: "quest", index: order.index });
+            else store.send(order);
           }}
         />
       )}
-
-      {chest !== null && (
-        <div className="loss is-good is-chest" role="status" data-testid="chest-note">
-          <strong>{chestIsGift ? t("alliance.gift") : t("chest.title")}</strong>
-          <span className="chest-loot">
-            {(["sugar", "bricks", "proteins"] as const)
-              .filter((id) => chest[id] !== undefined)
-              .map((id) => (
-                <span key={id}>
-                  <ResourceIcon id={id} />+{chest[id]}
-                </span>
-              ))}
-            {chest.energy !== undefined && (
-              <span>
-                <EnergyIcon />+{chest.energy} {t("chest.energy")}
-              </span>
-            )}
-          </span>
-          <button
-            type="button"
-            className="close"
-            aria-label={t("action.close")}
-            onClick={() => {
-              setChest(null);
-            }}
-          >
-            ×
-          </button>
-        </div>
+      {show("chests") && state.chests.length > 0 && (
+        <button
+          type="button"
+          className="quests-open chests-open has-chest"
+          data-testid="chests-open"
+          onClick={() => {
+            present({ kind: "reward" });
+          }}
+        >
+          {t("label.chests")}
+          <span className="badge">{state.chests.length}</span>
+        </button>
+      )}
+      {opening !== null && (
+        <ChestOverlay
+          key={openingCount}
+          lang={lang}
+          {...chestTitle()}
+          waiting={state.chests.length}
+          onOpen={openChest}
+          onNext={() => {
+            present({ kind: "reward" });
+          }}
+          onClose={() => {
+            setOpening(null);
+          }}
+        />
       )}
 
       {show("genome") && (
@@ -816,24 +819,6 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           }}
         />
       )}
-      {boostWon && (
-        <div className="loss is-good" role="status" data-testid="boost-note">
-          <strong>{t("boost.gained")}</strong>
-          <span>
-            {t("boost.text").replace("{t}", formatAway(BALANCE.boost.minutes * 60_000, lang))}
-          </span>
-          <button
-            type="button"
-            className="close"
-            aria-label={t("action.close")}
-            onClick={() => {
-              setBoostWon(false);
-            }}
-          >
-            ×
-          </button>
-        </div>
-      )}
       {show("zoneEvents") && (
         <button
           type="button"
@@ -867,7 +852,12 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           onClose={() => {
             setAllianceOpen(false);
           }}
-          onOrder={(order) => store.send(order).ok}
+          onOrder={(order) => {
+            // Le cadeau du jour s'ouvre comme un coffre : le joueur le touche lui-même.
+            if (order.type !== "claimGift") return store.send(order).ok;
+            present({ kind: "gift" });
+            return true;
+          }}
         />
       )}
       {show("gazette") && (
@@ -1123,7 +1113,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         >
           <strong>
             {huntNote.won ? t("hunt.won") : t("hunt.lost")}
-            {huntNote.won && (
+            {huntNote.won && huntNote.gained > 0 && (
               <>
                 {" · "}
                 <ResourceIcon id="proteins" />+{formatAmount(huntNote.gained, lang)}

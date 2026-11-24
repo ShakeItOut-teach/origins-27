@@ -12,6 +12,7 @@ import type {
 } from "@o27/data";
 import { advance } from "./advance";
 import { allianceOrder } from "./alliance";
+import { openReward } from "./chests";
 import { trackDaily } from "./daily";
 import { eventCovers, findEvent } from "./events";
 import { gatherOffer, playerDeposit } from "./gather";
@@ -689,6 +690,10 @@ function execute(state: PlayerState, order: Order): Outcome {
       return huntLeviathan(state, order.event, order.party);
     case "useBoost":
       return useBoost(state, order.target);
+    case "openReward":
+      return state.chests[order.index] === undefined
+        ? { error: "noChest" }
+        : openReward(state, order.index, state.now);
     case "joinAlliance":
     case "donate":
     case "recommend":
