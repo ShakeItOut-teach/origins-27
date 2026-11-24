@@ -279,6 +279,49 @@ export const BalanceSchema = z.strictObject({
       z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
     ),
   }),
+  /** La puissance : un seul nombre qui dit ce que valent une cellule et ses troupes. */
+  power: z.strictObject({
+    perOrganelleLevel: positiveInt,
+    perMutation: positiveInt,
+    /** Par zone remontée. */
+    perZone: positiveInt,
+    perTroop: positiveInt,
+  }),
+  /** Les scores des organismes simulés : ils grandissent avec la saison. */
+  ranking: z.strictObject({
+    tier: positiveInt,
+    power: z.strictObject({ base: positiveInt, perDay: positiveInt }),
+    /** Supplément de puissance par zone remontée, en pourcentage. */
+    zonePercent: nonNegativeInt,
+    /** Butin pillé par jour par un organisme moyen. */
+    lootPerDay: positiveInt,
+    /** Attaques repoussées en cent jours par un organisme moyen. */
+    defensePerHundredDays: positiveInt,
+  }),
+  /**
+   * Les ligues, de la plus haute à la plus basse. Chaque minuit, le joueur reçoit la
+   * récompense de base multipliée par le pourcentage de sa ligue.
+   */
+  leagues: z
+    .array(
+      z.strictObject({
+        /** La ligue accueille les joueurs classés dans ce premier pourcentage. */
+        topPercent: z.number().int().min(1).max(100),
+        rewardPercent: positiveInt,
+      }),
+    )
+    .min(2),
+  leagueReward: z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
+  /** Les prédateurs de l'océan : des animaux à chasser, plus forts près de la surface. */
+  predators: z.strictObject({
+    sector: positiveInt,
+    chancePercent: z.number().int().min(1).max(100),
+    /** Un prédateur reste ce temps-là, puis un autre apparaît ailleurs. */
+    epochHours: positiveInt,
+    energy: positiveInt,
+    /** Du plus faible au plus fort, dans les abysses. */
+    levels: z.array(z.strictObject({ power: positiveInt, proteins: positiveInt })).min(1),
+  }),
   /** Prix en protéines de chaque nouvelle mutation ; le dernier prix vaut pour toutes les suivantes. */
   mutationPrices: z.array(positiveInt).min(1),
   /** Géométrie de la goutte, en unités de carte. Entiers uniquement. */
@@ -371,6 +414,16 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("gather"),
     deposit: z.string().regex(/^d:-?d{1,4}:-?d{1,4}:d{1,9}$/),
+  }),
+  /** Chasser un prédateur de l'océan, désigné par son secteur et son cycle : « p:colonne:ligne:cycle ». */
+  z.strictObject({
+    type: z.literal("huntPredator"),
+    predator: z.string().regex(/^p:-?\d{1,4}:-?\d{1,4}:\d{1,9}$/),
+    party: z.strictObject({
+      hunter: z.number().int().min(0).max(500),
+      armored: z.number().int().min(0).max(500),
+      swift: z.number().int().min(0).max(500),
+    }),
   }),
   /** Remonter d'une zone vers la surface. */
   z.strictObject({ type: z.literal("migrate") }),

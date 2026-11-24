@@ -1,7 +1,10 @@
 import {
   MICRO,
   nextMutationPrice,
+  leagueOf,
+  ranking,
   rivalName as nameOfRival,
+  totalPower,
   capacity,
   describeCreature,
   levelCost,
@@ -15,13 +18,24 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
 import type { Account } from "./game/api";
 import type { GameStore } from "./game/store";
-import { formatAmount, formatAway, formatDuration, formatRate, translate } from "./game/text";
+import {
+  formatAmount,
+  formatAway,
+  formatDuration,
+  formatRate,
+  saveScience,
+  savedScience,
+  setScience,
+  translate,
+} from "./game/text";
 import type { Lang } from "./game/text";
 import { isVisible } from "./game/unlock";
 import { AccountSheet } from "./ui/AccountSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
+import { LexiconSheet } from "./ui/LexiconSheet";
 import { QuestSheet } from "./ui/QuestSheet";
+import { RankingSheet } from "./ui/RankingSheet";
 import { RaidBubble } from "./ui/RaidBubble";
 import { RivalsView } from "./ui/RivalsView";
 import { TroopPanel } from "./ui/TroopPanel";
@@ -69,6 +83,17 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   /** Butin perdu au dernier retour, faute de place : on le dit, une fois. */
   const [loss, setLoss] = useState<{ resource: ResourceId; amount: number } | null>(null);
   const [questsOpen, setQuestsOpen] = useState(false);
+  const [rankingOpen, setRankingOpen] = useState(false);
+  /** Dernière récompense de ligue reçue. */
+  const [leagueNote, setLeagueNote] = useState<{
+    league: number;
+    loot: Readonly<Record<ResourceId, number>>;
+  } | null>(null);
+  // Vrais termes de la biologie ou mots simples : le choix du joueur, gardé sur l'appareil.
+  const [science, setScienceChoice] = useState(() => savedScience(window.localStorage) ?? true);
+  const [termsAsked, setTermsAsked] = useState(() => savedScience(window.localStorage) !== null);
+  const [lexiconOpen, setLexiconOpen] = useState(false);
+  setScience(science);
   /** Contenu du dernier coffre ouvert. */
   const [chest, setChest] = useState<Readonly<Partial<Record<ChestReward, number>>> | null>(null);
   /** Résultat de la dernière chasse rentrée. */
@@ -98,6 +123,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
           if (event.type === "chestOpened") setChest(event.loot);
+          if (event.type === "leagueReward") {
+            setLeagueNote({ league: event.league, loot: event.loot });
+          }
           if (event.type === "raidReturned" && !event.cancelled) {
             setRaidNote({ won: event.won, gained: event.gained, losses: event.losses });
           }
@@ -187,6 +215,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       ? raid.resolveAt - state.now
       : null;
   const rivalName = (id: string): string => nameOfRival(state, id);
+  const powerRank = ranking(state, "power");
 
   if (!store.isReady()) {
     return <main className="page" data-tier="loading" aria-busy="true" />;
@@ -203,6 +232,32 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       >
         {lang === "fr" ? "EN" : "FR"}
       </button>
+      <button
+        type="button"
+        className="lang lexicon-open"
+        aria-label={t("action.lexicon")}
+        data-testid="lexicon-open"
+        onClick={() => {
+          setLexiconOpen(true);
+        }}
+      >
+        Aa
+      </button>
+      {(lexiconOpen || (!termsAsked && state.tier >= 1 && absence === null && reveal === null)) && (
+        <LexiconSheet
+          lang={lang}
+          onClose={() => {
+            saveScience(window.localStorage, science);
+            setTermsAsked(true);
+            setLexiconOpen(false);
+          }}
+          onChoose={(value) => {
+            saveScience(window.localStorage, value);
+            setTermsAsked(true);
+            setScienceChoice(value);
+          }}
+        />
+      )}
       {account !== null && (
         <button
           type="button"
@@ -276,6 +331,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           lang={lang}
           showPrey={show("hunt")}
           showWorld={show("worldMap")}
+          showPredators={show("predators")}
           onOrder={(order) => store.send(order).ok}
         />
       )}
@@ -338,6 +394,57 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         </div>
       )}
 
+      {show("ranking") && (
+        <button
+          type="button"
+          className="quests-open ranking-open"
+          data-testid="ranking-open"
+          onClick={() => {
+            setRankingOpen(true);
+          }}
+        >
+          {t("label.power")} <strong>{totalPower(state)}</strong>
+          <span className="badge">
+            {t(
+              `league.${String(leagueOf(powerRank.mine.rank, powerRank.rows.length))}.name` as TextKey,
+            )}{" "}
+            · {powerRank.mine.rank}
+          </span>
+        </button>
+      )}
+      {show("ranking") && rankingOpen && (
+        <RankingSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setRankingOpen(false);
+          }}
+        />
+      )}
+      {leagueNote !== null && (
+        <div className="loss is-good is-chest" role="status" data-testid="league-note">
+          <strong>
+            {t("league.note")} · {t(`league.${String(leagueNote.league)}.name` as TextKey)}
+          </strong>
+          <span className="chest-loot">
+            {(["sugar", "bricks", "proteins"] as const).map((id) => (
+              <span key={id}>
+                <ResourceIcon id={id} />+{formatAmount(leagueNote.loot[id], lang)}
+              </span>
+            ))}
+          </span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setLeagueNote(null);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
       {quests !== null && (
         <button
           type="button"

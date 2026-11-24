@@ -1,7 +1,7 @@
 /** Textes et mise en forme des nombres, dans la langue du joueur. */
 import { MICRO } from "@o27/core";
-import { en, fr } from "@o27/data";
-import type { TextKey } from "@o27/data";
+import { en, enScience, fr, frScience } from "@o27/data";
+import type { ScienceTexts, TextKey } from "@o27/data";
 
 export type Lang = "fr" | "en";
 
@@ -9,8 +9,32 @@ export function detectLang(languages: readonly string[]): Lang {
   return languages[0]?.toLowerCase().startsWith("fr") === true ? "fr" : "en";
 }
 
-export function translate(lang: Lang, key: TextKey): string {
-  return lang === "fr" ? fr[key] : en[key];
+/** Vrais termes de la biologie (par défaut) ou mots simples : le joueur choisit. */
+let science = true;
+const TERMS_KEY = "o27.termes";
+
+export function isScience(): boolean {
+  return science;
+}
+
+export function setScience(value: boolean): void {
+  science = value;
+}
+
+/** Le choix enregistré : `null` tant que le joueur n'a rien choisi. */
+export function savedScience(storage: Pick<Storage, "getItem">): boolean | null {
+  const value = storage.getItem(TERMS_KEY);
+  return value === "science" ? true : value === "simples" ? false : null;
+}
+
+export function saveScience(storage: Pick<Storage, "setItem">, value: boolean): void {
+  storage.setItem(TERMS_KEY, value ? "science" : "simples");
+}
+
+/** Un texte dans la langue du joueur, avec le mot simple ou le vrai terme selon son réglage. */
+export function translate(lang: Lang, key: TextKey, real: boolean = science): string {
+  const terms: ScienceTexts = lang === "fr" ? frScience : enScience;
+  return (real ? terms[key] : undefined) ?? (lang === "fr" ? fr[key] : en[key]);
 }
 
 /** Une quantité de ressource, en unités entières. */

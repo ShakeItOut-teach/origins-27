@@ -1288,6 +1288,101 @@ p {
   cursor: pointer;
 }
 
+.lexicon-open {
+  right: calc(var(--space-2) + var(--touch));
+}
+
+.ranking-open strong {
+  font-family: var(--font-number);
+}
+
+.league {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-deep);
+}
+
+.league-name strong {
+  font-family: var(--font-title);
+  font-size: 22px;
+}
+
+.rank-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.rank-tab {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rank-tab.is-on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.rank-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-number);
+  font-size: 14px;
+}
+
+.rank-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: var(--space-2);
+  padding: 6px var(--space-2);
+  border-bottom: 1px solid var(--grid);
+}
+
+.rank-row.has-gap {
+  border-top: 2px dotted var(--ink-soft);
+}
+
+.rank-row.is-me {
+  background: color-mix(in srgb, var(--iodine) 30%, transparent);
+  font-weight: 600;
+}
+
+.rank-name {
+  font-family: var(--font-text);
+}
+
+.lexicon {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.lexicon-row dd {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.lexicon-simple {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
 .lens-pill-right {
   left: auto;
   right: -6px;

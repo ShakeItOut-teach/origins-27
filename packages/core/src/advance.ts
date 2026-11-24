@@ -1,4 +1,5 @@
 /** Faire passer le temps : production passive, fin des chantiers, retour des expéditions, paliers. */
+import { leagueStep } from "./power";
 import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import { capacity, productionRate } from "./stats";
 import { partySize, resolveHunt } from "./hunt";
@@ -189,8 +190,11 @@ export function advance(state: PlayerState, now: number): Step {
     let step: Step;
     if (midnight === at) {
       // L'énergie est d'abord mise à jour : le coffre ouvert à minuit s'ajoute à la vraie jauge.
-      step =
+      const daily: Step =
         ready.quests === null ? { state: ready, events: [] } : renewQuests(settle(ready, at), at);
+      // Puis la récompense de ligue du jour qui s'achève.
+      const league = leagueStep(daily.state, at);
+      step = { state: league.state, events: [...daily.events, ...league.events] };
     } else if (construction !== null && buildEnd === at) {
       step = {
         state: complete(ready, construction),

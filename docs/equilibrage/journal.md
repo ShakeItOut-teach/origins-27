@@ -261,3 +261,19 @@ l'océan :
 
 À surveiller : la garde des rivaux près de la surface dépasse ce que 35 cellules de rang 1
 peuvent battre. C'est voulu : les troupes de rang supérieur arrivent aux paliers suivants.
+
+## 2026-11-24 — Palier 7 : premiers chiffres
+
+| Réglage                         | Valeur                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------- |
+| Condition                       | 3 combats contre des rivaux (au lieu de 5), jour 4                           |
+| Puissance                       | 20 par niveau d'organite, 30 par mutation, 100 par zone, 8 par cellule fille |
+| Puissance d'un organisme simulé | (150 + 60 par jour) × tempérament, +15 % par zone                            |
+| Ligues                          | 1 %, 5 %, 15 %, 35 %, 65 %, le reste                                         |
+| Récompense de minuit            | 100/50/10 × 300 %, 200 %, 150 %, 110 %, 80 %, 50 %                           |
+| Prédateurs (abysses)            | force 12, 25, 45 pour 20, 45, 90 protéines                                   |
+
+Mesure à l'écran, jour 7, une cellule de 10 niveaux d'organites et 20 cellules filles :
+puissance 410 avec 5 par cellule fille, rang 435 sur 500, et 496 sur 500 au classement des
+troupes. Passé à 8 par cellule fille pour que les troupes pèsent. À reprendre après une
+saison jouée par les robots.

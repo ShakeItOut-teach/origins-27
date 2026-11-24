@@ -10,6 +10,7 @@ import { dropShield, goAway, raidOffer, reachableRivals, resolveRaid, setNight }
 import { MICRO } from "./types";
 import { drawMutationOffer, orderTier } from "./unlock";
 import { ZONE_COUNT, cellIn, findDeposit, gatherOffer, migrateOffer } from "./ocean";
+import { findPredator, predatorOffer } from "./predators";
 import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
 
 type Outcome =
@@ -259,6 +260,58 @@ function sendHunt(
   };
 }
 
+/** Chasser un prédateur de l'océan : le même combat qu'une chasse, mais loin de chez soi. */
+function huntPredator(
+  state: PlayerState,
+  predatorId: string,
+  party: Readonly<Record<TroopId, number>>,
+): Outcome {
+  if (state.hunt !== null || state.raid !== null) return { error: "busy" };
+  const predator = findPredator(state.worldSeed, predatorId, state.now);
+  if (predator === null) return { error: "unknownPredator" };
+  if (predator.zone > state.zone) return { error: "zoneClosed" };
+  if ((state.placeReadyAt[predatorId] ?? 0) > state.now) return { error: "placeResting" };
+  if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {
+    return { error: "noTroops" };
+  }
+  const offer = predatorOffer(state, predator, state.now);
+  if (state.energy < offer.energy) return { error: "noEnergy" };
+  const windowMs = BALANCE.hunt.strikeWindowSeconds * 1000;
+  const arrivesAt = state.now + (offer.durationMs - windowMs) / 2;
+  const returnsAt = state.now + offer.durationMs;
+  const troops = { ...state.troops };
+  for (const id of TROOP_IDS) troops[id] -= party[id];
+  // On oublie au passage les prédateurs disparus : la liste ne grossit pas sans fin.
+  const placeReadyAt: Record<string, number> = {};
+  for (const [id, readyAt] of Object.entries(state.placeReadyAt)) {
+    if (!id.startsWith("p:") || readyAt > state.now) placeReadyAt[id] = readyAt;
+  }
+  return {
+    state: {
+      ...state,
+      energy: state.energy - offer.energy,
+      troops,
+      placeReadyAt,
+      hunt: {
+        prey: predatorId,
+        kind: predator.kind,
+        power: offer.power,
+        proteins: offer.proteins,
+        energy: offer.energy,
+        restMs: offer.restMs,
+        party: { hunter: party.hunter, armored: party.armored, swift: party.swift },
+        startedAt: state.now,
+        arrivesAt,
+        resolveAt: arrivesAt + windowMs,
+        returnsAt,
+        outcome: null,
+        cancelled: false,
+      },
+    },
+    events: [{ type: "huntSent", at: state.now, prey: predatorId, arrivesAt, returnsAt }],
+  };
+}
+
 /** Le joueur touche la proie pendant que son groupe se bat. */
 function strikeHunt(state: PlayerState): Outcome {
   const hunt = state.hunt;
@@ -457,6 +510,8 @@ function execute(state: PlayerState, order: Order): Outcome {
       return gather(state, order.deposit);
     case "migrate":
       return migrate(state);
+    case "huntPredator":
+      return huntPredator(state, order.predator, order.party);
   }
 }
 

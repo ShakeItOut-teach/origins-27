@@ -19,8 +19,9 @@ Gratuit, sans aucun avantage achetable.
   mais crédibles).
 - **L'arc :** cinq stades de vie — Procaryote → Eucaryote → Colonie → Pluricellulaire → APEX.
   La victoire, c'est sortir de l'eau.
-- **Le ton :** science réelle rendue accessible. Les vrais termes existent (ATP, ribosomes,
-  endosymbiose), mais le jeu parle d'abord avec des mots simples (sucre, briques, fabriques).
+- **Le ton :** science réelle. Le jeu emploie les vrais termes (ATP, lipides, mitochondrie),
+  expliqués un par un dans un lexique ; le joueur peut choisir les mots simples (sucre,
+  briques, centrale) à la place. Décision du propriétaire du 2026-11-24.
 - **La trace :** à la fin de la saison, l'espèce du joueur est unique (nom latin, apparence
   façonnée par ses mutations, cousin fossile réel) et entre dans un Muséum. On repart
   de zéro à la saison suivante, avec ce souvenir.

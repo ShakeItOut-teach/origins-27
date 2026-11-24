@@ -4,12 +4,15 @@ import {
   depositLeft,
   depthAt,
   findDeposit,
+  findPredator,
   gatherOffer,
   migrateOffer,
   oceanDeposits,
   oceanOrganisms,
+  oceanPredators,
   oceanRivals,
   playerCell,
+  predatorOffer,
   seasonDay,
   zoneOpenDay,
 } from "@o27/core";
@@ -27,12 +30,15 @@ import { labelSpot, panCamera, project, SPAN, TOUCH_SPAN, zoomCamera } from "../
 import type { WorldCamera } from "../game/worldView";
 import { EnergyIcon, ResourceIcon } from "./icons";
 import { SheetFrame } from "./SheetFrame";
+import { PreySheet } from "./PreySheet";
 import { RivalSheet } from "./RivalsView";
 
 interface Props {
   readonly state: PlayerState;
   readonly hue: number;
   readonly lang: Lang;
+  /** Les prédateurs n'existent pas avant leur palier. */
+  readonly showPredators: boolean;
   /** Revenir à la goutte proche. */
   readonly onBack: () => void;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
@@ -47,7 +53,7 @@ function zoneName(lang: Lang, zone: number): string {
 }
 
 /** L'océan entier : on le fait glisser, on recule, on touche un organisme ou un gisement. */
-export function WorldView({ state, hue, lang, onBack, onOrder }: Props) {
+export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const home = useMemo(() => playerCell(state), [state.worldSeed, state.slot, state.zone]);
   const [camera, setCamera] = useState<WorldCamera>({ x: home.x, y: home.y, span: SPAN.start });
@@ -56,8 +62,10 @@ export function WorldView({ state, hue, lang, onBack, onOrder }: Props) {
   const day = seasonDay(state, state.now);
   const rivals = oceanRivals(state);
   const deposits = oceanDeposits(state.worldSeed, state.now);
+  const predators = showPredators ? oceanPredators(state.worldSeed, state.now) : [];
   const raid = state.raid;
   const trip = state.expedition;
+  const hunt = state.hunt;
 
   // Les doigts posés sur la carte : un seul fait glisser, deux écartés font reculer.
   const fingers = useRef(new Map<number, { x: number; y: number }>());
@@ -120,6 +128,18 @@ export function WorldView({ state, hue, lang, onBack, onOrder }: Props) {
       ),
     });
   }
+  const hunted = hunt === null ? null : findPredator(state.worldSeed, hunt.prey, hunt.startedAt);
+  if (hunt !== null && hunted !== null) {
+    trails.push({
+      x: hunted.x,
+      y: hunted.y,
+      reach: filamentReach(
+        { ...hunt, leavesAt: hunt.resolveAt },
+        BALANCE.expedition.cancelSpeedup,
+        state.now,
+      ),
+    });
+  }
   // Le gisement visé peut s'être vidé depuis le départ : on le retrouve à l'heure du départ.
   const tripTarget =
     trip === null ? null : findDeposit(state.worldSeed, trip.place, trip.startedAt);
@@ -153,6 +173,13 @@ export function WorldView({ state, hue, lang, onBack, onOrder }: Props) {
       fill: depositLeft(deposit, state.taken, state.now) / deposit.total,
       reachable: deposit.zone <= state.zone,
     })),
+    predators: predators.map((predator) => ({
+      x: predator.x,
+      y: predator.y,
+      level: predator.level,
+      reachable: predator.zone <= state.zone,
+      gone: (state.placeReadyAt[predator.id] ?? 0) > state.now,
+    })),
     home: { x: home.x, y: home.y, hue },
     trails,
   };
@@ -164,6 +191,7 @@ export function WorldView({ state, hue, lang, onBack, onOrder }: Props) {
   };
   const openRival = rivals.find((rival) => rival.id === selected) ?? null;
   const openDeposit = deposits.find((deposit) => deposit.id === selected) ?? null;
+  const openPredator = predators.find((predator) => predator.id === selected) ?? null;
   const mine = project(camera, home.x, home.y);
   const offer = migrateOffer(state, state.now);
 
@@ -232,6 +260,34 @@ export function WorldView({ state, hue, lang, onBack, onOrder }: Props) {
                   data-zone={deposit.zone}
                   onClick={() => {
                     if (!dragged.current) setSelected(deposit.id);
+                  }}
+                >
+                  {target !== null && (
+                    <span className="slot-timer">
+                      {formatDuration(target.returnsAt - state.now)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          {touchable &&
+            predators.map((predator) => {
+              const point = seen(predator.x, predator.y);
+              if (point === null) return null;
+              const target = hunt !== null && hunt.prey === predator.id ? hunt : null;
+              const gone = (state.placeReadyAt[predator.id] ?? 0) > state.now;
+              return (
+                <button
+                  key={predator.id}
+                  type="button"
+                  className={`organism organism-predator${predator.zone > state.zone || gone ? " is-closed" : ""}${target !== null ? " is-target" : ""}`}
+                  style={{ left: `${String(point.x * 100)}%`, top: `${String(point.y * 100)}%` }}
+                  aria-label={t(`predator.${String(predator.level)}.name` as TextKey)}
+                  data-testid={`predator-${predator.id}`}
+                  data-zone={predator.zone}
+                  data-level={predator.level}
+                  onClick={() => {
+                    if (!dragged.current) setSelected(predator.id);
                   }}
                 >
                   {target !== null && (
@@ -341,6 +397,31 @@ export function WorldView({ state, hue, lang, onBack, onOrder }: Props) {
             setSelected(null);
           }}
           onOrder={onOrder}
+        />
+      )}
+      {openPredator !== null && (
+        <PreySheet
+          state={state}
+          lang={lang}
+          target={openPredator}
+          offer={predatorOffer(state, openPredator, state.now)}
+          title={`${t(`predator.${String(openPredator.level)}.name` as TextKey)} · ${t("label.level")} ${String(openPredator.level + 1)}`}
+          note={`${t(`predator.${String(openPredator.level)}.text` as TextKey)} ${zoneName(lang, openPredator.zone)} · ${t("label.depth").replace("{n}", formatDepth(depthAt(openPredator.x, openPredator.y), lang))}`}
+          closed={
+            openPredator.zone > state.zone
+              ? t("state.zoneClosed")
+              : (state.placeReadyAt[openPredator.id] ?? 0) > state.now &&
+                  hunt?.prey !== openPredator.id
+                ? t("state.predatorGone")
+                : null
+          }
+          order={(party) => ({ type: "huntPredator", predator: openPredator.id, party })}
+          onClose={() => {
+            setSelected(null);
+          }}
+          onOrder={(order) => {
+            if (onOrder(order) && order.type === "huntPredator") setSelected(null);
+          }}
         />
       )}
       {openDeposit !== null && (

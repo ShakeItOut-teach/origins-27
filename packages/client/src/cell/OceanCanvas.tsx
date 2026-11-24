@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import type { WorldCamera } from "../game/worldView";
 import { project } from "../game/worldView";
 import { hsl } from "./draw";
+import { drawCarcass, drawMarineSnow, drawOrganism, drawPredator, drawVent } from "./oceanLife";
 
 export interface OceanScene {
   readonly camera: WorldCamera;
@@ -31,8 +32,17 @@ export interface OceanScene {
     readonly fill: number;
     readonly reachable: boolean;
   }[];
+  readonly predators: readonly {
+    readonly x: number;
+    readonly y: number;
+    /** 0 = le plus faible. */
+    readonly level: number;
+    readonly reachable: boolean;
+    /** Déjà vaincu par le joueur. */
+    readonly gone: boolean;
+  }[];
   readonly home: { readonly x: number; readonly y: number; readonly hue: number };
-  /** Les cellules en route : vers un gisement ou vers un rival. */
+  /** Les cellules en route : vers un gisement, un prédateur ou un rival. */
   readonly trails: readonly {
     readonly x: number;
     readonly y: number;
@@ -48,9 +58,34 @@ function token(name: string, fallback: number): number {
   return match?.[1] === undefined ? fallback : Number.parseInt(match[1], 16);
 }
 
+/** Teinte, saturation et clarté de l'eau à chaque frontière, du bord jusqu'au rivage. */
+const WATER = [
+  [234, 0.6, 0.04],
+  [226, 0.62, 0.075],
+  [214, 0.64, 0.125],
+  [203, 0.62, 0.2],
+  [192, 0.5, 0.3],
+] as const;
+
+function water(index: number, part: number): number {
+  const from = WATER[Math.min(index, WATER.length - 1)] ?? WATER[0];
+  const to = WATER[Math.min(index + 1, WATER.length - 1)] ?? from;
+  return hsl(
+    from[0] + (to[0] - from[0]) * part,
+    from[1] + (to[1] - from[1]) * part,
+    from[2] + (to[2] - from[2]) * part,
+  );
+}
+
+/** Un nombre entre 0 et 1, toujours le même pour une case donnée. */
+function grain(x: number, y: number): number {
+  const mixed = Math.imul(Math.imul(x | 0, 0x9e3779b1) ^ Math.imul(y | 0, 0x85ebca6b), 0xc2b2ae35);
+  return ((mixed >>> 8) & 0xffff) / 0xffff;
+}
+
 /**
- * La carte de l'océan, dessinée comme une carte de profondeurs : des cercles de niveau,
- * l'eau qui s'éclaircit vers le centre, la terre ferme au milieu.
+ * La carte de l'océan, dessinée comme une planche d'océanographie : l'eau qui s'éclaircit
+ * vers le rivage, des lignes de niveau, et la vie comme on la voit au microscope à fond noir.
  */
 export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
   const host = useRef<HTMLDivElement>(null);
@@ -66,7 +101,6 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const light = token("--on-dark", 0xe8eef7);
     const warm = token("--iodine", 0xd9a441);
-    const red = token("--eosin", 0xa8402c);
     const dark = token("--lens-edge", 0x060a12);
     let disposed = false;
     let ready = false;
@@ -112,134 +146,132 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
             point.y < size + margin;
           graphics.clear();
 
-          // L'eau : de plus en plus claire à mesure que l'on remonte vers le centre.
+          // L'eau : un dégradé continu, du noir des abysses au bleu du rivage.
           const centre = at(0, 0);
-          const count = current.zones.length;
+          const land = current.landRadius;
+          const STEPS = 5;
           current.zones.forEach((zone, index) => {
-            const rise = count <= 1 ? 0 : index / (count - 1);
-            graphics
-              .circle(centre.x, centre.y, zone.outer * cell)
-              .fill({ color: hsl(228 - 42 * rise, 0.55, 0.1 + 0.2 * rise * rise) });
+            const inner = current.zones[index + 1]?.outer ?? land;
+            for (let step = 0; step < STEPS; step++) {
+              const part = step / STEPS;
+              graphics
+                .circle(centre.x, centre.y, (zone.outer - (zone.outer - inner) * part) * cell)
+                .fill({ color: water(index, part) });
+            }
             // Une zone encore fermée reste dans l'ombre.
             if (!zone.open) {
               graphics
                 .circle(centre.x, centre.y, zone.outer * cell)
-                .fill({ color: dark, alpha: 0.45 });
+                .fill({ color: dark, alpha: 0.5 });
             }
           });
-          graphics
-            .circle(centre.x, centre.y, current.landRadius * cell)
-            .fill({ color: hsl(38, 0.3, 0.42) });
 
-          // Les rayons de la carte, comme sur une carte marine.
-          const edge = (current.zones[0]?.outer ?? 0) * cell;
-          for (let index = 0; index < 12; index++) {
-            const angle = (index * Math.PI) / 6;
-            graphics
-              .moveTo(
-                centre.x + Math.cos(angle) * current.landRadius * cell,
-                centre.y + Math.sin(angle) * current.landRadius * cell,
-              )
-              .lineTo(centre.x + Math.cos(angle) * edge, centre.y + Math.sin(angle) * edge)
-              .stroke({ color: light, alpha: 0.05, width: 1 });
+          // La terre ferme : une côte irrégulière et ses courbes de niveau.
+          const coast = (scale: number): number[] => {
+            const points: number[] = [];
+            for (let index = 0; index < 72; index++) {
+              const angle = (index / 72) * Math.PI * 2;
+              const bump = 1 + (grain(index, 7) - 0.5) * 0.14 + Math.sin(angle * 3 + 1) * 0.04;
+              points.push(
+                centre.x + Math.cos(angle) * land * cell * scale * bump,
+                centre.y + Math.sin(angle) * land * cell * scale * bump,
+              );
+            }
+            return points;
+          };
+          graphics.poly(coast(1.04)).fill({ color: hsl(190, 0.35, 0.42), alpha: 0.5 });
+          graphics
+            .poly(coast(0.97))
+            .fill({ color: hsl(36, 0.2, 0.3) })
+            .stroke({ color: hsl(40, 0.3, 0.62), alpha: 0.7, width: 1.2 });
+          for (const scale of [0.74, 0.5, 0.27]) {
+            graphics.poly(coast(scale)).stroke({ color: hsl(40, 0.3, 0.7), alpha: 0.22, width: 1 });
           }
-          // Les lignes de niveau : fines entre deux frontières, nettes aux frontières.
-          if (cell * 6 > 12) {
-            for (let radius = current.landRadius + 6; radius * cell < edge; radius += 6) {
+
+          // Les lignes de la carte : rayons, courbes de niveau, frontières des zones.
+          const edge = (current.zones[0]?.outer ?? 0) * cell;
+          for (let index = 0; index < 24; index++) {
+            const angle = (index * Math.PI) / 12;
+            const from = (index % 2 === 0 ? land : land * 2.4) * cell;
+            graphics
+              .moveTo(centre.x + Math.cos(angle) * from, centre.y + Math.sin(angle) * from)
+              .lineTo(centre.x + Math.cos(angle) * edge, centre.y + Math.sin(angle) * edge)
+              .stroke({ color: light, alpha: 0.045, width: 1 });
+          }
+          if (cell * 4 > 9) {
+            for (let radius = land + 4; radius * cell < edge; radius += 4) {
               graphics
                 .circle(centre.x, centre.y, radius * cell)
-                .stroke({ color: light, alpha: 0.05, width: 1 });
+                .stroke({ color: light, alpha: 0.04, width: 1 });
             }
           }
           current.zones.forEach((zone, index) => {
             graphics
               .circle(centre.x, centre.y, zone.outer * cell)
-              .stroke({ color: light, alpha: index === 0 ? 0.5 : 0.28, width: 1.5 });
+              .stroke({ color: light, alpha: index === 0 ? 0.45 : 0.24, width: 1.2 });
             // La frontière que le joueur devra franchir pour remonter.
-            const inner = current.zones[index + 1]?.outer ?? current.landRadius;
+            const inner = current.zones[index + 1]?.outer ?? land;
             if (zone.mine) {
               graphics
                 .circle(centre.x, centre.y, inner * cell)
-                .stroke({ color: warm, alpha: 0.75, width: 2 });
+                .stroke({ color: warm, alpha: 0.7, width: 1.6 });
             }
           });
-          graphics
-            .circle(centre.x, centre.y, current.landRadius * cell)
-            .stroke({ color: light, alpha: 0.5, width: 1.5 });
 
-          // Les gisements : un triangle pour une source, un semis pour la neige, un losange
-          // pour une carcasse. Ils pâlissent en se vidant.
-          const mark = Math.max(1.8, Math.min(13, cell * 0.75));
-          for (const deposit of current.deposits) {
-            const point = at(deposit.x, deposit.y);
-            if (!inView(point, mark)) continue;
-            const alpha = (0.35 + 0.65 * deposit.fill) * (deposit.reachable ? 1 : 0.4);
-            if (mark < 4) {
-              graphics
-                .rect(point.x - mark / 2, point.y - mark / 2, mark, mark)
-                .fill({ color: deposit.kind === "carcass" ? red : warm, alpha });
-              continue;
-            }
-            if (deposit.kind === "sugarCluster") {
-              graphics
-                .poly([
-                  point.x,
-                  point.y - mark,
-                  point.x + mark * 0.9,
-                  point.y + mark * 0.7,
-                  point.x - mark * 0.9,
-                  point.y + mark * 0.7,
-                ])
-                .fill({ color: warm, alpha });
-            } else if (deposit.kind === "debris") {
-              for (let index = 0; index < 5; index++) {
-                const angle = index * 2.4 + deposit.x;
-                const spread = mark * (0.25 + 0.15 * index);
-                graphics
-                  .circle(
-                    point.x + Math.cos(angle) * spread,
-                    point.y + Math.sin(angle) * spread + Math.sin(t + index) * 1.2,
-                    Math.max(1.2, mark * 0.2),
-                  )
-                  .fill({ color: light, alpha });
-              }
-            } else {
-              graphics
-                .poly([
-                  point.x,
-                  point.y - mark,
-                  point.x + mark * 0.75,
-                  point.y,
-                  point.x,
-                  point.y + mark,
-                  point.x - mark * 0.75,
-                  point.y,
-                ])
-                .fill({ color: red, alpha })
-                .stroke({ color: light, alpha: alpha * 0.8, width: 1 });
-            }
+          // La neige marine : de fines particules qui descendent sans fin.
+          for (let index = 0; index < 46; index++) {
+            const fall = (grain(index, 3) * size + t * (4 + (index % 5) * 2.5)) % size;
+            const drift = (grain(index, 11) * size + Math.sin(t * 0.4 + index) * 6 + size) % size;
+            graphics
+              .circle(drift, fall, 0.6 + (index % 3) * 0.35)
+              .fill({ color: light, alpha: 0.1 + (index % 4) * 0.03 });
           }
 
-          // Les organismes : une membrane, un noyau. De loin, un simple point.
-          const radius = Math.max(1.4, Math.min(15, cell * 0.85));
+          // Les gisements.
+          const mark = Math.max(2, Math.min(15, cell * 0.85));
+          for (const deposit of current.deposits) {
+            const point = at(deposit.x, deposit.y);
+            if (!inView(point, mark * 2)) continue;
+            const alpha = (0.4 + 0.6 * deposit.fill) * (deposit.reachable ? 1 : 0.4);
+            const seed = grain(deposit.x, deposit.y);
+            if (deposit.kind === "sugarCluster") drawVent(graphics, point, mark, alpha, t, seed);
+            else if (deposit.kind === "debris") {
+              drawMarineSnow(graphics, point, mark, alpha, t, seed);
+            } else drawCarcass(graphics, point, mark, alpha, seed);
+          }
+
+          // Les prédateurs.
+          const beast = Math.max(2.4, Math.min(20, cell * 1.15));
+          for (const predator of current.predators) {
+            const point = at(predator.x, predator.y);
+            if (!inView(point, beast * 2)) continue;
+            const alpha = predator.gone ? 0.18 : predator.reachable ? 0.95 : 0.4;
+            drawPredator(
+              graphics,
+              point,
+              beast,
+              predator.level,
+              alpha,
+              t,
+              grain(predator.x, predator.y),
+            );
+          }
+
+          // Les organismes : chacun sa forme, comme sous l'objectif.
+          const radius = Math.max(1.4, Math.min(16, cell * 0.9));
           for (const organism of current.organisms) {
             const point = at(organism.x, organism.y);
-            if (!inView(point, radius)) continue;
-            const alpha = organism.tone === "reach" ? 0.95 : organism.tone === "closed" ? 0.5 : 0.3;
-            if (radius < 4.5) {
-              graphics
-                .circle(point.x, point.y, radius)
-                .fill({ color: hsl(organism.hue, 0.5, 0.5), alpha });
-              continue;
-            }
-            const breath = 1 + Math.sin(t * 1.2 + organism.x * 3 + organism.y * 5) * 0.05;
-            graphics
-              .circle(point.x, point.y, radius * breath)
-              .fill({ color: hsl(organism.hue, 0.45, 0.36), alpha })
-              .stroke({ color: hsl(organism.hue, 0.55, 0.68), alpha, width: 1.5 });
-            graphics
-              .circle(point.x - radius * 0.15, point.y - radius * 0.1, radius * 0.34)
-              .fill({ color: hsl(organism.hue, 0.4, 0.2), alpha });
+            if (!inView(point, radius * 2)) continue;
+            const alpha = organism.tone === "reach" ? 1 : organism.tone === "closed" ? 0.5 : 0.32;
+            drawOrganism(
+              graphics,
+              point,
+              radius,
+              organism.hue,
+              alpha,
+              t,
+              grain(organism.x, organism.y),
+            );
           }
 
           const home = at(current.home.x, current.home.y);
@@ -250,28 +282,31 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
             graphics
               .moveTo(home.x, home.y)
               .lineTo(tipX, tipY)
-              .stroke({ color: light, alpha: 0.5, width: 2, cap: "round" });
+              .stroke({ color: light, alpha: 0.4, width: 1.4, cap: "round" });
             for (let index = 0; index < 3; index++) {
               const angle = t * 2.4 + (index * Math.PI * 2) / 3;
               graphics
                 .circle(
                   tipX + Math.cos(angle) * Math.max(3, radius * 0.5),
                   tipY + Math.sin(angle) * Math.max(3, radius * 0.5),
-                  Math.max(1.5, radius * 0.28),
+                  Math.max(1.4, radius * 0.22),
                 )
                 .fill({ color: warm, alpha: 0.95 });
             }
           }
 
-          // La cellule du joueur : toujours visible, même de très loin.
-          const mine = Math.max(5, radius * 1.15) * (1 + Math.sin(t * 1.6) * 0.06);
-          graphics
-            .circle(home.x, home.y, mine)
-            .fill({ color: hsl(current.home.hue, 0.5, 0.42), alpha: 0.95 })
-            .stroke({ color: light, width: 2 });
-          graphics
-            .circle(home.x, home.y, mine + 4 + Math.sin(t * 1.6) * 1.5)
-            .stroke({ color: light, alpha: 0.4, width: 1 });
+          // La cellule du joueur : un repère de planche autour d'elle, toujours visible.
+          const mine = Math.max(5, radius * 1.2);
+          drawOrganism(graphics, home, mine, current.home.hue, 1, t, 0.31);
+          const ring = mine * 1.7 + 3 + Math.sin(t * 1.6) * 1.2;
+          graphics.circle(home.x, home.y, ring).stroke({ color: light, alpha: 0.75, width: 1.2 });
+          for (let index = 0; index < 4; index++) {
+            const angle = (index * Math.PI) / 2;
+            graphics
+              .moveTo(home.x + Math.cos(angle) * ring, home.y + Math.sin(angle) * ring)
+              .lineTo(home.x + Math.cos(angle) * (ring + 6), home.y + Math.sin(angle) * (ring + 6))
+              .stroke({ color: light, alpha: 0.75, width: 1.2 });
+          }
         });
       });
 

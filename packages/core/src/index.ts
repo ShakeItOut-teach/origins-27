@@ -39,6 +39,7 @@ export {
   raidOffer,
   nearRivals,
   oceanRivals,
+  organismProfile,
   reachableRivals,
   rivalName,
   rivalStats,
@@ -67,6 +68,18 @@ export {
   zoneOpenDay,
 } from "./ocean";
 export type { Deposit, GatherOffer, MigrateOffer, OceanOrganism } from "./ocean";
+export { findPredator, oceanPredators, predatorOffer } from "./predators";
+export type { Predator } from "./predators";
+export {
+  cellPower,
+  leagueOf,
+  leagueRewardFor,
+  playerScore,
+  ranking,
+  totalPower,
+  troopPower,
+} from "./power";
+export type { RankRow, Ranking } from "./power";
 export { evaluateTier, orderTier, seasonDay } from "./unlock";
 export {
   capacity,

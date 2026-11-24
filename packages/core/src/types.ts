@@ -119,7 +119,7 @@ export interface DailyQuests {
 }
 
 export interface PlayerState {
-  readonly version: 6;
+  readonly version: 7;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -278,6 +278,14 @@ export type GameEvent =
     }
   /** Un rival a attaqué le joueur et a été repoussé. */
   | { readonly type: "migrated"; readonly at: number; readonly zone: number }
+  | {
+      readonly type: "leagueReward";
+      readonly at: number;
+      /** 0 = la plus haute ligue. */
+      readonly league: number;
+      readonly rank: number;
+      readonly loot: Readonly<Record<ResourceId, number>>;
+    }
   | { readonly type: "attackRepelled"; readonly at: number; readonly rival: string }
   /** Un rival a attaqué le joueur et a pris une part de ses réserves. */
   | {
@@ -328,7 +336,8 @@ export type OrderErrorCode =
   | "nightResting"
   | "zoneClosed"
   | "depleted"
-  | "surface";
+  | "surface"
+  | "unknownPredator";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

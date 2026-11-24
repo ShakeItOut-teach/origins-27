@@ -42,7 +42,7 @@ export function createPlayer(
 ): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 6,
+    version: 7,
     zone: 0,
     taken: {},
     quests: null,
@@ -326,7 +326,7 @@ function readConstruction(value: unknown): Construction | null {
   return { organelle, toLevel, endsAt };
 }
 
-const PLACE_ID = /^((h:|r:)?-?\d{1,6}:-?\d{1,6}|o:\d{1,4}|d:-?\d{1,4}:-?\d{1,4}:\d{1,9})$/;
+const PLACE_ID = /^((h:|r:)?-?\d{1,6}:-?\d{1,6}|o:\d{1,4}|[dp]:-?\d{1,4}:-?\d{1,4}:\d{1,9})$/;
 
 function readExpedition(value: unknown): Expedition | null {
   if (value === null) return null;
@@ -522,7 +522,7 @@ export function needsWorldPlace(text: string): boolean {
 export function deserializeState(text: string, world?: WorldPlace): PlayerState {
   const raw: unknown = JSON.parse(text);
   const version = raw !== null && isRecord(raw) ? raw.version : undefined;
-  if (!isRecord(raw) || typeof version !== "number" || ![1, 2, 3, 4, 5, 6].includes(version)) {
+  if (!isRecord(raw) || typeof version !== "number" || ![1, 2, 3, 4, 5, 6, 7].includes(version)) {
     throw new TypeError("sauvegarde invalide : version");
   }
   const old = version === 1;
@@ -545,7 +545,7 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     throw new TypeError("sauvegarde invalide : carte");
   }
   return {
-    version: 6,
+    version: 7,
     // Avant l'océan : le joueur est dans les abysses et n'a touché à aucun gisement.
     zone:
       version < 6 || !isCount(raw.zone) ? 0 : Math.min(raw.zone, BALANCE.ocean.zones.length - 1),
@@ -584,7 +584,12 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     construction: readConstruction(raw.construction),
     mutations: readMutations(raw.mutations),
     mutationOffer: raw.mutationOffer === null ? null : readMutations(raw.mutationOffer),
-    counters: readCounts<CounterId>(COUNTER_IDS, raw.counters),
+    // Avant les classements : rien de pillé ni de repoussé n'avait été compté.
+    counters: readCounts<CounterId>(
+      COUNTER_IDS,
+      raw.counters,
+      version < 7 ? ["lootTaken", "attacksRepelled"] : [],
+    ),
     tier,
     tapBudgetAt,
   };

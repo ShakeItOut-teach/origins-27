@@ -152,6 +152,19 @@ export function oceanRivals(state: PlayerState): readonly Rival[] {
   return found;
 }
 
+/** Ce qui ne change jamais chez un organisme de l'océan : son nom, sa teinte, son tempérament. */
+export function organismProfile(
+  worldSeed: number,
+  slot: number,
+): { readonly name: string; readonly hue: number; readonly temper: number } {
+  const { name, hue, temper } = organismAt(
+    worldSeed,
+    { slot, x: 0, y: 0, zone: 0, hue: organismHue(worldSeed, slot) },
+    { x: 0, y: 0 },
+  );
+  return { name, hue, temper };
+}
+
 /** Les organismes que le joueur peut espionner et attaquer, selon son palier. */
 export function reachableRivals(state: PlayerState): readonly Rival[] {
   return state.tier >= BALANCE.ocean.tier
@@ -315,7 +328,13 @@ export function raidBack(
       // Un combat mené jusqu'au bout compte, gagné ou perdu.
       counters: raid.cancelled
         ? state.counters
-        : { ...state.counters, rivalFights: state.counters.rivalFights + 1 },
+        : {
+            ...state.counters,
+            rivalFights: state.counters.rivalFights + 1,
+            lootTaken:
+              state.counters.lootTaken +
+              Math.floor((gained.sugar + gained.bricks + gained.proteins) / MICRO),
+          },
       placeReadyAt: won
         ? { ...state.placeReadyAt, [raid.rival]: raid.returnsAt + raid.restMs }
         : state.placeReadyAt,
@@ -449,7 +468,11 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
 
   if (rng.int(100) < chance) {
     return {
-      state: { ...state, counters, nextRaidAt: at + nextDelay(state, at) },
+      state: {
+        ...state,
+        counters: { ...counters, attacksRepelled: counters.attacksRepelled + 1 },
+        nextRaidAt: at + nextDelay(state, at),
+      },
       events: [{ type: "attackRepelled", at, rival: attacker.id }],
     };
   }

@@ -50,6 +50,8 @@ export const COUNTER_IDS = [
   "huntsWon",
   "rivalFights",
   "leagueEntered",
+  "lootTaken",
+  "attacksRepelled",
 ] as const;
 export type CounterId = (typeof COUNTER_IDS)[number];
 
@@ -75,6 +77,7 @@ export const ORDER_TYPES = [
   "setNight",
   "gather",
   "migrate",
+  "huntPredator",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
@@ -127,6 +130,10 @@ export const QUEST_IDS = [
 ] as const;
 export type QuestId = (typeof QUEST_IDS)[number];
 
+/** Les classements : puissance totale, cellule seule, troupes seules, butin pillé, attaques repoussées. */
+export const RANKING_IDS = ["power", "cell", "troops", "loot", "defense"] as const;
+export type RankingId = (typeof RANKING_IDS)[number];
+
 /** Ce qu'un coffre peut contenir. */
 export const CHEST_REWARDS = ["sugar", "bricks", "proteins", "energy"] as const;
 export type ChestReward = (typeof CHEST_REWARDS)[number];
@@ -156,6 +163,8 @@ export const UI_ELEMENT_IDS = [
   "worldMap",
   "deposits",
   "migration",
+  "power",
+  "predators",
   "ranking",
   "leagues",
   "gazette",

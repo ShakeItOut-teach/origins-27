@@ -1,24 +1,15 @@
-import {
-  capacity,
-  partySize,
-  placeOffer,
-  preyOffer,
-  strikeChance,
-  unattendedChance,
-  visiblePlaces,
-  visiblePrey,
-  winChance,
-} from "@o27/core";
+import { capacity, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "@o27/core";
 import type { Place, PlayerState, Prey } from "@o27/core";
-import { BALANCE, PLACE_RESOURCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
-import type { Order, TextKey, TroopId } from "@o27/data";
+import { BALANCE, PLACE_RESOURCE } from "@o27/data";
+import type { Order, TextKey } from "@o27/data";
 import { useMemo, useState } from "react";
 import { MapCanvas } from "../cell/MapCanvas";
 import type { MapScene } from "../cell/MapCanvas";
 import { filamentReach, layoutSpots } from "../game/mapLayout";
 import { formatAmount, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
-import { EnergyIcon, PreyIcon, ResourceIcon, TroopIcon } from "./icons";
+import { EnergyIcon, PreyIcon, ResourceIcon } from "./icons";
+import { PreySheet } from "./PreySheet";
 import { SheetFrame } from "./SheetFrame";
 import { WorldView } from "./WorldView";
 
@@ -30,8 +21,10 @@ interface Props {
   readonly lang: Lang;
   /** Les proies n'existent pas avant le palier de la chasse. */
   readonly showPrey: boolean;
-  /** La grande carte n'existe pas avant son palier. */
+  /** L'océan n'existe pas avant son palier. */
   readonly showWorld: boolean;
+  /** Les prédateurs de l'océan non plus. */
+  readonly showPredators: boolean;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
   readonly onOrder: (order: Order) => boolean;
 }
@@ -45,7 +38,8 @@ function idOf(spot: Spot): string {
 }
 
 /** La goutte : la cellule au centre, les lieux et les proies autour. */
-export function MapView({ hidden, state, hue, lang, showPrey, showWorld, onOrder }: Props) {
+export function MapView(props: Props) {
+  const { hidden, state, hue, lang, showPrey, showWorld, showPredators, onOrder } = props;
   const t = (key: TextKey): string => translate(lang, key);
   // Reculé, le joueur voit la goutte entière ; sinon, les alentours de sa cellule.
   const [far, setFar] = useState(false);
@@ -130,6 +124,7 @@ export function MapView({ hidden, state, hue, lang, showPrey, showWorld, onOrder
           state={state}
           hue={hue}
           lang={lang}
+          showPredators={showPredators}
           onBack={() => {
             setFar(false);
           }}
@@ -197,7 +192,16 @@ export function MapView({ hidden, state, hue, lang, showPrey, showWorld, onOrder
         <PlaceSheet state={state} place={open.place} lang={lang} onClose={close} onOrder={act} />
       )}
       {open !== null && !hidden && !world && open.type === "prey" && (
-        <PreySheet state={state} prey={open.prey} lang={lang} onClose={close} onOrder={act} />
+        <PreySheet
+          state={state}
+          lang={lang}
+          target={open.prey}
+          offer={preyOffer(open.prey)}
+          title={t(`prey.${open.prey.kind}.name`)}
+          order={(party) => ({ type: "sendHunt", prey: open.prey.id, party })}
+          onClose={close}
+          onOrder={act}
+        />
       )}
     </>
   );
@@ -283,151 +287,6 @@ function PlaceSheet({ state, place, lang, onClose, onOrder }: SheetProps & { pla
             }}
           >
             {t("action.send")}
-          </button>
-        </>
-      )}
-    </SheetFrame>
-  );
-}
-
-/** Fiche d'une proie : son point faible, le groupe à envoyer, les chances, un bouton. */
-function PreySheet({ state, prey, lang, onClose, onOrder }: SheetProps & { prey: Prey }) {
-  const t = (key: TextKey): string => translate(lang, key);
-  const offer = preyOffer(prey);
-  const hunt = state.hunt;
-  const mine = hunt !== null && hunt.prey === prey.id ? hunt : null;
-  const restingFor = (state.placeReadyAt[prey.id] ?? 0) - state.now;
-  const weakness = TROOP_IDS.find((id) => STRONG_AGAINST[id] === prey.kind) ?? "hunter";
-  // Par défaut, tout le monde part. Le joueur peut en garder à la maison.
-  const [kept, setKept] = useState<Record<TroopId, number>>({ hunter: 0, armored: 0, swift: 0 });
-  const party: Record<TroopId, number> = {
-    hunter: Math.max(0, state.troops.hunter - kept.hunter),
-    armored: Math.max(0, state.troops.armored - kept.armored),
-    swift: Math.max(0, state.troops.swift - kept.swift),
-  };
-  const chance = winChance(party, prey.kind, offer.power);
-  const sure = partySize(party) > 0 && strikeChance(chance) === 100;
-
-  let blocked: string | null = null;
-  if (hunt !== null && mine === null) blocked = t("state.oneHunt");
-  else if (restingFor > 0) blocked = `${t("state.resting")} · ${formatDuration(restingFor)}`;
-  else if (partySize(state.troops) === 0) blocked = t("state.noTroops");
-  else if (state.energy < offer.energy) blocked = t("state.noEnergy");
-
-  const undecided = mine !== null && !mine.cancelled && mine.outcome === null;
-  const face = undecided && state.now >= mine.arrivesAt;
-
-  return (
-    <SheetFrame
-      title={t(`prey.${prey.kind}.name`)}
-      testId="prey-sheet"
-      closeLabel={t("action.close")}
-      onClose={onClose}
-    >
-      <div className="costs">
-        <span className="cost cost-gain">
-          <ResourceIcon id="proteins" />+{formatAmount(offer.proteins, lang)}
-        </span>
-        <span className="cost cost-time">{formatDuration(offer.durationMs)}</span>
-        <span className={`cost${state.energy < offer.energy ? " is-missing" : ""}`}>
-          <EnergyIcon />
-          {offer.energy}
-        </span>
-      </div>
-      <p className="sheet-role weakness">
-        {t("label.weakness")} : <TroopIcon id={weakness} />
-        <strong>{t(`troop.${weakness}.name`)}</strong>
-      </p>
-
-      {mine !== null ? (
-        <>
-          <p className="sheet-building" data-testid="prey-status">
-            {face ? t("state.fighting") : undecided ? t("state.away") : t("state.returning")} ·{" "}
-            {formatDuration(mine.returnsAt - state.now)}
-          </p>
-          {face && (
-            <button
-              type="button"
-              className="button button-strike"
-              data-testid="prey-strike"
-              onClick={() => {
-                onOrder({ type: "strikeHunt" });
-              }}
-            >
-              {t("action.strike")}
-            </button>
-          )}
-          {undecided && !face && (
-            <button
-              type="button"
-              className="button button-quiet"
-              data-testid="prey-cancel"
-              onClick={() => {
-                onOrder({ type: "cancelHunt" });
-              }}
-            >
-              {t("action.cancelExpedition")}
-            </button>
-          )}
-        </>
-      ) : (
-        <>
-          {blocked === null && (
-            <>
-              <div className="party" aria-label={t("label.party")}>
-                {TROOP_IDS.filter((id) => state.troops[id] > 0).map((id) => (
-                  <div key={id} className="party-row">
-                    <TroopIcon id={id} />
-                    <span className="party-name">{t(`troop.${id}.name`)}</span>
-                    <button
-                      type="button"
-                      className="step"
-                      aria-label={`${t(`troop.${id}.name`)} −`}
-                      disabled={party[id] === 0}
-                      onClick={() => {
-                        setKept({ ...kept, [id]: kept[id] + 1 });
-                      }}
-                    >
-                      −
-                    </button>
-                    <span className="party-count" data-testid={`party-${id}`}>
-                      {party[id]}
-                    </span>
-                    <button
-                      type="button"
-                      className="step"
-                      aria-label={`${t(`troop.${id}.name`)} +`}
-                      disabled={kept[id] === 0}
-                      onClick={() => {
-                        setKept({ ...kept, [id]: Math.max(0, kept[id] - 1) });
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <p className="chance" data-testid="prey-chance">
-                {t("label.chance")} : <strong>{unattendedChance(chance)} %</strong>
-                {sure && <span className="chance-sure"> · {t("label.sureIfStruck")}</span>}
-              </p>
-            </>
-          )}
-          {blocked !== null && (
-            <p className="sheet-building" data-testid="prey-status">
-              {blocked}
-            </p>
-          )}
-          <button
-            type="button"
-            className="button"
-            disabled={blocked !== null || partySize(party) === 0}
-            data-testid="prey-send"
-            onClick={() => {
-              onOrder({ type: "sendHunt", prey: prey.id, party });
-            }}
-          >
-            {t("action.hunt")}
           </button>
         </>
       )}
