@@ -9,6 +9,7 @@ import {
   DAY_MS,
   defensePower,
   deserializeState,
+  isNewcomer,
   loadLoot,
   nightEnd,
   protectedUntil,
@@ -40,8 +41,17 @@ function party(values: Partial<Record<TroopId, number>>): Record<TroopId, number
   return { ...NONE, ...values };
 }
 
-/** Un joueur qui vient d'arriver au palier 5, riche, avec les cellules filles demandées. */
+/**
+ * Un joueur du palier 5 qui n'est plus un nouveau venu : un bouclier de douze heures, puis
+ * une attaque prévue sept heures après. C'est la situation de la plupart des tests.
+ */
 function atTier5(troops: Partial<Record<TroopId, number>> = {}, seed = 7): PlayerState {
+  const state = newcomer(troops, seed);
+  return { ...state, shieldUntil: T0 + 12 * HOUR, nextRaidAt: T0 + 19 * HOUR };
+}
+
+/** Un joueur qui vient d'arriver au palier 5, riche, avec les cellules filles demandées. */
+function newcomer(troops: Partial<Record<TroopId, number>> = {}, seed = 7): PlayerState {
   const base = createPlayer(seed, SEASON, T0, WORLD);
   const ready: PlayerState = {
     ...base,
@@ -144,13 +154,33 @@ describe("les voisins", () => {
 });
 
 describe("arriver au palier des rivaux", () => {
-  it("le palier s'ouvre avec une chasse gagnée au deuxième jour, et protège le nouveau venu", () => {
-    const state = atTier5();
+  it("le palier s'ouvre avec une chasse gagnée au deuxième jour, et personne n'attaque le nouveau joueur", () => {
+    const state = newcomer({ hunter: 3 });
     expect(state.tier).toBe(5);
-    expect(state.shieldUntil).toBe(T0 + INCOMING.firstShieldHours * HOUR);
-    const wait = (state.nextRaidAt ?? 0) - state.shieldUntil;
-    expect(wait).toBeGreaterThanOrEqual(INCOMING.minHours * HOUR);
-    expect(wait).toBeLessThanOrEqual(INCOMING.maxHours * HOUR);
+    expect(isNewcomer(state)).toBe(true);
+    expect(state.nextRaidAt).toBeNull();
+    // Vingt jours plus tard, toujours rien : il n'a pas atteint le palier 6 et n'a attaqué personne.
+    const step = advance(state, T0 + 20 * DAY_MS);
+    expect(
+      step.events.filter(
+        (event) => event.type === "attackRepelled" || event.type === "attackSuffered",
+      ),
+    ).toHaveLength(0);
+    expect(isNewcomer(step.state)).toBe(true);
+    expect(INCOMING.newcomerUntilTier).toBe(6);
+  });
+
+  it("le nouveau joueur qui attaque perd sa protection : les rivaux viendront", () => {
+    const state = newcomer({ hunter: 6 });
+    // Espionner, régler sa nuit ou passer en mode absent ne lui coûte rien.
+    const spied = ok(state, { type: "spyRival", rival: rival().id }, T0);
+    const night = ok(spied, { type: "setNight", minute: 0 }, T0);
+    const away = ok(night, { type: "goAway" }, T0);
+    expect(isNewcomer(away)).toBe(true);
+    const sent = ok(state, raid(rival(), party({ hunter: 6 })), T0);
+    expect(isNewcomer(sent)).toBe(false);
+    expect(sent.nextRaidAt).toBeGreaterThanOrEqual(T0 + INCOMING.minHours * HOUR);
+    expect(sent.nextRaidAt).toBeLessThanOrEqual(T0 + INCOMING.maxHours * HOUR);
   });
 
   it("avant ce palier : ni espionnage ni attaque, et personne n'attaque le joueur", () => {
@@ -636,7 +666,7 @@ describe("garanties du moteur avec les rivaux", () => {
     expect(back.nextRaidAt).toBeNull();
     expect(back.troops.hunter).toBe(3);
     const later = advance(back, T0 + 1000).state;
-    expect(later.shieldUntil).toBe(T0 + 1000 + INCOMING.firstShieldHours * HOUR);
+    expect(isNewcomer(later)).toBe(true);
   });
 
   it("refuse une sauvegarde dont l'attaque est abîmée", () => {

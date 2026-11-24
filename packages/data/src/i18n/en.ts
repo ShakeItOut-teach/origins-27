@@ -145,6 +145,7 @@ export const en = {
     "Every day, nobody attacks you during these 8 hours. Attacking loses the current night.",
   "label.nightResting": "Hour can change in",
   "action.setNight": "Confirm",
+  "label.newcomer": "New player: nobody attacks you until tier 6, as long as you do not attack.",
   "raid.won": "Attack won",
   "raid.lost": "Attack pushed back",
   "incoming.repelled": "Your cells pushed back",

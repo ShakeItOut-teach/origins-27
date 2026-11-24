@@ -1,6 +1,7 @@
 import {
   MICRO,
   defensePower,
+  isNewcomer,
   protectedUntil,
   partySize,
   raidChance,
@@ -52,10 +53,15 @@ export function RivalsView({ state, lang, onOrder }: Props) {
         <p>
           {t("label.yourDefense")} <strong>{defensePower(state)}</strong>
         </p>
-        <p className={shieldLeft > 0 ? "is-safe" : "is-exposed"} data-testid="shield">
-          {shieldLeft > 0
-            ? `${t("label.shield")} ${formatAway(shieldLeft, lang)}`
-            : t("label.nextRaid")}
+        <p
+          className={shieldLeft > 0 || isNewcomer(state) ? "is-safe" : "is-exposed"}
+          data-testid="shield"
+        >
+          {isNewcomer(state)
+            ? t("label.newcomer")
+            : shieldLeft > 0
+              ? `${t("label.shield")} ${formatAway(shieldLeft, lang)}`
+              : t("label.nextRaid")}
         </p>
         {awayRest > 0 ? (
           shieldLeft <= 0 && (
@@ -365,11 +371,12 @@ function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps) {
                 {blocked}
               </p>
             )}
-            {blocked === null && protectedUntil(state, state.now) > state.now && (
-              <p className="sheet-building is-warning" data-testid="shield-drop">
-                {t("label.shieldDrop")}
-              </p>
-            )}
+            {blocked === null &&
+              (isNewcomer(state) || protectedUntil(state, state.now) > state.now) && (
+                <p className="sheet-building is-warning" data-testid="shield-drop">
+                  {t("label.shieldDrop")}
+                </p>
+              )}
             <button
               type="button"
               className="button"

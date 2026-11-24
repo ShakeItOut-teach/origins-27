@@ -137,7 +137,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     },
     spy: { energy: 1, hours: 2 },
     incoming: {
-      firstShieldHours: 12,
+      newcomerUntilTier: 6,
       minHours: 5,
       maxHours: 11,
       shieldHours: 1,

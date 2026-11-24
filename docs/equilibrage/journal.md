@@ -224,3 +224,6 @@ rapporte), donc piller ne rend pas encore plus riche que produire.
 
 Ajout du même jour : bouclier de nuit de 8 heures par jour (heure choisie par le joueur,
 modifiable une fois par 24 heures). Un joueur est donc exposé au plus 16 heures par jour.
+
+Ajout du même jour : la protection de 12 heures à l'arrivée est remplacée par une protection
+du nouveau joueur jusqu'au palier 6, perdue à sa première attaque envoyée.

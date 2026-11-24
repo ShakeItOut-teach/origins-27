@@ -31,6 +31,7 @@ export type { Party } from "./hunt";
 export { drawQuests, questIsAmount, questsRenewAt } from "./quests";
 export {
   defensePower,
+  isNewcomer,
   loadLoot,
   nightEnd,
   protectedUntil,

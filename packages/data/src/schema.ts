@@ -201,8 +201,8 @@ export const BalanceSchema = z.strictObject({
     spy: z.strictObject({ energy: positiveInt, hours: positiveInt }),
     /** Les attaques que le joueur subit. */
     incoming: z.strictObject({
-      /** Protection d'un joueur qui vient d'arriver au palier des rivaux. */
-      firstShieldHours: positiveInt,
+      /** Un nouveau joueur n'est pas attaqué avant ce palier, sauf s'il attaque lui-même. */
+      newcomerUntilTier: positiveInt,
       /** Délai, après la fin d'une protection, avant la prochaine attaque. */
       minHours: positiveInt,
       maxHours: positiveInt,

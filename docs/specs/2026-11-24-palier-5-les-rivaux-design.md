@@ -117,3 +117,7 @@ Ces règles remplacent celles du dessus quand elles se contredisent.
 - **Bouclier de nuit** : 8 heures par jour, à l'heure que le joueur choisit. Personne ne
   l'attaque pendant ces heures. S'il attaque pendant sa nuit, il perd la nuit en cours ; les
   suivantes reviennent. L'heure ne peut être changée qu'une fois par 24 heures.
+- **Nouveau joueur** : personne ne l'attaque avant son palier 6. S'il attaque lui-même, il
+  perd cette protection pour de bon. Les 12 heures de protection à l'arrivée disparaissent :
+  cette règle les remplace. Le palier 6 n'existe pas encore : d'ici là, seul un joueur qui a
+  attaqué peut être attaqué.

@@ -209,10 +209,11 @@ describe("cibles du palier 5 (les rivaux)", () => {
     expect(winners).toBeGreaterThanOrEqual(3);
   });
 
-  it("personne n'est attaqué pendant sa protection de nouveau venu", () => {
-    // Trente heures de jeu = six heures de rivaux, moins que les douze heures de protection.
-    for (const report of games) {
-      expect(report.attacksSuffered + report.attacksRepelled).toBe(0);
-    }
+  it("le robot qui attaque dès l'ouverture n'est pas attaqué dans les heures qui suivent", () => {
+    // Attaquer fait perdre la protection du nouveau joueur, mais les rivaux mettent au moins
+    // cinq heures à venir : en quatre heures de rivaux, il ne se passe rien.
+    const report = simulate(PROFILES.applique, 1, 28 * HOUR, "time");
+    expect(report.raidsWon + report.raidsLost).toBeGreaterThan(0);
+    expect(report.attacksSuffered + report.attacksRepelled).toBe(0);
   });
 });

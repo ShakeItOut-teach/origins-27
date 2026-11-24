@@ -144,6 +144,8 @@ export const fr = {
     "Chaque jour, personne ne vous attaque pendant ces 8 heures. Attaquer fait perdre la nuit en cours.",
   "label.nightResting": "Heure modifiable dans",
   "action.setNight": "Valider",
+  "label.newcomer":
+    "Nouveau joueur : personne ne vous attaque jusqu'au palier 6, tant que vous n'attaquez pas.",
   "raid.won": "Attaque réussie",
   "raid.lost": "Attaque repoussée",
   "incoming.repelled": "Vos cellules ont repoussé",

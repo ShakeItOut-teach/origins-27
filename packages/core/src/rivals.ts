@@ -269,17 +269,32 @@ export function protectedUntil(state: PlayerState, at: number): number {
   return Math.max(state.shieldUntil, nightEnd(state, at));
 }
 
+/**
+ * Nouveau joueur : il connaît les rivaux mais personne ne l'a encore attaqué, parce qu'il n'a
+ * ni atteint le palier où la protection s'arrête, ni attaqué lui-même.
+ */
+export function isNewcomer(state: PlayerState): boolean {
+  return (
+    state.nextRaidAt === null &&
+    state.tier >= BALANCE.organelles.wall.tier &&
+    state.tier < BALANCE.rivals.incoming.newcomerUntilTier
+  );
+}
+
 /** Attaquer fait tomber toute protection : les rivaux peuvent revenir plus tôt. */
 export function dropShield(state: PlayerState, at: number): PlayerState {
   const night = nightEnd(state, at);
-  if (state.shieldUntil <= at && night === 0) return state;
+  const newcomer = isNewcomer(state);
+  if (state.shieldUntil <= at && night === 0 && !newcomer) return state;
   const soon = at + nextDelay(state, at);
   return {
     ...state,
     shieldUntil: Math.min(state.shieldUntil, at),
     // La nuit en cours est perdue ; les suivantes reviennent.
     nightOffUntil: Math.max(state.nightOffUntil, night),
-    nextRaidAt: state.nextRaidAt === null ? null : Math.min(state.nextRaidAt, soon),
+    // Le nouveau joueur qui attaque entre dans la mêlée : les rivaux viendront.
+    nextRaidAt:
+      state.nextRaidAt === null ? (newcomer ? soon : null) : Math.min(state.nextRaidAt, soon),
   };
 }
 
@@ -299,16 +314,18 @@ export function goAway(state: PlayerState, at: number): PlayerState {
   return {
     ...state,
     shieldUntil,
-    nextRaidAt: shieldUntil + nextDelay(state, at),
+    // Un nouveau joueur reste un nouveau joueur : rien n'est programmé contre lui.
+    nextRaidAt: state.nextRaidAt === null ? null : shieldUntil + nextDelay(state, at),
     awayReadyAt: shieldUntil + away.restHours * HOUR_MS,
   };
 }
 
-/** Protège un joueur qui arrive au palier des rivaux et programme la première attaque. */
+/** Quand la protection du nouveau joueur s'arrête, la première attaque est programmée. */
 export function ensureIncoming(state: PlayerState, at: number): PlayerState {
-  if (state.nextRaidAt !== null || state.tier < BALANCE.organelles.wall.tier) return state;
-  const shieldUntil = at + BALANCE.rivals.incoming.firstShieldHours * HOUR_MS;
-  return { ...state, shieldUntil, nextRaidAt: shieldUntil + nextDelay(state, at) };
+  if (state.nextRaidAt !== null || state.tier < BALANCE.rivals.incoming.newcomerUntilTier) {
+    return state;
+  }
+  return { ...state, nextRaidAt: Math.max(at, state.shieldUntil) + nextDelay(state, at) };
 }
 
 /** Un voisin attaque le joueur. Ses cellules à la maison et sa Paroi le défendent. */
