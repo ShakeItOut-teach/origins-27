@@ -342,6 +342,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
 
       <section className="lens" hidden={onMap || onRivals}>
         <CellCanvas scene={scene} label={t("label.cell")} onTap={tap} />
+        <span className="scale-bar" aria-hidden="true">
+          10 µm
+        </span>
         {!touched && state.counters.harvests === 0 && <p className="hint">{t("hint.tap")}</p>}
         {show("buildSlots") &&
           slots.map((id) => {

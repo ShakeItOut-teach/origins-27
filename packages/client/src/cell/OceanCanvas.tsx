@@ -4,7 +4,14 @@ import { useEffect, useRef } from "react";
 import type { WorldCamera } from "../game/worldView";
 import { project } from "../game/worldView";
 import { hsl } from "./draw";
-import { drawCarcass, drawMarineSnow, drawOrganism, drawPredator, drawVent } from "./oceanLife";
+import {
+  HOME_FORM,
+  drawCarcass,
+  drawMarineSnow,
+  drawOrganism,
+  drawPredator,
+  drawVent,
+} from "./oceanLife";
 
 export interface OceanScene {
   readonly camera: WorldCamera;
@@ -297,7 +304,7 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
 
           // La cellule du joueur : un repère de planche autour d'elle, toujours visible.
           const mine = Math.max(5, radius * 1.2);
-          drawOrganism(graphics, home, mine, current.home.hue, 1, t, 0.31);
+          drawOrganism(graphics, home, mine, current.home.hue, 1, t, HOME_FORM);
           const ring = mine * 1.7 + 3 + Math.sin(t * 1.6) * 1.2;
           graphics.circle(home.x, home.y, ring).stroke({ color: light, alpha: 0.75, width: 1.2 });
           for (let index = 0; index < 4; index++) {

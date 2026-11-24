@@ -120,8 +120,26 @@ p {
   border: var(--line);
   border-width: 3px;
   border-radius: 50%;
-  box-shadow: var(--shadow-big);
+  /* Le bord de l'objectif : l'image s'assombrit vers l'extérieur, comme dans un oculaire. */
+  box-shadow:
+    var(--shadow-big),
+    inset 0 0 46px 12px rgba(0, 0, 0, 0.6);
   background: radial-gradient(circle at 50% 45%, var(--lens-center), var(--lens-edge) 78%);
+}
+
+.scale-bar {
+  position: absolute;
+  right: 17%;
+  bottom: 9%;
+  width: 46px;
+  padding-bottom: 2px;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--on-dark) 80%, transparent);
+  color: color-mix(in srgb, var(--on-dark) 80%, transparent);
+  font-family: var(--font-number);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-align: center;
+  pointer-events: none;
 }
 
 .lens-canvas {
@@ -166,13 +184,13 @@ p {
 /* Emplacements d'organites */
 .slot {
   position: absolute;
-  width: 56px;
-  height: 56px;
-  margin: -28px 0 0 -28px;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
   display: grid;
   place-items: center;
   padding: 0;
-  border: 2px dashed var(--on-dark);
+  border: 1.5px dashed color-mix(in srgb, var(--on-dark) 70%, transparent);
   border-radius: 50%;
   background: transparent;
   color: var(--on-dark);
@@ -201,14 +219,16 @@ p {
 .slot.is-building {
   opacity: 1;
   border-style: solid;
-  background: var(--paper);
-  color: var(--ink);
-  border-color: var(--ink);
+  /* Un repère de verre posé sur la lame, pas une pastille. */
+  background: color-mix(in srgb, var(--lens-edge) 72%, transparent);
+  color: var(--on-dark);
+  border-color: color-mix(in srgb, var(--on-dark) 65%, transparent);
+  backdrop-filter: blur(2px);
 }
 
 .slot.is-building {
-  border-color: var(--eosin);
-  color: var(--eosin);
+  border-color: var(--iodine);
+  color: var(--iodine);
 }
 
 .slot-timer {
@@ -573,18 +593,18 @@ p {
   display: grid;
   place-items: center;
   padding: 0;
-  border: 2px solid var(--on-dark);
+  border: 1.5px solid color-mix(in srgb, var(--iodine) 75%, transparent);
   border-radius: 50%;
-  background: color-mix(in srgb, var(--lens-edge) 55%, transparent);
+  background: color-mix(in srgb, var(--lens-edge) 72%, transparent);
   color: var(--iodine);
   cursor: pointer;
+  backdrop-filter: blur(2px);
   animation: appear 0.5s ease-out;
 }
 
 .place-debris {
-  color: var(--eosin);
-  background: color-mix(in srgb, var(--on-dark) 85%, transparent);
-  border-color: var(--on-dark);
+  color: var(--on-dark);
+  border-color: color-mix(in srgb, var(--on-dark) 65%, transparent);
 }
 
 .place.is-resting {

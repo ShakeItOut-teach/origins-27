@@ -1,6 +1,7 @@
 import { Application, Graphics } from "pixi.js";
 import { useEffect, useRef } from "react";
-import { hsl, makeDecor } from "./draw";
+import { makeDecor } from "./draw";
+import { HOME_FORM, drawOrganism } from "./oceanLife";
 
 export interface MapScene {
   readonly seed: number;
@@ -126,7 +127,7 @@ export function MapCanvas({ scene }: { readonly scene: MapScene }) {
               .stroke({
                 color: light,
                 alpha: filament.group ? 0.35 : 0.75,
-                width: filament.group ? 1.5 : 2.5,
+                width: filament.group ? 1.2 : 1.6,
                 cap: "round",
               });
             const tip = filament.loaded ? tones[filament.group ? "prey" : "sugar"] : light;
@@ -148,12 +149,16 @@ export function MapCanvas({ scene }: { readonly scene: MapScene }) {
           });
 
           const pulse = 1 + Math.sin(t * 1.6) * 0.05;
-          const body = hsl(current.hue, 0.5, 0.42);
-          graphics.circle(centre, centre, size * 0.06 * pulse).fill({ color: body, alpha: 0.95 });
-          graphics
-            .circle(centre, centre, size * 0.06 * pulse)
-            .stroke({ color: hsl(current.hue, 0.6, 0.72), width: 2 });
-          graphics.circle(centre, centre, size * 0.018).fill({ color: light, alpha: 0.6 });
+          // La cellule du joueur, telle qu'on la voit de plus loin : un cilié.
+          drawOrganism(
+            graphics,
+            { x: centre, y: centre },
+            size * 0.058 * pulse,
+            current.hue,
+            1,
+            t,
+            HOME_FORM,
+          );
         });
       });
 

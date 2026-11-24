@@ -34,6 +34,8 @@ function turned(spot: Spot, angle: number, px: number, py: number): Spot {
 }
 
 const FORMS = 5;
+/** La forme de la cellule du joueur vue de loin : un cilié, comme sur sa lame. */
+export const HOME_FORM = 0.85;
 
 /**
  * Un micro-organisme. Sa forme dépend de sa case : diatomée ronde, diatomée en navette,

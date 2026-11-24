@@ -46,10 +46,19 @@ gisements sont une cheminée hydrothermale et son panache, des flocons de neige 
 échine et ses côtes. Les prédateurs ont leur vraie silhouette. La terre ferme a une côte et
 des courbes de niveau ; l'eau passe du noir au bleu sans paliers.
 
+## Le dessin de la cellule
+
+Même parti pris que la carte, d'après ce que montre un vrai microscope : une membrane en
+double feuillet, un cytoplasme granuleux qui circule, un noyau avec son enveloppe, ses pores,
+sa chromatine et son nucléole, des mitochondries à crêtes (plusieurs quand le niveau monte),
+une vacuole, un réticulum en feuillets piqués de ribosomes, un centrosome et ses filaments,
+une paroi reliée à la membrane, des cils courbés parcourus d'une onde. Les emplacements sont
+des repères de verre posés sur la lame ; une barre d'échelle indique 10 µm.
+
 ## Limites connues
 
 - Les classements ne comptent que des organismes simulés et le joueur : les vrais joueurs
   n'y sont pas encore les uns pour les autres.
 - Les prédateurs ne bougent pas et n'attaquent personne.
-- La cellule elle-même et les écrans de papier n'ont pas encore été redessinés.
+- Les écrans de papier (fiches, compteurs, boutons) n'ont pas encore été revus.
 - Le premier chiffre de chaque réglage reste à vérifier en jouant une saison.
