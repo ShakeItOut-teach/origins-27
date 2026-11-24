@@ -159,8 +159,9 @@ describe("arriver au palier des rivaux", () => {
     expect(state.tier).toBe(5);
     expect(isNewcomer(state)).toBe(true);
     expect(state.nextRaidAt).toBeNull();
-    // Vingt jours plus tard, toujours rien : il n'a pas atteint le palier 6 et n'a attaqué personne.
-    const step = advance(state, T0 + 20 * DAY_MS);
+    // Jusqu'à la fin du deuxième jour, rien : il n'a attaqué personne.
+    const dayThree = SEASON + 2 * DAY_MS;
+    const step = advance(state, dayThree - 1);
     expect(
       step.events.filter(
         (event) => event.type === "attackRepelled" || event.type === "attackSuffered",
@@ -168,6 +169,11 @@ describe("arriver au palier des rivaux", () => {
     ).toHaveLength(0);
     expect(isNewcomer(step.state)).toBe(true);
     expect(INCOMING.newcomerUntilTier).toBe(6);
+    // Le troisième jour, le palier 6 s'ouvre à date fixe : la protection s'arrête.
+    const opened = advance(state, dayThree).state;
+    expect(opened.tier).toBeGreaterThanOrEqual(6);
+    expect(isNewcomer(opened)).toBe(false);
+    expect(opened.nextRaidAt).not.toBeNull();
   });
 
   it("le nouveau joueur qui attaque perd sa protection : les rivaux viendront", () => {
@@ -673,7 +679,7 @@ describe("garanties du moteur avec les rivaux", () => {
       organelles: Object.fromEntries(Object.entries(organelles).filter(([key]) => key !== "wall")),
     });
     const back = deserializeState(text);
-    expect(back.version).toBe(8);
+    expect(back.version).toBe(9);
     expect(back.organelles.wall).toBe(0);
     expect(back.nextRaidAt).toBeNull();
     expect(back.troops.hunter).toBe(3);

@@ -14,6 +14,8 @@ export interface Scene {
   readonly creature: Creature;
   readonly organelles: Readonly<Record<OrganelleId, number>>;
   readonly building: OrganelleId | null;
+  /** Le Noyau est-il en train d'exprimer une évolution ? */
+  readonly researching: boolean;
 }
 
 export interface Ripple {
@@ -96,6 +98,10 @@ export const ORGANELLE_ANGLE: Readonly<Record<OrganelleId, number>> = {
   ribosome: (35 * Math.PI) / 180,
   nursery: (90 * Math.PI) / 180,
   wall: (-90 * Math.PI) / 180,
+  golgi: (2 * Math.PI) / 180,
+  // Le noyau est au centre : cet angle ne sert pas.
+  nucleus: 0,
+  lysosome: (168 * Math.PI) / 180,
 };
 
 const MEMBRANE_POINTS = 96;
@@ -523,6 +529,58 @@ export function drawScene(
     g.stroke({ width: 1.3, color: violet, alpha: 0.95 });
   }
 
+  if (shown("golgi")) {
+    // L'appareil de Golgi : des saccules aplatis, empilés, d'où bourgeonnent des vésicules.
+    const { x, y } = place("golgi");
+    const k = growing("golgi");
+    const rose = hsl(330, 0.4, 0.78);
+    const stacks = 3 + Math.min(2, Math.floor(scene.organelles.golgi / 2));
+    for (let index = 0; index < stacks; index++) {
+      const offset = (index - (stacks - 1) / 2) * base * 0.045 * k;
+      const half = base * (0.13 - Math.abs(index - (stacks - 1) / 2) * 0.012) * k;
+      g.moveTo(x + offset, y - half).quadraticCurveTo(
+        x + offset + base * 0.05,
+        y,
+        x + offset,
+        y + half,
+      );
+    }
+    g.stroke({ width: 1.6, color: rose, alpha: 0.9, cap: "round" });
+    for (let index = 0; index < 3; index++) {
+      const drift = ((t * 0.25 + index / 3) % 1) * base * 0.16;
+      g.circle(
+        x + base * 0.12 + drift,
+        y + (index - 1) * base * 0.07,
+        Math.max(1, base * 0.016),
+      ).fill({ color: rose, alpha: 0.8 * (1 - drift / (base * 0.16)) });
+    }
+  }
+
+  if (shown("lysosome")) {
+    // Les lysosomes : de petits sacs sombres, pleins d'enzymes.
+    const { x, y } = place("lysosome");
+    const k = growing("lysosome");
+    const acid = hsl(95, 0.45, 0.72);
+    const count = 2 + Math.min(3, Math.floor(scene.organelles.lysosome / 2));
+    for (let index = 0; index < count; index++) {
+      const a = index * 2.2 + 0.4;
+      const lx = x + Math.cos(a) * base * 0.07 * (index === 0 ? 0 : 1);
+      const ly = y + Math.sin(a) * base * 0.07 * (index === 0 ? 0 : 1);
+      const lr = base * (index === 0 ? 0.055 : 0.038) * k;
+      g.circle(lx, ly, lr)
+        .fill({ color: hsl(95, 0.4, 0.2), alpha: 0.6 })
+        .stroke({ width: 1.2, color: acid, alpha: 0.9 });
+      for (let grain = 0; grain < 3; grain++) {
+        const b = grain * 2.1 + t * 0.6 + index;
+        g.circle(
+          lx + Math.cos(b) * lr * 0.45,
+          ly + Math.sin(b) * lr * 0.45,
+          Math.max(0.7, lr * 0.14),
+        ).fill({ color: acid, alpha: 0.75 });
+      }
+    }
+  }
+
   // Le noyau : une double enveloppe percée de pores, la chromatine, le nucléole.
   const nx = cx + base * 0.04 * Math.sin(t * 0.5);
   const ny = cy + base * 0.04 * Math.cos(t * 0.4);
@@ -557,7 +615,12 @@ export function drawScene(
     );
   }
   g.stroke({ width: 1, color: nucleus, alpha: 0.4 });
-  g.circle(nx + nr * 0.25, ny - nr * 0.2, nr * 0.27).fill({ color: nucleus, alpha: 0.55 });
+  // Le nucléole bat quand le Noyau exprime une évolution.
+  const expressing = scene.researching ? 0.2 * Math.sin(t * 4) : 0;
+  g.circle(nx + nr * 0.25, ny - nr * 0.2, nr * (0.27 + expressing * 0.3)).fill({
+    color: nucleus,
+    alpha: 0.55 + expressing,
+  });
 
   // Ondes de toucher : un cercle fin qui s'élargit, comme sur l'eau.
   for (const ripple of ripples) {

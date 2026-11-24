@@ -7,12 +7,14 @@ import {
   PLACE_KINDS,
   PREY_KINDS,
   QUEST_IDS,
+  EVOLUTION_IDS,
   RESOURCE_IDS,
   TROOP_IDS,
 } from "@o27/data";
 import type { CounterId, MutationId, OrganelleId, ResourceId, TraitId, TroopId } from "@o27/data";
 import { createRng } from "./rng";
 import type {
+  Research,
   Construction,
   DailyQuests,
   Expedition,
@@ -42,7 +44,9 @@ export function createPlayer(
 ): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 8,
+    version: 9,
+    evolutions: fill(EVOLUTION_IDS, 0),
+    research: null,
     zone: 0,
     taken: {},
     quests: null,
@@ -193,6 +197,15 @@ export function serializeState(state: PlayerState): string {
         .sort()
         .map((id) => [id, state.placeReadyAt[id]]),
     ),
+    evolutions: pick(EVOLUTION_IDS, state.evolutions),
+    research:
+      state.research === null
+        ? null
+        : {
+            evolution: state.research.evolution,
+            toLevel: state.research.toLevel,
+            endsAt: state.research.endsAt,
+          },
     zone: state.zone,
     taken: Object.fromEntries(
       Object.keys(state.taken)
@@ -313,6 +326,17 @@ function readCounts<K extends string>(
     result[key] = entry;
   }
   return result;
+}
+
+function readResearch(value: unknown): Research | null {
+  if (value === null) return null;
+  if (!isRecord(value)) throw new TypeError("sauvegarde invalide : recherche");
+  const evolution = EVOLUTION_IDS.find((id) => id === value.evolution);
+  const { toLevel, endsAt } = value;
+  if (evolution === undefined || !isCount(toLevel) || toLevel < 1 || !isCount(endsAt)) {
+    throw new TypeError("sauvegarde invalide : recherche");
+  }
+  return { evolution, toLevel, endsAt };
 }
 
 function readMutations(value: unknown): MutationId[] {
@@ -534,7 +558,7 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
   if (
     !isRecord(raw) ||
     typeof version !== "number" ||
-    ![1, 2, 3, 4, 5, 6, 7, 8].includes(version)
+    ![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(version)
   ) {
     throw new TypeError("sauvegarde invalide : version");
   }
@@ -558,7 +582,10 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     throw new TypeError("sauvegarde invalide : carte");
   }
   return {
-    version: 8,
+    version: 9,
+    // Avant les évolutions : rien d'exprimé, et trois organites de moins.
+    evolutions: version < 9 ? fill(EVOLUTION_IDS, 0) : readCounts(EVOLUTION_IDS, raw.evolutions),
+    research: version < 9 ? null : readResearch(raw.research),
     // Avant l'océan : le joueur est dans les abysses et n'a touché à aucun gisement.
     zone:
       version < 6 || !isCount(raw.zone) ? 0 : Math.min(raw.zone, BALANCE.ocean.zones.length - 1),
@@ -589,11 +616,10 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     seasonStart,
     now,
     resources: readCounts<ResourceId>(RESOURCE_IDS, raw.resources, beforeHunt ? ["proteins"] : []),
-    organelles: readCounts<OrganelleId>(
-      ORGANELLE_IDS,
-      raw.organelles,
-      beforeHunt ? ["nursery", "wall"] : version < 5 ? ["wall"] : [],
-    ),
+    organelles: readCounts<OrganelleId>(ORGANELLE_IDS, raw.organelles, [
+      ...(beforeHunt ? (["nursery", "wall"] as const) : version < 5 ? (["wall"] as const) : []),
+      ...(version < 9 ? (["golgi", "nucleus", "lysosome"] as const) : []),
+    ]),
     construction: readConstruction(raw.construction),
     mutations: readMutations(raw.mutations),
     mutationOffer: raw.mutationOffer === null ? null : readMutations(raw.mutationOffer),

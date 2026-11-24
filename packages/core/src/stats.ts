@@ -1,13 +1,28 @@
 /** Valeurs dérivées de l'état : production, stockage, coûts, durées. Entiers uniquement. */
 import { BALANCE, ORGANELLE_IDS } from "@o27/data";
 import type { OrganelleId, ResourceId, StatId } from "@o27/data";
+import { evolutionPercent } from "./evolutions";
 import { lineagePercent } from "./genes";
 import { MICRO } from "./types";
 import type { PlayerState } from "./types";
 
-/** Somme des pourcentages apportés par les mutations et les lignées pour une statistique. */
+/** Les organites qui donnent un bonus par niveau : la liste ne change jamais. */
+const BONUS_ORGANELLES = ORGANELLE_IDS.filter(
+  (id) => BALANCE.organelles[id].effect.kind === "bonus",
+);
+
+/**
+ * Somme des pourcentages apportés à une statistique : mutations, lignées, évolutions
+ * exprimées, et organites qui donnent un bonus par niveau.
+ */
 export function modifierPercent(state: PlayerState, stat: StatId): number {
-  let total = lineagePercent(state, stat);
+  let total = lineagePercent(state, stat) + evolutionPercent(state, stat);
+  for (const id of BONUS_ORGANELLES) {
+    const effect = BALANCE.organelles[id].effect;
+    if (effect.kind === "bonus" && effect.stat === stat) {
+      total += effect.percentPerLevel * state.organelles[id];
+    }
+  }
   for (const id of state.mutations) {
     const mutation = BALANCE.mutations[id];
     if (mutation.stat === stat) total += mutation.percent;

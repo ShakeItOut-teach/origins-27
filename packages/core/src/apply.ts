@@ -1,7 +1,8 @@
 /** Point d'entrée du moteur : appliquer un ordre du joueur à un instant donné. */
 import { BALANCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
-import type { MutationId, Order, OrganelleId, TroopId } from "@o27/data";
+import type { EvolutionId, MutationId, Order, OrganelleId, TroopId } from "@o27/data";
 import { advance } from "./advance";
+import { researchOffer } from "./evolutions";
 import { troopUnlocked } from "./genes";
 import { capacity, foePower, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
@@ -145,6 +146,28 @@ function gather(state: PlayerState, depositId: string): Outcome {
       },
     },
     events: [{ type: "expeditionSent", at: state.now, place: depositId, returnsAt }],
+  };
+}
+
+/** Exprimer le niveau suivant d'une évolution : le Noyau n'en mène qu'une à la fois. */
+function research(state: PlayerState, evolution: EvolutionId): Outcome {
+  if (state.research !== null) return { error: "researching" };
+  const offer = researchOffer(state, evolution);
+  if (offer.blocked !== null) return { error: offer.blocked };
+  if (RESOURCE_IDS.some((id) => state.resources[id] < offer.cost[id])) {
+    return { error: "insufficient" };
+  }
+  return {
+    state: {
+      ...state,
+      resources: {
+        sugar: state.resources.sugar - offer.cost.sugar,
+        bricks: state.resources.bricks - offer.cost.bricks,
+        proteins: state.resources.proteins - offer.cost.proteins,
+      },
+      research: { evolution, toLevel: offer.toLevel, endsAt: state.now + offer.durationMs },
+    },
+    events: [],
   };
 }
 
@@ -513,6 +536,8 @@ function execute(state: PlayerState, order: Order): Outcome {
       return startAway(state);
     case "setNight":
       return chooseNight(state, order.minute);
+    case "research":
+      return research(state, order.evolution);
     case "gather":
       return gather(state, order.deposit);
     case "migrate":

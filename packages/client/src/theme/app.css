@@ -135,6 +135,140 @@ p {
   justify-self: end;
 }
 
+/* Le prochain rendez-vous de la saison, toujours affiché. */
+.season-next {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 2px var(--space-2);
+  max-width: min(100%, 420px);
+  min-height: var(--touch);
+  padding: var(--space-1) var(--space-3);
+  border: 1px dashed var(--ink-soft);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.season-next-label {
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.season-next-left {
+  font-family: var(--font-number);
+  color: var(--eosin);
+}
+
+.calendar {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar-row {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--grid);
+  font-size: 14px;
+}
+
+.calendar-day,
+.calendar-left {
+  font-family: var(--font-number);
+  font-size: 13px;
+}
+
+.calendar-left {
+  color: var(--eosin);
+}
+
+.calendar-row.is-open {
+  color: var(--ink-soft);
+}
+
+.calendar-row.is-open .calendar-left {
+  color: var(--algae);
+}
+
+.branch {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.branch h3 {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: 22px;
+}
+
+.evolution {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius);
+}
+
+.evolution p {
+  margin: 0;
+}
+
+.evolution.is-dormant {
+  border-style: dashed;
+  opacity: 0.55;
+}
+
+.evolution.is-favoured {
+  border-color: var(--algae);
+}
+
+.evolution-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.evolution-level {
+  font-family: var(--font-number);
+  font-size: 13px;
+}
+
+.evolution-effect,
+.evolution-blocked {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.evolution-act {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.button.button-small {
+  width: auto;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  font-size: 15px;
+}
+
 .troop-role {
   flex-basis: 100%;
   color: var(--ink-soft);

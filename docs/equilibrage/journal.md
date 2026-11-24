@@ -331,3 +331,20 @@ chasse. Le butin des rivaux n'a pas été relevé : la réserve ne pourrait pas 
 À entretien égal (une Centrale de niveau 5 nourrit 166 parts), 83 venimeuses frappent pour
 332 là où 166 cellules de rang 1 frappent pour 166 : la force des armées double au palier 8.
 Les rivaux n'ont pas été relevés pour autant ; à surveiller.
+
+## 2026-11-24 — Ouvertures à date fixe, organites, évolutions
+
+| Réglage                   | Avant                                | Après                                                         |
+| ------------------------- | ------------------------------------ | ------------------------------------------------------------- |
+| Palier 6                  | 1 combat contre un rival, jour 3     | jour 3                                                        |
+| Palier 7                  | 3 combats contre des rivaux, jour 4  | jour 4                                                        |
+| Palier 8                  | première récompense de ligue, jour 5 | jour 5                                                        |
+| Golgi, Noyau, Lysosome    | —                                    | 160 à 200 sucres, 100 à 120 briques                           |
+| Évolution, niveau 1       | —                                    | 120 à 150 sucres, 80 à 120 briques, 15 à 25 protéines, 10 min |
+| Évolution, niveau suivant | —                                    | coût × 1,3 ; durée × 1,8                                      |
+| Tirage de saison          | —                                    | 1 dormante et 1 favorisée (× 1,5) par branche                 |
+| Puissance                 | —                                    | 15 par niveau d'évolution                                     |
+
+Vérifié par test : le dernier niveau d'une évolution reste payable avec une Vacuole au maximum.
+Tout exprimer (9 évolutions, 5 niveaux) demande environ 31 heures de Noyau au niveau 1, moins
+avec un Noyau plus haut : c'est un objectif de saison, pas d'une journée.

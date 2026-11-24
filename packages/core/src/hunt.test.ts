@@ -493,8 +493,8 @@ describe("les protéines paient l'évolution", () => {
     // Revenir trois jours plus tard donne le même instant d'ouverture.
     const late = advance(struck, T0 + 4 * day);
     expect(late.events).toContainEqual({ type: "tierReached", at: T0 + day, tier: 5 });
-    // Le palier 6 n'est pas livré.
-    expect(advance(struck, T0 + 30 * day).state.tier).toBe(5);
+    // Les paliers suivants s'ouvrent ensuite à date fixe, sans rien demander de plus.
+    expect(advance(struck, T0 + 30 * day).state.tier).toBeGreaterThan(5);
   });
 });
 
@@ -603,7 +603,7 @@ describe("garanties du moteur avec la chasse", () => {
       ),
     });
     const back = deserializeState(text);
-    expect(back.version).toBe(8);
+    expect(back.version).toBe(9);
     expect(back.resources).toEqual({ sugar: 500 * MICRO, bricks: 300 * MICRO, proteins: 0 });
     expect(back.organelles.nursery).toBe(0);
     expect(back.troops).toEqual(NONE);

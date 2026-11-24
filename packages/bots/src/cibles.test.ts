@@ -2,12 +2,16 @@
  * Cibles d'équilibrage des paliers 0 à 2. Si un changement de chiffres casse une cible,
  * c'est l'intention qu'il faut rediscuter, pas le test qu'il faut assouplir.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { BALANCE } from "@o27/data";
 import { PROFILES, simulate } from "./index";
 
 const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8];
 const HOUR = 3600;
+
+// Ces tests rejouent des heures de partie seconde par seconde : ils ont besoin de temps,
+// surtout sur les machines de la CI.
+vi.setConfig({ testTimeout: 30_000 });
 
 describe("cibles d'équilibrage", () => {
   it("tout le monde atteint le palier 1 en moins de 15 secondes", () => {

@@ -46,21 +46,22 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
   },
   {
     tier: 6,
-    condition: { counter: "rivalFights", atLeast: 1 },
+    // À partir d'ici, tout s'ouvre à date fixe : le joueur voit le compte à rebours.
+    condition: null,
     minDay: 3,
-    ui: ["worldMap", "deposits", "migration"],
+    ui: ["worldMap", "deposits", "migration", "calendar"],
     orders: ["gather", "migrate"],
   },
   {
     tier: 7,
-    condition: { counter: "rivalFights", atLeast: 3 },
+    condition: null,
     minDay: 4,
-    ui: ["power", "ranking", "leagues", "predators"],
-    orders: ["huntPredator"],
+    ui: ["power", "ranking", "leagues", "predators", "evolutions"],
+    orders: ["huntPredator", "research"],
   },
   {
     tier: 8,
-    condition: { counter: "leagueEntered", atLeast: 1 },
+    condition: null,
     minDay: 5,
     ui: ["genome", "rank2Troops"],
     orders: [],

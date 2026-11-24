@@ -1,4 +1,5 @@
 import type {
+  EvolutionId,
   CounterId,
   MutationId,
   OrganelleId,
@@ -42,6 +43,13 @@ export interface Expedition {
 }
 
 /** Des cellules filles en train de naître, l'une après l'autre. */
+/** L'évolution que le Noyau est en train d'exprimer. */
+export interface Research {
+  readonly evolution: EvolutionId;
+  readonly toLevel: number;
+  readonly endsAt: number;
+}
+
 export interface Training {
   readonly troop: TroopId;
   readonly remaining: number;
@@ -119,7 +127,7 @@ export interface DailyQuests {
 }
 
 export interface PlayerState {
-  readonly version: 8;
+  readonly version: 9;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -168,6 +176,9 @@ export interface PlayerState {
   readonly nightOffUntil: number;
   /** Instant à partir duquel l'heure de la nuit peut être changée. */
   readonly nightReadyAt: number;
+  /** Niveau exprimé de chaque évolution (0 : jamais exprimée). */
+  readonly evolutions: Readonly<Record<EvolutionId, number>>;
+  readonly research: Research | null;
   /** Zone de l'océan où vit le joueur : 0 = les abysses, puis de plus en plus près de la surface. */
   readonly zone: number;
   /** Ce que le joueur a déjà pris dans chaque gisement encore présent, en millionièmes d'unité. */
@@ -278,6 +289,12 @@ export type GameEvent =
     }
   /** Un rival a attaqué le joueur et a été repoussé. */
   | { readonly type: "migrated"; readonly at: number; readonly zone: number }
+  | {
+      readonly type: "evolutionDone";
+      readonly at: number;
+      readonly evolution: EvolutionId;
+      readonly level: number;
+    }
   /** Des cellules filles sont mortes de faim : la réserve de sucre était vide. */
   | { readonly type: "troopsStarved"; readonly at: number; readonly count: number }
   | {
@@ -340,7 +357,10 @@ export type OrderErrorCode =
   | "depleted"
   | "surface"
   | "unknownPredator"
-  | "geneMissing";
+  | "geneMissing"
+  | "dormant"
+  | "needsNucleus"
+  | "researching";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

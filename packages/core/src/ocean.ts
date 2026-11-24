@@ -7,7 +7,7 @@
 import { BALANCE, PLACE_RESOURCE } from "@o27/data";
 import type { PlaceKind, ResourceId } from "@o27/data";
 import { createRng } from "./rng";
-import { travelMs } from "./stats";
+import { modifierPercent, travelMs } from "./stats";
 import { MICRO } from "./types";
 import type { PlayerState } from "./types";
 import { seasonDay } from "./unlock";
@@ -327,7 +327,13 @@ export function gatherOffer(state: PlayerState, deposit: Deposit, at: number): G
   const distance = cellDistance(playerCell(state), deposit);
   return {
     resource: PLACE_RESOURCE[deposit.kind],
-    loot: Math.min(depositLoad(deposit.kind, deposit.zone), depositLeft(deposit, state.taken, at)),
+    // Appareil de Golgi et évolutions de récolte grossissent le chargement.
+    loot: Math.min(
+      Math.floor(
+        (depositLoad(deposit.kind, deposit.zone) * (100 + modifierPercent(state, "gather"))) / 100,
+      ),
+      depositLeft(deposit, state.taken, at),
+    ),
     energy: data.energy,
     durationMs: travelMs(
       state,

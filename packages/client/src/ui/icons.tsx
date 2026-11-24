@@ -43,6 +43,33 @@ export function OrganelleIcon({ id }: { readonly id: OrganelleId }) {
           <circle cx="16.5" cy="14.5" r="2.4" />
         </svg>
       );
+    case "golgi":
+      // Des saccules empilés, une vésicule qui s'en détache.
+      return (
+        <svg {...common}>
+          <path d="M5 8c4-2 10-2 14 0M4 12c5-2 11-2 16 0M5 16c4-2 10-2 14 0" />
+          <circle cx="19" cy="19" r="1.6" />
+        </svg>
+      );
+    case "nucleus":
+      // Le noyau : son enveloppe, son nucléole.
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8.5" strokeDasharray="4 2" />
+          <circle cx="13.5" cy="10.5" r="3" />
+        </svg>
+      );
+    case "lysosome":
+      // Un petit sac rempli de grains.
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8" />
+          <circle cx="9.5" cy="10.5" r="0.9" fill="currentColor" />
+          <circle cx="14" cy="9.5" r="0.9" fill="currentColor" />
+          <circle cx="13" cy="14.5" r="0.9" fill="currentColor" />
+          <circle cx="9.5" cy="14.5" r="0.9" fill="currentColor" />
+        </svg>
+      );
     case "wall":
       // Une membrane épaisse, doublée.
       return (

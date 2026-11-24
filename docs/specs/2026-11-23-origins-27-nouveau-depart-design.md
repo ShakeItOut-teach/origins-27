@@ -35,15 +35,17 @@ autorise, et la mise en scène du déblocage.
 | 3      | Première mutation                                      | —             | La carte proche, envoyer récolter ; énergie                                    |
 | 4      | 5 récoltes sur la carte                                | —             | Premières troupes, chasse de proies neutres ; coffres et quêtes du jour        |
 | 5      | Première chasse gagnée                                 | Jour 2        | Rivaux, espionnage, pillage, défense et esquive, protections                   |
-| 6      | Premier combat contre un rival                         | Jour 3        | L'océan : zones de profondeur, gisements communs, remonter vers le centre      |
-| 7      | 3 combats contre des rivaux                            | Jour 4        | Puissance, cinq classements, ligues, prédateurs de l'océan                     |
-| 8      | Première récompense de ligue                           | Jour 5        | Familles de gènes, lignées, cellules filles de rang 2                          |
-| 9      | —                                                      | Jour 9        | Événements, alliances, Gazette ; puis rangs supérieurs, crise, course à l'APEX |
+| 6      | — (date seule)                                         | Jour 3        | L'océan : zones de profondeur, gisements communs, remonter vers le centre      |
+| 7      | — (date seule)                                         | Jour 4        | Puissance, classements, ligues, prédateurs ; Noyau et évolutions               |
+| 8      | — (date seule)                                         | Jour 5        | Familles de gènes, lignées, cellules filles de rang 2                          |
+| 9      | — (date seule)                                         | Jour 9        | Événements, alliances, Gazette ; puis rangs supérieurs, crise, course à l'APEX |
 
 Règles :
 
-- Un joueur arrivé en retard passe les paliers par accomplissement, à son rythme ; les dates
-  minimales déjà passées ne le retiennent pas.
+- Jusqu'au palier 5, on avance par ce que l'on accomplit. À partir du palier 6, tout s'ouvre à
+  date fixe, et le joueur voit le compte à rebours (décision du propriétaire, 2026-11-24).
+- Un joueur arrivé en retard passe les paliers 0 à 5 à son rythme ; les dates déjà passées ne
+  le retiennent pas.
 - Personne ne peut être attaqué avant d'avoir atteint le palier 5.
 - Chaque palier est livré complet et agréable avant de commencer le suivant.
 - L'espèce unique se construit dès le palier 2 ; la planche à partager s'ouvre au palier 7,

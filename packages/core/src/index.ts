@@ -85,6 +85,10 @@ export {
 export type { RankRow, Ranking } from "./power";
 export { evaluateTier, mutationPool, orderTier, seasonDay } from "./unlock";
 export { familyGenes, genesMissing, hasLineage, troopUnlocked } from "./genes";
+export { evolutionLevels, evolutionPercent, researchOffer, seasonDraw } from "./evolutions";
+export type { ResearchOffer, SeasonDraw } from "./evolutions";
+export { nextOpening, seasonCalendar } from "./calendar";
+export type { CalendarEntry } from "./calendar";
 export {
   capacity,
   foePower,

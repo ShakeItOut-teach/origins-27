@@ -13,6 +13,9 @@ export const ORGANELLE_IDS = [
   "ribosome",
   "nursery",
   "wall",
+  "golgi",
+  "nucleus",
+  "lysosome",
 ] as const;
 export type OrganelleId = (typeof ORGANELLE_IDS)[number];
 
@@ -64,11 +67,35 @@ export const STAT_IDS = [
   "carry",
   "trainTime",
   "attack",
+  "gather",
 ] as const;
 export type StatId = (typeof STAT_IDS)[number];
 
 /** Durée d'une saison, en jours : l'âge du serveur va de 1 à ce nombre. */
 export const SEASON_DAYS = 27;
+
+/**
+ * Les évolutions : des caractères que le Noyau exprime, niveau après niveau. Trois branches.
+ * Chaque saison, quelques-unes sont dormantes et d'autres favorisées : on ne joue jamais deux
+ * fois la même cellule.
+ */
+export const EVOLUTION_BRANCHES = ["combat", "defense", "harvest"] as const;
+export type EvolutionBranch = (typeof EVOLUTION_BRANCHES)[number];
+export const EVOLUTION_IDS = [
+  "venom",
+  "frenzy",
+  "plunder",
+  "pursuit",
+  "shell",
+  "frugal",
+  "reserve",
+  "repair",
+  "enzymes",
+  "synthesis",
+  "foraging",
+  "digestion",
+] as const;
+export type EvolutionId = (typeof EVOLUTION_IDS)[number];
 
 /** Les quatre familles de gènes. Trois gènes d'une même famille ouvrent une lignée. */
 export const GENE_FAMILIES = ["metabolism", "predation", "mobility", "resilience"] as const;
@@ -108,6 +135,7 @@ export const ORDER_TYPES = [
   "cancelRaid",
   "goAway",
   "setNight",
+  "research",
   "gather",
   "migrate",
   "huntPredator",
@@ -214,6 +242,8 @@ export const UI_ELEMENT_IDS = [
   "migration",
   "power",
   "predators",
+  "evolutions",
+  "calendar",
   "genome",
   "rank2Troops",
   "ranking",

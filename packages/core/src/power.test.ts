@@ -175,12 +175,12 @@ describe("les ligues", () => {
   });
 
   it("avant le palier 7, pas de récompense de ligue", () => {
-    const state = player(6, 5);
-    const step = advance(
-      { ...state, counters: { ...state.counters, rivalFights: 1 } },
-      SEASON + 5 * DAY_MS,
-    );
+    // Troisième jour : le palier 7 ne s'ouvre qu'au minuit suivant, après la distribution.
+    const state = player(6, 3);
+    expect(state.tier).toBe(6);
+    const step = advance(state, SEASON + 3 * DAY_MS);
     expect(step.events.some((event) => event.type === "leagueReward")).toBe(false);
+    expect(step.state.tier).toBe(7);
   });
 });
 
@@ -210,7 +210,8 @@ describe("les prédateurs de l'océan", () => {
     const predator = nearestPredator(state, 0);
     const party = state.troops;
     const order: Order = { type: "huntPredator", predator: predator.id, party };
-    expect(refusal(player(6, 5), order, state.now)).toBe("locked");
+    const early = player(6, 3);
+    expect(refusal(early, order, early.now)).toBe("locked");
     expect(refusal(state, { ...order, predator: "p:0:0:1" }, state.now)).toBe("unknownPredator");
     expect(
       refusal(state, { ...order, party: partyOf({ hunter: 0, armored: 0, swift: 0 }) }, state.now),
@@ -242,7 +243,7 @@ describe("les prédateurs de l'océan", () => {
 
 describe("la sauvegarde", () => {
   it("une sauvegarde d'avant les classements repart avec des compteurs à zéro", () => {
-    const state = player(6, 5);
+    const state = player(6, 3);
     const old = JSON.parse(serializeState(state)) as { version: number; counters: object };
     old.version = 6;
     old.counters = Object.fromEntries(
@@ -251,7 +252,7 @@ describe("la sauvegarde", () => {
       ),
     );
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(8);
+    expect(back.version).toBe(9);
     expect(back.counters.lootTaken).toBe(0);
     expect(back.counters.attacksRepelled).toBe(0);
   });

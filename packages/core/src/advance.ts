@@ -34,8 +34,10 @@ function produce(state: PlayerState, to: number): PlayerState {
  * maison. Entre la réserve vide et la vague, le joueur a le temps de réagir.
  */
 function hungerAt(state: PlayerState): number {
+  // Personne à la maison : personne ne peut mourir de faim. On le vérifie d'abord, c'est le cas le plus courant.
+  if (partySize(state.troops) === 0) return Number.POSITIVE_INFINITY;
   const rate = productionRate(state, "sugar") - upkeepRate(state);
-  if (rate >= 0 || partySize(state.troops) === 0) return Number.POSITIVE_INFINITY;
+  if (rate >= 0) return Number.POSITIVE_INFINITY;
   const emptyAt = state.now + Math.ceil(state.resources.sugar / -rate);
   const wave = BALANCE.troopUpkeep.famineSeconds * 1000;
   return (Math.floor(emptyAt / wave) + 1) * wave;
@@ -214,7 +216,8 @@ export function advance(state: PlayerState, now: number): Step {
   let current = state;
   const events: GameEvent[] = [];
   for (;;) {
-    const { construction, expedition, training, hunt, raid } = current;
+    const { construction, expedition, training, hunt, raid, research } = current;
+    const researchEnd = research?.endsAt ?? never;
     const buildEnd = construction?.endsAt ?? never;
     const birth = training?.nextAt ?? never;
     const tripEnd = expedition?.returnsAt ?? never;
@@ -225,7 +228,17 @@ export function advance(state: PlayerState, now: number): Step {
     // attendait son jour s'ouvre à cet instant précis, pas « quand le joueur revient ».
     const midnight = current.seasonStart + seasonDay(current, current.now) * DAY_MS;
     const hunger = hungerAt(current);
-    const at = Math.min(buildEnd, birth, tripEnd, huntAt, raidAt, attackAt, midnight, hunger);
+    const at = Math.min(
+      buildEnd,
+      birth,
+      tripEnd,
+      huntAt,
+      raidAt,
+      attackAt,
+      midnight,
+      hunger,
+      researchEnd,
+    );
     if (at > now) break;
     const seen = events.length;
     const ready = produce(current, at);
@@ -250,6 +263,17 @@ export function advance(state: PlayerState, now: number): Step {
             organelle: construction.organelle,
             level: construction.toLevel,
           },
+        ],
+      };
+    } else if (research !== null && researchEnd === at) {
+      step = {
+        state: {
+          ...ready,
+          research: null,
+          evolutions: { ...ready.evolutions, [research.evolution]: research.toLevel },
+        },
+        events: [
+          { type: "evolutionDone", at, evolution: research.evolution, level: research.toLevel },
         ],
       };
     } else if (training !== null && birth === at) {

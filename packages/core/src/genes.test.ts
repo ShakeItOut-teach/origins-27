@@ -33,7 +33,9 @@ const GENES = BALANCE.genes;
 
 /** Un joueur riche du palier demandé, avec les mutations demandées, que personne ne dérange. */
 function player(tier: number, mutations: readonly MutationId[] = []): PlayerState {
-  const base = createPlayer(7, SEASON, NOW, { worldSeed: 27, slot: 4 });
+  // Le palier 8 s'ouvre à date fixe : un joueur du palier 7 vit donc au quatrième jour.
+  const now = tier >= 8 ? NOW : SEASON + 3 * DAY_MS + HOUR;
+  const base = createPlayer(7, SEASON, now, { worldSeed: 27, slot: 4 });
   return advance(
     {
       ...base,
@@ -51,10 +53,10 @@ function player(tier: number, mutations: readonly MutationId[] = []): PlayerStat
       },
       organelles: { ...base.organelles, mitochondrion: 3, vacuole: 5, nursery: 1, wall: 2 },
       resources: { sugar: 600 * MICRO, bricks: 600 * MICRO, proteins: 300 * MICRO },
-      shieldUntil: NOW + 20 * DAY_MS,
-      nextRaidAt: NOW + 25 * DAY_MS,
+      shieldUntil: now + 20 * DAY_MS,
+      nextRaidAt: now + 25 * DAY_MS,
     },
-    NOW,
+    now,
   ).state;
 }
 
@@ -87,7 +89,8 @@ describe("les familles de gènes", () => {
     expect(mutationPool(player(8, ["thrift", "voracity"]))).toHaveLength(MUTATION_IDS.length - 2);
     // Au palier 7, celui qui a les six premières ne peut plus muter ; au palier 8, si.
     const six: MutationId[] = MUTATION_IDS.filter((id) => BALANCE.mutations[id].tier < GENES.tier);
-    expect(refusal(player(7, six), { type: "buyMutation" }, NOW)).toBe("noMoreMutations");
+    const seven = player(7, six);
+    expect(refusal(seven, { type: "buyMutation" }, seven.now)).toBe("noMoreMutations");
     const bought = ok(player(8, six), { type: "buyMutation" }, NOW);
     expect(bought.mutationOffer?.every((id) => BALANCE.mutations[id].tier === GENES.tier)).toBe(
       true,
@@ -165,7 +168,8 @@ describe("les cellules filles de rang 2", () => {
     expect(troopUnlocked(player(8, two), "guardian")).toBe(false);
     const order: Order = { type: "trainTroop", troop: "toxic", count: 1 };
     expect(refusal(player(8), order, NOW)).toBe("geneMissing");
-    expect(refusal(player(7, two), order, NOW)).toBe("geneMissing");
+    const seven = player(7, two);
+    expect(refusal(seven, order, seven.now)).toBe("geneMissing");
   });
 
   it("elles coûtent des protéines, naissent plus lentement, mangent double", () => {
@@ -208,7 +212,7 @@ describe("les cellules filles de rang 2", () => {
     old.version = 7;
     old.troops = { hunter: 4, armored: 0, swift: 0 };
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(8);
+    expect(back.version).toBe(9);
     expect(back.troops).toEqual(partyOf({ hunter: 4 }));
     const full = { ...player(8, two), troops: partyOf({ toxic: 3, hunter: 2 }) };
     expect(deserializeState(serializeState(full))).toEqual(full);

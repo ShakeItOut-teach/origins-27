@@ -109,6 +109,7 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
       return 0;
     }
     case "migrated":
+    case "evolutionDone":
     case "leagueReward":
     case "troopsStarved":
       return 0;

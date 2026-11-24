@@ -1,6 +1,8 @@
 /** Schémas de validation : une donnée invalide fait échouer le chargement et les tests. */
 import { z } from "zod";
 import {
+  EVOLUTION_BRANCHES,
+  EVOLUTION_IDS,
   GENE_FAMILIES,
   COUNTER_IDS,
   MUTATION_IDS,
@@ -36,6 +38,14 @@ export const OrganelleEffectSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("trainingSpeed"), percentPerLevel: positiveInt }),
   /** Points de défense ajoutés par niveau, contre les attaques des rivaux. */
   z.strictObject({ kind: z.literal("defense"), perLevel: positiveInt }),
+  /** Un pourcentage ajouté à une statistique, par niveau (récolte, chasse…). */
+  z.strictObject({
+    kind: z.literal("bonus"),
+    stat: z.enum(STAT_IDS),
+    percentPerLevel: z.number().int(),
+  }),
+  /** Exprime les évolutions ; chaque niveau au-delà du premier accélère la recherche. */
+  z.strictObject({ kind: z.literal("research"), percentPerLevel: positiveInt }),
 ]);
 
 export const OrganelleSchema = z.strictObject({
@@ -100,6 +110,9 @@ export const BalanceSchema = z.strictObject({
     ribosome: OrganelleSchema,
     nursery: OrganelleSchema,
     wall: OrganelleSchema,
+    golgi: OrganelleSchema,
+    nucleus: OrganelleSchema,
+    lysosome: OrganelleSchema,
   } satisfies Record<(typeof ORGANELLE_IDS)[number], unknown>),
   mutations: z.strictObject({
     swiftCilia: MutationSchema,
@@ -148,6 +161,29 @@ export const BalanceSchema = z.strictObject({
     scout: TroopSchema,
     carrier: TroopSchema,
   } satisfies Record<(typeof TROOP_IDS)[number], unknown>),
+  /** Les évolutions : ce que le Noyau peut exprimer. */
+  research: z.strictObject({
+    tier: positiveInt,
+    maxLevel: positiveInt,
+    /** Le coût et la durée sont multipliés par ces pourcentages à chaque niveau. */
+    costGrowthPercent: z.number().int().min(100),
+    timeGrowthPercent: z.number().int().min(100),
+    /** Nombre d'évolutions dormantes par branche, chaque saison. */
+    dormantPerBranch: nonNegativeInt,
+    /** Effet d'une évolution favorisée par la saison, en pourcentage de l'effet normal. */
+    favouredPercent: z.number().int().min(100),
+  }),
+  evolutions: z.record(
+    z.enum(EVOLUTION_IDS),
+    z.strictObject({
+      branch: z.enum(EVOLUTION_BRANCHES),
+      stat: z.enum(STAT_IDS),
+      /** Pourcentage ajouté à la statistique par niveau (négatif pour une réduction). */
+      percentPerLevel: z.number().int(),
+      cost: z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
+      seconds: positiveInt,
+    }),
+  ),
   /** Les familles de gènes : à partir de ce palier, trois gènes d'une famille font une lignée. */
   genes: z.strictObject({ tier: positiveInt, lineageGenes: positiveInt }),
   /** Ce qu'apporte chaque lignée. */
@@ -342,6 +378,7 @@ export const BalanceSchema = z.strictObject({
   power: z.strictObject({
     perOrganelleLevel: positiveInt,
     perMutation: positiveInt,
+    perEvolutionLevel: positiveInt,
     /** Par zone remontée. */
     perZone: positiveInt,
     perTroop: positiveInt,
@@ -469,6 +506,8 @@ export const OrderSchema = z.discriminatedUnion("type", [
   }),
   z.strictObject({ type: z.literal("strikeRaid") }),
   z.strictObject({ type: z.literal("cancelRaid") }),
+  /** Exprimer le niveau suivant d'une évolution, dans le Noyau. */
+  z.strictObject({ type: z.literal("research"), evolution: z.enum(EVOLUTION_IDS) }),
   /** Passer en mode absent : une longue protection, que la première attaque envoyée fait tomber. */
   z.strictObject({ type: z.literal("goAway") }),
   /** Choisir l'heure de son bouclier de nuit : la minute du jour (temps universel) où il commence. */

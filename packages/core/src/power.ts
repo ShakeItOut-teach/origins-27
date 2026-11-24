@@ -5,6 +5,7 @@
  */
 import { BALANCE, ORGANELLE_IDS, TROOP_IDS } from "@o27/data";
 import type { RankingId, ResourceId } from "@o27/data";
+import { evolutionLevels } from "./evolutions";
 import { organismZone, rankOf } from "./ocean";
 import { organismProfile } from "./rivals";
 import { createRng } from "./rng";
@@ -21,6 +22,7 @@ export function cellPower(state: PlayerState): number {
   return (
     levels * data.perOrganelleLevel +
     state.mutations.length * data.perMutation +
+    evolutionLevels(state) * data.perEvolutionLevel +
     state.zone * data.perZone
   );
 }

@@ -78,9 +78,10 @@ function atTier6(day: number, zone = 0): PlayerState {
   ).state;
 }
 
-/** Le même joueur un palier plus bas : il n'a encore affronté aucun rival. */
+/** Le même joueur un palier plus bas. */
 function atTier5(state: PlayerState): PlayerState {
-  return { ...state, tier: 5, counters: { ...state.counters, rivalFights: 0 } };
+  // Le palier 6 s'ouvre à date fixe au troisième jour : ce joueur vit donc au deuxième.
+  return { ...state, tier: 5, seasonStart: state.now - DAY_MS - HOUR };
 }
 
 function ok(state: PlayerState, order: Order, now: number): PlayerState {
@@ -383,7 +384,7 @@ describe("la sauvegarde", () => {
     delete old.zone;
     delete old.taken;
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(8);
+    expect(back.version).toBe(9);
     expect(back.zone).toBe(0);
     expect(back.taken).toEqual({});
   });

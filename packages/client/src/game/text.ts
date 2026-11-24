@@ -76,6 +76,20 @@ export function formatAway(ms: number, lang: Lang): string {
   return `${String(Math.floor(hours / 24))} ${translate(lang, "unit.days")}`;
 }
 
+/** Un compte à rebours : « 3 j 4 h », « 5 h 12 », « 8 min ». */
+export function formatCountdown(ms: number, lang: Lang): string {
+  const minutes = Math.max(0, Math.ceil(ms / 60_000));
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  if (days > 0) {
+    return `${String(days)} ${translate(lang, "unit.days")} ${String(hours)} ${translate(lang, "unit.hours")}`;
+  }
+  if (hours > 0) {
+    return `${String(hours)} ${translate(lang, "unit.hours")} ${String(minutes % 60).padStart(2, "0")}`;
+  }
+  return `${String(Math.max(1, minutes))} min`;
+}
+
 const LANG_KEY = "o27.langue";
 
 /** La langue choisie par le joueur si elle existe, sinon celle de l'appareil. */

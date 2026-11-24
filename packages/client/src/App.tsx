@@ -3,6 +3,7 @@ import {
   nextMutationPrice,
   leagueOf,
   mutationPool,
+  nextOpening,
   ranking,
   rivalName as nameOfRival,
   seasonDay,
@@ -16,7 +17,15 @@ import {
 } from "@o27/core";
 import type { AbsenceSummary, PlayerState } from "@o27/core";
 import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS, SEASON_DAYS } from "@o27/data";
-import type { ChestReward, MutationId, Order, OrganelleId, ResourceId, TextKey } from "@o27/data";
+import type {
+  ChestReward,
+  EvolutionId,
+  MutationId,
+  Order,
+  OrganelleId,
+  ResourceId,
+  TextKey,
+} from "@o27/data";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
 import type { Account } from "./game/api";
@@ -24,6 +33,7 @@ import type { GameStore } from "./game/store";
 import {
   formatAmount,
   formatAway,
+  formatCountdown,
   formatDuration,
   formatRate,
   saveScience,
@@ -36,6 +46,8 @@ import { isVisible } from "./game/unlock";
 import { AccountSheet } from "./ui/AccountSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
+import { CalendarSheet, openingName } from "./ui/CalendarSheet";
+import { EvolutionPanel } from "./ui/EvolutionPanel";
 import { GenomeSheet } from "./ui/GenomeSheet";
 import { LexiconSheet } from "./ui/LexiconSheet";
 import { QuestSheet } from "./ui/QuestSheet";
@@ -54,12 +66,15 @@ interface Props {
 
 /** Position de chaque emplacement sur la lame, en pourcentage. */
 const SLOT_POSITION: Readonly<Record<OrganelleId, { left: string; top: string }>> = {
-  mitochondrion: { left: "17%", top: "27%" },
-  vacuole: { left: "83%", top: "27%" },
-  cilia: { left: "17%", top: "73%" },
-  ribosome: { left: "83%", top: "73%" },
-  nursery: { left: "50%", top: "88%" },
-  wall: { left: "50%", top: "12%" },
+  wall: { left: "50%", top: "9%" },
+  vacuole: { left: "76%", top: "19%" },
+  golgi: { left: "90%", top: "43%" },
+  ribosome: { left: "85%", top: "70%" },
+  nursery: { left: "64%", top: "88%" },
+  lysosome: { left: "36%", top: "88%" },
+  cilia: { left: "15%", top: "70%" },
+  nucleus: { left: "10%", top: "43%" },
+  mitochondrion: { left: "24%", top: "19%" },
 };
 
 function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number): boolean {
@@ -89,6 +104,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [questsOpen, setQuestsOpen] = useState(false);
   const [rankingOpen, setRankingOpen] = useState(false);
   const [genomeOpen, setGenomeOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  /** Dernière évolution exprimée : on le dit, une fois. */
+  const [evolved, setEvolved] = useState<{ evolution: EvolutionId; level: number } | null>(null);
   /** Cellules filles mortes de faim depuis la dernière note. */
   const [starved, setStarved] = useState(0);
   /** Dernière récompense de ligue reçue. */
@@ -130,6 +148,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
           if (event.type === "chestOpened") setChest(event.loot);
+          if (event.type === "evolutionDone") {
+            setEvolved({ evolution: event.evolution, level: event.level });
+          }
           if (event.type === "troopsStarved") {
             const dead = event.count;
             setStarved((count) => count + dead);
@@ -181,8 +202,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       creature,
       organelles: state.organelles,
       building: state.construction?.organelle ?? null,
+      researching: state.research !== null,
     }),
-    [state.seed, creature, state.organelles, state.construction],
+    [state.seed, creature, state.organelles, state.construction, state.research],
   );
 
   const tap = (): void => {
@@ -226,6 +248,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       : null;
   const rivalName = (id: string): string => nameOfRival(state, id);
   const powerRank = ranking(state, "power");
+  const upcoming = nextOpening(state);
 
   if (!store.isReady()) {
     return <main className="page" data-tier="loading" aria-busy="true" />;
@@ -339,6 +362,31 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         )}
       </header>
 
+      {show("calendar") && upcoming !== null && (
+        <button
+          type="button"
+          className="season-next"
+          data-testid="season-next"
+          onClick={() => {
+            setCalendarOpen(true);
+          }}
+        >
+          <span className="season-next-label">{t("label.nextOpening")}</span>
+          <strong>{openingName(lang, upcoming)}</strong>
+          <span className="season-next-left">
+            {t("label.in")} {formatCountdown(upcoming.at - state.now, lang)}
+          </span>
+        </button>
+      )}
+      {show("calendar") && calendarOpen && (
+        <CalendarSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setCalendarOpen(false);
+          }}
+        />
+      )}
       {show("map") && (
         <MapView
           hidden={!onMap}
@@ -439,6 +487,24 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setRankingOpen(false);
           }}
         />
+      )}
+      {evolved !== null && (
+        <div className="loss is-good" role="status" data-testid="evolution-note">
+          <strong>{t("evolution.done")}</strong>
+          <span>
+            {t(`evolution.${evolved.evolution}.name`)} · {t("label.level")} {evolved.level}
+          </span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setEvolved(null);
+            }}
+          >
+            ×
+          </button>
+        </div>
       )}
       {starved > 0 && (
         <div className="loss" role="status" data-testid="starve-note">
@@ -911,6 +977,9 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }
         <p className="sheet-role">{t(`organelle.${id}.role`)}</p>
         {id === "nursery" && level > 0 && (
           <TroopPanel state={state} lang={lang} onOrder={onOrder} />
+        )}
+        {id === "nucleus" && level > 0 && (
+          <EvolutionPanel state={state} lang={lang} onOrder={onOrder} />
         )}
 
         {building && (
