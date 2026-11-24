@@ -2,8 +2,10 @@ export { createRng } from "./rng";
 export type { Rng } from "./rng";
 export { MICRO, DAY_MS } from "./types";
 export type {
+  Alliance,
   Companion,
   Construction,
+  DailyRecord,
   DailyQuests,
   Raid,
   Quest,
@@ -35,7 +37,10 @@ export type { Party } from "./hunt";
 export { drawQuests, questIsAmount, questsRenewAt } from "./quests";
 export {
   defensePower,
+  isAlly,
   isNewcomer,
+  reinforcements,
+  rivalWeakened,
   loadLoot,
   nightEnd,
   protectedUntil,
@@ -58,7 +63,6 @@ export {
   depositLoad,
   depthAt,
   findDeposit,
-  gatherOffer,
   migrateOffer,
   oceanDeposits,
   oceanOrganisms,
@@ -71,7 +75,53 @@ export {
   zoneInner,
   zoneOpenDay,
 } from "./ocean";
-export type { Deposit, GatherOffer, MigrateOffer, OceanOrganism } from "./ocean";
+export type { Deposit, MigrateOffer, OceanOrganism } from "./ocean";
+export { gatherOffer, playerDeposit, playerDeposits } from "./gather";
+export type { GatherOffer } from "./gather";
+export {
+  anoxiaAt,
+  bloomPercent,
+  eventCovers,
+  eventDeposits,
+  findEvent,
+  oceanEvents,
+  playerAnoxia,
+  playerTroubles,
+  visibleEvents,
+} from "./events";
+export type { ZoneEvent } from "./events";
+export {
+  leviathanBeaten,
+  leviathanKind,
+  leviathanOffer,
+  leviathanPower,
+  leviathanThreat,
+} from "./leviathan";
+export {
+  allianceLevel,
+  alliancePercent,
+  allianceTechLevel,
+  allianceView,
+  bannerMembers,
+  bannerOf,
+  bannerProgress,
+  techLevel,
+  techThreshold,
+} from "./banners";
+export type { TechPool, TechView } from "./banners";
+export {
+  allianceToday,
+  bannerList,
+  donationCost,
+  donationPoints,
+  giftFor,
+  helpRequests,
+  isOfficer,
+  nearestBanner,
+} from "./alliance";
+export type { BannerRow } from "./alliance";
+export { fossilOfDay, gazette } from "./gazette";
+export type { Gazette, GazetteNews } from "./gazette";
 export { findPredator, oceanPredators, predatorOffer } from "./predators";
 export type { Predator } from "./predators";
 export {

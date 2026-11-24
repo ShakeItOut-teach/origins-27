@@ -1,6 +1,10 @@
 /** Schémas de validation : une donnée invalide fait échouer le chargement et les tests. */
 import { z } from "zod";
 import {
+  ALLIANCE_BRANCHES,
+  ALLIANCE_SHOP_IDS,
+  ALLIANCE_TECH_IDS,
+  BANNER_IDS,
   EVOLUTION_BRANCHES,
   EVOLUTION_IDS,
   GENE_FAMILIES,
@@ -454,6 +458,125 @@ export const BalanceSchema = z.strictObject({
     /** Du plus faible au plus fort, dans les abysses. */
     levels: z.array(z.strictObject({ power: positiveInt, proteins: positiveInt })).min(1),
   }),
+  /**
+   * Les événements de zone. L'océan est découpé en grands quartiers ; à chaque cycle, chacun
+   * a une chance de voir naître un événement, le même pour tous les joueurs.
+   */
+  events: z.strictObject({
+    tier: positiveInt,
+    /** Côté d'un quartier, en cases. */
+    district: positiveInt,
+    epochHours: positiveInt,
+    chancePercent: z.number().int().min(1).max(100),
+    /** Éruption hydrothermale : des gisements très riches autour d'une cheminée. */
+    eruption: z.strictObject({
+      weight: positiveInt,
+      hours: positiveInt,
+      radius: positiveInt,
+      deposits: z.number().int().min(1).max(9),
+      /** Richesse de ses gisements, en pourcentage d'un gisement ordinaire. */
+      loadPercent: positiveInt,
+    }),
+    /** Efflorescence : des gisements qui ne se vident pas, et une récolte plus généreuse. */
+    bloom: z.strictObject({
+      weight: positiveInt,
+      hours: positiveInt,
+      radius: positiveInt,
+      deposits: z.number().int().min(1).max(9),
+      /** Supplément de récolte dans toute la zone, en pourcentage. */
+      gatherPercent: positiveInt,
+    }),
+    /** Léviathan : il frappe les cellules à sa portée ; le vaincre rapporte beaucoup. */
+    leviathan: z.strictObject({
+      weight: positiveInt,
+      hours: positiveInt,
+      radius: positiveInt,
+      strikeHours: positiveInt,
+      /** Force de ses frappes, en pourcentage de sa force au combat. */
+      strikePercent: positiveInt,
+      /** Part des cellules filles et des réserves qu'une frappe emporte. */
+      lossPercent: z.number().int().min(1).max(50),
+      power: z.strictObject({ base: positiveInt, perDay: nonNegativeInt }),
+      proteins: positiveInt,
+      /** Énergie dépensée pour l'affronter, et énergie rendue par la victoire. */
+      energy: positiveInt,
+      energyGain: nonNegativeInt,
+    }),
+    /** Zone anoxique : production réduite, gardes affaiblis. Les deux pourcentages sont négatifs. */
+    anoxia: z.strictObject({
+      weight: positiveInt,
+      hours: positiveInt,
+      radius: positiveInt,
+      productionPercent: z.number().int().min(-90).max(-1),
+      guardPercent: z.number().int().min(-90).max(-1),
+    }),
+  }),
+  /** Les alliances : six bannières, des technologies communes, de l'entraide. */
+  alliance: z.strictObject({
+    tier: positiveInt,
+    /** Production en plus pour tout membre d'une alliance, en pourcentage. */
+    memberBonusPercent: nonNegativeInt,
+    /** La bannière la plus présente à cette distance recrute le joueur d'office. */
+    nearCells: positiveInt,
+    /** Durée pendant laquelle on change de bannière sans rien perdre. */
+    freeHours: positiveInt,
+    tech: z.strictObject({
+      maxLevel: positiveInt,
+      /** Points pour le premier niveau ; chaque niveau suivant en demande davantage. */
+      needBase: positiveInt,
+      needGrowthPercent: z.number().int().min(100),
+      /** Ce que chaque membre simulé verse par jour. */
+      memberPointsPerDay: positiveInt,
+    }),
+    techs: z.record(
+      z.enum(ALLIANCE_TECH_IDS),
+      z.strictObject({
+        branch: z.enum(ALLIANCE_BRANCHES),
+        /** Les statistiques touchées ; aucune pour les renforts, qui ont leur propre règle. */
+        stats: z.array(z.enum(STAT_IDS)),
+        percentPerLevel: z.number().int(),
+      }),
+    ),
+    donation: z.strictObject({
+      cost: CostSchema,
+      points: positiveInt,
+      /** Ce que rapporte un don à la technologie recommandée, en pourcentage. */
+      recommendedPercent: z.number().int().min(100),
+      perDay: positiveInt,
+    }),
+    /** Contribution à partir de laquelle on choisit la technologie recommandée. */
+    officerPoints: positiveInt,
+    help: z.strictObject({
+      /** Demandes d'aide des autres membres : combien par jour, combien dès minuit, puis une toutes les N minutes. */
+      perDay: positiveInt,
+      start: nonNegativeInt,
+      minutes: positiveInt,
+      credits: positiveInt,
+      points: positiveInt,
+      /** Ce que l'aide des alliés retire au temps qu'il reste à un chantier, en pourcentage. */
+      buildPercent: z.number().int().min(1).max(90),
+    }),
+    reinforcements: z.strictObject({
+      /** Les alliés à cette distance viennent défendre. */
+      cells: positiveInt,
+      /** Part de sa garde que chaque allié envoie. */
+      percent: z.number().int().min(1).max(100),
+    }),
+    gift: z.strictObject({
+      sugar: nonNegativeInt,
+      bricks: nonNegativeInt,
+      proteins: nonNegativeInt,
+      energy: nonNegativeInt,
+      /** Le cadeau grossit avec le niveau de l'alliance. */
+      levels: z.array(z.strictObject({ from: positiveInt, percent: positiveInt })).min(1),
+    }),
+    shop: z.strictObject({
+      energy: z.strictObject({ price: positiveInt, amount: positiveInt }),
+      ration: z.strictObject({ price: positiveInt, proteins: positiveInt }),
+      shield: z.strictObject({ price: positiveInt, hours: positiveInt }),
+      instant: z.strictObject({ price: positiveInt }),
+    } satisfies Record<(typeof ALLIANCE_SHOP_IDS)[number], unknown>),
+  }),
   /** Prix en protéines de chaque nouvelle mutation ; le dernier prix vaut pour toutes les suivantes. */
   mutationPrices: z.array(positiveInt).min(1),
   /** Géométrie de la goutte, en unités de carte. Entiers uniquement. */
@@ -502,6 +625,9 @@ const PartySchema = z.strictObject({
   carrier: troopCount.default(0),
 } satisfies Record<(typeof TROOP_IDS)[number], unknown>);
 
+const RIVAL_ID = /^(r:-?\d{1,6}:-?\d{1,6}|o:\d{1,4})$/;
+const DEPOSIT_ID = /^(d:-?\d{1,4}:-?\d{1,4}:\d{1,9}|v:-?\d{1,4}:-?\d{1,4}:\d{1,9}:\d)$/;
+
 /** Un ordre envoyé par le joueur. Le serveur valide toute entrée avec ce schéma. */
 export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("harvest"), taps: z.number().int().min(1).max(100) }),
@@ -530,14 +656,14 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("buyMutation") }),
   /** Ouvrir le coffre d'une quête terminée, désignée par sa position dans la liste du jour. */
   z.strictObject({ type: z.literal("claimQuest"), index: z.number().int().min(0).max(9) }),
-  /** Un rival est désigné par sa place dans la goutte, précédée de « r: ». */
-  z.strictObject({
-    type: z.literal("spyRival"),
-    rival: z.string().regex(/^r:-?\d{1,6}:-?\d{1,6}$/),
-  }),
+  /**
+   * Un rival est désigné par sa place dans la goutte, précédée de « r: », ou, dans l'océan,
+   * par son numéro d'organisme, précédé de « o: ».
+   */
+  z.strictObject({ type: z.literal("spyRival"), rival: z.string().regex(RIVAL_ID) }),
   z.strictObject({
     type: z.literal("sendRaid"),
-    rival: z.string().regex(/^r:-?\d{1,6}:-?\d{1,6}$/),
+    rival: z.string().regex(RIVAL_ID),
     party: PartySchema,
   }),
   z.strictObject({ type: z.literal("strikeRaid") }),
@@ -548,11 +674,31 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("goAway") }),
   /** Choisir l'heure de son bouclier de nuit : la minute du jour (temps universel) où il commence. */
   z.strictObject({ type: z.literal("setNight"), minute: z.number().int().min(0).max(1439) }),
-  /** Récolter un gisement commun, désigné par son secteur et son cycle : « d:colonne:ligne:cycle ». */
+  /**
+   * Récolter un gisement commun, désigné par son secteur et son cycle : « d:colonne:ligne:cycle »,
+   * ou un gisement né d'un événement : « v:colonne:ligne:cycle:numéro ».
+   */
+  z.strictObject({ type: z.literal("gather"), deposit: z.string().regex(DEPOSIT_ID) }),
+  /** Affronter le Léviathan d'un événement : « e:colonne:ligne:cycle ». */
   z.strictObject({
-    type: z.literal("gather"),
-    deposit: z.string().regex(/^d:-?d{1,4}:-?d{1,4}:d{1,9}$/),
+    type: z.literal("huntLeviathan"),
+    event: z.string().regex(/^e:-?\d{1,4}:-?\d{1,4}:\d{1,9}$/),
+    party: PartySchema,
   }),
+  /** Se ranger sous une bannière (ou en changer). */
+  z.strictObject({ type: z.literal("joinAlliance"), banner: z.enum(BANNER_IDS) }),
+  /** Donner des ressources à une technologie de son alliance. */
+  z.strictObject({ type: z.literal("donate"), tech: z.enum(ALLIANCE_TECH_IDS) }),
+  /** Officier : choisir la technologie que l'alliance recommande. */
+  z.strictObject({ type: z.literal("recommend"), tech: z.enum(ALLIANCE_TECH_IDS) }),
+  /** Répondre à toutes les demandes d'aide des autres membres. */
+  z.strictObject({ type: z.literal("helpAllies") }),
+  /** Demander l'aide des alliés pour le chantier en cours. */
+  z.strictObject({ type: z.literal("askHelp") }),
+  /** Prendre le cadeau d'alliance du jour. */
+  z.strictObject({ type: z.literal("claimGift") }),
+  /** Acheter dans la boutique d'alliance, avec ses crédits. */
+  z.strictObject({ type: z.literal("buyAlliance"), item: z.enum(ALLIANCE_SHOP_IDS) }),
   /** Chasser un prédateur de l'océan, désigné par son secteur et son cycle : « p:colonne:ligne:cycle ». */
   z.strictObject({
     type: z.literal("huntPredator"),

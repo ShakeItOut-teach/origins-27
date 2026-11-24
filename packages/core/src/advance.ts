@@ -1,4 +1,9 @@
 /** Faire passer le temps : production passive, fin des chantiers, retour des expéditions, paliers. */
+import { ensureAlliance } from "./alliance";
+import { allianceDue } from "./banners";
+import { trackDaily } from "./daily";
+import { anoxiaEdge } from "./events";
+import { leviathanDue, leviathanStrike } from "./leviathan";
 import { leagueStep } from "./power";
 import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import type { GeneFamily } from "@o27/data";
@@ -96,7 +101,7 @@ function comeBack(state: PlayerState, expedition: Expedition): Step {
       ? state.counters
       : { ...state.counters, mapHarvests: state.counters.mapHarvests + 1 },
     placeReadyAt:
-      expedition.cancelled || expedition.place.startsWith("d:")
+      expedition.cancelled || /^[dv]:/.test(expedition.place)
         ? state.placeReadyAt
         : { ...state.placeReadyAt, [expedition.place]: expedition.returnsAt + expedition.restMs },
   };
@@ -163,6 +168,10 @@ function huntBack(state: PlayerState, hunt: Hunt): Step {
           ? { species: state.taming, genes: emptyGenes() }
           : state.companion,
       troops,
+      // Vaincre un Léviathan redonne du souffle.
+      energy:
+        state.energy +
+        (won && hunt.prey.startsWith("e:") ? BALANCE.events.leviathan.energyGain : 0),
       resources: { ...state.resources, proteins: state.resources.proteins + gained },
       counters: won ? { ...state.counters, huntsWon: state.counters.huntsWon + 1 } : state.counters,
       placeReadyAt: won
@@ -239,7 +248,13 @@ export function advance(state: PlayerState, now: number): Step {
     // attendait son jour s'ouvre à cet instant précis, pas « quand le joueur revient ».
     const midnight = current.seasonStart + seasonDay(current, current.now) * DAY_MS;
     const hunger = hungerAt(current);
+    const leviathanAt = leviathanDue(current);
+    // Instants où les bonus du joueur changent tout seuls : une technologie d'alliance gagne
+    // un niveau, une zone anoxique arrive ou se dissipe. On s'y arrête pour produire juste.
+    const edge = Math.min(allianceDue(current), anoxiaEdge(current));
     const at = Math.min(
+      leviathanAt,
+      edge,
       buildEnd,
       birth,
       tripEnd,
@@ -307,15 +322,27 @@ export function advance(state: PlayerState, now: number): Step {
           : resolveRaid(ready, raid, at, false);
     } else if (attackAt === at) {
       step = resolveIncoming(ready, at);
-    } else {
+    } else if (leviathanAt === at) {
+      step = leviathanStrike(ready, at);
+    } else if (hunger === at) {
       step = starve(ready, at);
+    } else {
+      step = { state: ready, events: [] };
     }
     events.push(...step.events);
     const tiers = evaluateTier(step.state, at);
     events.push(...tiers.events);
-    current = trackQuests(ensureIncoming(ensureQuests(tiers.state, at), at), events.slice(seen));
+    const allied = ensureAlliance(tiers.state, at);
+    events.push(...allied.events);
+    const fresh = events.slice(seen);
+    current = trackDaily(
+      trackQuests(ensureIncoming(ensureQuests(allied.state, at), at), fresh),
+      fresh,
+    );
   }
   const step = evaluateTier(settle(produce(current, now), now), now);
   events.push(...step.events);
-  return { state: ensureIncoming(ensureQuests(step.state, now), now), events };
+  const allied = ensureAlliance(step.state, now);
+  events.push(...allied.events);
+  return { state: ensureIncoming(ensureQuests(allied.state, now), now), events };
 }

@@ -1,7 +1,9 @@
 /** Valeurs dérivées de l'état : production, stockage, coûts, durées. Entiers uniquement. */
 import { BALANCE, ORGANELLE_IDS } from "@o27/data";
 import type { OrganelleId, ResourceId, StatId } from "@o27/data";
+import { alliancePercent } from "./banners";
 import { companionPercent } from "./companion";
+import { playerAnoxia } from "./events";
 import { evolutionPercent } from "./evolutions";
 import { lineagePercent } from "./genes";
 import { MICRO } from "./types";
@@ -18,7 +20,10 @@ const BONUS_ORGANELLES = ORGANELLE_IDS.filter(
  */
 export function modifierPercent(state: PlayerState, stat: StatId): number {
   let total =
-    lineagePercent(state, stat) + evolutionPercent(state, stat) + companionPercent(state, stat);
+    lineagePercent(state, stat) +
+    evolutionPercent(state, stat) +
+    companionPercent(state, stat) +
+    alliancePercent(state, stat);
   for (const id of BONUS_ORGANELLES) {
     const effect = BALANCE.organelles[id].effect;
     if (effect.kind === "bonus" && effect.stat === stat) {
@@ -73,7 +78,11 @@ export function productionRate(state: PlayerState, resource: ResourceId): number
   }
   // 1 millième par seconde = 1 millionième par milliseconde.
   const stat = PRODUCTION_STAT[resource];
-  return applyPercent(milliPerSecond, stat === undefined ? 0 : modifierPercent(state, stat));
+  const rate = applyPercent(milliPerSecond, stat === undefined ? 0 : modifierPercent(state, stat));
+  // Sans oxygène, la cellule tourne au ralenti.
+  return playerAnoxia(state) === null
+    ? rate
+    : applyPercent(rate, BALANCE.events.anoxia.productionPercent);
 }
 
 /** Quantité maximale stockable, en millionièmes d'unité. */

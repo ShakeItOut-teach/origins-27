@@ -1,7 +1,20 @@
 /** Point d'entrée du moteur : appliquer un ordre du joueur à un instant donné. */
 import { BALANCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
-import type { EvolutionId, GeneFamily, MutationId, Order, OrganelleId, TroopId } from "@o27/data";
+import type {
+  EvolutionId,
+  GeneFamily,
+  MutationId,
+  Order,
+  OrganelleId,
+  PreyKind,
+  TroopId,
+} from "@o27/data";
 import { advance } from "./advance";
+import { allianceOrder } from "./alliance";
+import { trackDaily } from "./daily";
+import { eventCovers, findEvent } from "./events";
+import { gatherOffer, playerDeposit } from "./gather";
+import { leviathanBeaten, leviathanKind, leviathanOffer } from "./leviathan";
 import { shareOffer } from "./companion";
 import { researchOffer } from "./evolutions";
 import { troopUnlocked } from "./genes";
@@ -9,10 +22,19 @@ import { capacity, foePower, levelCost, levelDuration, tapYield } from "./stats"
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
 import { canTrain, partyOf, partySize, resolveHunt, trainMs } from "./hunt";
 import { openChest, trackQuests } from "./quests";
-import { dropShield, goAway, raidOffer, reachableRivals, resolveRaid, setNight } from "./rivals";
+import {
+  dropShield,
+  goAway,
+  isAlly,
+  raidOffer,
+  reachableRivals,
+  resolveRaid,
+  setNight,
+} from "./rivals";
 import { MICRO } from "./types";
 import { drawMutationOffer, mutationPool, orderTier } from "./unlock";
-import { ZONE_COUNT, cellIn, findDeposit, gatherOffer, migrateOffer } from "./ocean";
+import { ZONE_COUNT, cellIn, migrateOffer, playerCell } from "./ocean";
+import type { PreyOffer } from "./world";
 import { findPredator, predatorOffer } from "./predators";
 import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
 
@@ -54,7 +76,7 @@ function startConstruction(state: PlayerState, organelle: OrganelleId, toLevel: 
         sugar: state.resources.sugar - cost.sugar,
         bricks: state.resources.bricks - cost.bricks,
       },
-      construction: { organelle, toLevel, endsAt },
+      construction: { organelle, toLevel, endsAt, helped: false },
     },
     events: [{ type: "constructionStarted", at: state.now, organelle, toLevel, endsAt }],
   };
@@ -117,7 +139,7 @@ function sendExpedition(state: PlayerState, placeId: string): Outcome {
 /** Récolter un gisement commun : ce que l'on charge n'est plus là pour les autres. */
 function gather(state: PlayerState, depositId: string): Outcome {
   if (state.expedition !== null) return { error: "busy" };
-  const deposit = findDeposit(state.worldSeed, depositId, state.now);
+  const deposit = playerDeposit(state, depositId, state.now);
   if (deposit === null) return { error: "unknownPlace" };
   if (deposit.zone > state.zone) return { error: "zoneClosed" };
   const offer = gatherOffer(state, deposit, state.now);
@@ -127,7 +149,7 @@ function gather(state: PlayerState, depositId: string): Outcome {
   // On oublie au passage les gisements disparus : la liste ne grossit pas sans fin.
   const taken: Record<string, number> = {};
   for (const [id, amount] of Object.entries(state.taken)) {
-    if (findDeposit(state.worldSeed, id, state.now) !== null) taken[id] = amount;
+    if (playerDeposit(state, id, state.now) !== null) taken[id] = amount;
   }
   taken[depositId] = (taken[depositId] ?? 0) + offer.loot;
   return {
@@ -341,21 +363,14 @@ function releaseCompanion(state: PlayerState): Outcome {
   return { state: { ...state, companion: null }, events: [] };
 }
 
-/** Chasser un prédateur de l'océan : le même combat qu'une chasse, mais loin de chez soi. */
-function huntPredator(
+/** Un groupe part affronter un animal de l'océan : prédateur ou Léviathan. */
+function launch(
   state: PlayerState,
-  predatorId: string,
+  preyId: string,
+  kind: PreyKind,
+  offer: PreyOffer,
   party: Readonly<Record<TroopId, number>>,
 ): Outcome {
-  if (state.hunt !== null || state.raid !== null) return { error: "busy" };
-  const predator = findPredator(state.worldSeed, predatorId, state.now);
-  if (predator === null) return { error: "unknownPredator" };
-  if (predator.zone > state.zone) return { error: "zoneClosed" };
-  if ((state.placeReadyAt[predatorId] ?? 0) > state.now) return { error: "placeResting" };
-  if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {
-    return { error: "noTroops" };
-  }
-  const offer = predatorOffer(state, predator, state.now);
   if (state.energy < offer.energy) return { error: "noEnergy" };
   const windowMs = BALANCE.hunt.strikeWindowSeconds * 1000;
   const arrivesAt = state.now + (offer.durationMs - windowMs) / 2;
@@ -374,8 +389,8 @@ function huntPredator(
       troops,
       placeReadyAt,
       hunt: {
-        prey: predatorId,
-        kind: predator.kind,
+        prey: preyId,
+        kind: kind,
         power: foePower(state, offer.power),
         proteins: offer.proteins,
         energy: offer.energy,
@@ -389,8 +404,54 @@ function huntPredator(
         cancelled: false,
       },
     },
-    events: [{ type: "huntSent", at: state.now, prey: predatorId, arrivesAt, returnsAt }],
+    events: [{ type: "huntSent", at: state.now, prey: preyId, arrivesAt, returnsAt }],
   };
+}
+
+/**
+ * Affronter le Léviathan d'un événement. Vaincu, il ne menace plus le joueur ; perdu, on peut
+ * revenir tant qu'il est là.
+ */
+function huntLeviathan(
+  state: PlayerState,
+  eventId: string,
+  party: Readonly<Record<TroopId, number>>,
+): Outcome {
+  if (state.hunt !== null || state.raid !== null) return { error: "busy" };
+  const event = findEvent(state.worldSeed, eventId, state.now);
+  if (event === null || event.kind !== "leviathan") return { error: "unknownEvent" };
+  // Plus haut que soi, on ne l'atteint pas, sauf s'il tient déjà la cellule à sa portée.
+  if (event.zone > state.zone && !eventCovers(event, playerCell(state))) {
+    return { error: "zoneClosed" };
+  }
+  if (leviathanBeaten(state, event)) return { error: "placeResting" };
+  if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {
+    return { error: "noTroops" };
+  }
+  return launch(
+    state,
+    eventId,
+    leviathanKind(event),
+    leviathanOffer(state, event, state.now),
+    party,
+  );
+}
+
+/** Chasser un prédateur de l'océan : le même combat qu'une chasse, mais loin de chez soi. */
+function huntPredator(
+  state: PlayerState,
+  predatorId: string,
+  party: Readonly<Record<TroopId, number>>,
+): Outcome {
+  if (state.hunt !== null || state.raid !== null) return { error: "busy" };
+  const predator = findPredator(state.worldSeed, predatorId, state.now);
+  if (predator === null) return { error: "unknownPredator" };
+  if (predator.zone > state.zone) return { error: "zoneClosed" };
+  if ((state.placeReadyAt[predatorId] ?? 0) > state.now) return { error: "placeResting" };
+  if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {
+    return { error: "noTroops" };
+  }
+  return launch(state, predatorId, predator.kind, predatorOffer(state, predator, state.now), party);
 }
 
 /** Le joueur touche la proie pendant que son groupe se bat. */
@@ -444,6 +505,7 @@ function buyMutation(state: PlayerState): Outcome {
 function spyRival(state: PlayerState, rivalId: string): Outcome {
   const rival = reachableRivals(state).find((entry) => entry.id === rivalId);
   if (rival === undefined) return { error: "unknownRival" };
+  if (isAlly(state, rival)) return { error: "ally" };
   if ((state.spiedUntil[rivalId] ?? 0) > state.now) return { error: "alreadySpied" };
   const spy = BALANCE.rivals.spy;
   if (state.energy < spy.energy) return { error: "noEnergy" };
@@ -465,6 +527,7 @@ function sendRaid(
   if (state.hunt !== null || state.raid !== null) return { error: "busy" };
   const rival = reachableRivals(state).find((entry) => entry.id === rivalId);
   if (rival === undefined) return { error: "unknownRival" };
+  if (isAlly(state, rival)) return { error: "ally" };
   if ((state.placeReadyAt[rivalId] ?? 0) > state.now) return { error: "rivalClosed" };
   if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {
     return { error: "noTroops" };
@@ -601,6 +664,16 @@ function execute(state: PlayerState, order: Order): Outcome {
       return shareGene(state, order.family);
     case "releaseCompanion":
       return releaseCompanion(state);
+    case "huntLeviathan":
+      return huntLeviathan(state, order.event, order.party);
+    case "joinAlliance":
+    case "donate":
+    case "recommend":
+    case "helpAllies":
+    case "askHelp":
+    case "claimGift":
+    case "buyAlliance":
+      return allianceOrder(state, order);
   }
 }
 
@@ -615,7 +688,10 @@ export function applyOrder(state: PlayerState, order: Order, now: number): Order
   const outcome = execute(before.state, order);
   if ("error" in outcome) return { ok: false, error: outcome.error };
   // Une expédition rappelée tout près de la cellule peut rentrer dans la même milliseconde.
-  const after = advance(trackQuests(outcome.state, outcome.events), now);
+  const after = advance(
+    trackDaily(trackQuests(outcome.state, outcome.events), outcome.events),
+    now,
+  );
   return {
     ok: true,
     state: after.state,

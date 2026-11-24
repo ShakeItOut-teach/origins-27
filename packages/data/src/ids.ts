@@ -97,6 +97,73 @@ export const EVOLUTION_IDS = [
 ] as const;
 export type EvolutionId = (typeof EVOLUTION_IDS)[number];
 
+/**
+ * Les événements de zone : ils apparaissent dans l'océan, durent un jour ou deux, et donnent
+ * une raison de bouger ou de se battre.
+ */
+export const ZONE_EVENT_KINDS = ["eruption", "bloom", "leviathan", "anoxia"] as const;
+export type ZoneEventKind = (typeof ZONE_EVENT_KINDS)[number];
+
+/** Les six bannières : chaque organisme de l'océan se range sous l'une d'elles. */
+export const BANNER_IDS = ["aby", "krk", "mer", "tox", "lum", "nox"] as const;
+export type BannerId = (typeof BANNER_IDS)[number];
+
+/** Les technologies d'alliance : trois directions, trois technologies chacune. */
+export const ALLIANCE_BRANCHES = ["growth", "conquest", "bulwark"] as const;
+export type AllianceBranch = (typeof ALLIANCE_BRANCHES)[number];
+export const ALLIANCE_TECH_IDS = [
+  "network",
+  "reserves",
+  "worksites",
+  "pack",
+  "looting",
+  "currents",
+  "membrane",
+  "reinforcements",
+  "sharedUpkeep",
+] as const;
+export type AllianceTechId = (typeof ALLIANCE_TECH_IDS)[number];
+
+/** Ce que l'on achète avec ses crédits d'alliance. */
+export const ALLIANCE_SHOP_IDS = ["energy", "ration", "shield", "instant"] as const;
+export type AllianceShopId = (typeof ALLIANCE_SHOP_IDS)[number];
+
+/**
+ * Les fossiles de la Gazette : un par jour de saison. Leur âge, en millions d'années, est
+ * celui que retiennent les musées ; il n'entre dans aucune règle du jeu.
+ */
+export const FOSSIL_AGES = {
+  stromatolite: 3500,
+  grypania: 1900,
+  bangiomorpha: 1050,
+  charnia: 570,
+  dickinsonia: 558,
+  kimberella: 555,
+  cloudina: 550,
+  trilobite: 521,
+  haikouichthys: 518,
+  anomalocaris: 508,
+  opabinia: 508,
+  hallucigenia: 508,
+  pikaia: 508,
+  wiwaxia: 508,
+  ottoia: 508,
+  cameroceras: 470,
+  ammonite: 400,
+  coelacanth: 400,
+  jaekelopterus: 390,
+  tiktaalik: 375,
+  dunkleosteus: 360,
+  helicoprion: 290,
+  ichthyosaur: 200,
+  archaeopteryx: 150,
+  mosasaurus: 70,
+  basilosaurus: 40,
+  megalodon: 20,
+} as const;
+export type FossilId = keyof typeof FOSSIL_AGES;
+export const FOSSIL_IDS = Object.keys(FOSSIL_AGES) as readonly FossilId[];
+
 /** Les quatre familles de gènes. Trois gènes d'une même famille ouvrent une lignée. */
 export const GENE_FAMILIES = ["metabolism", "predation", "mobility", "resilience"] as const;
 export type GeneFamily = (typeof GENE_FAMILIES)[number];
@@ -142,6 +209,14 @@ export const ORDER_TYPES = [
   "gather",
   "migrate",
   "huntPredator",
+  "huntLeviathan",
+  "joinAlliance",
+  "donate",
+  "recommend",
+  "helpAllies",
+  "askHelp",
+  "claimGift",
+  "buyAlliance",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
@@ -252,6 +327,7 @@ export const UI_ELEMENT_IDS = [
   "rank2Troops",
   "ranking",
   "leagues",
+  "zoneEvents",
   "gazette",
   "speciesSheet",
   "alliances",

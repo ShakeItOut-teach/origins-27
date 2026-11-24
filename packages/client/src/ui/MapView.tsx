@@ -25,6 +25,8 @@ interface Props {
   readonly showWorld: boolean;
   /** Les prédateurs de l'océan non plus. */
   readonly showPredators: boolean;
+  /** Ni les événements de zone. */
+  readonly showEvents: boolean;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
   readonly onOrder: (order: Order) => boolean;
 }
@@ -39,7 +41,8 @@ function idOf(spot: Spot): string {
 
 /** La goutte : la cellule au centre, les lieux et les proies autour. */
 export function MapView(props: Props) {
-  const { hidden, state, hue, lang, showPrey, showWorld, showPredators, onOrder } = props;
+  const { hidden, state, hue, lang, showPrey, showWorld, showPredators, showEvents, onOrder } =
+    props;
   const t = (key: TextKey): string => translate(lang, key);
   // Reculé, le joueur voit la goutte entière ; sinon, les alentours de sa cellule.
   const [far, setFar] = useState(false);
@@ -125,6 +128,7 @@ export function MapView(props: Props) {
           hue={hue}
           lang={lang}
           showPredators={showPredators}
+          showEvents={showEvents}
           onBack={() => {
             setFar(false);
           }}

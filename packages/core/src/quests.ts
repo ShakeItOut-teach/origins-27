@@ -114,6 +114,14 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
     case "evolutionDone":
     case "leagueReward":
     case "troopsStarved":
+    case "allianceJoined":
+    case "allianceDonated":
+    case "alliesHelped":
+    case "buildHelped":
+    case "allianceGift":
+    case "allianceBought":
+    case "leviathanStruck":
+    case "leviathanRepelled":
       return 0;
     case "troopBorn":
       return id === "trainCells" ? 1 : 0;

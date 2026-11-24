@@ -16,6 +16,7 @@ function average(zone: number): Rival {
     zone,
     x: 0,
     y: 0,
+    banner: null,
   };
 }
 

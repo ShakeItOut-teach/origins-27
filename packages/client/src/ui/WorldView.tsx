@@ -3,17 +3,21 @@ import {
   capacity,
   depositLeft,
   depthAt,
-  findDeposit,
+  eventCovers,
+  findEvent,
   findPredator,
   gatherOffer,
+  leviathanBeaten,
   migrateOffer,
-  oceanDeposits,
   oceanOrganisms,
   oceanPredators,
   oceanRivals,
   playerCell,
+  playerDeposit,
+  playerDeposits,
   predatorOffer,
   seasonDay,
+  visibleEvents,
   zoneOpenDay,
 } from "@o27/core";
 import type { Deposit, PlayerState } from "@o27/core";
@@ -24,10 +28,18 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { OceanCanvas } from "../cell/OceanCanvas";
 import type { OceanScene } from "../cell/OceanCanvas";
 import { filamentReach } from "../game/mapLayout";
-import { formatAmount, formatAway, formatDepth, formatDuration, translate } from "../game/text";
+import {
+  formatAmount,
+  formatAway,
+  formatCountdown,
+  formatDepth,
+  formatDuration,
+  translate,
+} from "../game/text";
 import type { Lang } from "../game/text";
 import { labelSpot, panCamera, project, SPAN, TOUCH_SPAN, zoomCamera } from "../game/worldView";
 import type { WorldCamera } from "../game/worldView";
+import { EventSheet, EventsSheet } from "./EventsSheet";
 import { EnergyIcon, ResourceIcon } from "./icons";
 import { SheetFrame } from "./SheetFrame";
 import { PreySheet } from "./PreySheet";
@@ -39,6 +51,8 @@ interface Props {
   readonly lang: Lang;
   /** Les prédateurs n'existent pas avant leur palier. */
   readonly showPredators: boolean;
+  /** Les événements de zone non plus. */
+  readonly showEvents: boolean;
   /** Revenir à la goutte proche. */
   readonly onBack: () => void;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
@@ -53,12 +67,14 @@ function zoneName(lang: Lang, zone: number): string {
 }
 
 /** L'océan entier : on le fait glisser, on recule, on touche un organisme ou un gisement. */
-export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: Props) {
+export function WorldView(props: Props) {
+  const { state, hue, lang, showPredators, showEvents, onBack, onOrder } = props;
   const t = (key: TextKey): string => translate(lang, key);
   const home = useMemo(() => playerCell(state), [state.worldSeed, state.slot, state.zone]);
   const [camera, setCamera] = useState<WorldCamera>({ x: home.x, y: home.y, span: SPAN.start });
   const [selected, setSelected] = useState<string | null>(null);
   const [rising, setRising] = useState(false);
+  const [listing, setListing] = useState(false);
   // L'océan occupe tout l'écran : on mesure sa forme pour que les cases restent carrées.
   const frame = useRef<HTMLElement>(null);
   const [aspect, setAspect] = useState(1);
@@ -77,7 +93,8 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
   }, []);
   const day = seasonDay(state, state.now);
   const rivals = oceanRivals(state);
-  const deposits = oceanDeposits(state.worldSeed, state.now);
+  const deposits = playerDeposits(state, state.now);
+  const events = showEvents ? visibleEvents(state) : [];
   const predators = showPredators ? oceanPredators(state.worldSeed, state.now) : [];
   const raid = state.raid;
   const trip = state.expedition;
@@ -144,7 +161,12 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
       ),
     });
   }
-  const hunted = hunt === null ? null : findPredator(state.worldSeed, hunt.prey, hunt.startedAt);
+  // Le groupe est parti chasser un prédateur, ou affronter le Léviathan d'un événement.
+  const hunted =
+    hunt === null
+      ? null
+      : (findPredator(state.worldSeed, hunt.prey, hunt.startedAt) ??
+        findEvent(state.worldSeed, hunt.prey, hunt.startedAt));
   if (hunt !== null && hunted !== null) {
     trails.push({
       x: hunted.x,
@@ -157,8 +179,7 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
     });
   }
   // Le gisement visé peut s'être vidé depuis le départ : on le retrouve à l'heure du départ.
-  const tripTarget =
-    trip === null ? null : findDeposit(state.worldSeed, trip.place, trip.startedAt);
+  const tripTarget = trip === null ? null : playerDeposit(state, trip.place, trip.startedAt);
   if (trip !== null && tripTarget !== null) {
     const arrivesAt =
       trip.startedAt + gatherOffer(state, tripTarget, trip.startedAt).durationMs / 2;
@@ -196,6 +217,14 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
       reachable: predator.zone <= state.zone,
       gone: (state.placeReadyAt[predator.id] ?? 0) > state.now,
     })),
+    events: events.map((event) => ({
+      x: event.x,
+      y: event.y,
+      radius: event.radius,
+      kind: event.kind,
+      reachable: event.zone <= state.zone || eventCovers(event, home),
+      beaten: event.kind === "leviathan" && leviathanBeaten(state, event),
+    })),
     home: { x: home.x, y: home.y, hue },
     trails,
   };
@@ -208,6 +237,7 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
   const openRival = rivals.find((rival) => rival.id === selected) ?? null;
   const openDeposit = deposits.find((deposit) => deposit.id === selected) ?? null;
   const openPredator = predators.find((predator) => predator.id === selected) ?? null;
+  const openEvent = events.find((event) => event.id === selected) ?? null;
   const mine = project(camera, home.x, home.y, aspect);
   const offer = migrateOffer(state, state.now);
 
@@ -265,6 +295,34 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
               </span>
             );
           })}
+          {touchable &&
+            events.map((event) => {
+              const point = seen(event.x, event.y);
+              if (point === null) return null;
+              const target = hunt !== null && hunt.prey === event.id ? hunt : null;
+              const closed = event.zone > state.zone && !eventCovers(event, home);
+              return (
+                <button
+                  key={event.id}
+                  type="button"
+                  className={`organism organism-event is-${event.kind}${closed ? " is-closed" : ""}${target !== null ? " is-target" : ""}`}
+                  style={{ left: `${String(point.x * 100)}%`, top: `${String(point.y * 100)}%` }}
+                  aria-label={t(`event.${event.kind}.name`)}
+                  data-testid={`event-${event.id}`}
+                  data-kind={event.kind}
+                  onClick={() => {
+                    if (!dragged.current) setSelected(event.id);
+                  }}
+                >
+                  <span className="slot-timer event-tag">
+                    {t(`event.${event.kind}.name`)} ·{" "}
+                    {target !== null
+                      ? formatDuration(target.returnsAt - state.now)
+                      : formatCountdown(event.endsAt - state.now, lang)}
+                  </span>
+                </button>
+              );
+            })}
           {touchable &&
             deposits.map((deposit) => {
               const point = seen(deposit.x, deposit.y);
@@ -390,6 +448,18 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
         >
           {t("action.migrate")}
         </button>
+        {events.length > 0 && (
+          <button
+            type="button"
+            className="lens-pill lens-pill-events"
+            data-testid="events-open"
+            onClick={() => {
+              setListing(true);
+            }}
+          >
+            {t("label.events")} · {events.filter((event) => event.zone <= state.zone).length}
+          </button>
+        )}
         <p className="world-place" data-testid="world-place">
           {zoneName(lang, state.zone)} ·{" "}
           {t("label.depth").replace("{n}", formatDepth(depthAt(home.x, home.y), lang))} ·{" "}
@@ -470,6 +540,35 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
             if (sent && (order.type === "huntPredator" || order.type === "tamePredator")) {
               setSelected(null);
             }
+          }}
+        />
+      )}
+      {openEvent !== null && (
+        <EventSheet
+          state={state}
+          lang={lang}
+          event={openEvent}
+          onClose={() => {
+            setSelected(null);
+          }}
+          onOrder={onOrder}
+        />
+      )}
+      {listing && (
+        <EventsSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setListing(false);
+          }}
+          onPick={(event) => {
+            // On va voir : la carte se centre sur l'événement, assez près pour le toucher.
+            setListing(false);
+            setCamera((current) => ({
+              x: event.x,
+              y: event.y,
+              span: Math.min(current.span, TOUCH_SPAN),
+            }));
           }}
         />
       )}
@@ -604,8 +703,16 @@ function DepositSheet(props: {
       </div>
       <p className="sheet-role" data-testid="deposit-left">
         {t("label.left")} : <strong>{formatAmount(left, lang)}</strong> /{" "}
-        {formatAmount(deposit.total, lang)} · {t("label.shared")}
+        {formatAmount(deposit.total, lang)} ·{" "}
+        {deposit.steady ? t("label.steady") : t("label.shared")}
       </p>
+      {(deposit.id.startsWith("v:") || offer.bloomPercent > 0) && (
+        <p className="sheet-level" data-testid="deposit-event">
+          {deposit.id.startsWith("v:") && <span className="badge">{t("label.eventDeposit")}</span>}
+          {offer.bloomPercent > 0 &&
+            ` ${t("label.blooming").replace("{n}", String(offer.bloomPercent))}`}
+        </p>
+      )}
 
       {mine !== null ? (
         <>

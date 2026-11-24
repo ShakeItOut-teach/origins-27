@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  ALLIANCE_SHOP_IDS,
+  ALLIANCE_TECH_IDS,
+  BANNER_IDS,
   BALANCE,
   BalanceSchema,
+  FOSSIL_AGES,
+  FOSSIL_IDS,
+  SEASON_DAYS,
+  ZONE_EVENT_KINDS,
   en,
   fr,
   MAX_RELEASED_TIER,
@@ -85,6 +92,20 @@ describe("équilibrage", () => {
   });
 });
 
+describe("alliances et événements", () => {
+  it("les quatre sortes d'événements ont un poids, et les technologies couvrent trois directions", () => {
+    for (const kind of ZONE_EVENT_KINDS) expect(BALANCE.events[kind].weight).toBeGreaterThan(0);
+    const branches = new Set(ALLIANCE_TECH_IDS.map((id) => BALANCE.alliance.techs[id].branch));
+    expect(branches.size).toBe(3);
+    for (const id of ALLIANCE_TECH_IDS) {
+      const tech = BALANCE.alliance.techs[id];
+      expect(tech.stats.length > 0 || id === "reinforcements").toBe(true);
+    }
+    expect(BALANCE.alliance.tier).toBe(BALANCE.events.tier);
+    expect(UNLOCKS[BALANCE.alliance.tier]?.minDay).toBe(9);
+  });
+});
+
 describe("ordres", () => {
   it("accepte un ordre valide et refuse le reste", () => {
     expect(OrderSchema.safeParse({ type: "harvest", taps: 3 }).success).toBe(true);
@@ -92,6 +113,26 @@ describe("ordres", () => {
     expect(OrderSchema.safeParse({ type: "harvest", taps: 3, now: 5 }).success).toBe(false);
     expect(OrderSchema.safeParse({ type: "build", organelle: "castle" }).success).toBe(false);
     expect(OrderSchema.safeParse({ type: "fly" }).success).toBe(false);
+  });
+
+  it("les lieux de l'océan passent la validation : gisement, organisme, Léviathan", () => {
+    const valid = (order: unknown): boolean => OrderSchema.safeParse(order).success;
+    const party = { hunter: 1, armored: 0, swift: 0 };
+    expect(valid({ type: "gather", deposit: "d:3:-4:1234" })).toBe(true);
+    expect(valid({ type: "gather", deposit: "v:-2:5:1234:3" })).toBe(true);
+    expect(valid({ type: "gather", deposit: "d:x:1:2" })).toBe(false);
+    expect(valid({ type: "gather", deposit: "v:1:2:3" })).toBe(false);
+    expect(valid({ type: "spyRival", rival: "o:499" })).toBe(true);
+    expect(valid({ type: "spyRival", rival: "r:1:-1" })).toBe(true);
+    expect(valid({ type: "sendRaid", rival: "o:12", party })).toBe(true);
+    expect(valid({ type: "sendRaid", rival: "o:12345", party })).toBe(false);
+    expect(valid({ type: "huntLeviathan", event: "e:1:-2:3456", party })).toBe(true);
+    expect(valid({ type: "huntLeviathan", event: "p:1:-2:3456", party })).toBe(false);
+    expect(valid({ type: "joinAlliance", banner: "krk" })).toBe(true);
+    expect(valid({ type: "joinAlliance", banner: "moi" })).toBe(false);
+    expect(valid({ type: "donate", tech: "pack" })).toBe(true);
+    expect(valid({ type: "buyAlliance", item: "shield" })).toBe(true);
+    expect(valid({ type: "claimGift" })).toBe(true);
   });
 });
 
@@ -113,6 +154,25 @@ describe("textes", () => {
       expect(keys.has(`mutation.${id}.name`)).toBe(true);
       expect(keys.has(`mutation.${id}.effect`)).toBe(true);
     }
+  });
+
+  it("événements, bannières, technologies, boutique et fossiles ont leurs textes", () => {
+    const keys = new Set(Object.keys(fr));
+    for (const kind of ZONE_EVENT_KINDS) {
+      expect(keys.has(`event.${kind}.name`)).toBe(true);
+      expect(keys.has(`event.${kind}.text`)).toBe(true);
+      expect(keys.has(`news.event.${kind}`)).toBe(true);
+    }
+    for (const id of BANNER_IDS) expect(keys.has(`banner.${id}.name`)).toBe(true);
+    for (const id of ALLIANCE_TECH_IDS) expect(keys.has(`alliance.tech.${id}.name`)).toBe(true);
+    for (const id of ALLIANCE_SHOP_IDS) expect(keys.has(`alliance.shop.${id}`)).toBe(true);
+    for (const id of FOSSIL_IDS) {
+      expect(keys.has(`fossil.${id}.name`)).toBe(true);
+      expect(keys.has(`fossil.${id}.fact`)).toBe(true);
+      expect(FOSSIL_AGES[id]).toBeGreaterThan(0);
+    }
+    // Un fossile par jour de saison.
+    expect(FOSSIL_IDS).toHaveLength(SEASON_DAYS);
   });
 
   it("chaque palier livré après le premier a sa mise en scène", () => {

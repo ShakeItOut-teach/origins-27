@@ -1,4 +1,4 @@
-import type { PlaceKind } from "@o27/data";
+import type { PlaceKind, ZoneEventKind } from "@o27/data";
 import { Application, Graphics } from "pixi.js";
 import { useEffect, useRef } from "react";
 import type { WorldCamera } from "../game/worldView";
@@ -7,6 +7,8 @@ import { hsl } from "./draw";
 import {
   HOME_FORM,
   drawCarcass,
+  drawEventZone,
+  drawLeviathan,
   drawMarineSnow,
   drawOrganism,
   drawPredator,
@@ -47,6 +49,16 @@ export interface OceanScene {
     readonly reachable: boolean;
     /** Déjà vaincu par le joueur. */
     readonly gone: boolean;
+  }[];
+  /** Les événements de zone en cours. */
+  readonly events: readonly {
+    readonly x: number;
+    readonly y: number;
+    readonly radius: number;
+    readonly kind: ZoneEventKind;
+    readonly reachable: boolean;
+    /** Un Léviathan que le joueur a déjà vaincu. */
+    readonly beaten: boolean;
   }[];
   readonly home: { readonly x: number; readonly y: number; readonly hue: number };
   /** Les cellules en route : vers un gisement, un prédateur ou un rival. */
@@ -236,6 +248,22 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
               .fill({ color: light, alpha: 0.1 + (index % 4) * 0.03 });
           }
 
+          // Les événements de zone : leur étendue d'abord, sous tout le reste.
+          for (const event of current.events) {
+            const point = at(event.x, event.y);
+            const reach = event.radius * cell;
+            if (!inView(point, reach)) continue;
+            drawEventZone(
+              graphics,
+              point,
+              reach,
+              event.kind,
+              event.reachable ? 1 : 0.55,
+              t,
+              grain(event.x, event.y),
+            );
+          }
+
           // Les gisements.
           const mark = Math.max(2, Math.min(15, cell * 0.85));
           for (const deposit of current.deposits) {
@@ -264,6 +292,25 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
               t,
               grain(predator.x, predator.y),
             );
+          }
+
+          // Le cœur des événements : la cheminée d'une éruption, le Léviathan.
+          for (const event of current.events) {
+            const point = at(event.x, event.y);
+            if (!inView(point, beast * 4)) continue;
+            const seed = grain(event.x, event.y);
+            if (event.kind === "eruption") {
+              drawVent(graphics, point, Math.max(3, mark * 1.7), 1, t, seed);
+            } else if (event.kind === "leviathan") {
+              drawLeviathan(
+                graphics,
+                point,
+                Math.max(3.2, Math.min(34, cell * 2.1)),
+                event.beaten ? 0.2 : event.reachable ? 1 : 0.5,
+                t,
+                seed,
+              );
+            }
           }
 
           // Les organismes : chacun sa forme, comme sous l'objectif.

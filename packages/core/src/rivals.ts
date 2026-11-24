@@ -4,7 +4,9 @@
  * et leur butin se calculent à partir de la graine du monde, de leur place et du jour de saison.
  */
 import { BALANCE, ORGANELLE_IDS, PREY_KINDS, TROOP_IDS } from "@o27/data";
-import type { PreyKind, TroopId } from "@o27/data";
+import type { BannerId, PreyKind, TroopId } from "@o27/data";
+import { allianceTechLevel, bannerOf } from "./banners";
+import { anoxiaAt } from "./events";
 import { lossesFor, partyOf, partySize, winChance } from "./hunt";
 import { modifierPercent, travelMs } from "./stats";
 import { createRng } from "./rng";
@@ -38,6 +40,8 @@ export interface Rival {
   /** Sa case. */
   readonly x: number;
   readonly y: number;
+  /** Sa bannière ; `null` pour un voisin de la goutte, avant l'océan. */
+  readonly banner: BannerId | null;
 }
 
 export interface RivalStats {
@@ -77,6 +81,7 @@ function rivalAt(worldSeed: number, column: number, row: number, steps: number):
     zone: 0,
     x: column,
     y: row,
+    banner: null,
   };
 }
 
@@ -124,6 +129,7 @@ function organismAt(
     zone: organism.zone,
     x: organism.x,
     y: organism.y,
+    banner: bannerOf(worldSeed, organism.slot),
     distance,
   };
 }
@@ -213,7 +219,54 @@ export function rivalStats(rival: Rival, day: number): RivalStats {
   };
 }
 
+/** Un membre de l'alliance du joueur : on ne l'attaque pas, et il n'attaque pas. */
+export function isAlly(state: PlayerState, rival: Rival): boolean {
+  return state.alliance !== null && rival.banner === state.alliance.banner;
+}
+
+/** Un organisme pris dans une zone anoxique : sa garde faiblit tant qu'elle dure. */
+export function rivalWeakened(state: PlayerState, rival: Rival, at: number): boolean {
+  return (
+    state.tier >= BALANCE.events.tier &&
+    rival.id.startsWith("o:") &&
+    anoxiaAt(state.worldSeed, rival, at)
+  );
+}
+
+let helpKey = "";
+let helpBase = 0;
+
+/**
+ * Les renforts : chaque allié assez proche envoie une part de sa garde défendre la cellule du
+ * joueur. La technologie « Renforts » de l'alliance les grossit.
+ */
+export function reinforcements(state: PlayerState, at: number): number {
+  const alliance = state.alliance;
+  if (alliance === null) return 0;
+  const day = seasonDay(state, at);
+  const key = [state.worldSeed, state.slot, state.zone, day, alliance.banner].join("/");
+  if (key !== helpKey) {
+    const rules = BALANCE.alliance.reinforcements;
+    const home = playerCell(state);
+    let total = 0;
+    for (const organism of oceanOrganisms(state.worldSeed, day)) {
+      if (organism.slot === state.slot) continue;
+      if (bannerOf(state.worldSeed, organism.slot) !== alliance.banner) continue;
+      if (cellDistance(home, organism) > rules.cells) continue;
+      total += rivalStats(organismAt(state.worldSeed, organism, home), day).guard * rules.percent;
+    }
+    helpBase = Math.floor(total / 100);
+    helpKey = key;
+  }
+  const boost =
+    BALANCE.alliance.techs.reinforcements.percentPerLevel *
+    allianceTechLevel(state, "reinforcements");
+  return Math.floor((helpBase * (100 + boost)) / 100);
+}
+
 export interface RaidOffer extends RivalStats {
+  /** Sa garde est affaiblie par une zone anoxique. */
+  readonly weakened: boolean;
   readonly energy: number;
   /** Aller, combat et retour. */
   readonly durationMs: number;
@@ -223,9 +276,15 @@ export interface RaidOffer extends RivalStats {
 /** Ce qu'une attaque contre ce rival demande et peut rapporter, à cet instant. */
 export function raidOffer(state: PlayerState, rival: Rival, at: number): RaidOffer {
   const raid = BALANCE.rivals.raid;
-  const stats = rivalStats(rival, seasonDay(state, at));
+  const full = rivalStats(rival, seasonDay(state, at));
+  const weakened = rivalWeakened(state, rival, at);
+  const guard = weakened
+    ? Math.max(1, Math.floor((full.guard * (100 + BALANCE.events.anoxia.guardPercent)) / 100))
+    : full.guard;
+  const stats = { ...full, guard };
   return {
     ...stats,
+    weakened,
     // On ne peut jamais prendre qu'une part des protéines d'un organisme.
     proteins: Math.floor((stats.proteins * raid.proteinSharePercent) / 100),
     energy: raid.energy,
@@ -444,6 +503,19 @@ export function goAway(state: PlayerState, at: number): PlayerState {
   };
 }
 
+/** Un bouclier de plus : la protection s'allonge, et l'attaque prévue attend qu'elle tombe. */
+export function raiseShield(state: PlayerState, hours: number, at: number): PlayerState {
+  const shieldUntil = Math.max(state.shieldUntil, at) + hours * HOUR_MS;
+  return {
+    ...state,
+    shieldUntil,
+    nextRaidAt:
+      state.nextRaidAt === null
+        ? null
+        : Math.max(state.nextRaidAt, shieldUntil + nextDelay(state, at)),
+  };
+}
+
 /** Quand la protection du nouveau joueur s'arrête, la première attaque est programmée. */
 export function ensureIncoming(state: PlayerState, at: number): PlayerState {
   if (state.nextRaidAt !== null || state.tier < BALANCE.rivals.incoming.newcomerUntilTier) {
@@ -458,7 +530,8 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
   const night = nightEnd(state, at);
   if (night > at)
     return { state: { ...state, nextRaidAt: night + nextDelay(state, at) }, events: [] };
-  const rivals = nearRivals(state);
+  // Les alliés n'attaquent pas : seuls les autres voisins viennent.
+  const rivals = nearRivals(state).filter((rival) => !isAlly(state, rival));
   // Personne autour : on regardera de nouveau plus tard.
   if (rivals.length === 0) {
     return { state: { ...state, nextRaidAt: at + nextDelay(state, at) }, events: [] };
@@ -470,7 +543,7 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
   const attacker = rivals[rng.int(rivals.length)];
   if (attacker === undefined) return { state: { ...state, nextRaidAt: null }, events: [] };
   const attack = rivalStats(attacker, seasonDay(state, at)).attack;
-  const defense = defensePower(state);
+  const defense = defensePower(state) + reinforcements(state, at);
   const chance = Math.max(5, Math.min(95, Math.round((100 * defense) / (defense + attack))));
   const counters = { ...state.counters, rivalFights: state.counters.rivalFights + 1 };
 

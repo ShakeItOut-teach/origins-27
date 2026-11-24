@@ -33,4 +33,15 @@ describe("ce que l'écran montre à chaque palier", () => {
       expect(isVisible(element, 2)).toBe(false);
     }
   });
+
+  it("palier 9 : s'ajoutent les événements de zone, les alliances et la Gazette", () => {
+    for (const element of ["zoneEvents", "alliances", "gazette"] as const) {
+      expect(isVisible(element, 8)).toBe(false);
+      expect(isVisible(element, 9)).toBe(true);
+    }
+    // La suite n'est pas encore livrée.
+    for (const element of ["speciesSheet", "higherRanks", "crisis", "apexRace"] as const) {
+      expect(isVisible(element, 9)).toBe(false);
+    }
+  });
 });

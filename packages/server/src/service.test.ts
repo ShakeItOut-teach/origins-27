@@ -1,4 +1,13 @@
-import { MICRO, placeOffer, visiblePlaces } from "@o27/core";
+import {
+  DAY_MS,
+  MICRO,
+  cellDistance,
+  oceanDeposits,
+  oceanRivals,
+  placeOffer,
+  playerCell,
+  visiblePlaces,
+} from "@o27/core";
 import { describe, expect, it } from "vitest";
 import { createMemoryRepository } from "./memory";
 import { handleOrder, handleState } from "./service";
@@ -186,7 +195,7 @@ describe("place dans la goutte", () => {
 
     const back = await handleState(deps, ALICE);
     if (back.status !== "done") throw new Error("état attendu");
-    expect(back.state.version).toBe(10);
+    expect(back.state.version).toBe(11);
     expect(back.state.counters.harvests).toBe(3);
     expect(back.state.worldSeed).toBe(27);
     expect(back.state.slot).toBeGreaterThan(first.state.slot);
@@ -234,6 +243,85 @@ describe("place dans la goutte", () => {
     expect(back.state.expedition).toBeNull();
     expect(back.state.counters.mapHarvests).toBe(1);
     expect(back.state.resources[placeOffer(nearest).resource]).toBe(placeOffer(nearest).loot);
+  });
+});
+
+describe("océan et alliances", () => {
+  it("au jour 9, récolte, espionnage et alliances passent par le serveur", async () => {
+    const { deps, time, repo } = setup();
+    const start = await handleState(deps, ALICE);
+    if (start.status !== "done") throw new Error("état attendu");
+    const stored = await repo.load(ALICE);
+    if (stored === null) throw new Error("partie attendue");
+    // On place le joueur au palier 8, bien installé, sans rejouer toute la partie.
+    const ready = {
+      ...start.state,
+      tier: 8,
+      counters: {
+        ...start.state.counters,
+        harvests: 10,
+        organellesBuilt: 4,
+        mutationsChosen: 1,
+        mapHarvests: 5,
+        huntsWon: 1,
+      },
+      mutations: ["thrift"],
+      organelles: { ...start.state.organelles, mitochondrion: 3, vacuole: 5, ribosome: 2 },
+      resources: { sugar: 400 * MICRO, bricks: 400 * MICRO, proteins: 50 * MICRO },
+      nextRaidAt: START + 30 * DAY_MS,
+    };
+    await repo.commit({
+      playerId: ALICE,
+      expectedVersion: stored.version,
+      state: JSON.stringify(ready),
+      order: null,
+    });
+
+    // Avant le jour 9 : pas d'alliance, et ses ordres sont refusés.
+    time.now = START + 6 * DAY_MS;
+    const early = await handleOrder(deps, ALICE, { orderId: id(60), order: { type: "claimGift" } });
+    expect(early).toMatchObject({ status: "done", outcome: { ok: false, error: "locked" } });
+
+    // Le jour 9 : une bannière a recruté le joueur.
+    time.now = START + 8 * DAY_MS + 60_000;
+    const open = await handleState(deps, ALICE);
+    if (open.status !== "done") throw new Error("état attendu");
+    expect(open.state.tier).toBe(9);
+    expect(open.state.alliance).not.toBeNull();
+
+    const gift = await handleOrder(deps, ALICE, { orderId: id(61), order: { type: "claimGift" } });
+    expect(gift).toMatchObject({ status: "done", outcome: { ok: true } });
+    const given = await handleOrder(deps, ALICE, {
+      orderId: id(62),
+      order: { type: "donate", tech: "membrane" },
+    });
+    expect(given).toMatchObject({ status: "done", outcome: { ok: true } });
+    if (given.status !== "done") return;
+    expect(given.state.alliance?.donations).toBe(1);
+
+    // Un gisement et un organisme de l'océan : leurs identifiants passent la validation.
+    const home = playerCell(given.state);
+    const deposit = oceanDeposits(27, time.now)
+      .filter((entry) => entry.zone === 0 && entry.endsAt - time.now > 3_600_000)
+      .sort((one, other) => cellDistance(home, one) - cellDistance(home, other))[0];
+    if (deposit === undefined) throw new Error("gisement attendu");
+    const gathered = await handleOrder(deps, ALICE, {
+      orderId: id(63),
+      order: { type: "gather", deposit: deposit.id },
+    });
+    expect(gathered).toMatchObject({ status: "done", outcome: { ok: true } });
+    const [neighbour] = oceanRivals(given.state);
+    if (neighbour === undefined) throw new Error("voisin attendu");
+    const spied = await handleOrder(deps, ALICE, {
+      orderId: id(64),
+      order: { type: "spyRival", rival: neighbour.id },
+    });
+    expect(spied.status).toBe("done");
+    const wrong = await handleOrder(deps, ALICE, {
+      orderId: id(65),
+      order: { type: "joinAlliance", banner: "pirates" },
+    });
+    expect(wrong.status).toBe("invalid");
   });
 });
 

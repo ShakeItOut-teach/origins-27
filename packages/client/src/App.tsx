@@ -1,5 +1,10 @@
 import {
   MICRO,
+  allianceToday,
+  helpRequests,
+  leviathanThreat,
+  playerAnoxia,
+  visibleEvents,
   nextMutationPrice,
   companionForm,
   leagueOf,
@@ -19,6 +24,7 @@ import {
 import type { AbsenceSummary, PlayerState } from "@o27/core";
 import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS, SEASON_DAYS } from "@o27/data";
 import type {
+  BannerId,
   ChestReward,
   EvolutionId,
   GeneFamily,
@@ -46,6 +52,9 @@ import {
 import type { Lang } from "./game/text";
 import { isVisible } from "./game/unlock";
 import { AccountSheet } from "./ui/AccountSheet";
+import { AllianceSheet, bannerLabel, bannerTag } from "./ui/AllianceSheet";
+import { EventsSheet } from "./ui/EventsSheet";
+import { GazetteSheet } from "./ui/GazetteSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
 import { CalendarSheet, openingName } from "./ui/CalendarSheet";
@@ -119,6 +128,21 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [companionOpen, setCompanionOpen] = useState(false);
   const [tamed, setTamed] = useState(false);
+  const [eventsOpen, setEventsOpen] = useState(false);
+  /** Le dernier coffre ouvert est-il le cadeau du jour de l'alliance ? */
+  const [chestIsGift, setChestIsGift] = useState(false);
+  const [allianceOpen, setAllianceOpen] = useState(false);
+  const [gazetteOpen, setGazetteOpen] = useState(false);
+  /** La bannière qui vient d'accueillir le joueur, et s'il a été recruté d'office. */
+  const [enlisted, setEnlisted] = useState<{ banner: BannerId; auto: boolean } | null>(null);
+  /** La dernière frappe du Léviathan : repoussée, ou ce qu'elle a coûté. */
+  const [beastNote, setBeastNote] = useState<{
+    repelled: boolean;
+    sugar: number;
+    bricks: number;
+    proteins: number;
+    troopsLost: number;
+  } | null>(null);
   /** Dernière évolution exprimée : on le dit, une fois. */
   const [evolved, setEvolved] = useState<{ evolution: EvolutionId; level: number } | null>(null);
   /** Cellules filles mortes de faim depuis la dernière note. */
@@ -161,8 +185,35 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           if (event.type === "expeditionReturned" && event.lost >= MICRO) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
-          if (event.type === "chestOpened") setChest(event.loot);
+          if (event.type === "chestOpened") {
+            setChestIsGift(false);
+            setChest(event.loot);
+          }
           if (event.type === "companionTamed") setTamed(true);
+          if (event.type === "allianceJoined") {
+            setEnlisted({ banner: event.banner, auto: event.auto });
+          }
+          if (event.type === "allianceGift") {
+            setChestIsGift(true);
+            setChest({
+              sugar: Math.floor(event.loot.sugar / MICRO),
+              bricks: Math.floor(event.loot.bricks / MICRO),
+              proteins: Math.floor(event.loot.proteins / MICRO),
+              energy: event.energy,
+            });
+          }
+          if (event.type === "leviathanRepelled") {
+            setBeastNote({ repelled: true, sugar: 0, bricks: 0, proteins: 0, troopsLost: 0 });
+          }
+          if (event.type === "leviathanStruck") {
+            setBeastNote({
+              repelled: false,
+              sugar: event.sugar,
+              bricks: event.bricks,
+              proteins: event.proteins,
+              troopsLost: event.troopsLost,
+            });
+          }
           if (event.type === "evolutionDone") {
             setEvolved({ evolution: event.evolution, level: event.level });
           }
@@ -272,6 +323,16 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const rivalName = (id: string): string => nameOfRival(state, id);
   const powerRank = ranking(state, "power");
   const upcoming = nextOpening(state);
+  // Ce qui pèse sur la cellule en ce moment : une zone anoxique, un Léviathan à portée.
+  const anoxia = show("zoneEvents") ? playerAnoxia(state) : null;
+  const threat = show("zoneEvents") ? leviathanThreat(state) : null;
+  const eventCount = show("zoneEvents")
+    ? visibleEvents(state).filter((event) => event.zone <= state.zone).length
+    : 0;
+  const allianceToDo =
+    show("alliances") && state.alliance !== null
+      ? (allianceToday(state).gift ? 0 : 1) + (helpRequests(state) > 0 ? 1 : 0)
+      : 0;
 
   if (!store.isReady()) {
     return <main className="page" data-tier="loading" aria-busy="true" />;
@@ -401,6 +462,45 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           </span>
         </button>
       )}
+      {anoxia !== null && (
+        <button
+          type="button"
+          className="season-next is-danger"
+          data-testid="anoxia-strip"
+          onClick={() => {
+            setEventsOpen(true);
+          }}
+        >
+          <strong>{t("state.anoxic")}</strong>
+          <span className="season-next-left">
+            {t("label.endsIn")} {formatCountdown(anoxia.endsAt - state.now, lang)}
+          </span>
+        </button>
+      )}
+      {threat !== null && (
+        <button
+          type="button"
+          className="season-next is-danger"
+          data-testid="leviathan-strip"
+          onClick={() => {
+            setEventsOpen(true);
+          }}
+        >
+          <strong>{t("state.leviathanNear")}</strong>
+          <span className="season-next-left">
+            {t("label.nextStrike")} {formatCountdown(threat.strikesAt - state.now, lang)}
+          </span>
+        </button>
+      )}
+      {show("zoneEvents") && eventsOpen && (
+        <EventsSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setEventsOpen(false);
+          }}
+        />
+      )}
       {show("calendar") && calendarOpen && (
         <CalendarSheet
           state={state}
@@ -419,6 +519,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           showPrey={show("hunt")}
           showWorld={show("worldMap")}
           showPredators={show("predators")}
+          showEvents={show("zoneEvents")}
           onOrder={(order) => store.send(order).ok}
         />
       )}
@@ -603,7 +704,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
 
       {chest !== null && (
         <div className="loss is-good is-chest" role="status" data-testid="chest-note">
-          <strong>{t("chest.title")}</strong>
+          <strong>{chestIsGift ? t("alliance.gift") : t("chest.title")}</strong>
           <span className="chest-loot">
             {(["sugar", "bricks", "proteins"] as const)
               .filter((id) => chest[id] !== undefined)
@@ -654,6 +755,112 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setGenomeOpen(false);
           }}
         />
+      )}
+      {show("zoneEvents") && (
+        <button
+          type="button"
+          className="quests-open events-open"
+          data-testid="events-list-open"
+          onClick={() => {
+            setEventsOpen(true);
+          }}
+        >
+          {t("label.events")}
+          <span className="badge">{eventCount}</span>
+        </button>
+      )}
+      {show("alliances") && state.alliance !== null && (
+        <button
+          type="button"
+          className={`quests-open alliance-open${allianceToDo > 0 ? " has-chest" : ""}`}
+          data-testid="alliance-open"
+          onClick={() => {
+            setAllianceOpen(true);
+          }}
+        >
+          {t("label.alliance")}
+          <span className="badge">{bannerTag(state.alliance.banner)}</span>
+        </button>
+      )}
+      {show("alliances") && allianceOpen && (
+        <AllianceSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setAllianceOpen(false);
+          }}
+          onOrder={(order) => store.send(order).ok}
+        />
+      )}
+      {show("gazette") && (
+        <button
+          type="button"
+          className="quests-open gazette-open"
+          data-testid="gazette-open"
+          onClick={() => {
+            setGazetteOpen(true);
+          }}
+        >
+          {t("label.gazette")}
+        </button>
+      )}
+      {show("gazette") && gazetteOpen && (
+        <GazetteSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setGazetteOpen(false);
+          }}
+        />
+      )}
+      {enlisted !== null && (
+        <div className="loss is-good" role="status" data-testid="alliance-note">
+          <strong>{enlisted.auto ? t("alliance.recruited") : t("alliance.joined")}</strong>
+          <span>{bannerLabel(lang, enlisted.banner)}</span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setEnlisted(null);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+      {beastNote !== null && (
+        <div
+          className={`loss${beastNote.repelled ? " is-good" : ""}`}
+          role="status"
+          data-testid="leviathan-note"
+        >
+          <strong>
+            {beastNote.repelled ? t("event.leviathan.repelled") : t("event.leviathan.struck")}
+          </strong>
+          {!beastNote.repelled && (
+            <span className="chest-loot">
+              {(["sugar", "bricks", "proteins"] as const).map((id) => (
+                <span key={id}>
+                  <ResourceIcon id={id} />−{formatAmount(beastNote[id], lang)}
+                </span>
+              ))}
+              <span>
+                {t("hunt.losses")} : {beastNote.troopsLost}
+              </span>
+            </span>
+          )}
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setBeastNote(null);
+            }}
+          >
+            ×
+          </button>
+        </div>
       )}
       {show("companion") && (
         <button

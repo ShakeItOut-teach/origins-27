@@ -4,10 +4,9 @@
  * Rien n'est stocké : places, gisements et profondeurs se calculent à partir de la graine du
  * monde et de l'heure. Les cases sont des entiers ; 0:0 est le centre du monde.
  */
-import { BALANCE, PLACE_RESOURCE } from "@o27/data";
+import { BALANCE } from "@o27/data";
 import type { PlaceKind, ResourceId } from "@o27/data";
 import { createRng } from "./rng";
-import { modifierPercent, travelMs } from "./stats";
 import { MICRO } from "./types";
 import type { PlayerState } from "./types";
 import { seasonDay } from "./unlock";
@@ -210,11 +209,15 @@ export interface Deposit {
   readonly x: number;
   readonly y: number;
   readonly zone: number;
+  /** Ce qu'une expédition y charge au plus, en millionièmes d'unité. */
+  readonly load: number;
   /** Ce qu'il contenait à son apparition, en millionièmes d'unité. */
   readonly total: number;
   readonly startsAt: number;
   /** Instant où les autres organismes auront fini de le vider. */
   readonly endsAt: number;
+  /** Né d'une efflorescence : les autres ne le vident pas, il se regarnit sans cesse. */
+  readonly steady: boolean;
 }
 
 const DEPOSIT_ID = /^d:(-?\d{1,4}):(-?\d{1,4}):(\d{1,9})$/;
@@ -256,9 +259,11 @@ function sectorDeposit(worldSeed: number, column: number, row: number, at: numbe
     x,
     y,
     zone,
+    load: depositLoad(kind, zone),
     total: data.loads * depositLoad(kind, zone),
     startsAt,
     endsAt,
+    steady: false,
   };
 }
 
@@ -305,41 +310,13 @@ export function depositLeft(
   taken: Readonly<Record<string, number>>,
   at: number,
 ): number {
+  const mine = taken[deposit.id] ?? 0;
+  if (deposit.steady) return Math.max(0, deposit.total - mine);
   const life = deposit.endsAt - deposit.startsAt;
   const remaining = Math.max(0, Math.min(life, deposit.endsAt - at));
   // En millièmes d'unité pendant le calcul : le produit reste un entier exact.
   const shared = Math.floor((Math.floor(deposit.total / 1000) * remaining) / life) * 1000;
   return Math.max(0, shared - (taken[deposit.id] ?? 0));
-}
-
-export interface GatherOffer {
-  readonly resource: ResourceId;
-  /** Butin, en millionièmes d'unité. */
-  readonly loot: number;
-  readonly energy: number;
-  /** Durée de l'aller-retour. */
-  readonly durationMs: number;
-}
-
-/** Ce qu'une récolte dans ce gisement rapporte et coûte, pour ce joueur, à cet instant. */
-export function gatherOffer(state: PlayerState, deposit: Deposit, at: number): GatherOffer {
-  const data = OCEAN.deposit;
-  const distance = cellDistance(playerCell(state), deposit);
-  return {
-    resource: PLACE_RESOURCE[deposit.kind],
-    // Appareil de Golgi et évolutions de récolte grossissent le chargement.
-    loot: Math.min(
-      Math.floor(
-        (depositLoad(deposit.kind, deposit.zone) * (100 + modifierPercent(state, "gather"))) / 100,
-      ),
-      depositLeft(deposit, state.taken, at),
-    ),
-    energy: data.energy,
-    durationMs: travelMs(
-      state,
-      Math.max(data.minSeconds, 2 * distance * data.secondsPerCell) * 1000,
-    ),
-  };
 }
 
 export interface MigrateOffer {

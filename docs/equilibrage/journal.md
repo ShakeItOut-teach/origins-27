@@ -363,3 +363,29 @@ avec un Noyau plus haut : c'est un objectif de saison, pas d'une journée.
 | Famille de prédilection | force × 1,5 (Ottoia : Résilience ; Opabinia : Mobilité ; Anomalocaris : Prédation) |
 
 Le plus fort : un Anomalocaris « fléau », attaque +33 %, défense −12 %.
+
+## 2026-11-24 — Palier 9 : premiers chiffres (événements, alliances)
+
+| Réglage                 | Valeur                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| Ouverture               | jour 9 (palier 9)                                                                   |
+| Événements              | quartiers de 24 cases, cycle de 12 h, 14 % de chances ; poids 30/30/20/20           |
+| Éruption                | 48 h, rayon 6, 5 gisements à 300 % de la richesse ordinaire                         |
+| Efflorescence           | 48 h, rayon 10, 6 gisements qui ne se vident pas, récolte +50 % dans la zone        |
+| Léviathan               | 36 h, rayon 12, frappe toutes les 6 h à 50 % de sa force, perte de 10 %             |
+| Force du Léviathan      | 400 + 30 par jour, × garde de la zone ; 400 protéines, +5 énergie                   |
+| Zone anoxique           | 16 h, rayon 9, production −30 %, garde des organismes −30 %                         |
+| Technologies d'alliance | 5 niveaux : 400, 800, 1 600, 3 200, 6 400 points ; 50 points par membre et par jour |
+| Don                     | 100 ATP + 60 lipides → 40 points (60 sur la recommandée) ; 20 par jour              |
+| Officier                | 600 points de contribution                                                          |
+| Entraide                | 30 demandes par jour, 10 crédits et 2 points chacune ; chantier −20 % du reste      |
+| Renforts                | alliés à 25 cases, 15 % de leur garde, +15 % par niveau de « Renforts »             |
+| Membre                  | production +5 %                                                                     |
+
+Mesure (trois graines, jours 9 à 27) : 37 à 40 événements en cours dans tout l'océan ; par
+joueur resté dans les abysses et par saison, 0,50 à 0,66 zone anoxique et 0,51 à 0,83 Léviathan.
+
+Premier réglage, le même jour : 20 % de chances donnait 54 événements en cours, trop pour
+qu'un événement compte ; ramené à 14 %, avec un Léviathan et une zone anoxique qui portent un
+peu plus loin (rayons 10 → 12 et 8 → 9). Le Léviathan à 200 + 15 par jour se battait d'un
+toucher avec 120 cellules de rang 1 au jour 10 : passé à 400 + 30 par jour, frappes à 50 %.

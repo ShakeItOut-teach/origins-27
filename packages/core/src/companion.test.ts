@@ -229,7 +229,7 @@ describe("l'arbre d'évolution du compagnon", () => {
       version: 9,
     };
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(10);
+    expect(back.version).toBe(11);
     expect(back.companion).toBeNull();
     expect(back.taming).toBeNull();
   });

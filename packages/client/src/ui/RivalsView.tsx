@@ -2,6 +2,7 @@ import {
   MICRO,
   defensePower,
   foePower,
+  isAlly,
   partyOf,
   depthAt,
   nearRivals,
@@ -18,6 +19,7 @@ import type { Order, TextKey, TroopId } from "@o27/data";
 import { useState } from "react";
 import { formatAmount, formatAway, formatDepth, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
+import { bannerTag } from "./AllianceSheet";
 import { EnergyIcon, ResourceIcon, TroopIcon } from "./icons";
 
 interface Props {
@@ -212,8 +214,10 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
   const chance = winChance(party, rival.kind, foePower(state, offer.guard));
   const spy = BALANCE.rivals.spy;
 
+  const ally = isAlly(state, rival);
   let blocked: string | null = null;
-  if ((raid !== null && mine === null) || state.hunt !== null) blocked = t("state.oneSortie");
+  if (ally) blocked = t("state.ally");
+  else if ((raid !== null && mine === null) || state.hunt !== null) blocked = t("state.oneSortie");
   else if (closedFor > 0) blocked = `${t("state.rivalClosed")} ${formatAway(closedFor, lang)}`;
   else if (partySize(state.troops) === 0) blocked = t("state.noTroops");
   else if (state.energy < offer.energy) blocked = t("state.noEnergy");
@@ -234,7 +238,12 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
       >
         <div className="sheet-head sheet-head-plain">
           <div>
-            <h2>{rival.name}</h2>
+            <h2>
+              {state.alliance !== null && rival.banner !== null && (
+                <small className="banner-tag">{bannerTag(rival.banner)} </small>
+              )}
+              {rival.name}
+            </h2>
           </div>
           <button type="button" className="close" aria-label={t("action.close")} onClick={onClose}>
             ×
@@ -264,7 +273,18 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
           </p>
         )}
 
-        {spied ? (
+        {ally && (
+          <p className="sheet-level" data-testid="rival-ally">
+            <span className="badge">{t("label.ally")}</span>
+          </p>
+        )}
+        {offer.weakened && !ally && (
+          <p className="sheet-building is-warning" data-testid="rival-weakened">
+            {t("state.weakened")}
+          </p>
+        )}
+
+        {ally ? null : spied ? (
           <>
             <p className="sheet-role weakness">
               {t("label.weakness")} : <TroopIcon id={weakness} />

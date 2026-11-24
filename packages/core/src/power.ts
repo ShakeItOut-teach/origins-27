@@ -59,7 +59,12 @@ export function playerScore(state: PlayerState, category: RankingId): number {
 }
 
 /** Le score d'un organisme simulé un jour donné. */
-function organismScore(worldSeed: number, slot: number, day: number, category: RankingId): number {
+export function organismScore(
+  worldSeed: number,
+  slot: number,
+  day: number,
+  category: RankingId,
+): number {
   const data = BALANCE.ranking;
   const { temper } = organismProfile(worldSeed, slot);
   const rng = createRng((worldSeed ^ 0x9e3779b9 ^ Math.imul(slot + 1, 0xc2b2ae35)) >>> 0);

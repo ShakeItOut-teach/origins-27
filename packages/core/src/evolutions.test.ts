@@ -199,7 +199,7 @@ describe("exprimer une évolution", () => {
       ),
     };
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(10);
+    expect(back.version).toBe(11);
     expect(back.research).toBeNull();
     expect(EVOLUTION_IDS.every((id) => back.evolutions[id] === 0)).toBe(true);
     expect(back.organelles.nucleus).toBe(0);
@@ -214,7 +214,7 @@ describe("le calendrier de la saison", () => {
       [...calendar.map((entry) => entry.at)].sort((a, b) => a - b),
     );
     expect(calendar.filter((entry) => entry.kind === "tier").map((entry) => entry.day)).toEqual([
-      3, 4, 5,
+      3, 4, 5, 9,
     ]);
     expect(calendar.filter((entry) => entry.kind === "zone").map((entry) => entry.day)).toEqual(
       BALANCE.ocean.zones.slice(1).map((zone) => zone.openDay),

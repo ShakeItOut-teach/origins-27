@@ -11,3 +11,6 @@ export const SERVER: { readonly url: string; readonly key: string } | null = use
       key: "sb_publishable_x1OgN1cjsjly9r_ZWTsSKA_krpNYvkC",
     }
   : null;
+
+/** Le serveur Discord de la communauté : on y colle la Gazette, on y trouve ses alliés. */
+export const DISCORD_URL = "https://discord.gg/xDFe8R3qv9";

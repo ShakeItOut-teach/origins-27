@@ -1,5 +1,7 @@
 /** Naissance d'un joueur, apparence de sa créature, résumé d'absence, sauvegarde. */
 import {
+  ALLIANCE_TECH_IDS,
+  BANNER_IDS,
   BALANCE,
   COUNTER_IDS,
   MUTATION_IDS,
@@ -15,6 +17,8 @@ import {
 import type { CounterId, MutationId, OrganelleId, ResourceId, TraitId, TroopId } from "@o27/data";
 import { createRng } from "./rng";
 import type {
+  Alliance,
+  DailyRecord,
   Companion,
   Research,
   Construction,
@@ -46,7 +50,9 @@ export function createPlayer(
 ): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 10,
+    version: 11,
+    alliance: null,
+    daily: { day: 0, wins: 0, losses: 0 },
     companion: null,
     taming: null,
     evolutions: fill(EVOLUTION_IDS, 0),
@@ -160,6 +166,23 @@ export function serializeState(state: PlayerState): string {
     Object.fromEntries(keys.map((key) => [key, from[key]]));
   return JSON.stringify({
     version: state.version,
+    alliance:
+      state.alliance === null
+        ? null
+        : {
+            banner: state.alliance.banner,
+            freeUntil: state.alliance.freeUntil,
+            points: state.alliance.points,
+            credits: state.alliance.credits,
+            day: state.alliance.day,
+            donations: state.alliance.donations,
+            helped: state.alliance.helped,
+            gift: state.alliance.gift,
+            tech: pick(ALLIANCE_TECH_IDS, state.alliance.tech),
+            recommended: state.alliance.recommended,
+            syncedAt: state.alliance.syncedAt,
+          },
+    daily: { day: state.daily.day, wins: state.daily.wins, losses: state.daily.losses },
     seed: state.seed,
     rngState: state.rngState,
     seasonStart: state.seasonStart,
@@ -173,6 +196,7 @@ export function serializeState(state: PlayerState): string {
             organelle: state.construction.organelle,
             toLevel: state.construction.toLevel,
             endsAt: state.construction.endsAt,
+            helped: state.construction.helped,
           },
     mutations: state.mutations,
     mutationOffer: state.mutationOffer,
@@ -376,10 +400,54 @@ function readConstruction(value: unknown): Construction | null {
   if (organelle === undefined || !isCount(toLevel) || !isCount(endsAt)) {
     throw new TypeError("sauvegarde invalide : chantier");
   }
-  return { organelle, toLevel, endsAt };
+  // Une sauvegarde d'avant les alliances : personne n'était encore venu aider.
+  return { organelle, toLevel, endsAt, helped: value.helped === true };
 }
 
-const PLACE_ID = /^((h:|r:)?-?\d{1,6}:-?\d{1,6}|o:\d{1,4}|[dp]:-?\d{1,4}:-?\d{1,4}:\d{1,9})$/;
+function readAlliance(value: unknown): Alliance | null {
+  if (value === null) return null;
+  if (!isRecord(value)) throw new TypeError("sauvegarde invalide : alliance");
+  const banner = BANNER_IDS.find((id) => id === value.banner);
+  const recommended = ALLIANCE_TECH_IDS.find((id) => id === value.recommended) ?? null;
+  const { freeUntil, points, credits, day, donations, helped, gift, syncedAt } = value;
+  if (
+    banner === undefined ||
+    (value.recommended !== null && recommended === null) ||
+    !isCount(freeUntil) ||
+    !isCount(points) ||
+    !isCount(credits) ||
+    !isCount(day) ||
+    !isCount(donations) ||
+    !isCount(helped) ||
+    typeof gift !== "boolean" ||
+    !isCount(syncedAt)
+  ) {
+    throw new TypeError("sauvegarde invalide : alliance");
+  }
+  return {
+    banner,
+    freeUntil,
+    points,
+    credits,
+    day,
+    donations,
+    helped,
+    gift,
+    tech: readCounts(ALLIANCE_TECH_IDS, value.tech),
+    recommended,
+    syncedAt,
+  };
+}
+
+function readDaily(value: unknown): DailyRecord {
+  if (!isRecord(value) || !isCount(value.day) || !isCount(value.wins) || !isCount(value.losses)) {
+    throw new TypeError("sauvegarde invalide : bilan du jour");
+  }
+  return { day: value.day, wins: value.wins, losses: value.losses };
+}
+
+const PLACE_ID =
+  /^((h:|r:)?-?\d{1,6}:-?\d{1,6}|o:\d{1,4}|[dpe]:-?\d{1,4}:-?\d{1,4}:\d{1,9}|v:-?\d{1,4}:-?\d{1,4}:\d{1,9}:\d)$/;
 
 function readExpedition(value: unknown): Expedition | null {
   if (value === null) return null;
@@ -578,7 +646,7 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
   if (
     !isRecord(raw) ||
     typeof version !== "number" ||
-    ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(version)
+    ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(version)
   ) {
     throw new TypeError("sauvegarde invalide : version");
   }
@@ -602,7 +670,10 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     throw new TypeError("sauvegarde invalide : carte");
   }
   return {
-    version: 10,
+    version: 11,
+    // Avant les alliances : aucune bannière (le moteur en donnera une le moment venu).
+    alliance: version < 11 ? null : readAlliance(raw.alliance),
+    daily: version < 11 ? { day: 0, wins: 0, losses: 0 } : readDaily(raw.daily),
     // Avant le compagnon : personne à apprivoiser, personne en route.
     companion: version < 10 ? null : readCompanion(raw.companion),
     taming: version < 10 || !isCount(raw.taming) ? null : raw.taming,
@@ -630,7 +701,8 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     hunt: beforeHunt ? null : readHunt(raw.hunt),
     worldSeed: old ? (world?.worldSeed ?? seed) >>> 0 : (worldSeed as number),
     slot: old ? (world?.slot ?? 0) : (slot as number),
-    energy: old ? BALANCE.energy.max : Math.min(BALANCE.energy.max, energy as number),
+    // Un cadeau peut faire dépasser la jauge : on relit l'énergie telle qu'elle est.
+    energy: old ? BALANCE.energy.max : (energy as number),
     energyAt: old ? now : (energyAt as number),
     expedition: old ? null : readExpedition(raw.expedition),
     placeReadyAt: old ? {} : readPlaceTimes(raw.placeReadyAt),

@@ -389,3 +389,145 @@ export function drawPredator(
     }
   }
 }
+
+/**
+ * Le Léviathan : un orthocône géant, cousin lointain des pieuvres, dans sa longue coquille
+ * droite et cloisonnée. Ses bras ondulent devant l'ouverture.
+ */
+export function drawLeviathan(
+  g: Graphics,
+  spot: Spot,
+  size: number,
+  alpha: number,
+  t: number,
+  seed: number,
+): void {
+  const blood = hsl(352, 0.78, 0.62);
+  const shell = hsl(18, 0.32, 0.26);
+  const pale = hsl(30, 0.4, 0.72);
+  if (size < 7) {
+    g.circle(spot.x, spot.y, size * 1.9).fill({ color: blood, alpha: alpha * 0.18 });
+    g.poly([
+      spot.x - size * 1.3,
+      spot.y,
+      spot.x + size * 0.9,
+      spot.y - size * 0.55,
+      spot.x + size * 0.9,
+      spot.y + size * 0.55,
+    ]).fill({ color: blood, alpha });
+    return;
+  }
+  const angle = seed * Math.PI * 2 + Math.sin(t * 0.3 + seed * 20) * 0.12;
+  const line = Math.max(1, size * 0.05);
+  g.circle(spot.x, spot.y, size * 2).fill({ color: blood, alpha: alpha * 0.06 });
+  // La coquille : un long cône, pointe en arrière, cerclé de cloisons.
+  const tip = turned(spot, angle, -size * 2.1, 0);
+  const upper = turned(spot, angle, size * 0.7, -size * 0.5);
+  const lower = turned(spot, angle, size * 0.7, size * 0.5);
+  g.poly([tip.x, tip.y, upper.x, upper.y, lower.x, lower.y])
+    .fill({ color: shell, alpha: alpha * 0.92 })
+    .stroke({ color: pale, alpha: alpha * 0.85, width: line });
+  for (let index = 1; index <= 7; index++) {
+    const part = index / 8;
+    const along = -size * 2.1 + part * size * 2.8;
+    const half = part * size * 0.5;
+    const from = turned(spot, angle, along, -half);
+    const to = turned(spot, angle, along, half);
+    g.moveTo(from.x, from.y).lineTo(to.x, to.y);
+  }
+  g.stroke({ color: pale, alpha: alpha * 0.4, width: line * 0.8 });
+  // La tête et son œil.
+  const head = turned(spot, angle, size * 0.95, 0);
+  g.poly(ellipse(head, size * 0.42, size * 0.46, angle, 16))
+    .fill({ color: hsl(352, 0.5, 0.3), alpha: alpha * 0.9 })
+    .stroke({ color: blood, alpha, width: line });
+  const eye = turned(spot, angle, size * 0.92, -size * 0.2);
+  g.circle(eye.x, eye.y, Math.max(1.5, size * 0.11)).fill({ color: pale, alpha });
+  g.circle(eye.x, eye.y, Math.max(0.8, size * 0.05)).fill({ color: hsl(0, 0, 0.05), alpha });
+  // Les bras : huit, qui ondulent chacun à son rythme.
+  for (let index = 0; index < 8; index++) {
+    const spread = (index - 3.5) * 0.13;
+    const wave = Math.sin(t * 2.2 + index * 0.9 + seed * 6);
+    const root = turned(spot, angle, size * 1.3, spread * size * 2);
+    const bend = turned(spot, angle, size * 1.9, spread * size * 4.5 + wave * size * 0.25);
+    const end = turned(spot, angle, size * 2.5, spread * size * 5.5 - wave * size * 0.35);
+    g.moveTo(root.x, root.y).quadraticCurveTo(bend.x, bend.y, end.x, end.y);
+  }
+  g.stroke({ color: blood, alpha: alpha * 0.9, width: line * 1.4, cap: "round" });
+}
+
+/**
+ * L'étendue d'un événement : une auréole sur la carte. Chaude pour une éruption, verte et
+ * pleine de plancton pour une efflorescence, rouge pour le Léviathan, sombre et terne pour
+ * une zone sans oxygène.
+ */
+export function drawEventZone(
+  g: Graphics,
+  spot: Spot,
+  radius: number,
+  kind: "eruption" | "bloom" | "leviathan" | "anoxia",
+  alpha: number,
+  t: number,
+  seed: number,
+): void {
+  const pulse = 1 + Math.sin(t * 1.4 + seed * 9) * 0.025;
+  const ring = Math.max(1, Math.min(2.2, radius * 0.02));
+  if (kind === "eruption") {
+    const ember = hsl(24, 0.9, 0.55);
+    for (const part of [1, 0.66, 0.36]) {
+      g.circle(spot.x, spot.y, radius * part * pulse).fill({ color: ember, alpha: alpha * 0.07 });
+    }
+    g.circle(spot.x, spot.y, radius * pulse).stroke({
+      color: ember,
+      alpha: alpha * 0.6,
+      width: ring,
+    });
+    return;
+  }
+  if (kind === "bloom") {
+    const leaf = hsl(96, 0.6, 0.5);
+    g.circle(spot.x, spot.y, radius).fill({ color: leaf, alpha: alpha * 0.1 });
+    g.circle(spot.x, spot.y, radius).stroke({ color: leaf, alpha: alpha * 0.55, width: ring });
+    // Le plancton : des grains de lumière verte qui dérivent dans toute la zone.
+    const count = radius > 40 ? 46 : 18;
+    for (let index = 0; index < count; index++) {
+      const a = index * 2.399963 + seed * 6;
+      const far = Math.sqrt((index + 0.5) / count) * radius * 0.94;
+      const drift = Math.sin(t * 0.6 + index * 1.7) * radius * 0.025;
+      g.circle(
+        spot.x + Math.cos(a) * far + drift,
+        spot.y + Math.sin(a) * far - drift,
+        Math.max(0.7, radius * 0.012 + (index % 3) * 0.3),
+      ).fill({ color: hsl(88 + (index % 4) * 8, 0.7, 0.62), alpha: alpha * 0.55 });
+    }
+    return;
+  }
+  if (kind === "leviathan") {
+    const blood = hsl(352, 0.8, 0.58);
+    g.circle(spot.x, spot.y, radius).fill({ color: blood, alpha: alpha * 0.06 });
+    g.circle(spot.x, spot.y, radius * pulse).stroke({
+      color: blood,
+      alpha: alpha * 0.7,
+      width: ring,
+    });
+    // Sa portée : des tirets, comme une zone de danger sur une carte marine.
+    const dashes = 36;
+    for (let index = 0; index < dashes; index += 2) {
+      const from = (index / dashes) * Math.PI * 2 + t * 0.05;
+      const to = ((index + 1) / dashes) * Math.PI * 2 + t * 0.05;
+      g.moveTo(spot.x + Math.cos(from) * radius * 0.86, spot.y + Math.sin(from) * radius * 0.86)
+        .arc(spot.x, spot.y, radius * 0.86, from, to)
+        .stroke({ color: blood, alpha: alpha * 0.35, width: ring * 0.8 });
+    }
+    return;
+  }
+  // Zone anoxique : l'eau s'assombrit et vire au violet terne.
+  const dead = hsl(276, 0.3, 0.22);
+  g.circle(spot.x, spot.y, radius).fill({ color: dead, alpha: alpha * 0.5 });
+  g.circle(spot.x, spot.y, radius * 0.6).fill({ color: hsl(280, 0.25, 0.1), alpha: alpha * 0.3 });
+  g.circle(spot.x, spot.y, radius).stroke({
+    color: hsl(276, 0.45, 0.62),
+    alpha: alpha * 0.6,
+    width: ring,
+  });
+}

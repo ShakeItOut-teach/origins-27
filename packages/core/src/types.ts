@@ -1,4 +1,7 @@
 import type {
+  AllianceShopId,
+  AllianceTechId,
+  BannerId,
   GeneFamily,
   EvolutionId,
   CounterId,
@@ -25,6 +28,36 @@ export interface Construction {
   readonly organelle: OrganelleId;
   readonly toLevel: number;
   readonly endsAt: number;
+  /** Les alliés sont déjà venus aider : on ne les rappelle pas pour le même chantier. */
+  readonly helped: boolean;
+}
+
+/** L'alliance du joueur : sa bannière, ce qu'il y a apporté, et l'état de ses technologies. */
+export interface Alliance {
+  readonly banner: BannerId;
+  /** Jusqu'à cet instant, on change de bannière sans rien perdre. */
+  readonly freeUntil: number;
+  /** Contribution du joueur ; elle fait de lui un Officier. */
+  readonly points: number;
+  /** Crédits à dépenser dans la boutique. */
+  readonly credits: number;
+  /** Jour de saison auquel se rapportent les trois compteurs du jour qui suivent. */
+  readonly day: number;
+  readonly donations: number;
+  readonly helped: number;
+  readonly gift: boolean;
+  /** Points versés dans chaque technologie, par tous les membres, à l'instant `syncedAt`. */
+  readonly tech: Readonly<Record<AllianceTechId, number>>;
+  /** La technologie où les membres versent leurs points ; `null` quand tout est au maximum. */
+  readonly recommended: AllianceTechId | null;
+  readonly syncedAt: number;
+}
+
+/** Les combats du jour, pour la Gazette. */
+export interface DailyRecord {
+  readonly day: number;
+  readonly wins: number;
+  readonly losses: number;
 }
 
 export interface Expedition {
@@ -135,7 +168,10 @@ export interface DailyQuests {
 }
 
 export interface PlayerState {
-  readonly version: 10;
+  readonly version: 11;
+  /** L'alliance du joueur ; `null` avant l'ouverture des alliances. */
+  readonly alliance: Alliance | null;
+  readonly daily: DailyRecord;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -318,6 +354,40 @@ export type GameEvent =
       readonly rank: number;
       readonly loot: Readonly<Record<ResourceId, number>>;
     }
+  | {
+      readonly type: "allianceJoined";
+      readonly at: number;
+      readonly banner: BannerId;
+      /** Recruté d'office à l'ouverture des alliances. */
+      readonly auto: boolean;
+    }
+  | {
+      readonly type: "allianceDonated";
+      readonly at: number;
+      readonly tech: AllianceTechId;
+      readonly points: number;
+    }
+  | { readonly type: "alliesHelped"; readonly at: number; readonly count: number }
+  /** Les alliés ont raccourci le chantier en cours. */
+  | { readonly type: "buildHelped"; readonly at: number; readonly savedMs: number }
+  | {
+      readonly type: "allianceGift";
+      readonly at: number;
+      readonly loot: Readonly<Record<ResourceId, number>>;
+      readonly energy: number;
+    }
+  | { readonly type: "allianceBought"; readonly at: number; readonly item: AllianceShopId }
+  /** Le Léviathan a frappé la cellule : la défense a cédé. */
+  | {
+      readonly type: "leviathanStruck";
+      readonly at: number;
+      readonly event: string;
+      readonly sugar: number;
+      readonly bricks: number;
+      readonly proteins: number;
+      readonly troopsLost: number;
+    }
+  | { readonly type: "leviathanRepelled"; readonly at: number; readonly event: string }
   | { readonly type: "attackRepelled"; readonly at: number; readonly rival: string }
   /** Un rival a attaqué le joueur et a pris une part de ses réserves. */
   | {
@@ -376,7 +446,19 @@ export type OrderErrorCode =
   | "researching"
   | "hasCompanion"
   | "noCompanion"
-  | "grown";
+  | "grown"
+  | "unknownEvent"
+  /** On n'espionne ni n'attaque un membre de sa propre alliance. */
+  | "ally"
+  | "noAlliance"
+  | "sameAlliance"
+  | "donationsDone"
+  | "notOfficer"
+  | "noHelp"
+  | "noConstruction"
+  | "alreadyHelped"
+  | "noCredits"
+  | "energyFull";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

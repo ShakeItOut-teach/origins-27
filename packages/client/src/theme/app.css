@@ -1922,3 +1922,367 @@ p {
   outline: 3px solid var(--iodine);
   outline-offset: 2px;
 }
+
+/* Palier 9 : événements de zone, alliances, Gazette */
+.season-next.is-danger {
+  border-style: solid;
+  border-color: var(--eosin);
+}
+
+.season-next.is-danger strong {
+  color: var(--eosin);
+}
+
+.lens-world .lens-pill-events {
+  top: calc(104px + env(safe-area-inset-top));
+}
+
+.organism-event {
+  border-style: dotted;
+}
+
+.organism-event.is-eruption {
+  border-color: #f08a3c;
+}
+
+.organism-event.is-bloom {
+  border-color: #8fd36b;
+}
+
+.organism-event.is-leviathan {
+  border-color: #ff5d73;
+}
+
+.organism-event.is-anoxia {
+  border-color: #b79bff;
+}
+
+.event-tag {
+  font-family: var(--font-text);
+  font-weight: 600;
+}
+
+.event-list,
+.banner-list,
+.gazette-briefs,
+.gazette-top {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event-row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-1) 0;
+  border: 0;
+  border-bottom: 1px solid var(--grid);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.event-row:disabled {
+  cursor: default;
+}
+
+.event-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ink-soft);
+}
+
+.event-row.is-eruption .event-dot {
+  background: #f08a3c;
+}
+
+.event-row.is-bloom .event-dot {
+  background: #6fb34a;
+}
+
+.event-row.is-leviathan .event-dot {
+  background: var(--eosin);
+}
+
+.event-row.is-anoxia .event-dot {
+  background: #8a6fd1;
+}
+
+.event-name,
+.banner-name {
+  display: grid;
+}
+
+.event-name small,
+.banner-name small {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.event-left {
+  font-family: var(--font-number);
+  font-size: 13px;
+  color: var(--eosin);
+}
+
+.sheet-title {
+  margin: var(--space-3) 0 0;
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: 20px;
+}
+
+.alliance-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2) var(--space-3);
+  margin: 0;
+}
+
+.alliance-stats dt {
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.alliance-stats dd {
+  margin: 0;
+  font-family: var(--font-number);
+  font-size: 18px;
+}
+
+.alliance-stats dd small {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.alliance-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.alliance-acts .button {
+  flex: 1 1 auto;
+  text-align: center;
+  text-decoration: none;
+}
+
+a.button {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+
+.tech-row {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.tech-row.is-recommended {
+  padding-left: var(--space-2);
+  border-left: 3px solid var(--iodine);
+}
+
+.tech-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.tech-level,
+.tech-points {
+  font-family: var(--font-number);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.tech-effect {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: 14px;
+}
+
+.tech-act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tech-bar {
+  flex: 1 1 80px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--grid);
+  overflow: hidden;
+}
+
+.tech-bar i {
+  display: block;
+  height: 100%;
+  background: var(--algae);
+}
+
+.shop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.shop-item {
+  display: grid;
+  gap: 2px;
+  min-height: var(--touch);
+  padding: var(--space-2);
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.shop-item strong {
+  font-family: var(--font-number);
+}
+
+.shop-item:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.banner-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.banner-row.is-mine {
+  background: color-mix(in srgb, var(--iodine) 22%, transparent);
+}
+
+.banner-tag {
+  font-family: var(--font-number);
+  font-size: 0.7em;
+  color: var(--ink-soft);
+}
+
+.gazette-kicker {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gazette-headline {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 26px;
+  line-height: 1.15;
+}
+
+.gazette-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.gazette-columns h3 {
+  margin: 0 0 var(--space-1);
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gazette-columns p {
+  margin: 0 0 var(--space-2);
+  font-size: 15px;
+}
+
+.gazette-columns small,
+.gazette-top small {
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 12px;
+}
+
+.gazette-top {
+  counter-reset: place;
+  font-size: 15px;
+}
+
+.gazette-top li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  counter-increment: place;
+}
+
+.gazette-top li span::before {
+  content: counter(place) ". ";
+  font-family: var(--font-number);
+  color: var(--ink-soft);
+}
+
+.gazette-top li.is-me {
+  font-weight: 600;
+}
+
+.gazette-briefs {
+  font-size: 14px;
+}
+
+.gazette-briefs li {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--grid);
+}
+
+.fossil {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-deep);
+}
+
+.fossil p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.fossil small {
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 12px;
+}

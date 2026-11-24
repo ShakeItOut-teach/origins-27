@@ -49,6 +49,9 @@ export const frScience = {
   "prey.soft.name": "Amibe",
   "prey.aggressive.name": "Didinium",
   "prey.fleeing.name": "Euglène",
+  "event.eruption.name": "Éruption hydrothermale",
+  "event.anoxia.name": "Zone anoxique",
+  "state.anoxic": "Zone anoxique : votre production baisse de 30 %",
 } as const satisfies ScienceTexts;
 
 export const enScience = {
@@ -94,6 +97,9 @@ export const enScience = {
   "prey.soft.name": "Amoeba",
   "prey.aggressive.name": "Didinium",
   "prey.fleeing.name": "Euglena",
+  "event.eruption.name": "Hydrothermal eruption",
+  "event.anoxia.name": "Anoxic zone",
+  "state.anoxic": "Anoxic zone: your production is down 30%",
 } as const satisfies Record<keyof typeof frScience, string>;
 
 /** Les mots expliqués dans le lexique : la clé du mot, et celle de son explication. */
