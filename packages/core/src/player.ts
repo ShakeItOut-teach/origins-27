@@ -104,6 +104,9 @@ export interface AbsenceSummary {
   readonly tiersReached: readonly number[];
   /** Nombre d'expéditions revenues avec leur butin. */
   readonly expeditionsBack: number;
+  /** Attaques de rivaux pendant l'absence : repoussées, et subies. */
+  readonly attacksRepelled: number;
+  readonly attacksSuffered: number;
 }
 
 /** Ce qui s'est passé entre deux états, pour l'écran « pendant votre absence ». */
@@ -123,6 +126,8 @@ export function summarizeAbsence(
       event.type === "constructionDone" ? [{ organelle: event.organelle, level: event.level }] : [],
     ),
     tiersReached: events.flatMap((event) => (event.type === "tierReached" ? [event.tier] : [])),
+    attacksRepelled: events.filter((event) => event.type === "attackRepelled").length,
+    attacksSuffered: events.filter((event) => event.type === "attackSuffered").length,
     expeditionsBack: events.filter(
       (event) => event.type === "expeditionReturned" && !event.cancelled,
     ).length,

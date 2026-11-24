@@ -43,6 +43,14 @@ export function OrganelleIcon({ id }: { readonly id: OrganelleId }) {
           <circle cx="16.5" cy="14.5" r="2.4" />
         </svg>
       );
+    case "wall":
+      // Une membrane épaisse, doublée.
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="5.5" strokeDasharray="3 2.5" />
+        </svg>
+      );
     case "nursery":
       // Une cellule en train de se diviser.
       return (

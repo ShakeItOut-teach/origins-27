@@ -71,7 +71,14 @@ function loadSaved(deps: StoreDeps): PlayerState | null {
 
 function worthTelling(summary: AbsenceSummary): boolean {
   const gained = summary.gained.sugar >= MICRO || summary.gained.bricks >= MICRO;
-  return summary.elapsedMs >= ABSENCE_MIN_MS && (gained || summary.constructionsDone.length > 0);
+  // Une ancienne réponse du serveur peut ne pas connaître les attaques : elles valent alors 0.
+  const attacks =
+    ((summary.attacksRepelled as number | undefined) ?? 0) +
+    ((summary.attacksSuffered as number | undefined) ?? 0);
+  return (
+    summary.elapsedMs >= ABSENCE_MIN_MS &&
+    (gained || summary.constructionsDone.length > 0 || attacks > 0)
+  );
 }
 
 export function createStore(deps: StoreDeps): GameStore {

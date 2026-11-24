@@ -1015,3 +1015,108 @@ p {
 .loss.is-chest .close {
   color: var(--ink);
 }
+
+/* Palier 5 : les rivaux */
+.views:has(.view:nth-child(3)) .view {
+  padding: 0 var(--space-3);
+  font-size: 15px;
+}
+
+.rivals {
+  display: grid;
+  gap: var(--space-3);
+  width: min(100%, 460px);
+}
+
+.defense {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-size: 15px;
+}
+
+.defense strong {
+  font-family: var(--font-number);
+  font-size: 22px;
+}
+
+.defense .is-safe {
+  color: var(--algae);
+}
+
+.defense .is-exposed {
+  color: var(--eosin);
+}
+
+.rival-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rival {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2px var(--space-3);
+  align-items: center;
+  width: 100%;
+  min-height: 64px;
+  padding: var(--space-2) var(--space-4);
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rival.is-closed {
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.rival.is-target {
+  border-color: var(--iodine);
+}
+
+.rival-dot {
+  grid-row: 1 / 3;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+
+.rival-name {
+  font-family: var(--font-title);
+  font-size: 22px;
+}
+
+.rival-guard {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.rival-guard strong {
+  font-family: var(--font-number);
+  color: var(--ink);
+}
+
+.rival-state {
+  grid-column: 2 / 4;
+  font-family: var(--font-number);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* Le bouton de langue ne recouvre plus les compteurs quand ils sont quatre */
+.counters:has(.counter-energy):has([data-testid="counter-proteins"]) {
+  margin-top: var(--space-5);
+}

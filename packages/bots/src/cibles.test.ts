@@ -188,3 +188,31 @@ describe("cibles des quêtes du jour", () => {
     expect(wins).toBeLessThan(SEEDS.length);
   });
 });
+
+describe("cibles du palier 5 (les rivaux)", () => {
+  const DAY = 24 * HOUR;
+  // Une seule partie par graine, rejouée par tous les tests : trente heures de jeu.
+  const games = [1, 2, 3, 4].map((seed) => simulate(PROFILES.applique, seed, 30 * HOUR, "time"));
+
+  it("le palier s'ouvre à la première seconde du deuxième jour pour qui a gagné une chasse", () => {
+    for (const report of games) expect(report.tierSeconds[5]).toBe(DAY);
+  });
+
+  it("la première attaque part dans les dix minutes", () => {
+    for (const report of games) {
+      expect((report.firstRaidSeconds ?? Number.POSITIVE_INFINITY) - DAY).toBeLessThanOrEqual(600);
+    }
+  });
+
+  it("un joueur appliqué gagne au moins une attaque dans ses six premières heures de rivaux", () => {
+    const winners = games.filter((report) => report.raidsWon >= 1).length;
+    expect(winners).toBeGreaterThanOrEqual(3);
+  });
+
+  it("personne n'est attaqué pendant sa protection de nouveau venu", () => {
+    // Trente heures de jeu = six heures de rivaux, moins que les douze heures de protection.
+    for (const report of games) {
+      expect(report.attacksSuffered + report.attacksRepelled).toBe(0);
+    }
+  });
+});

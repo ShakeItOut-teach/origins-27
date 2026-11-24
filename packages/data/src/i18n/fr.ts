@@ -50,6 +50,9 @@ export const fr = {
   "loss.title": "Butin perdu",
   "loss.text": "La réserve était pleine. Améliorez la Réserve pour tout garder.",
   "absence.expedition": "Expédition revenue",
+  "absence.repelled": "Attaques repoussées",
+  "absence.suffered": "Attaques subies",
+  "incoming.lost": "Perdu",
 
   "resource.proteins": "Protéines",
   "organelle.nursery.name": "Pouponnière",
@@ -122,6 +125,7 @@ export const fr = {
   "label.range": "entre {a} et {b}",
   "label.strikeBonus": "Touchez pendant le combat pour aider vos cellules.",
   "label.blind": "Vous attaquez sans avoir espionné.",
+  "label.raidChance": "Chances si vous laissez faire",
   "action.spy": "Espionner",
   "action.raid": "Attaquer",
   "action.strikeRaid": "Touchez pour aider vos cellules !",

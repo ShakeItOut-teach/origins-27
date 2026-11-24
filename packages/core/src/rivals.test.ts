@@ -438,13 +438,11 @@ describe("garanties du moteur avec les rivaux", () => {
         fc.integer({ min: 0, max: 5 }),
       )
       .map(([entry, hunter, swift]): Order => raid(entry, { hunter, armored: 0, swift })),
-    fc
-      .constantFrom(...visiblePrey(WORLD.worldSeed, WORLD.slot))
-      .map((prey): Order => ({
-        type: "sendHunt",
-        prey: prey.id,
-        party: { hunter: 2, armored: 0, swift: 2 },
-      })),
+    fc.constantFrom(...visiblePrey(WORLD.worldSeed, WORLD.slot)).map((prey): Order => ({
+      type: "sendHunt",
+      prey: prey.id,
+      party: { hunter: 2, armored: 0, swift: 2 },
+    })),
   );
   const steps = fc.array(
     fc.tuple(

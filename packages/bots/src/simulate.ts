@@ -8,10 +8,12 @@ import {
   partySize,
   placeOffer,
   preyOffer,
+  raidOffer,
   troopCapacity,
   troopsOwned,
   visiblePlaces,
   visiblePrey,
+  visibleRivals,
   winChance,
 } from "@o27/core";
 import type { PlayerState } from "@o27/core";
@@ -64,7 +66,12 @@ export const PROFILES = {
 
 /** Jusqu'où le robot joue : sa première mutation, ou un nombre d'expéditions revenues. */
 export type Goal =
-  "mutation" | { readonly expeditions: number } | { readonly huntsWon: number } | "secondMutation";
+  /** "time" : jouer jusqu'au bout du temps donné. */
+  | "time"
+  | "mutation"
+  | { readonly expeditions: number }
+  | { readonly huntsWon: number }
+  | "secondMutation";
 
 export interface Report {
   readonly profile: string;
@@ -84,6 +91,13 @@ export interface Report {
   readonly secondMutationSeconds: number | null;
   readonly huntsWon: number;
   readonly huntsLost: number;
+  /** Secondes avant la première attaque envoyée contre un rival. */
+  readonly firstRaidSeconds: number | null;
+  readonly raidsWon: number;
+  readonly raidsLost: number;
+  /** Attaques de rivaux repoussées et subies. */
+  readonly attacksRepelled: number;
+  readonly attacksSuffered: number;
   /** Coffres de quêtes ouverts, dont ceux des défis. */
   readonly chestsOpened: number;
   readonly challengeChestsOpened: number;
@@ -114,7 +128,12 @@ export function simulate(
   goal: Goal = "mutation",
 ): Report {
   let state: PlayerState = createPlayer(seed, SEASON_START, SEASON_START);
-  const tierSeconds: (number | null)[] = [0, null, null, null, null];
+  const tierSeconds: (number | null)[] = [0, null, null, null, null, null];
+  let firstRaidSeconds: number | null = null;
+  let raidsWon = 0;
+  let raidsLost = 0;
+  let attacksRepelled = 0;
+  let attacksSuffered = 0;
   let firstHuntSeconds: number | null = null;
   let firstHuntWonSeconds: number | null = null;
   let secondMutationSeconds: number | null = null;
@@ -137,6 +156,14 @@ export function simulate(
         lootLost += Number(event.lost);
         lootGained += Number(event.gained);
       }
+      if (event.type === "attackRepelled") attacksRepelled += 1;
+      if (event.type === "attackSuffered") attacksSuffered += 1;
+      if (event.type === "raidReturned" && "won" in event && "cancelled" in event) {
+        if (event.cancelled !== true) {
+          if (event.won === true) raidsWon += 1;
+          else raidsLost += 1;
+        }
+      }
       if (event.type === "chestOpened" && "challenge" in event) {
         chestsOpened += 1;
         if (event.challenge === true) challengeChestsOpened += 1;
@@ -157,6 +184,7 @@ export function simulate(
     return result.ok;
   };
   const done = (): boolean => {
+    if (goal === "time") return false;
     if (goal === "mutation") return mutationSeconds !== null;
     if (goal === "secondMutation") return secondMutationSeconds !== null;
     if (typeof goal === "object" && "huntsWon" in goal)
@@ -181,6 +209,17 @@ export function simulate(
     }
     let acted = false;
 
+    // Son groupe se bat chez un rival : le robot présent l'aide.
+    if (
+      profile.strikes &&
+      state.raid !== null &&
+      state.raid.outcome === null &&
+      !state.raid.cancelled &&
+      now >= state.raid.arrivesAt &&
+      send({ type: "strikeRaid" }, now)
+    ) {
+      acted = true;
+    }
     // Le groupe est face à la proie : le robot présent la touche.
     if (
       profile.strikes &&
@@ -236,6 +275,25 @@ export function simulate(
           }
         }
       }
+      // Rivaux : le robot attaque le voisin ouvert contre lequel il a le plus de chances,
+      // s'il en a au moins une sur deux. Sinon il continue de chasser.
+      if (state.tier >= 5 && state.hunt === null && state.raid === null) {
+        let best: { id: string; chance: number } | null = null;
+        for (const rival of visibleRivals(state.worldSeed, state.slot)) {
+          if ((state.placeReadyAt[rival.id] ?? 0) > now) continue;
+          const chance = winChance(state.troops, rival.kind, raidOffer(state, rival, now).guard);
+          if (best === null || chance > best.chance) best = { id: rival.id, chance };
+        }
+        if (
+          best !== null &&
+          best.chance >= 50 &&
+          partySize(state.troops) > 0 &&
+          send({ type: "sendRaid", rival: best.id, party: state.troops }, now)
+        ) {
+          firstRaidSeconds ??= second;
+          acted = true;
+        }
+      }
       // Chasse : le robot vise la proie disponible la plus proche, fait naître le type de
       // cellule qui compte double contre elle, puis envoie tout son monde.
       if (state.tier >= 4 && troopCapacity(state) > 0) {
@@ -264,6 +322,7 @@ export function simulate(
           const ready = profile.careful ? chance >= 50 : partySize(state.troops) >= 4;
           if (
             state.hunt === null &&
+            state.raid === null &&
             ready &&
             state.energy >= offer.energy &&
             send({ type: "sendHunt", prey: prey.id, party: state.troops }, now)
@@ -300,7 +359,14 @@ export function simulate(
       acted = true;
     }
     // Attendre le retour d'un filament, c'est avoir quelque chose en cours.
-    if (state.expedition !== null || state.hunt !== null || state.training !== null) acted = true;
+    if (
+      state.expedition !== null ||
+      state.hunt !== null ||
+      state.raid !== null ||
+      state.training !== null
+    ) {
+      acted = true;
+    }
 
     stuck = acted ? 0 : stuck + 1;
     longestStuck = Math.max(longestStuck, stuck);
@@ -326,6 +392,11 @@ export function simulate(
     secondMutationSeconds,
     huntsWon: state.counters.huntsWon,
     huntsLost,
+    firstRaidSeconds,
+    raidsWon,
+    raidsLost,
+    attacksRepelled,
+    attacksSuffered,
     chestsOpened,
     challengeChestsOpened,
     fewestTroopsAfterHunt: fewestTroops,

@@ -1,6 +1,7 @@
 import {
   MICRO,
   nextMutationPrice,
+  visibleRivals,
   capacity,
   describeCreature,
   levelCost,
@@ -21,6 +22,7 @@ import { AccountSheet } from "./ui/AccountSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
 import { QuestSheet } from "./ui/QuestSheet";
+import { RivalsView } from "./ui/RivalsView";
 import { TroopPanel } from "./ui/TroopPanel";
 
 interface Props {
@@ -38,6 +40,7 @@ const SLOT_POSITION: Readonly<Record<OrganelleId, { left: string; top: string }>
   cilia: { left: "17%", top: "73%" },
   ribosome: { left: "83%", top: "73%" },
   nursery: { left: "50%", top: "88%" },
+  wall: { left: "50%", top: "12%" },
 };
 
 function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number): boolean {
@@ -47,7 +50,20 @@ function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number):
 
 export function App({ store, lang, onSwitchLang, account }: Props) {
   const [accountOpen, setAccountOpen] = useState(false);
-  const [view, setView] = useState<"cell" | "map">("cell");
+  const [view, setView] = useState<"cell" | "map" | "rivals">("cell");
+  /** Résultat de la dernière attaque rentrée, et dernière attaque subie. */
+  const [raidNote, setRaidNote] = useState<{
+    won: boolean;
+    gained: Readonly<Record<ResourceId, number>>;
+    losses: number;
+  } | null>(null);
+  const [attackNote, setAttackNote] = useState<{
+    rival: string;
+    repelled: boolean;
+    sugar: number;
+    bricks: number;
+    troopsLost: number;
+  } | null>(null);
   /** Butin perdu au dernier retour, faute de place : on le dit, une fois. */
   const [loss, setLoss] = useState<{ resource: ResourceId; amount: number } | null>(null);
   const [questsOpen, setQuestsOpen] = useState(false);
@@ -69,7 +85,6 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [absenceSeen, setAbsenceSeen] = useState(false);
   const absence: AbsenceSummary | null = absenceSeen ? null : store.getAbsence();
 
-  useEffect(() => store.start(), [store]);
   useEffect(
     () =>
       store.onEvents((events) => {
@@ -81,6 +96,27 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
           if (event.type === "chestOpened") setChest(event.loot);
+          if (event.type === "raidReturned" && !event.cancelled) {
+            setRaidNote({ won: event.won, gained: event.gained, losses: event.losses });
+          }
+          if (event.type === "attackRepelled") {
+            setAttackNote({
+              rival: event.rival,
+              repelled: true,
+              sugar: 0,
+              bricks: 0,
+              troopsLost: 0,
+            });
+          }
+          if (event.type === "attackSuffered") {
+            setAttackNote({
+              rival: event.rival,
+              repelled: false,
+              sugar: event.sugar,
+              bricks: event.bricks,
+              troopsLost: event.troopsLost,
+            });
+          }
           if (event.type === "huntReturned" && !event.cancelled) {
             setHuntNote({ won: event.won, gained: event.gained, losses: event.losses });
           }
@@ -88,6 +124,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       }),
     [store],
   );
+
+  // Après l'abonnement ci-dessus, pour ne manquer aucun événement du premier tic.
+  useEffect(() => store.start(), [store]);
 
   const creature = useMemo(
     () => describeCreature(state),
@@ -133,6 +172,18 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
     absence === null && reveal === null && state.mutationOffer !== null && show("mutationChoice");
 
   const onMap = view === "map" && show("map");
+  const onRivals = view === "rivals" && show("rivals");
+  const views: ("cell" | "map" | "rivals")[] = show("rivals")
+    ? ["cell", "map", "rivals"]
+    : ["cell", "map"];
+  const raid = state.raid;
+  /** Le groupe se bat chez un rival : le joueur peut l'aider. */
+  const raidStrikeLeft =
+    raid !== null && !raid.cancelled && raid.outcome === null && state.now >= raid.arrivesAt
+      ? raid.resolveAt - state.now
+      : null;
+  const rivalName = (id: string): string =>
+    visibleRivals(state.worldSeed, state.slot).find((rival) => rival.id === id)?.name ?? "";
 
   if (!store.isReady()) {
     return <main className="page" data-tier="loading" aria-busy="true" />;
@@ -219,7 +270,11 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         />
       )}
 
-      <section className="lens" hidden={onMap}>
+      {onRivals && (
+        <RivalsView state={state} lang={lang} onOrder={(order) => store.send(order).ok} />
+      )}
+
+      <section className="lens" hidden={onMap || onRivals}>
         <CellCanvas scene={scene} label={t("label.cell")} onTap={tap} />
         {!touched && state.counters.harvests === 0 && <p className="hint">{t("hint.tap")}</p>}
         {show("buildSlots") &&
@@ -255,7 +310,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
 
       {show("map") && (
         <div className="views" role="tablist">
-          {(["cell", "map"] as const).map((id) => (
+          {views.map((id) => (
             <button
               key={id}
               type="button"
@@ -364,6 +419,95 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         </button>
       )}
 
+      {raidStrikeLeft !== null && (
+        <button
+          type="button"
+          className="strike"
+          data-testid="strike-raid"
+          onClick={() => {
+            store.send({ type: "strikeRaid" });
+          }}
+        >
+          <strong>{t("action.strikeRaid")}</strong>
+          <span>
+            {t("raid.strikeHint")} {raid === null ? "" : rivalName(raid.rival)} ·{" "}
+            {formatDuration(raidStrikeLeft)}
+          </span>
+        </button>
+      )}
+
+      {raidNote !== null && (
+        <div
+          className={`loss${raidNote.won ? " is-good" : ""}`}
+          role="status"
+          data-testid="raid-note"
+        >
+          <strong>{raidNote.won ? t("raid.won") : t("raid.lost")}</strong>
+          <span className="chest-loot">
+            {raidNote.won &&
+              (["sugar", "bricks", "proteins"] as const)
+                .filter((id) => raidNote.gained[id] >= MICRO)
+                .map((id) => (
+                  <span key={id}>
+                    <ResourceIcon id={id} />+{formatAmount(raidNote.gained[id], lang)}
+                  </span>
+                ))}
+            <span>
+              {t("hunt.losses")} : {raidNote.losses}
+            </span>
+          </span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setRaidNote(null);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {attackNote !== null && (
+        <div
+          className={`loss${attackNote.repelled ? " is-good" : ""}`}
+          role="status"
+          data-testid="attack-note"
+        >
+          <strong>
+            {attackNote.repelled ? t("incoming.repelled") : t("incoming.suffered")}{" "}
+            {rivalName(attackNote.rival)}
+          </strong>
+          {!attackNote.repelled && (
+            <span className="chest-loot">
+              {t("incoming.lost")} :
+              <span>
+                <ResourceIcon id="sugar" />
+                {formatAmount(attackNote.sugar, lang)}
+              </span>
+              <span>
+                <ResourceIcon id="bricks" />
+                {formatAmount(attackNote.bricks, lang)}
+              </span>
+              <span>
+                {t("hunt.losses")} : {attackNote.troopsLost}
+              </span>
+            </span>
+          )}
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setAttackNote(null);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {huntNote !== null && (
         <div
           className={`loss${huntNote.won ? " is-good" : ""}`}
@@ -454,6 +598,16 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
                     {absence.expeditionsBack > 1 ? ` × ${String(absence.expeditionsBack)}` : ""}
                   </li>
                 )}
+              {((absence.attacksRepelled as number | undefined) ?? 0) > 0 && (
+                <li>
+                  {t("absence.repelled")} : {absence.attacksRepelled}
+                </li>
+              )}
+              {((absence.attacksSuffered as number | undefined) ?? 0) > 0 && (
+                <li>
+                  {t("absence.suffered")} : {absence.attacksSuffered}
+                </li>
+              )}
               {absence.constructionsDone.map((done) => (
                 <li key={done.organelle}>
                   <OrganelleIcon id={done.organelle} />
@@ -485,6 +639,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               onClick={() => {
                 // La carte vient de s'ouvrir : on y emmène le joueur.
                 if (reveal === 3) setView("map");
+                if (reveal === 5) setView("rivals");
                 setReveal(null);
               }}
             >

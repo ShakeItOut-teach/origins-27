@@ -52,6 +52,9 @@ export const en = {
   "loss.title": "Haul lost",
   "loss.text": "The store was full. Upgrade the Store to keep it all.",
   "absence.expedition": "Expedition back",
+  "absence.repelled": "Attacks pushed back",
+  "absence.suffered": "Attacks suffered",
+  "incoming.lost": "Lost",
 
   "resource.proteins": "Proteins",
   "organelle.nursery.name": "Nursery",
@@ -123,6 +126,7 @@ export const en = {
   "label.range": "between {a} and {b}",
   "label.strikeBonus": "Tap during the fight to help your cells.",
   "label.blind": "You attack without spying first.",
+  "label.raidChance": "Chance if you leave them to it",
   "action.spy": "Spy",
   "action.raid": "Attack",
   "action.strikeRaid": "Tap to help your cells!",

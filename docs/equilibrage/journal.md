@@ -154,3 +154,39 @@ la même liste : c'est prévu par la structure, il suffit d'une ligne par défi.
 
 **Reste à surveiller.** 6 protéines par coffre ordinaire, c'est un tiers de la première mutation
 payante : à vérifier que les coffres ne remplacent pas la chasse.
+
+## 2026-11-24 — Palier 5 : premiers chiffres des rivaux
+
+**Décidé par l'agent en l'absence du propriétaire** (voir la conception du palier 5). Tout est à relire.
+
+**Ce qui est posé.** Six voisins simulés par joueur. Garde d'un rival moyen : 8 le premier jour,
++4 par jour de saison ; force d'attaque : 5, +3 par jour ; butin : 120 sucres (+40 par jour),
+60 briques (+20), 6 protéines (+2). Chaque rival vaut entre 70 % et 130 % de ces valeurs.
+Attaquer : 2 points d'énergie, 4 ou 8 minutes aller-retour, toucher ajoute 15 points de chance,
+chaque survivante rapporte l'équivalent de 40 sucres, le rival se referme 6 heures.
+Espionner : 1 point d'énergie, valable 2 heures. Paroi : 180 sucres, 80 briques, 2 minutes,
++4 de défense par niveau. Attaques subies : protection de 12 heures à l'arrivée, puis une
+attaque toutes les 5 à 11 heures ; une attaque qui passe prend 20 % du sucre et des briques
+et 20 % des cellules à la maison, puis protège 8 heures.
+
+**Règle corrigée au passage.** Un palier soumis à un jour de saison s'ouvre désormais à minuit
+pile, pas « au retour du joueur » : c'était un défaut, révélé par les tests du palier 5.
+
+**Mesure** (robots, trois jours de jeu) :
+
+| Robot    | Palier 5                   | Première attaque | Attaques gagnées / perdues en 48 h | Attaques subies : repoussées / passées |
+| -------- | -------------------------- | ---------------- | ---------------------------------- | -------------------------------------- |
+| Appliqué | première seconde du jour 2 | aussitôt         | 1 à 3 / 0 à 1                      | 1 à 2 / 1 à 2                          |
+| Débutant | première seconde du jour 2 | aussitôt         | 1 à 2 / 0 à 2                      | 1 à 2 / 1 à 2                          |
+
+**Reste à surveiller.**
+
+- Les robots attaquent peu (une à trois fois en deux jours) : leurs cellules sont presque
+  toujours en chasse, et un rival pillé se referme six heures. À voir avec de vrais joueurs
+  si les rivaux pèsent assez dans une journée.
+- Les protéines s'accumulent vite (plus de 1 000 en trois jours pour un robot qui chasse sans
+  arrêt) alors que les six mutations coûtent 370 au total. Il manque une dépense de fin de
+  parcours pour les protéines.
+- La garde des rivaux grandit de 4 par jour : au jour 20, un rival moyen a une garde de 84,
+  hors de portée d'une Pouponnière de niveau 5 (30 cellules, 60 de force au mieux). C'est
+  voulu comme plafond provisoire, mais il faudra des troupes plus fortes ou des alliés avant.
