@@ -75,6 +75,32 @@ export interface Hunt {
   readonly cancelled: boolean;
 }
 
+/** Une attaque contre un rival : comme une chasse, mais le butin se prend chez lui. */
+export interface Raid {
+  /** Le rival visé (sa place dans la goutte, précédée de « r: »). */
+  readonly rival: string;
+  readonly kind: PreyKind;
+  /** Sa garde au moment du départ. */
+  readonly power: number;
+  /** Ce qu'il y avait à prendre au départ, en millionièmes d'unité. */
+  readonly sugar: number;
+  readonly bricks: number;
+  readonly proteins: number;
+  readonly energy: number;
+  readonly restMs: number;
+  readonly party: Readonly<Record<TroopId, number>>;
+  readonly startedAt: number;
+  readonly arrivesAt: number;
+  readonly resolveAt: number;
+  readonly returnsAt: number;
+  readonly outcome: {
+    readonly won: boolean;
+    readonly struck: boolean;
+    readonly losses: Readonly<Record<TroopId, number>>;
+  } | null;
+  readonly cancelled: boolean;
+}
+
 export interface Quest {
   readonly id: QuestId;
   /** Objectif et avancement : un nombre de fois, ou une quantité en millionièmes d'unité. */
@@ -93,7 +119,7 @@ export interface DailyQuests {
 }
 
 export interface PlayerState {
-  readonly version: 4;
+  readonly version: 5;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -127,6 +153,13 @@ export interface PlayerState {
   readonly hunt: Hunt | null;
   /** Quêtes du jour ; `null` tant que le joueur n'y a pas droit. */
   readonly quests: DailyQuests | null;
+  readonly raid: Raid | null;
+  /** Rivaux espionnés : pour chacun, l'instant où le renseignement expire. */
+  readonly spiedUntil: Readonly<Record<string, number>>;
+  /** Le joueur ne peut pas être attaqué avant cet instant. */
+  readonly shieldUntil: number;
+  /** Instant de la prochaine attaque subie ; `null` avant le palier des rivaux. */
+  readonly nextRaidAt: number | null;
 }
 
 export type GameEvent =
@@ -203,6 +236,44 @@ export type GameEvent =
       readonly challenge: boolean;
       /** Contenu, en unités entières. */
       readonly loot: Readonly<Partial<Record<ChestReward, number>>>;
+    }
+  | { readonly type: "rivalSpied"; readonly at: number; readonly rival: string }
+  | {
+      readonly type: "raidSent";
+      readonly at: number;
+      readonly rival: string;
+      readonly arrivesAt: number;
+      readonly returnsAt: number;
+    }
+  | { readonly type: "raidCancelled"; readonly at: number; readonly returnsAt: number }
+  | {
+      readonly type: "raidResolved";
+      readonly at: number;
+      readonly won: boolean;
+      readonly struck: boolean;
+      readonly losses: Readonly<Record<TroopId, number>>;
+    }
+  | {
+      readonly type: "raidReturned";
+      readonly at: number;
+      readonly rival: string;
+      readonly won: boolean;
+      /** Butin entré dans la réserve, par ressource, et total qui a débordé. */
+      readonly gained: Readonly<Record<ResourceId, number>>;
+      readonly lost: number;
+      readonly losses: number;
+      readonly cancelled: boolean;
+    }
+  /** Un rival a attaqué le joueur et a été repoussé. */
+  | { readonly type: "attackRepelled"; readonly at: number; readonly rival: string }
+  /** Un rival a attaqué le joueur et a pris une part de ses réserves. */
+  | {
+      readonly type: "attackSuffered";
+      readonly at: number;
+      readonly rival: string;
+      readonly sugar: number;
+      readonly bricks: number;
+      readonly troopsLost: number;
     };
 
 export type OrderErrorCode =
@@ -234,7 +305,11 @@ export type OrderErrorCode =
   | "noMoreMutations"
   | "noQuest"
   | "questNotDone"
-  | "alreadyClaimed";
+  | "alreadyClaimed"
+  | "unknownRival"
+  | "rivalClosed"
+  | "alreadySpied"
+  | "noRaid";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

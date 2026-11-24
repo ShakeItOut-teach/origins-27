@@ -1,5 +1,5 @@
 /**
- * Équilibrage des paliers 0 à 4.
+ * Équilibrage des paliers 0 à 5.
  * Tout changement se note dans docs/equilibrage/journal.md, avec la mesure avant et après.
  */
 import { BalanceSchema } from "./schema";
@@ -50,6 +50,14 @@ export const BALANCE: Balance = BalanceSchema.parse({
       maxLevel: 5,
       effect: { kind: "troopCapacity", base: 10, addPerLevel: 5 },
     },
+    wall: {
+      tier: 5,
+      buildCost: { sugar: 180, bricks: 80 },
+      buildSeconds: 120,
+      upgradeBricks: 100,
+      maxLevel: 5,
+      effect: { kind: "defense", perLevel: 4 },
+    },
   },
   mutations: {
     swiftCilia: { stat: "tapYield", percent: 50, trait: "longCilia" },
@@ -93,17 +101,47 @@ export const BALANCE: Balance = BalanceSchema.parse({
       strikeWin: { tier: 4, challenge: false, min: 1, max: 1 },
       cleanHunt: { tier: 4, challenge: false, min: 1, max: 1 },
       mutate: { tier: 4, challenge: false, min: 1, max: 1 },
+      spyRival: { tier: 5, challenge: false, min: 1, max: 2 },
       challengeFarHunt: { tier: 4, challenge: true, min: 1, max: 1 },
       challengeHunts: { tier: 4, challenge: true, min: 3, max: 4 },
       challengeExpeditions: { tier: 4, challenge: true, min: 6, max: 8 },
       challengeStrikes: { tier: 4, challenge: true, min: 2, max: 3 },
       challengeCleanHunts: { tier: 4, challenge: true, min: 2, max: 2 },
+      challengeRaid: { tier: 5, challenge: true, min: 1, max: 1 },
+      challengeRaids: { tier: 5, challenge: true, min: 2, max: 3 },
     },
   },
   chests: {
     normal: { sugar: 80, bricks: 40, proteins: 6, energy: 2 },
     challenge: { sugar: 200, bricks: 100, proteins: 15, energy: 4 },
     challengeDraws: 2,
+  },
+  rivals: {
+    count: 6,
+    temperMinPercent: 70,
+    temperMaxPercent: 130,
+    guard: { base: 8, perDay: 4 },
+    attack: { base: 5, perDay: 3 },
+    sugar: { base: 120, perDay: 40 },
+    bricks: { base: 60, perDay: 20 },
+    proteins: { base: 6, perDay: 2 },
+    raid: {
+      energy: 2,
+      nearSeconds: 240,
+      farSeconds: 480,
+      strikeBonusPercent: 15,
+      carryPerCell: 40,
+      restHours: 6,
+    },
+    spy: { energy: 1, hours: 2 },
+    incoming: {
+      firstShieldHours: 12,
+      minHours: 5,
+      maxHours: 11,
+      shieldHours: 8,
+      lossPercent: 20,
+      troopLossPercent: 20,
+    },
   },
   mutationPrices: [20, 50, 100],
   expedition: {

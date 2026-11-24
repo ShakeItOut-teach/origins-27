@@ -6,6 +6,7 @@ import { capacity, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
 import { partySize, resolveHunt, troopCapacity, troopsOwned } from "./hunt";
 import { openChest, trackQuests } from "./quests";
+import { raidOffer, resolveRaid, visibleRivals } from "./rivals";
 import { MICRO } from "./types";
 import { drawMutationOffer, orderTier } from "./unlock";
 import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
@@ -153,7 +154,8 @@ function sendHunt(
   preyId: string,
   party: Readonly<Record<TroopId, number>>,
 ): Outcome {
-  if (state.hunt !== null) return { error: "busy" };
+  // Chasse et attaque partent avec les mêmes cellules : une seule sortie à la fois.
+  if (state.hunt !== null || state.raid !== null) return { error: "busy" };
   const prey = visiblePrey(state.worldSeed, state.slot).find((entry) => entry.id === preyId);
   if (prey === undefined) return { error: "unknownPrey" };
   if ((state.placeReadyAt[preyId] ?? 0) > state.now) return { error: "placeResting" };
@@ -240,6 +242,93 @@ function buyMutation(state: PlayerState): Outcome {
   };
 }
 
+function spyRival(state: PlayerState, rivalId: string): Outcome {
+  const rival = visibleRivals(state.worldSeed, state.slot).find((entry) => entry.id === rivalId);
+  if (rival === undefined) return { error: "unknownRival" };
+  if ((state.spiedUntil[rivalId] ?? 0) > state.now) return { error: "alreadySpied" };
+  const spy = BALANCE.rivals.spy;
+  if (state.energy < spy.energy) return { error: "noEnergy" };
+  return {
+    state: {
+      ...state,
+      energy: state.energy - spy.energy,
+      spiedUntil: { ...state.spiedUntil, [rivalId]: state.now + spy.hours * 3_600_000 },
+    },
+    events: [{ type: "rivalSpied", at: state.now, rival: rivalId }],
+  };
+}
+
+function sendRaid(
+  state: PlayerState,
+  rivalId: string,
+  party: Readonly<Record<TroopId, number>>,
+): Outcome {
+  if (state.hunt !== null || state.raid !== null) return { error: "busy" };
+  const rival = visibleRivals(state.worldSeed, state.slot).find((entry) => entry.id === rivalId);
+  if (rival === undefined) return { error: "unknownRival" };
+  if ((state.placeReadyAt[rivalId] ?? 0) > state.now) return { error: "rivalClosed" };
+  if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {
+    return { error: "noTroops" };
+  }
+  const offer = raidOffer(state, rival, state.now);
+  if (state.energy < offer.energy) return { error: "noEnergy" };
+  const windowMs = BALANCE.hunt.strikeWindowSeconds * 1000;
+  const arrivesAt = state.now + (offer.durationMs - windowMs) / 2;
+  const returnsAt = state.now + offer.durationMs;
+  const troops = { ...state.troops };
+  for (const id of TROOP_IDS) troops[id] -= party[id];
+  return {
+    state: {
+      ...state,
+      energy: state.energy - offer.energy,
+      troops,
+      raid: {
+        rival: rivalId,
+        kind: rival.kind,
+        power: offer.guard,
+        sugar: offer.sugar * MICRO,
+        bricks: offer.bricks * MICRO,
+        proteins: offer.proteins * MICRO,
+        energy: offer.energy,
+        restMs: offer.restMs,
+        party: { hunter: party.hunter, armored: party.armored, swift: party.swift },
+        startedAt: state.now,
+        arrivesAt,
+        resolveAt: arrivesAt + windowMs,
+        returnsAt,
+        outcome: null,
+        cancelled: false,
+      },
+    },
+    events: [{ type: "raidSent", at: state.now, rival: rivalId, arrivesAt, returnsAt }],
+  };
+}
+
+/** Le joueur touche pendant que son groupe se bat chez le rival : il aide, sans garantie. */
+function strikeRaid(state: PlayerState): Outcome {
+  const raid = state.raid;
+  if (raid === null || raid.cancelled) return { error: "noRaid" };
+  if (raid.outcome !== null) return { error: "tooLate" };
+  if (state.now < raid.arrivesAt) return { error: "notFighting" };
+  return resolveRaid(state, raid, state.now, true);
+}
+
+function cancelRaid(state: PlayerState): Outcome {
+  const raid = state.raid;
+  if (raid === null || raid.cancelled) return { error: "noRaid" };
+  if (state.now >= raid.arrivesAt) return { error: "tooLate" };
+  const returnsAt =
+    state.now + cancelReturnMs(raid.startedAt, 2 * raid.arrivesAt - raid.startedAt, state.now);
+  return {
+    state: {
+      ...state,
+      energy: Math.min(BALANCE.energy.max, state.energy + raid.energy),
+      raid: { ...raid, returnsAt, cancelled: true },
+    },
+    events: [{ type: "raidCancelled", at: state.now, returnsAt }],
+  };
+}
+
 function claimQuest(state: PlayerState, index: number): Outcome {
   const quest = state.quests?.items[index];
   if (quest === undefined) return { error: "noQuest" };
@@ -274,6 +363,14 @@ function execute(state: PlayerState, order: Order): Outcome {
       return buyMutation(state);
     case "claimQuest":
       return claimQuest(state, order.index);
+    case "spyRival":
+      return spyRival(state, order.rival);
+    case "sendRaid":
+      return sendRaid(state, order.rival, order.party);
+    case "strikeRaid":
+      return strikeRaid(state);
+    case "cancelRaid":
+      return cancelRaid(state);
   }
 }
 

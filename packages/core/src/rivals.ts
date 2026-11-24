@@ -1,0 +1,290 @@
+/**
+ * Les rivaux : les voisins du joueur dans la goutte.
+ * Ce sont des organismes simulés. Rien n'est stocké : leur nom, leur tempérament, leur force
+ * et leur butin se calculent à partir de la graine du monde, de leur place et du jour de saison.
+ */
+import { BALANCE, ORGANELLE_IDS, PREY_KINDS, TROOP_IDS } from "@o27/data";
+import type { PreyKind, TroopId } from "@o27/data";
+import { lossesFor, partySize, winChance } from "./hunt";
+import { createRng } from "./rng";
+import type { Rng } from "./rng";
+import { MICRO } from "./types";
+import type { GameEvent, PlayerState, Raid, Step } from "./types";
+import { seasonDay } from "./unlock";
+import { slotPosition } from "./world";
+
+const HOUR_MS = 3_600_000;
+
+export interface Rival {
+  /** Sa place dans la goutte, précédée de « r: ». La même pour tous les joueurs. */
+  readonly id: string;
+  readonly name: string;
+  /** Teinte de sa créature, de 0 à 359. */
+  readonly hue: number;
+  /** Son tempérament : il fixe quel type de cellule fille compte double contre lui. */
+  readonly kind: PreyKind;
+  /** Voisin en diagonale : un peu plus loin. */
+  readonly far: boolean;
+  /** Sa valeur par rapport à un rival moyen, en pourcentage. */
+  readonly temper: number;
+}
+
+export interface RivalStats {
+  readonly guard: number;
+  readonly attack: number;
+  /** Ce qu'il y a à prendre, en unités entières. */
+  readonly sugar: number;
+  readonly bricks: number;
+  readonly proteins: number;
+}
+
+const NAME_START = ["Vo", "Li", "Ka", "Mu", "Ze", "Ty", "Or", "Ba", "Ni", "Sy", "Ra", "Pe"];
+const NAME_MIDDLE = ["ra", "mu", "lo", "xi", "ne", "ta", "vi", "go", "", ""];
+const NAME_END = ["x", "le", "s", "ris", "dia", "tor", "lla", "ne", "phe", "nor"];
+
+function cellRng(worldSeed: number, column: number, row: number): Rng {
+  const rng = createRng(
+    (worldSeed ^ 0x3c6ef372 ^ Math.imul(column, 0x9e3779b1) ^ Math.imul(row, 0x85ebca6b)) >>> 0,
+  );
+  rng.next();
+  rng.next();
+  return rng;
+}
+
+function rivalAt(worldSeed: number, column: number, row: number, far: boolean): Rival {
+  const rng = cellRng(worldSeed, column, row);
+  const pickFrom = (list: readonly string[]): string => list[rng.int(list.length)] ?? "";
+  const { temperMinPercent, temperMaxPercent } = BALANCE.rivals;
+  return {
+    id: `r:${String(column)}:${String(row)}`,
+    name: `${pickFrom(NAME_START)}${pickFrom(NAME_MIDDLE)}${pickFrom(NAME_END)}`,
+    hue: rng.int(360),
+    kind: PREY_KINDS[rng.int(PREY_KINDS.length)] ?? "soft",
+    far,
+    temper: temperMinPercent + rng.int(temperMaxPercent - temperMinPercent + 1),
+  };
+}
+
+const NEIGHBOURS = [
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+  [0, -1],
+  [1, 1],
+  [-1, 1],
+  [-1, -1],
+  [1, -1],
+] as const;
+
+/** Les voisins d'un joueur : d'abord les quatre directs, puis ceux en diagonale. */
+export function visibleRivals(worldSeed: number, slot: number): readonly Rival[] {
+  const spacing = BALANCE.world.playerSpacing;
+  const home = slotPosition(slot);
+  const column = home.x / spacing;
+  const row = home.y / spacing;
+  return NEIGHBOURS.slice(0, BALANCE.rivals.count).map(([dx, dy], index) =>
+    rivalAt(worldSeed, column + dx, row + dy, index >= 4),
+  );
+}
+
+/** Force et butin d'un rival un jour donné : il grandit avec la saison. */
+export function rivalStats(rival: Rival, day: number): RivalStats {
+  const data = BALANCE.rivals;
+  const grown = (line: { base: number; perDay: number }): number =>
+    Math.max(1, Math.round(((line.base + line.perDay * (day - 1)) * rival.temper) / 100));
+  return {
+    guard: grown(data.guard),
+    attack: grown(data.attack),
+    sugar: grown(data.sugar),
+    bricks: grown(data.bricks),
+    proteins: grown(data.proteins),
+  };
+}
+
+export interface RaidOffer extends RivalStats {
+  readonly energy: number;
+  /** Aller, combat et retour. */
+  readonly durationMs: number;
+  readonly restMs: number;
+}
+
+/** Ce qu'une attaque contre ce rival demande et peut rapporter, à cet instant. */
+export function raidOffer(state: PlayerState, rival: Rival, at: number): RaidOffer {
+  const raid = BALANCE.rivals.raid;
+  const seconds =
+    (rival.far ? raid.farSeconds : raid.nearSeconds) + BALANCE.hunt.strikeWindowSeconds;
+  return {
+    ...rivalStats(rival, seasonDay(state, at)),
+    energy: raid.energy,
+    durationMs: seconds * 1000,
+    restMs: raid.restHours * HOUR_MS,
+  };
+}
+
+/** Chances d'une attaque selon que le joueur touche ou non pendant le combat. */
+export function raidChance(base: number, struck: boolean): number {
+  return struck ? Math.min(99, base + BALANCE.rivals.raid.strikeBonusPercent) : base;
+}
+
+/** Défense du joueur : ses cellules à la maison, plus sa Paroi. Jamais nulle. */
+export function defensePower(state: PlayerState): number {
+  let total = 1 + partySize(state.troops);
+  for (const id of ORGANELLE_IDS) {
+    const effect = BALANCE.organelles[id].effect;
+    if (effect.kind === "defense") total += effect.perLevel * state.organelles[id];
+  }
+  return total;
+}
+
+/** Le combat de l'attaque en cours a lieu : le joueur vient de toucher, ou la fenêtre est passée. */
+export function resolveRaid(state: PlayerState, raid: Raid, at: number, struck: boolean): Step {
+  const base = winChance(raid.party, raid.kind, raid.power);
+  const rng = createRng(state.rngState);
+  const won = rng.int(100) < raidChance(base, struck);
+  const losses = lossesFor(raid.party, base, won);
+  return {
+    state: { ...state, rngState: rng.state, raid: { ...raid, outcome: { won, struck, losses } } },
+    events: [{ type: "raidResolved", at, won, struck, losses }],
+  };
+}
+
+/** Le groupe d'attaque est rentré : survivantes à la maison, butin dans la réserve. */
+export function raidBack(
+  state: PlayerState,
+  raid: Raid,
+  room: Readonly<Record<"sugar" | "bricks" | "proteins", number>>,
+): Step {
+  const won = raid.outcome?.won === true;
+  const losses = raid.outcome?.losses ?? { hunter: 0, armored: 0, swift: 0 };
+  const troops = { ...state.troops };
+  for (const id of TROOP_IDS) troops[id] += raid.party[id] - losses[id];
+
+  // Chaque survivante porte une charge limitée ; une brique pèse deux sucres.
+  const survivors = partySize(raid.party) - partySize(losses);
+  const carry = survivors * BALANCE.rivals.raid.carryPerCell * MICRO;
+  const weight = raid.sugar + 2 * raid.bricks;
+  const share = (amount: number): number =>
+    !won ? 0 : weight <= carry ? amount : Math.floor((amount * carry) / weight);
+  const taken = {
+    sugar: share(raid.sugar),
+    bricks: share(raid.bricks),
+    proteins: share(raid.proteins),
+  };
+  const gained = {
+    sugar: Math.min(Math.max(0, room.sugar), taken.sugar),
+    bricks: Math.min(Math.max(0, room.bricks), taken.bricks),
+    proteins: Math.min(Math.max(0, room.proteins), taken.proteins),
+  };
+  const lost =
+    taken.sugar -
+    gained.sugar +
+    (taken.bricks - gained.bricks) +
+    (taken.proteins - gained.proteins);
+
+  return {
+    state: {
+      ...state,
+      raid: null,
+      troops,
+      resources: {
+        sugar: state.resources.sugar + gained.sugar,
+        bricks: state.resources.bricks + gained.bricks,
+        proteins: state.resources.proteins + gained.proteins,
+      },
+      // Un combat mené jusqu'au bout compte, gagné ou perdu.
+      counters: raid.cancelled
+        ? state.counters
+        : { ...state.counters, rivalFights: state.counters.rivalFights + 1 },
+      placeReadyAt: won
+        ? { ...state.placeReadyAt, [raid.rival]: raid.returnsAt + raid.restMs }
+        : state.placeReadyAt,
+    },
+    events: [
+      {
+        type: "raidReturned",
+        at: raid.returnsAt,
+        rival: raid.rival,
+        won,
+        gained,
+        lost,
+        losses: partySize(losses),
+        cancelled: raid.cancelled,
+      },
+    ],
+  };
+}
+
+/** Délai avant la prochaine attaque subie, tiré d'après la graine du joueur et l'instant. */
+function nextDelay(state: PlayerState, at: number): number {
+  const { minHours, maxHours } = BALANCE.rivals.incoming;
+  const rng = createRng((state.seed ^ Math.imul(Math.floor(at / 1000), 0x9e3779b1)) >>> 0);
+  rng.next();
+  const minutes = minHours * 60 + rng.int((maxHours - minHours) * 60 + 1);
+  return minutes * 60_000;
+}
+
+/** Protège un joueur qui arrive au palier des rivaux et programme la première attaque. */
+export function ensureIncoming(state: PlayerState, at: number): PlayerState {
+  if (state.nextRaidAt !== null || state.tier < BALANCE.organelles.wall.tier) return state;
+  const shieldUntil = at + BALANCE.rivals.incoming.firstShieldHours * HOUR_MS;
+  return { ...state, shieldUntil, nextRaidAt: shieldUntil + nextDelay(state, at) };
+}
+
+/** Un voisin attaque le joueur. Ses cellules à la maison et sa Paroi le défendent. */
+export function resolveIncoming(state: PlayerState, at: number): Step {
+  const rivals = visibleRivals(state.worldSeed, state.slot);
+  const rng = createRng(
+    (state.seed ^ 0x51ed270b ^ Math.imul(Math.floor(at / 1000), 0x85ebca6b)) >>> 0,
+  );
+  rng.next();
+  const attacker = rivals[rng.int(rivals.length)];
+  if (attacker === undefined) return { state: { ...state, nextRaidAt: null }, events: [] };
+  const attack = rivalStats(attacker, seasonDay(state, at)).attack;
+  const defense = defensePower(state);
+  const chance = Math.max(5, Math.min(95, Math.round((100 * defense) / (defense + attack))));
+  const counters = { ...state.counters, rivalFights: state.counters.rivalFights + 1 };
+
+  if (rng.int(100) < chance) {
+    return {
+      state: { ...state, counters, nextRaidAt: at + nextDelay(state, at) },
+      events: [{ type: "attackRepelled", at, rival: attacker.id }],
+    };
+  }
+
+  const incoming = BALANCE.rivals.incoming;
+  const sugar = Math.floor((state.resources.sugar * incoming.lossPercent) / 100);
+  const bricks = Math.floor((state.resources.bricks * incoming.lossPercent) / 100);
+  const troops: Record<TroopId, number> = { ...state.troops };
+  let toLose = Math.floor((partySize(troops) * incoming.troopLossPercent) / 100);
+  const troopsLost = toLose;
+  while (toLose > 0) {
+    let biggest: TroopId = "hunter";
+    for (const id of TROOP_IDS) if (troops[id] > troops[biggest]) biggest = id;
+    troops[biggest] -= 1;
+    toLose -= 1;
+  }
+  const shieldUntil = at + incoming.shieldHours * HOUR_MS;
+  const event: GameEvent = {
+    type: "attackSuffered",
+    at,
+    rival: attacker.id,
+    sugar,
+    bricks,
+    troopsLost,
+  };
+  return {
+    state: {
+      ...state,
+      counters,
+      troops,
+      resources: {
+        ...state.resources,
+        sugar: state.resources.sugar - sugar,
+        bricks: state.resources.bricks - bricks,
+      },
+      shieldUntil,
+      nextRaidAt: shieldUntil + nextDelay(state, at),
+    },
+    events: [event],
+  };
+}

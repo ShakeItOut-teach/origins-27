@@ -30,6 +30,8 @@ export const OrganelleEffectSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("tapYield"), addPercentPerLevel: positiveInt }),
   /** Nombre maximal de cellules filles : `base` au niveau 1, puis `addPerLevel` par niveau. */
   z.strictObject({ kind: z.literal("troopCapacity"), base: positiveInt, addPerLevel: positiveInt }),
+  /** Points de défense ajoutés par niveau, contre les attaques des rivaux. */
+  z.strictObject({ kind: z.literal("defense"), perLevel: positiveInt }),
 ]);
 
 export const OrganelleSchema = z.strictObject({
@@ -71,6 +73,7 @@ export const BalanceSchema = z.strictObject({
     cilia: OrganelleSchema,
     ribosome: OrganelleSchema,
     nursery: OrganelleSchema,
+    wall: OrganelleSchema,
   } satisfies Record<(typeof ORGANELLE_IDS)[number], unknown>),
   mutations: z.strictObject({
     swiftCilia: MutationSchema,
@@ -166,6 +169,46 @@ export const BalanceSchema = z.strictObject({
     }),
     challengeDraws: positiveInt,
   }),
+  /** Les voisins du joueur. Leur force et leur butin grandissent avec les jours de la saison. */
+  rivals: z.strictObject({
+    /** Nombre de voisins visibles. */
+    count: positiveInt,
+    /** Tempérament : chaque rival vaut entre ces deux pourcentages de la valeur de base. */
+    temperMinPercent: positiveInt,
+    temperMaxPercent: positiveInt,
+    /** Valeur au premier jour, puis ajout par jour de saison. */
+    guard: z.strictObject({ base: positiveInt, perDay: positiveInt }),
+    attack: z.strictObject({ base: positiveInt, perDay: positiveInt }),
+    sugar: z.strictObject({ base: positiveInt, perDay: positiveInt }),
+    bricks: z.strictObject({ base: positiveInt, perDay: positiveInt }),
+    proteins: z.strictObject({ base: positiveInt, perDay: positiveInt }),
+    raid: z.strictObject({
+      energy: positiveInt,
+      /** Durée de l'aller-retour vers un voisin direct, puis vers un voisin en diagonale. */
+      nearSeconds: positiveInt,
+      farSeconds: positiveInt,
+      /** Points de chance ajoutés si le joueur touche pendant le combat. Pas de victoire certaine. */
+      strikeBonusPercent: z.number().int().min(0).max(50),
+      /** Charge que chaque survivante rapporte, en unités de sucre (une brique en vaut deux). */
+      carryPerCell: positiveInt,
+      /** Après un pillage, le rival se referme ce nombre d'heures. */
+      restHours: positiveInt,
+    }),
+    spy: z.strictObject({ energy: positiveInt, hours: positiveInt }),
+    /** Les attaques que le joueur subit. */
+    incoming: z.strictObject({
+      /** Protection d'un joueur qui vient d'arriver au palier des rivaux. */
+      firstShieldHours: positiveInt,
+      /** Délai, après la fin d'une protection, avant la prochaine attaque. */
+      minHours: positiveInt,
+      maxHours: positiveInt,
+      /** Protection accordée après une attaque subie. */
+      shieldHours: positiveInt,
+      /** Part du sucre et des briques perdue quand l'attaque passe. */
+      lossPercent: z.number().int().min(1).max(90),
+      troopLossPercent: z.number().int().min(0).max(90),
+    }),
+  }),
   /** Prix en protéines de chaque nouvelle mutation ; le dernier prix vaut pour toutes les suivantes. */
   mutationPrices: z.array(positiveInt).min(1),
   /** Géométrie de la goutte, en unités de carte. Entiers uniquement. */
@@ -232,6 +275,22 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("buyMutation") }),
   /** Ouvrir le coffre d'une quête terminée, désignée par sa position dans la liste du jour. */
   z.strictObject({ type: z.literal("claimQuest"), index: z.number().int().min(0).max(9) }),
+  /** Un rival est désigné par sa place dans la goutte, précédée de « r: ». */
+  z.strictObject({
+    type: z.literal("spyRival"),
+    rival: z.string().regex(/^r:-?\d{1,6}:-?\d{1,6}$/),
+  }),
+  z.strictObject({
+    type: z.literal("sendRaid"),
+    rival: z.string().regex(/^r:-?\d{1,6}:-?\d{1,6}$/),
+    party: z.strictObject({
+      hunter: z.number().int().min(0).max(500),
+      armored: z.number().int().min(0).max(500),
+      swift: z.number().int().min(0).max(500),
+    }),
+  }),
+  z.strictObject({ type: z.literal("strikeRaid") }),
+  z.strictObject({ type: z.literal("cancelRaid") }),
 ]);
 export type Order = z.infer<typeof OrderSchema>;
 

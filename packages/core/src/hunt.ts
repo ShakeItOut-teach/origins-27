@@ -83,6 +83,10 @@ export function troopsOwned(state: PlayerState): number {
     total += partySize(state.hunt.party);
     if (state.hunt.outcome !== null) total -= partySize(state.hunt.outcome.losses);
   }
+  if (state.raid !== null) {
+    total += partySize(state.raid.party);
+    if (state.raid.outcome !== null) total -= partySize(state.raid.outcome.losses);
+  }
   return total;
 }
 

@@ -6,7 +6,14 @@
 export const RESOURCE_IDS = ["sugar", "bricks", "proteins"] as const;
 export type ResourceId = (typeof RESOURCE_IDS)[number];
 
-export const ORGANELLE_IDS = ["mitochondrion", "vacuole", "cilia", "ribosome", "nursery"] as const;
+export const ORGANELLE_IDS = [
+  "mitochondrion",
+  "vacuole",
+  "cilia",
+  "ribosome",
+  "nursery",
+  "wall",
+] as const;
 export type OrganelleId = (typeof ORGANELLE_IDS)[number];
 
 export const MUTATION_IDS = [
@@ -60,6 +67,10 @@ export const ORDER_TYPES = [
   "cancelHunt",
   "buyMutation",
   "claimQuest",
+  "spyRival",
+  "sendRaid",
+  "strikeRaid",
+  "cancelRaid",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
@@ -100,11 +111,14 @@ export const QUEST_IDS = [
   "strikeWin",
   "cleanHunt",
   "mutate",
+  "spyRival",
   "challengeFarHunt",
   "challengeHunts",
   "challengeExpeditions",
   "challengeStrikes",
   "challengeCleanHunts",
+  "challengeRaid",
+  "challengeRaids",
 ] as const;
 export type QuestId = (typeof QUEST_IDS)[number];
 

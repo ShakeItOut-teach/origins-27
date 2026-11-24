@@ -2,9 +2,11 @@
 import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import { capacity, productionRate } from "./stats";
 import { partySize, resolveHunt } from "./hunt";
-import { ensureQuests, questsRenewAt, renewQuests, trackQuests } from "./quests";
+import { ensureQuests, renewQuests, trackQuests } from "./quests";
+import { ensureIncoming, raidBack, resolveIncoming, resolveRaid } from "./rivals";
 import type { Construction, Expedition, GameEvent, Hunt, PlayerState, Step } from "./types";
-import { evaluateTier } from "./unlock";
+import { DAY_MS } from "./types";
+import { evaluateTier, seasonDay } from "./unlock";
 import { energyAt } from "./world";
 
 /** Produit jusqu'à l'instant `to`, sans dépasser le stockage. */
@@ -123,85 +125,110 @@ function huntBack(state: PlayerState, hunt: Hunt): Step {
   };
 }
 
-/** Prochain instant où la chasse en cours demande quelque chose : le combat, puis le retour. */
-function huntDue(hunt: Hunt | null): number {
-  if (hunt === null) return Number.POSITIVE_INFINITY;
-  return hunt.cancelled || hunt.outcome !== null ? hunt.returnsAt : hunt.resolveAt;
+/** Prochain instant où un groupe sorti (chasse ou attaque) demande quelque chose : le combat, puis le retour. */
+function sortieDue(
+  sortie: {
+    readonly cancelled: boolean;
+    readonly outcome: unknown;
+    readonly returnsAt: number;
+    readonly resolveAt: number;
+  } | null,
+): number {
+  if (sortie === null) return Number.POSITIVE_INFINITY;
+  return sortie.cancelled || sortie.outcome !== null ? sortie.returnsAt : sortie.resolveAt;
 }
 
 /** Énergie remise à jour, lieux regarnis oubliés. */
 function settle(state: PlayerState, now: number): PlayerState {
   const energy = energyAt(state, now);
   const resting = Object.entries(state.placeReadyAt).filter(([, readyAt]) => readyAt > now);
-  const pruned = resting.length !== Object.keys(state.placeReadyAt).length;
+  const spied = Object.entries(state.spiedUntil).filter(([, until]) => until > now);
+  const pruned =
+    resting.length !== Object.keys(state.placeReadyAt).length ||
+    spied.length !== Object.keys(state.spiedUntil).length;
   if (energy.energy === state.energy && energy.energyAt === state.energyAt && !pruned) return state;
   return {
     ...state,
     ...energy,
-    placeReadyAt: pruned ? Object.fromEntries(resting) : state.placeReadyAt,
+    placeReadyAt: Object.fromEntries(resting),
+    spiedUntil: Object.fromEntries(spied),
   };
 }
 
 /**
- * Amène l'état à l'instant `now`. Chaque événement daté (fin de chantier, retour) est résolu
- * à son heure exacte : avancer en une fois ou en plusieurs donne le même résultat.
+ * Amène l'état à l'instant `now`. Chaque événement daté (fin de chantier, naissance, retour,
+ * combat, attaque subie, minuit) est résolu à son heure exacte : avancer en une fois ou en
+ * plusieurs donne le même résultat.
  */
 export function advance(state: PlayerState, now: number): Step {
   if (!Number.isSafeInteger(now) || now < state.now) {
     throw new RangeError("advance : le temps ne peut pas reculer");
   }
+  const never = Number.POSITIVE_INFINITY;
   let current = state;
   const events: GameEvent[] = [];
   for (;;) {
-    const { construction, expedition, training, hunt } = current;
-    const buildEnd = construction?.endsAt ?? Number.POSITIVE_INFINITY;
-    const tripEnd = expedition?.returnsAt ?? Number.POSITIVE_INFINITY;
-    const birth = training?.nextAt ?? Number.POSITIVE_INFINITY;
-    const huntAt = huntDue(hunt);
-    const renewAt = questsRenewAt(current);
-    const at = Math.min(buildEnd, tripEnd, birth, huntAt, renewAt);
+    const { construction, expedition, training, hunt, raid } = current;
+    const buildEnd = construction?.endsAt ?? never;
+    const birth = training?.nextAt ?? never;
+    const tripEnd = expedition?.returnsAt ?? never;
+    const huntAt = sortieDue(hunt);
+    const raidAt = sortieDue(raid);
+    const attackAt = current.nextRaidAt ?? never;
+    // Chaque minuit de saison est un événement : les quêtes changent, et un palier qui
+    // attendait son jour s'ouvre à cet instant précis, pas « quand le joueur revient ».
+    const midnight = current.seasonStart + seasonDay(current, current.now) * DAY_MS;
+    const at = Math.min(buildEnd, birth, tripEnd, huntAt, raidAt, attackAt, midnight);
     if (at > now) break;
-    // Minuit passe avant tout le reste : ce qui arrive à minuit pile compte pour le nouveau jour.
-    if (renewAt === at) {
-      // L'énergie est d'abord mise à jour : le coffre ouvert à minuit s'ajoute à la vraie jauge.
-      const renewed = renewQuests(settle(produce(current, at), at), at);
-      current = renewed.state;
-      events.push(...renewed.events);
-      continue;
-    }
     const seen = events.length;
-    // À la même milliseconde, l'ordre est fixe : chantier, naissance, expédition, chasse.
-    // Le chantier passe d'abord : la réserve agrandie accueille le butin.
-    if (training !== null && birth === at && buildEnd > at) {
-      const step = born(produce(current, at));
-      current = step.state;
-      events.push(...step.events);
-    } else if (hunt !== null && huntAt === at && buildEnd > at && tripEnd > at) {
-      const ready = produce(current, at);
-      const step =
+    const ready = produce(current, at);
+    // À la même milliseconde, l'ordre est fixe : chantier, naissance, expédition, chasse,
+    // attaque envoyée, attaque subie. Le chantier d'abord : la réserve agrandie accueille le butin.
+    // Minuit passe avant tout le reste : ce qui arrive à minuit pile compte pour le nouveau jour.
+    let step: Step;
+    if (midnight === at) {
+      // L'énergie est d'abord mise à jour : le coffre ouvert à minuit s'ajoute à la vraie jauge.
+      step =
+        ready.quests === null ? { state: ready, events: [] } : renewQuests(settle(ready, at), at);
+    } else if (construction !== null && buildEnd === at) {
+      step = {
+        state: complete(ready, construction),
+        events: [
+          {
+            type: "constructionDone",
+            at,
+            organelle: construction.organelle,
+            level: construction.toLevel,
+          },
+        ],
+      };
+    } else if (training !== null && birth === at) {
+      step = born(ready);
+    } else if (expedition !== null && tripEnd === at) {
+      step = comeBack(ready, expedition);
+    } else if (hunt !== null && huntAt === at) {
+      step =
         hunt.cancelled || hunt.outcome !== null
           ? huntBack(ready, hunt)
           : resolveHunt(ready, hunt, at, false);
-      current = step.state;
-      events.push(...step.events);
-    } else if (construction !== null && buildEnd <= tripEnd) {
-      current = complete(produce(current, at), construction);
-      events.push({
-        type: "constructionDone",
-        at,
-        organelle: construction.organelle,
-        level: construction.toLevel,
-      });
-    } else if (expedition !== null) {
-      const back = comeBack(produce(current, at), expedition);
-      current = back.state;
-      events.push(...back.events);
+    } else if (raid !== null && raidAt === at) {
+      step =
+        raid.cancelled || raid.outcome !== null
+          ? raidBack(ready, raid, {
+              sugar: capacity(ready, "sugar") - ready.resources.sugar,
+              bricks: capacity(ready, "bricks") - ready.resources.bricks,
+              proteins: capacity(ready, "proteins") - ready.resources.proteins,
+            })
+          : resolveRaid(ready, raid, at, false);
+    } else {
+      step = resolveIncoming(ready, at);
     }
-    const step = evaluateTier(current, at);
     events.push(...step.events);
-    current = trackQuests(ensureQuests(step.state, at), events.slice(seen));
+    const tiers = evaluateTier(step.state, at);
+    events.push(...tiers.events);
+    current = trackQuests(ensureIncoming(ensureQuests(tiers.state, at), at), events.slice(seen));
   }
   const step = evaluateTier(settle(produce(current, now), now), now);
   events.push(...step.events);
-  return { state: ensureQuests(step.state, now), events };
+  return { state: ensureIncoming(ensureQuests(step.state, now), now), events };
 }

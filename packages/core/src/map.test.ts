@@ -393,7 +393,7 @@ describe("garanties du moteur avec la carte", () => {
     const text = JSON.stringify({ ...old, version: 1 });
 
     const alone = deserializeState(text);
-    expect(alone.version).toBe(4);
+    expect(alone.version).toBe(5);
     expect(alone.counters.harvests).toBe(10);
     expect(alone.energy).toBe(BALANCE.energy.max);
     expect(alone.slot).toBe(0);

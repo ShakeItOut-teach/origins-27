@@ -135,7 +135,18 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
     case "huntSent":
     case "huntCancelled":
     case "chestOpened":
+    case "raidSent":
+    case "raidCancelled":
+    case "raidResolved":
+    case "attackRepelled":
+    case "attackSuffered":
       return 0;
+    case "rivalSpied":
+      return id === "spyRival" ? 1 : 0;
+    case "raidReturned":
+      return (id === "challengeRaid" || id === "challengeRaids") && event.won && !event.cancelled
+        ? 1
+        : 0;
   }
 }
 

@@ -19,6 +19,7 @@ import type {
   GameEvent,
   Hunt,
   PlayerState,
+  Raid,
   Training,
 } from "./types";
 
@@ -41,8 +42,12 @@ export function createPlayer(
 ): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 4,
+    version: 5,
     quests: null,
+    raid: null,
+    spiedUntil: {},
+    shieldUntil: 0,
+    nextRaidAt: null,
     worldSeed: (world?.worldSeed ?? seed) >>> 0,
     slot: world?.slot ?? 0,
     energy: BALANCE.energy.max,
@@ -184,6 +189,40 @@ export function serializeState(state: PlayerState): string {
               claimed: quest.claimed,
             })),
           },
+    raid:
+      state.raid === null
+        ? null
+        : {
+            rival: state.raid.rival,
+            kind: state.raid.kind,
+            power: state.raid.power,
+            sugar: state.raid.sugar,
+            bricks: state.raid.bricks,
+            proteins: state.raid.proteins,
+            energy: state.raid.energy,
+            restMs: state.raid.restMs,
+            party: pick(TROOP_IDS, state.raid.party),
+            startedAt: state.raid.startedAt,
+            arrivesAt: state.raid.arrivesAt,
+            resolveAt: state.raid.resolveAt,
+            returnsAt: state.raid.returnsAt,
+            outcome:
+              state.raid.outcome === null
+                ? null
+                : {
+                    won: state.raid.outcome.won,
+                    struck: state.raid.outcome.struck,
+                    losses: pick(TROOP_IDS, state.raid.outcome.losses),
+                  },
+            cancelled: state.raid.cancelled,
+          },
+    spiedUntil: Object.fromEntries(
+      Object.keys(state.spiedUntil)
+        .sort()
+        .map((id) => [id, state.spiedUntil[id]]),
+    ),
+    shieldUntil: state.shieldUntil,
+    nextRaidAt: state.nextRaidAt,
     troops: pick(TROOP_IDS, state.troops),
     training:
       state.training === null
@@ -266,7 +305,7 @@ function readConstruction(value: unknown): Construction | null {
   return { organelle, toLevel, endsAt };
 }
 
-const PLACE_ID = /^(h:)?-?\d{1,6}:-?\d{1,6}$/;
+const PLACE_ID = /^(h:|r:)?-?\d{1,6}:-?\d{1,6}$/;
 
 function readExpedition(value: unknown): Expedition | null {
   if (value === null) return null;
@@ -365,6 +404,64 @@ function readHunt(value: unknown): Hunt | null {
   };
 }
 
+function readRaid(value: unknown): Raid | null {
+  if (value === null) return null;
+  if (!isRecord(value)) throw new TypeError("sauvegarde invalide : attaque");
+  const kind = PREY_KINDS.find((id) => id === value.kind);
+  const { rival, power, sugar, bricks, proteins, energy, restMs } = value;
+  const { startedAt, arrivesAt, resolveAt, returnsAt, cancelled, outcome } = value;
+  if (
+    kind === undefined ||
+    typeof rival !== "string" ||
+    !PLACE_ID.test(rival) ||
+    !isCount(power) ||
+    !isCount(sugar) ||
+    !isCount(bricks) ||
+    !isCount(proteins) ||
+    !isCount(energy) ||
+    !isCount(restMs) ||
+    !isCount(startedAt) ||
+    !isCount(arrivesAt) ||
+    !isCount(resolveAt) ||
+    !isCount(returnsAt) ||
+    typeof cancelled !== "boolean"
+  ) {
+    throw new TypeError("sauvegarde invalide : attaque");
+  }
+  let result: Raid["outcome"] = null;
+  if (outcome !== null) {
+    if (
+      !isRecord(outcome) ||
+      typeof outcome.won !== "boolean" ||
+      typeof outcome.struck !== "boolean"
+    ) {
+      throw new TypeError("sauvegarde invalide : issue de l'attaque");
+    }
+    result = {
+      won: outcome.won,
+      struck: outcome.struck,
+      losses: readCounts(TROOP_IDS, outcome.losses),
+    };
+  }
+  return {
+    rival,
+    kind,
+    power,
+    sugar,
+    bricks,
+    proteins,
+    energy,
+    restMs,
+    party: readCounts(TROOP_IDS, value.party),
+    startedAt,
+    arrivesAt,
+    resolveAt,
+    returnsAt,
+    outcome: result,
+    cancelled,
+  };
+}
+
 function readQuests(value: unknown): DailyQuests | null {
   if (value === null) return null;
   if (!isRecord(value) || !isCount(value.day) || !Array.isArray(value.items)) {
@@ -404,7 +501,7 @@ export function needsWorldPlace(text: string): boolean {
 export function deserializeState(text: string, world?: WorldPlace): PlayerState {
   const raw: unknown = JSON.parse(text);
   const version = raw !== null && isRecord(raw) ? raw.version : undefined;
-  if (!isRecord(raw) || typeof version !== "number" || ![1, 2, 3, 4].includes(version)) {
+  if (!isRecord(raw) || typeof version !== "number" || ![1, 2, 3, 4, 5].includes(version)) {
     throw new TypeError("sauvegarde invalide : version");
   }
   const old = version === 1;
@@ -427,7 +524,12 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     throw new TypeError("sauvegarde invalide : carte");
   }
   return {
-    version: 4,
+    version: 5,
+    // Avant les rivaux : ni attaque en cours, ni espionnage, ni protection.
+    raid: version < 5 ? null : readRaid(raw.raid),
+    spiedUntil: version < 5 ? {} : readPlaceTimes(raw.spiedUntil),
+    shieldUntil: version < 5 || !isCount(raw.shieldUntil) ? 0 : raw.shieldUntil,
+    nextRaidAt: version < 5 || !isCount(raw.nextRaidAt) ? null : raw.nextRaidAt,
     // Avant les quêtes : le joueur en recevra dès que le temps avancera.
     quests: version < 4 ? null : readQuests(raw.quests),
     troops: beforeHunt ? fill(TROOP_IDS, 0) : readCounts(TROOP_IDS, raw.troops),
@@ -447,7 +549,7 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     organelles: readCounts<OrganelleId>(
       ORGANELLE_IDS,
       raw.organelles,
-      beforeHunt ? ["nursery"] : [],
+      beforeHunt ? ["nursery", "wall"] : version < 5 ? ["wall"] : [],
     ),
     construction: readConstruction(raw.construction),
     mutations: readMutations(raw.mutations),

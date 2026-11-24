@@ -382,14 +382,21 @@ describe("les protéines paient l'évolution", () => {
     expect(refusal(all, { type: "buyMutation" }, T0)).toBe("noMoreMutations");
   });
 
-  it("le palier 5 n'est pas livré : une chasse gagnée ne fait pas dépasser le palier 4", () => {
+  it("une chasse gagnée ouvre le palier 5 au deuxième jour de la saison, à minuit pile", () => {
     const target = prey(0);
     const strong = strongType(target);
     const sent = ok(atTier4({ [strong]: 3 }), hunt(target, party({ [strong]: 3 })), T0);
     const struck = ok(sent, { type: "strikeHunt" }, sent.hunt?.arrivesAt ?? T0);
-    const home = advance(struck, T0 + 30 * 86_400_000).state;
-    expect(home.counters.huntsWon).toBe(1);
-    expect(home.tier).toBe(4);
+    const day = 86_400_000;
+    expect(advance(struck, T0 + day - 1).state.tier).toBe(4);
+    const opened = advance(struck, T0 + day);
+    expect(opened.state.tier).toBe(5);
+    expect(opened.events).toContainEqual({ type: "tierReached", at: T0 + day, tier: 5 });
+    // Revenir trois jours plus tard donne le même instant d'ouverture.
+    const late = advance(struck, T0 + 4 * day);
+    expect(late.events).toContainEqual({ type: "tierReached", at: T0 + day, tier: 5 });
+    // Le palier 6 n'est pas livré.
+    expect(advance(struck, T0 + 30 * day).state.tier).toBe(5);
   });
 });
 
@@ -496,7 +503,7 @@ describe("garanties du moteur avec la chasse", () => {
       ),
     });
     const back = deserializeState(text);
-    expect(back.version).toBe(4);
+    expect(back.version).toBe(5);
     expect(back.resources).toEqual({ sugar: 500 * MICRO, bricks: 300 * MICRO, proteins: 0 });
     expect(back.organelles.nursery).toBe(0);
     expect(back.troops).toEqual(NONE);

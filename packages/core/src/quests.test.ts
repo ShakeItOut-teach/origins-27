@@ -114,7 +114,9 @@ describe("tirage des quêtes du jour", () => {
         state = advance(state, T0 + day * DAY_MS).state;
       }
     }
-    expect([...seen].sort()).toEqual([...QUEST_IDS].sort());
+    // Les quêtes du palier des rivaux ne sortent pas pour un joueur qui n'y est pas encore.
+    const expected = QUEST_IDS.filter((id) => BALANCE.quests.pool[id].tier <= 4);
+    expect([...seen].sort()).toEqual([...expected].sort());
   });
 
   it("jamais les mêmes quêtes que la veille", () => {
