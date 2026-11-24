@@ -6,7 +6,7 @@ import { capacity, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
 import { partySize, resolveHunt, troopCapacity, troopsOwned } from "./hunt";
 import { openChest, trackQuests } from "./quests";
-import { dropShield, goAway, raidOffer, resolveRaid, setNight, visibleRivals } from "./rivals";
+import { dropShield, goAway, raidOffer, reachableRivals, resolveRaid, setNight } from "./rivals";
 import { MICRO } from "./types";
 import { drawMutationOffer, orderTier } from "./unlock";
 import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
@@ -243,7 +243,7 @@ function buyMutation(state: PlayerState): Outcome {
 }
 
 function spyRival(state: PlayerState, rivalId: string): Outcome {
-  const rival = visibleRivals(state.worldSeed, state.slot).find((entry) => entry.id === rivalId);
+  const rival = reachableRivals(state).find((entry) => entry.id === rivalId);
   if (rival === undefined) return { error: "unknownRival" };
   if ((state.spiedUntil[rivalId] ?? 0) > state.now) return { error: "alreadySpied" };
   const spy = BALANCE.rivals.spy;
@@ -264,7 +264,7 @@ function sendRaid(
   party: Readonly<Record<TroopId, number>>,
 ): Outcome {
   if (state.hunt !== null || state.raid !== null) return { error: "busy" };
-  const rival = visibleRivals(state.worldSeed, state.slot).find((entry) => entry.id === rivalId);
+  const rival = reachableRivals(state).find((entry) => entry.id === rivalId);
   if (rival === undefined) return { error: "unknownRival" };
   if ((state.placeReadyAt[rivalId] ?? 0) > state.now) return { error: "rivalClosed" };
   if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {

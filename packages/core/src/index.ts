@@ -37,10 +37,14 @@ export {
   protectedUntil,
   raidChance,
   raidOffer,
+  farLootPercent,
+  reachableRivals,
   rivalStats,
   visibleRivals,
+  worldOrganisms,
+  worldRivals,
 } from "./rivals";
-export type { RaidOffer, Rival, RivalStats } from "./rivals";
+export type { Organism, RaidOffer, Rival, RivalStats } from "./rivals";
 export { evaluateTier, orderTier, seasonDay } from "./unlock";
 export {
   capacity,
@@ -61,9 +65,11 @@ export {
 export type { AbsenceSummary, Creature, WorldPlace } from "./player";
 export {
   cancelReturnMs,
+  cellSlot,
   energyAt,
   placeOffer,
   preyOffer,
+  slotCell,
   slotPosition,
   visiblePlaces,
   visiblePrey,

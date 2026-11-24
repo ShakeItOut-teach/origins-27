@@ -20,6 +20,7 @@ import { filamentReach, layoutSpots } from "../game/mapLayout";
 import { formatAmount, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { EnergyIcon, PreyIcon, ResourceIcon, TroopIcon } from "./icons";
+import { WorldView } from "./WorldView";
 
 interface Props {
   /** La goutte reste en place quand on regarde la cellule : elle est seulement cachée. */
@@ -29,6 +30,8 @@ interface Props {
   readonly lang: Lang;
   /** Les proies n'existent pas avant le palier de la chasse. */
   readonly showPrey: boolean;
+  /** La grande carte n'existe pas avant son palier. */
+  readonly showWorld: boolean;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
   readonly onOrder: (order: Order) => boolean;
 }
@@ -42,8 +45,11 @@ function idOf(spot: Spot): string {
 }
 
 /** La goutte : la cellule au centre, les lieux et les proies autour. */
-export function MapView({ hidden, state, hue, lang, showPrey, onOrder }: Props) {
+export function MapView({ hidden, state, hue, lang, showPrey, showWorld, onOrder }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
+  // Reculé, le joueur voit la goutte entière ; sinon, les alentours de sa cellule.
+  const [far, setFar] = useState(false);
+  const world = far && showWorld;
   const [selected, setSelected] = useState<string | null>(null);
   const placed = useMemo(() => {
     const spots: Spot[] = visiblePlaces(state.worldSeed, state.slot).map((place) => ({
@@ -119,7 +125,23 @@ export function MapView({ hidden, state, hue, lang, showPrey, onOrder }: Props) 
 
   return (
     <>
-      <section className="lens" data-testid="map" aria-label={t("label.map")} hidden={hidden}>
+      {world && !hidden && (
+        <WorldView
+          state={state}
+          hue={hue}
+          lang={lang}
+          onBack={() => {
+            setFar(false);
+          }}
+          onOrder={onOrder}
+        />
+      )}
+      <section
+        className="lens"
+        data-testid="map"
+        aria-label={t("label.map")}
+        hidden={hidden || world}
+      >
         <MapCanvas scene={scene} />
         {placed.map(({ item, x, y }) => {
           const id = idOf(item);
@@ -157,12 +179,24 @@ export function MapView({ hidden, state, hue, lang, showPrey, onOrder }: Props) 
             </button>
           );
         })}
+        {showWorld && (
+          <button
+            type="button"
+            className="lens-pill"
+            data-testid="world-open"
+            onClick={() => {
+              setFar(true);
+            }}
+          >
+            {t("action.world")}
+          </button>
+        )}
       </section>
 
-      {open !== null && !hidden && open.type === "place" && (
+      {open !== null && !hidden && !world && open.type === "place" && (
         <PlaceSheet state={state} place={open.place} lang={lang} onClose={close} onOrder={act} />
       )}
-      {open !== null && !hidden && open.type === "prey" && (
+      {open !== null && !hidden && !world && open.type === "prey" && (
         <PreySheet state={state} prey={open.prey} lang={lang} onClose={close} onOrder={act} />
       )}
     </>

@@ -1,6 +1,7 @@
 import {
   MICRO,
   defensePower,
+  farLootPercent,
   isNewcomer,
   protectedUntil,
   partySize,
@@ -194,7 +195,7 @@ interface SheetProps extends Props {
 }
 
 /** Fiche d'un rival : ce qu'on sait de lui, espionner, choisir son groupe, attaquer. */
-function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps) {
+export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps) {
   const t = (key: TextKey): string => translate(lang, key);
   const offer = raidOffer(state, rival, state.now);
   const spied = (state.spiedUntil[rival.id] ?? 0) > state.now;
@@ -256,6 +257,12 @@ function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps) {
             {offer.energy}
           </span>
         </div>
+
+        {farLootPercent(rival.steps) > 100 && (
+          <p className="sheet-role" data-testid="rival-far">
+            {t("label.farLoot").replace("{n}", String(farLootPercent(rival.steps) - 100))}
+          </p>
+        )}
 
         {spied ? (
           <>

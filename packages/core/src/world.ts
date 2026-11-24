@@ -56,6 +56,23 @@ function spiral(slot: number): Point {
   }
 }
 
+/** La case d'un joueur dans la spirale : colonne et ligne, 0:0 au centre. */
+export function slotCell(slot: number): Point {
+  return spiral(slot);
+}
+
+/** L'inverse : le numéro de place de la case donnée. */
+export function cellSlot(column: number, row: number): number {
+  const ring = Math.max(Math.abs(column), Math.abs(row));
+  if (ring === 0) return 0;
+  const first = (2 * ring - 1) * (2 * ring - 1);
+  const side = 2 * ring;
+  if (column === ring && row > -ring) return first + row + ring - 1;
+  if (row === ring) return first + side + ring - 1 - column;
+  if (column === -ring) return first + 2 * side + ring - 1 - row;
+  return first + 3 * side + column + ring - 1;
+}
+
 /** Position d'un joueur dans la goutte, d'après son numéro de place. */
 export function slotPosition(slot: number): Point {
   const cell = spiral(slot);

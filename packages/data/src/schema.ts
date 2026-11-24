@@ -184,9 +184,8 @@ export const BalanceSchema = z.strictObject({
     proteins: z.strictObject({ base: positiveInt, perDay: positiveInt }),
     raid: z.strictObject({
       energy: positiveInt,
-      /** Durée de l'aller-retour vers un voisin direct, puis vers un voisin en diagonale. */
-      nearSeconds: positiveInt,
-      farSeconds: positiveInt,
+      /** Durée de l'aller-retour par pas de distance (un voisin direct est à un pas). */
+      stepSeconds: positiveInt,
       /** Points de chance ajoutés si le joueur touche pendant le combat. Pas de victoire certaine. */
       strikeBonusPercent: z.number().int().min(0).max(50),
       /** Charge que chaque survivante rapporte, en unités de sucre (une brique en vaut deux). */
@@ -214,11 +213,22 @@ export const BalanceSchema = z.strictObject({
     away: z.strictObject({ hours: positiveInt, restHours: positiveInt }),
     /** Bouclier de nuit : sa durée chaque jour, et le délai avant de pouvoir changer d'heure. */
     night: z.strictObject({ hours: z.number().int().min(1).max(23), changeHours: positiveInt }),
+    /**
+     * La grande carte : à partir de ce palier, on atteint tout organisme à cette distance (en
+     * cases). Au-delà de deux pas, chaque pas de plus grossit le butin de ce pourcentage.
+     */
+    world: z.strictObject({
+      tier: positiveInt,
+      reach: positiveInt,
+      farLootPercent: z.number().int().min(0).max(100),
+    }),
   }),
   /** Prix en protéines de chaque nouvelle mutation ; le dernier prix vaut pour toutes les suivantes. */
   mutationPrices: z.array(positiveInt).min(1),
   /** Géométrie de la goutte, en unités de carte. Entiers uniquement. */
   world: z.strictObject({
+    /** Nombre d'organismes dans une goutte. */
+    organisms: positiveInt,
     /** Écart entre deux joueurs voisins. */
     playerSpacing: positiveInt,
     /** Côté des cases invisibles qui contiennent chacune au plus un lieu. */

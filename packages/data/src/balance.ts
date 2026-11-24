@@ -127,8 +127,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     proteins: { base: 40, perDay: 15 },
     raid: {
       energy: 2,
-      nearSeconds: 240,
-      farSeconds: 480,
+      stepSeconds: 240,
       strikeBonusPercent: 15,
       carryPerCell: 50,
       restHours: 2,
@@ -145,6 +144,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     },
     away: { hours: 72, restHours: 24 },
     night: { hours: 8, changeHours: 24 },
+    world: { tier: 6, reach: 3, farLootPercent: 15 },
   },
   mutationPrices: [20, 50, 100],
   expedition: {
@@ -157,6 +157,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     ],
   },
   world: {
+    organisms: 500,
     playerSpacing: 1000,
     placeCell: 400,
     placeChancePercent: 60,

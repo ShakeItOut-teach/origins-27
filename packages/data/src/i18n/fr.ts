@@ -146,6 +146,17 @@ export const fr = {
   "action.setNight": "Valider",
   "label.newcomer":
     "Nouveau joueur : personne ne vous attaque jusqu'au palier 6, tant que vous n'attaquez pas.",
+  "unlock.6.title": "La goutte est immense",
+  "unlock.6.text":
+    "Touchez « Voir le monde » : tous les organismes sont là. Plus vous allez loin, plus le butin est gros. Les rivaux savent maintenant où vous êtes.",
+  "action.world": "Voir le monde",
+  "action.worldBack": "Vue proche",
+  "action.zoomIn": "Agrandir",
+  "action.zoomOut": "Réduire",
+  "label.world": "La goutte entière",
+  "label.you": "Votre cellule",
+  "label.worldHint": "Agrandissez pour toucher un organisme.",
+  "label.farLoot": "Loin de chez vous : butin +{n} %",
   "raid.won": "Attaque réussie",
   "raid.lost": "Attaque repoussée",
   "incoming.repelled": "Vos cellules ont repoussé",

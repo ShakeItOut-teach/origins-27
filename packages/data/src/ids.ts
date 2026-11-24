@@ -150,6 +150,7 @@ export const UI_ELEMENT_IDS = [
   "raid",
   "defense",
   "protections",
+  "worldMap",
   "ranking",
   "leagues",
   "gazette",

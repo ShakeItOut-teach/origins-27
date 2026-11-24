@@ -13,6 +13,7 @@ import {
   troopsOwned,
   visiblePlaces,
   visiblePrey,
+  reachableRivals,
   visibleRivals,
   winChance,
 } from "@o27/core";
@@ -287,7 +288,7 @@ export function simulate(
           : 0;
       if (state.tier >= 5 && state.hunt === null && state.raid === null) {
         let best: { id: string; chance: number } | null = null;
-        for (const rival of visibleRivals(state.worldSeed, state.slot)) {
+        for (const rival of reachableRivals(state)) {
           if ((state.placeReadyAt[rival.id] ?? 0) > now) continue;
           const chance = winChance(state.troops, rival.kind, raidOffer(state, rival, now).guard);
           if (best === null || chance > best.chance) best = { id: rival.id, chance };

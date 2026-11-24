@@ -276,6 +276,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           hue={creature.hue}
           lang={lang}
           showPrey={show("hunt")}
+          showWorld={show("worldMap")}
           onOrder={(order) => store.send(order).ok}
         />
       )}
@@ -660,7 +661,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               className="button"
               onClick={() => {
                 // La carte vient de s'ouvrir : on y emmène le joueur.
-                if (reveal === 3) setView("map");
+                if (reveal === 3 || reveal === 6) setView("map");
                 if (reveal === 5) setView("rivals");
                 setReveal(null);
               }}

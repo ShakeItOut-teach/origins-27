@@ -35,9 +35,10 @@ autorise, et la mise en scène du déblocage.
 | 3      | Première mutation                                      | —             | La carte proche, envoyer récolter ; énergie                                      |
 | 4      | 5 récoltes sur la carte                                | —             | Premières troupes, chasse de proies neutres ; coffres et quêtes du jour          |
 | 5      | Première chasse gagnée                                 | Jour 2        | Rivaux, espionnage, pillage, défense et esquive, protections                     |
-| 6      | Premier combat contre un rival                         | Jour 3        | Classement, ligues, Gazette                                                      |
-| 7      | Entrée en ligue                                        | Jour 5        | Alliances : dons, entraide, technologies                                         |
-| 8      | —                                                      | Jour 9        | Tout est en place : rangs supérieurs, crise de saison (jour 18), course à l'APEX |
+| 6      | Premier combat contre un rival                         | Jour 3        | La grande carte : la goutte entière, piller plus loin                            |
+| 7      | 5 combats contre des rivaux                            | Jour 4        | Classement, ligues, Gazette                                                      |
+| 8      | Entrée en ligue                                        | Jour 5        | Alliances : dons, entraide, technologies                                         |
+| 9      | —                                                      | Jour 9        | Tout est en place : rangs supérieurs, crise de saison (jour 18), course à l'APEX |
 
 Règles :
 
@@ -45,7 +46,7 @@ Règles :
   minimales déjà passées ne le retiennent pas.
 - Personne ne peut être attaqué avant d'avoir atteint le palier 5.
 - Chaque palier est livré complet et agréable avant de commencer le suivant.
-- L'espèce unique se construit dès le palier 2 ; la planche à partager s'ouvre au palier 6,
+- L'espèce unique se construit dès le palier 2 ; la planche à partager s'ouvre au palier 7,
   le Muséum à la fin de la saison.
 
 ## 3. Première version jouable (paliers 0 à 2)

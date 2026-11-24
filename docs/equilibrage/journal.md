@@ -227,3 +227,16 @@ modifiable une fois par 24 heures). Un joueur est donc exposé au plus 16 heures
 
 Ajout du même jour : la protection de 12 heures à l'arrivée est remplacée par une protection
 du nouveau joueur jusqu'au palier 6, perdue à sa première attaque envoyée.
+
+## 2026-11-24 — Palier 6 : premiers chiffres de la grande carte
+
+| Réglage                         | Valeur                                    |
+| ------------------------------- | ----------------------------------------- |
+| Portée                          | 3 cases dans chaque direction (48 cibles) |
+| Durée                           | 4 minutes d'aller-retour par pas          |
+| Supplément de butin             | +15 % par pas au-delà de deux             |
+| Fin de la protection du nouveau | à l'entrée au palier 6                    |
+
+Le classement, les ligues et la Gazette passent au palier 7 (5 combats contre des rivaux,
+jour 4). À surveiller : avec 48 cibles, le joueur trouve toujours un organisme faible ; il
+faudra peut-être que les plus riches soient aussi les mieux gardés.
