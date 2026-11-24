@@ -138,6 +138,12 @@ export const fr = {
   "label.awayResting": "Mode absent de nouveau possible dans",
   "label.shieldDrop": "Attaquer met fin à votre protection.",
   "label.bubble": "Bulle de protéines",
+  "label.night": "Bouclier de nuit : 8 h à partir de",
+  "label.nightNone": "pas réglé",
+  "label.nightHint":
+    "Chaque jour, personne ne vous attaque pendant ces 8 heures. Attaquer fait perdre la nuit en cours.",
+  "label.nightResting": "Heure modifiable dans",
+  "action.setNight": "Valider",
   "raid.won": "Attaque réussie",
   "raid.lost": "Attaque repoussée",
   "incoming.repelled": "Vos cellules ont repoussé",

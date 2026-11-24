@@ -72,6 +72,7 @@ export const ORDER_TYPES = [
   "strikeRaid",
   "cancelRaid",
   "goAway",
+  "setNight",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 

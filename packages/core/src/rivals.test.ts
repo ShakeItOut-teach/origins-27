@@ -10,6 +10,8 @@ import {
   defensePower,
   deserializeState,
   loadLoot,
+  nightEnd,
+  protectedUntil,
   MICRO,
   partySize,
   raidChance,
@@ -31,6 +33,8 @@ const T0 = SEASON + DAY_MS + HOUR;
 const WORLD = { worldSeed: 27, slot: 4 };
 const NONE = { hunter: 0, armored: 0, swift: 0 };
 const INCOMING = BALANCE.rivals.incoming;
+/** La minute du jour (temps universel) à laquelle tombe T0. */
+const T0_MINUTE = (T0 % DAY_MS) / 60_000;
 
 function party(values: Partial<Record<TroopId, number>>): Record<TroopId, number> {
   return { ...NONE, ...values };
@@ -421,6 +425,48 @@ describe("être attaqué", () => {
     // Espionner, en revanche, ne coûte pas la protection.
     const spied = ok(state, { type: "spyRival", rival: rival().id }, T0);
     expect(spied.shieldUntil).toBe(state.shieldUntil);
+  });
+
+  it("bouclier de nuit : huit heures par jour à l'heure choisie, sans aucune attaque", () => {
+    const NIGHT = BALANCE.rivals.night;
+    const state = atTier5({ hunter: 2 });
+    expect(nightEnd(state, T0)).toBe(0);
+    // La nuit commence une heure après T0.
+    const set = ok(state, { type: "setNight", minute: T0_MINUTE + 60 }, T0);
+    const start = T0 + HOUR;
+    expect(nightEnd(set, start - 1)).toBe(0);
+    expect(nightEnd(set, start)).toBe(start + NIGHT.hours * HOUR);
+    expect(nightEnd(set, start + NIGHT.hours * HOUR)).toBe(0);
+    expect(nightEnd(set, start + 24 * HOUR)).toBe(start + (24 + NIGHT.hours) * HOUR);
+    expect(protectedUntil(set, start)).toBe(Math.max(set.shieldUntil, start + NIGHT.hours * HOUR));
+    // Une nuit commencée une heure avant T0.
+    const late = ok(state, { type: "setNight", minute: T0_MINUTE - 60 }, T0);
+    expect(nightEnd(late, T0)).toBe(T0 - HOUR + NIGHT.hours * HOUR);
+    // Sur dix jours, aucune attaque ne tombe pendant une nuit.
+    const step = advance(set, T0 + 10 * 24 * HOUR);
+    const seen = attacks(step.events);
+    expect(seen.length).toBeGreaterThan(5);
+    for (const event of seen) expect(nightEnd(set, event.at)).toBe(0);
+    // Avancer en une fois ou jour par jour donne le même résultat.
+    let slow = set;
+    for (let day = 1; day <= 10; day++) slow = advance(slow, T0 + day * 24 * HOUR).state;
+    expect(slow).toEqual(step.state);
+    expect(deserializeState(serializeState(set))).toEqual(set);
+  });
+
+  it("bouclier de nuit : attaquer pendant sa nuit la fait perdre, et l'heure ne change qu'une fois par jour", () => {
+    const NIGHT = BALANCE.rivals.night;
+    const state = { ...atTier5({ hunter: 6 }), shieldUntil: 0 };
+    const set = ok(state, { type: "setNight", minute: T0_MINUTE }, T0);
+    expect(nightEnd(set, T0)).toBe(T0 + NIGHT.hours * HOUR);
+    expect(refusal(set, { type: "setNight", minute: 300 }, T0 + HOUR)).toBe("nightResting");
+    const later = T0 + NIGHT.changeHours * HOUR;
+    expect(refusal(advance(set, later).state, { type: "setNight", minute: 300 }, later)).toBeNull();
+    const sent = ok(set, raid(rival(), party({ hunter: 6 })), T0 + HOUR);
+    expect(nightEnd(sent, T0 + HOUR)).toBe(0);
+    expect(protectedUntil(sent, T0 + HOUR)).toBeLessThanOrEqual(T0 + HOUR);
+    // La nuit suivante revient.
+    expect(nightEnd(sent, T0 + 24 * HOUR)).toBe(T0 + (24 + NIGHT.hours) * HOUR);
   });
 
   it("mode absent : trois jours de protection, perdus à la première attaque, puis un délai", () => {

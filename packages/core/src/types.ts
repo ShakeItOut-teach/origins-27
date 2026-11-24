@@ -162,6 +162,12 @@ export interface PlayerState {
   readonly nextRaidAt: number | null;
   /** Instant à partir duquel le mode absent peut être repris. */
   readonly awayReadyAt: number;
+  /** Bouclier de nuit : minute du jour (temps universel) où il commence, ou rien s'il n'est pas réglé. */
+  readonly nightStart: number | null;
+  /** Le bouclier de nuit est rompu jusqu'à cet instant : le joueur a attaqué pendant sa nuit. */
+  readonly nightOffUntil: number;
+  /** Instant à partir duquel l'heure de la nuit peut être changée. */
+  readonly nightReadyAt: number;
 }
 
 export type GameEvent =
@@ -313,7 +319,8 @@ export type OrderErrorCode =
   | "rivalClosed"
   | "alreadySpied"
   | "noRaid"
-  | "awayResting";
+  | "awayResting"
+  | "nightResting";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

@@ -6,7 +6,7 @@ import { capacity, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
 import { partySize, resolveHunt, troopCapacity, troopsOwned } from "./hunt";
 import { openChest, trackQuests } from "./quests";
-import { dropShield, goAway, raidOffer, resolveRaid, visibleRivals } from "./rivals";
+import { dropShield, goAway, raidOffer, resolveRaid, setNight, visibleRivals } from "./rivals";
 import { MICRO } from "./types";
 import { drawMutationOffer, orderTier } from "./unlock";
 import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
@@ -337,6 +337,11 @@ function startAway(state: PlayerState): Outcome {
   return { state: goAway(state, state.now), events: [] };
 }
 
+function chooseNight(state: PlayerState, minute: number): Outcome {
+  if (state.nightReadyAt > state.now) return { error: "nightResting" };
+  return { state: setNight(state, minute, state.now), events: [] };
+}
+
 function claimQuest(state: PlayerState, index: number): Outcome {
   const quest = state.quests?.items[index];
   if (quest === undefined) return { error: "noQuest" };
@@ -381,6 +386,8 @@ function execute(state: PlayerState, order: Order): Outcome {
       return cancelRaid(state);
     case "goAway":
       return startAway(state);
+    case "setNight":
+      return chooseNight(state, order.minute);
   }
 }
 

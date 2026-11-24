@@ -1,6 +1,7 @@
 import {
   MICRO,
   defensePower,
+  protectedUntil,
   partySize,
   raidChance,
   raidOffer,
@@ -33,7 +34,15 @@ export function RivalsView({ state, lang, onOrder }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const rivals = visibleRivals(state.worldSeed, state.slot);
   const raid = state.raid;
-  const shieldLeft = state.shieldUntil - state.now;
+  const shieldLeft = protectedUntil(state, state.now) - state.now;
+  // L'heure de la nuit est gardée en temps universel ; le joueur la choisit à son heure locale.
+  const zone = new Date().getTimezoneOffset();
+  const localHour =
+    state.nightStart === null
+      ? null
+      : Math.floor(((((state.nightStart - zone) % 1440) + 1440) % 1440) / 60);
+  const [hour, setHour] = useState<number>(localHour ?? 23);
+  const nightRest = state.nightReadyAt - state.now;
   const open = rivals.find((rival) => rival.id === selected) ?? null;
   const awayRest = state.awayReadyAt - state.now;
 
@@ -70,6 +79,48 @@ export function RivalsView({ state, lang, onOrder }: Props) {
             <p className="away-hint">{t("label.awayHint")}</p>
           </>
         )}
+        <div className="night" data-testid="night">
+          <label htmlFor="night-hour">{t("label.night")}</label>
+          {nightRest > 0 ? (
+            <strong data-testid="night-hour">
+              {localHour === null ? t("label.nightNone") : `${String(localHour)} h`}
+            </strong>
+          ) : (
+            <>
+              <select
+                id="night-hour"
+                value={hour}
+                onChange={(event) => {
+                  setHour(Number(event.target.value));
+                }}
+              >
+                {Array.from({ length: 24 }, (_, value) => (
+                  <option key={value} value={value}>
+                    {value} h
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="button button-quiet"
+                data-testid="night-set"
+                onClick={() => {
+                  onOrder({
+                    type: "setNight",
+                    minute: (((hour * 60 + zone) % 1440) + 1440) % 1440,
+                  });
+                }}
+              >
+                {t("action.setNight")}
+              </button>
+            </>
+          )}
+          <p className="away-hint">
+            {nightRest > 0
+              ? `${t("label.nightResting")} ${formatAway(nightRest, lang)}`
+              : t("label.nightHint")}
+          </p>
+        </div>
       </div>
 
       <ul className="rival-list">
@@ -314,7 +365,7 @@ function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps) {
                 {blocked}
               </p>
             )}
-            {blocked === null && state.shieldUntil > state.now && (
+            {blocked === null && protectedUntil(state, state.now) > state.now && (
               <p className="sheet-building is-warning" data-testid="shield-drop">
                 {t("label.shieldDrop")}
               </p>

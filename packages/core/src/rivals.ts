@@ -247,14 +247,48 @@ function nextDelay(state: PlayerState, at: number): number {
   return minutes * 60_000;
 }
 
+const DAY = 24 * HOUR_MS;
+
+/**
+ * Fin de la nuit protégée en cours, ou 0 si le joueur n'est pas dans sa nuit (pas réglée,
+ * pas l'heure, ou rompue parce qu'il a attaqué).
+ */
+export function nightEnd(state: PlayerState, at: number): number {
+  if (state.nightStart === null) return 0;
+  const length = BALANCE.rivals.night.hours * HOUR_MS;
+  const today = at - (at % DAY) + state.nightStart * 60_000;
+  for (const start of [today, today - DAY]) {
+    const end = start + length;
+    if (at >= start && at < end) return end > state.nightOffUntil ? end : 0;
+  }
+  return 0;
+}
+
+/** Instant jusqu'auquel le joueur est à l'abri : bouclier, mode absent ou nuit. */
+export function protectedUntil(state: PlayerState, at: number): number {
+  return Math.max(state.shieldUntil, nightEnd(state, at));
+}
+
 /** Attaquer fait tomber toute protection : les rivaux peuvent revenir plus tôt. */
 export function dropShield(state: PlayerState, at: number): PlayerState {
-  if (state.shieldUntil <= at) return state;
+  const night = nightEnd(state, at);
+  if (state.shieldUntil <= at && night === 0) return state;
   const soon = at + nextDelay(state, at);
   return {
     ...state,
-    shieldUntil: at,
+    shieldUntil: Math.min(state.shieldUntil, at),
+    // La nuit en cours est perdue ; les suivantes reviennent.
+    nightOffUntil: Math.max(state.nightOffUntil, night),
     nextRaidAt: state.nextRaidAt === null ? null : Math.min(state.nextRaidAt, soon),
+  };
+}
+
+/** Régler l'heure de sa nuit. On ne peut pas la déplacer tous les jours pour rester à l'abri. */
+export function setNight(state: PlayerState, minute: number, at: number): PlayerState {
+  return {
+    ...state,
+    nightStart: minute,
+    nightReadyAt: at + BALANCE.rivals.night.changeHours * HOUR_MS,
   };
 }
 
@@ -279,6 +313,10 @@ export function ensureIncoming(state: PlayerState, at: number): PlayerState {
 
 /** Un voisin attaque le joueur. Ses cellules à la maison et sa Paroi le défendent. */
 export function resolveIncoming(state: PlayerState, at: number): Step {
+  // Personne n'attaque un joueur dans sa nuit : le rival revient après.
+  const night = nightEnd(state, at);
+  if (night > at)
+    return { state: { ...state, nextRaidAt: night + nextDelay(state, at) }, events: [] };
   const rivals = visibleRivals(state.worldSeed, state.slot);
   const rng = createRng(
     (state.seed ^ 0x51ed270b ^ Math.imul(Math.floor(at / 1000), 0x85ebca6b)) >>> 0,

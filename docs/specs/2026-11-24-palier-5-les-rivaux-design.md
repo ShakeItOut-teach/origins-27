@@ -114,3 +114,6 @@ Ces règles remplacent celles du dessus quand elles se contredisent.
   des cellules reste capable de piller jusqu'à la fin de la saison.
 - **Prévenir l'attaqué** : une note à l'écran, et une ligne dans le résumé d'absence. Les
   notifications sur le téléphone ne sont pas encore faites.
+- **Bouclier de nuit** : 8 heures par jour, à l'heure que le joueur choisit. Personne ne
+  l'attaque pendant ces heures. S'il attaque pendant sa nuit, il perd la nuit en cours ; les
+  suivantes reviennent. L'heure ne peut être changée qu'une fois par 24 heures.

@@ -221,3 +221,6 @@ chacune, qui filent du centre vers le bord de l'écran. En attraper une ajoute 1
 
 Reste à régler : la réserve plafonne le butin (le robot perd encore une part de ce qu'il
 rapporte), donc piller ne rend pas encore plus riche que produire.
+
+Ajout du même jour : bouclier de nuit de 8 heures par jour (heure choisie par le joueur,
+modifiable une fois par 24 heures). Un joueur est donc exposé au plus 16 heures par jour.

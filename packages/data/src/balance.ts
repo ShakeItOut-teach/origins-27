@@ -144,6 +144,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
       troopLossPercent: 20,
     },
     away: { hours: 72, restHours: 24 },
+    night: { hours: 8, changeHours: 24 },
   },
   mutationPrices: [20, 50, 100],
   expedition: {

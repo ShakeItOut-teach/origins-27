@@ -139,6 +139,12 @@ export const en = {
   "label.awayResting": "Away mode available again in",
   "label.shieldDrop": "Attacking ends your protection.",
   "label.bubble": "Protein bubble",
+  "label.night": "Night shield: 8 h starting at",
+  "label.nightNone": "not set",
+  "label.nightHint":
+    "Every day, nobody attacks you during these 8 hours. Attacking loses the current night.",
+  "label.nightResting": "Hour can change in",
+  "action.setNight": "Confirm",
   "raid.won": "Attack won",
   "raid.lost": "Attack pushed back",
   "incoming.repelled": "Your cells pushed back",

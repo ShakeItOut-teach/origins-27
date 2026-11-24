@@ -212,6 +212,8 @@ export const BalanceSchema = z.strictObject({
     }),
     /** Mode absent : une longue protection, puis un délai avant de pouvoir la reprendre. */
     away: z.strictObject({ hours: positiveInt, restHours: positiveInt }),
+    /** Bouclier de nuit : sa durée chaque jour, et le délai avant de pouvoir changer d'heure. */
+    night: z.strictObject({ hours: z.number().int().min(1).max(23), changeHours: positiveInt }),
   }),
   /** Prix en protéines de chaque nouvelle mutation ; le dernier prix vaut pour toutes les suivantes. */
   mutationPrices: z.array(positiveInt).min(1),
@@ -297,6 +299,8 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("cancelRaid") }),
   /** Passer en mode absent : une longue protection, que la première attaque envoyée fait tomber. */
   z.strictObject({ type: z.literal("goAway") }),
+  /** Choisir l'heure de son bouclier de nuit : la minute du jour (temps universel) où il commence. */
+  z.strictObject({ type: z.literal("setNight"), minute: z.number().int().min(0).max(1439) }),
 ]);
 export type Order = z.infer<typeof OrderSchema>;
 
