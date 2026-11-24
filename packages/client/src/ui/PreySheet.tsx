@@ -19,6 +19,12 @@ interface Props {
   readonly note?: string;
   /** Une raison de refuser propre à cette cible (trop haute, par exemple). */
   readonly closed?: string | null;
+  /** Apprivoiser plutôt que chasser, quand c'est possible : le texte du bouton et son ordre. */
+  readonly tame?: {
+    readonly label: string;
+    readonly note: string;
+    readonly order: (party: Readonly<Record<TroopId, number>>) => Order;
+  };
   /** L'ordre à envoyer pour partir avec ce groupe. */
   readonly order: (party: Readonly<Record<TroopId, number>>) => Order;
   readonly onClose: () => void;
@@ -164,6 +170,22 @@ export function PreySheet(props: Props) {
           >
             {t("action.hunt")}
           </button>
+          {props.tame !== undefined && (
+            <>
+              <button
+                type="button"
+                className="button button-quiet"
+                disabled={blocked !== null || partySize(party) === 0}
+                data-testid="prey-tame"
+                onClick={() => {
+                  if (props.tame !== undefined) onOrder(props.tame.order(party));
+                }}
+              >
+                {props.tame.label}
+              </button>
+              <p className="sheet-role">{props.tame.note}</p>
+            </>
+          )}
         </>
       )}
     </SheetFrame>

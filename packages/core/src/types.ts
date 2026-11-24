@@ -1,4 +1,5 @@
 import type {
+  GeneFamily,
   EvolutionId,
   CounterId,
   MutationId,
@@ -48,6 +49,13 @@ export interface Research {
   readonly evolution: EvolutionId;
   readonly toLevel: number;
   readonly endsAt: number;
+}
+
+/** Le prédateur apprivoisé par le joueur, et les gènes qu'il a reçus. */
+export interface Companion {
+  /** Son espèce : le niveau du prédateur d'origine (0 = le plus faible). */
+  readonly species: number;
+  readonly genes: Readonly<Record<GeneFamily, number>>;
 }
 
 export interface Training {
@@ -127,7 +135,7 @@ export interface DailyQuests {
 }
 
 export interface PlayerState {
-  readonly version: 9;
+  readonly version: 10;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -176,6 +184,9 @@ export interface PlayerState {
   readonly nightOffUntil: number;
   /** Instant à partir duquel l'heure de la nuit peut être changée. */
   readonly nightReadyAt: number;
+  readonly companion: Companion | null;
+  /** Espèce du prédateur que le groupe de chasse en route cherche à apprivoiser, s'il y en a un. */
+  readonly taming: number | null;
   /** Niveau exprimé de chaque évolution (0 : jamais exprimée). */
   readonly evolutions: Readonly<Record<EvolutionId, number>>;
   readonly research: Research | null;
@@ -289,6 +300,8 @@ export type GameEvent =
     }
   /** Un rival a attaqué le joueur et a été repoussé. */
   | { readonly type: "migrated"; readonly at: number; readonly zone: number }
+  | { readonly type: "companionTamed"; readonly at: number; readonly species: number }
+  | { readonly type: "geneShared"; readonly at: number; readonly family: GeneFamily }
   | {
       readonly type: "evolutionDone";
       readonly at: number;
@@ -360,7 +373,10 @@ export type OrderErrorCode =
   | "geneMissing"
   | "dormant"
   | "needsNucleus"
-  | "researching";
+  | "researching"
+  | "hasCompanion"
+  | "noCompanion"
+  | "grown";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

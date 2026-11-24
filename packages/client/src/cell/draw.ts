@@ -14,6 +14,12 @@ export interface Scene {
   readonly creature: Creature;
   readonly organelles: Readonly<Record<OrganelleId, number>>;
   readonly building: OrganelleId | null;
+  /** Le compagnon du joueur, s'il en a un : son espèce, son âge, sa teinte. */
+  readonly companion: {
+    readonly species: number;
+    readonly stage: number;
+    readonly hue: number;
+  } | null;
   /** Le Noyau est-il en train d'exprimer une évolution ? */
   readonly researching: boolean;
 }

@@ -269,6 +269,55 @@ p {
   font-size: 15px;
 }
 
+.companion-effects {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+}
+
+.companion-effects li {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.companion-effects li span {
+  min-width: 76px;
+  font-family: var(--font-number);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.companion-effects .is-strength span {
+  color: var(--algae);
+}
+
+.companion-effects .is-weakness span {
+  color: var(--eosin);
+}
+
+.share-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.share-family {
+  display: grid;
+}
+
+.share-family small {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
 .troop-role {
   flex-basis: 100%;
   color: var(--ink-soft);

@@ -199,7 +199,7 @@ describe("exprimer une évolution", () => {
       ),
     };
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(9);
+    expect(back.version).toBe(10);
     expect(back.research).toBeNull();
     expect(EVOLUTION_IDS.every((id) => back.evolutions[id] === 0)).toBe(true);
     expect(back.organelles.nucleus).toBe(0);

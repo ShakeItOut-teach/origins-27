@@ -2,6 +2,7 @@ export { createRng } from "./rng";
 export type { Rng } from "./rng";
 export { MICRO, DAY_MS } from "./types";
 export type {
+  Companion,
   Construction,
   DailyQuests,
   Raid,
@@ -88,6 +89,14 @@ export { familyGenes, genesMissing, hasLineage, troopUnlocked } from "./genes";
 export { evolutionLevels, evolutionPercent, researchOffer, seasonDraw } from "./evolutions";
 export type { ResearchOffer, SeasonDraw } from "./evolutions";
 export { nextOpening, seasonCalendar } from "./calendar";
+export {
+  companionEffects,
+  companionForm,
+  companionPercent,
+  companionPoints,
+  shareOffer,
+} from "./companion";
+export type { CompanionEffect, CompanionForm, ShareOffer } from "./companion";
 export type { CalendarEntry } from "./calendar";
 export {
   capacity,

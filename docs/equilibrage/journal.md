@@ -348,3 +348,18 @@ Les rivaux n'ont pas été relevés pour autant ; à surveiller.
 Vérifié par test : le dernier niveau d'une évolution reste payable avec une Vacuole au maximum.
 Tout exprimer (9 évolutions, 5 niveaux) demande environ 31 heures de Noyau au niveau 1, moins
 avec un Noyau plus haut : c'est un objectif de saison, pas d'une journée.
+
+## 2026-11-24 — Le compagnon : premiers chiffres
+
+| Réglage                 | Valeur                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| Ouverture               | jour 5 (palier 8)                                                                  |
+| Gènes partagés          | 5 au plus ; 30, 60, 100, 150, 220 protéines (560 en tout)                          |
+| Première forme, adulte  | au 2e gène, au 5e gène ; pur à partir de 4 gènes d'une famille                     |
+| Prédation               | attaque +10 / +15 / +22 % ; défense −6 / −12 %                                     |
+| Résilience              | défense +15 / +22 / +32 % ; trajets +6 / +12 %                                     |
+| Mobilité                | trajets −10 / −15 / −22 % ; butin porté −6 / −12 %                                 |
+| Métabolisme             | sucre +8 / +12 / +18 % ; attaque −5 / −10 %                                        |
+| Famille de prédilection | force × 1,5 (Ottoia : Résilience ; Opabinia : Mobilité ; Anomalocaris : Prédation) |
+
+Le plus fort : un Anomalocaris « fléau », attaque +33 %, défense −12 %.

@@ -2,6 +2,7 @@ import { Application, Graphics } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { drawScene, makeDecor } from "./draw";
 import type { Ripple, Scene } from "./draw";
+import { drawPredator } from "./oceanLife";
 
 interface Props {
   readonly scene: Scene;
@@ -89,6 +90,25 @@ export function CellCanvas({ scene, label, onTap }: Props) {
             ripples,
             reducedMotion ? 0 : pulse,
           );
+          // Le compagnon tourne lentement autour de la cellule ; adulte, il est plus grand.
+          const pet = current.companion;
+          if (pet !== null) {
+            const unit = Math.min(app.screen.width, app.screen.height);
+            const turn = seconds * 0.18;
+            drawPredator(
+              graphics,
+              {
+                x: app.screen.width / 2 + Math.cos(turn) * unit * 0.36,
+                y: app.screen.height / 2 + Math.sin(turn) * unit * 0.33,
+              },
+              unit * (0.028 + 0.009 * pet.stage),
+              pet.species,
+              0.95,
+              seconds,
+              ((turn + Math.PI / 2) / (Math.PI * 2)) % 1,
+              pet.hue,
+            );
+          }
         });
       });
 

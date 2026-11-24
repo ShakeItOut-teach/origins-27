@@ -282,9 +282,10 @@ export function drawPredator(
   alpha: number,
   t: number,
   seed: number,
+  hue = 352,
 ): void {
-  const blood = hsl(352, 0.72, 0.62);
-  const flesh = hsl(352, 0.6, 0.3);
+  const blood = hsl(hue, 0.72, 0.62);
+  const flesh = hsl(hue, 0.6, 0.3);
   if (size < 5) {
     g.circle(spot.x, spot.y, size * 1.8).fill({ color: blood, alpha: alpha * 0.16 });
     g.poly([

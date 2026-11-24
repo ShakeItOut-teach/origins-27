@@ -384,7 +384,7 @@ describe("la sauvegarde", () => {
     delete old.zone;
     delete old.taken;
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(9);
+    expect(back.version).toBe(10);
     expect(back.zone).toBe(0);
     expect(back.taken).toEqual({});
   });

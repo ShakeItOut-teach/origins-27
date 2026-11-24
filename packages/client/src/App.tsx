@@ -1,6 +1,7 @@
 import {
   MICRO,
   nextMutationPrice,
+  companionForm,
   leagueOf,
   mutationPool,
   nextOpening,
@@ -20,6 +21,7 @@ import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS, SEASON_DAYS } 
 import type {
   ChestReward,
   EvolutionId,
+  GeneFamily,
   MutationId,
   Order,
   OrganelleId,
@@ -47,6 +49,7 @@ import { AccountSheet } from "./ui/AccountSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
 import { CalendarSheet, openingName } from "./ui/CalendarSheet";
+import { CompanionSheet, companionName } from "./ui/CompanionSheet";
 import { EvolutionPanel } from "./ui/EvolutionPanel";
 import { GenomeSheet } from "./ui/GenomeSheet";
 import { LexiconSheet } from "./ui/LexiconSheet";
@@ -77,6 +80,15 @@ const SLOT_POSITION: Readonly<Record<OrganelleId, { left: string; top: string }>
   mitochondrion: { left: "24%", top: "19%" },
 };
 
+/** La teinte du compagnon : celle de la famille qui l'a façonné. */
+const FAMILY_HUE: Readonly<Record<GeneFamily | "none", number>> = {
+  none: 280,
+  metabolism: 42,
+  predation: 352,
+  mobility: 165,
+  resilience: 212,
+};
+
 function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number): boolean {
   const cost = levelCost(state, organelle, toLevel);
   return RESOURCE_IDS.every((id) => state.resources[id] >= cost[id]);
@@ -105,6 +117,8 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [rankingOpen, setRankingOpen] = useState(false);
   const [genomeOpen, setGenomeOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [companionOpen, setCompanionOpen] = useState(false);
+  const [tamed, setTamed] = useState(false);
   /** Dernière évolution exprimée : on le dit, une fois. */
   const [evolved, setEvolved] = useState<{ evolution: EvolutionId; level: number } | null>(null);
   /** Cellules filles mortes de faim depuis la dernière note. */
@@ -148,6 +162,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setLoss({ resource: event.resource, amount: event.lost });
           }
           if (event.type === "chestOpened") setChest(event.loot);
+          if (event.type === "companionTamed") setTamed(true);
           if (event.type === "evolutionDone") {
             setEvolved({ evolution: event.evolution, level: event.level });
           }
@@ -203,8 +218,16 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       organelles: state.organelles,
       building: state.construction?.organelle ?? null,
       researching: state.research !== null,
+      companion:
+        state.companion === null
+          ? null
+          : {
+              species: state.companion.species,
+              stage: companionForm(state.companion).stage,
+              hue: FAMILY_HUE[companionForm(state.companion).family ?? "none"],
+            },
     }),
-    [state.seed, creature, state.organelles, state.construction, state.research],
+    [state.seed, creature, state.organelles, state.construction, state.research, state.companion],
   );
 
   const tap = (): void => {
@@ -631,6 +654,49 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setGenomeOpen(false);
           }}
         />
+      )}
+      {show("companion") && (
+        <button
+          type="button"
+          className="quests-open companion-open"
+          data-testid="companion-open"
+          onClick={() => {
+            setCompanionOpen(true);
+          }}
+        >
+          {t("label.companion")}
+          {state.companion !== null && (
+            <span className="badge">{companionName(lang, state.companion)}</span>
+          )}
+        </button>
+      )}
+      {show("companion") && companionOpen && (
+        <CompanionSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setCompanionOpen(false);
+          }}
+          onOrder={(order) => {
+            if (store.send(order).ok && order.type === "releaseCompanion") setCompanionOpen(false);
+          }}
+        />
+      )}
+      {tamed && state.companion !== null && (
+        <div className="loss is-good" role="status" data-testid="companion-note">
+          <strong>{t("companion.tamed")}</strong>
+          <span>{companionName(lang, state.companion)}</span>
+          <button
+            type="button"
+            className="close"
+            aria-label={t("action.close")}
+            onClick={() => {
+              setTamed(false);
+            }}
+          >
+            ×
+          </button>
+        </div>
       )}
       {canMutate && (
         <button

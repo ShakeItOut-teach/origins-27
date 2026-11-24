@@ -204,6 +204,37 @@ export const BALANCE: Balance = BalanceSchema.parse({
       seconds: 600,
     },
   },
+  companion: {
+    tier: 8,
+    sharePrices: [30, 60, 100, 150, 220],
+    firstFormAt: 2,
+    adultAt: 5,
+    pureAt: 4,
+    affinityPercent: 150,
+    species: [{ affinity: "resilience" }, { affinity: "mobility" }, { affinity: "predation" }],
+    families: {
+      metabolism: {
+        stat: "sugarProduction",
+        bonus: [8, 12, 18],
+        weakness: { stat: "attack", percent: [-5, -10] },
+      },
+      predation: {
+        stat: "attack",
+        bonus: [10, 15, 22],
+        weakness: { stat: "defense", percent: [-6, -12] },
+      },
+      mobility: {
+        stat: "travelTime",
+        bonus: [-10, -15, -22],
+        weakness: { stat: "carry", percent: [-6, -12] },
+      },
+      resilience: {
+        stat: "defense",
+        bonus: [15, 22, 32],
+        weakness: { stat: "travelTime", percent: [6, 12] },
+      },
+    },
+  },
   genes: { tier: 8, lineageGenes: 3 },
   lineages: {
     metabolism: { stat: "sugarProduction", percent: 20 },

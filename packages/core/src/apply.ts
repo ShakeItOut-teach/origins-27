@@ -1,7 +1,8 @@
 /** Point d'entrée du moteur : appliquer un ordre du joueur à un instant donné. */
 import { BALANCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
-import type { EvolutionId, MutationId, Order, OrganelleId, TroopId } from "@o27/data";
+import type { EvolutionId, GeneFamily, MutationId, Order, OrganelleId, TroopId } from "@o27/data";
 import { advance } from "./advance";
+import { shareOffer } from "./companion";
 import { researchOffer } from "./evolutions";
 import { troopUnlocked } from "./genes";
 import { capacity, foePower, levelCost, levelDuration, tapYield } from "./stats";
@@ -290,6 +291,56 @@ function sendHunt(
   };
 }
 
+/**
+ * Apprivoiser un prédateur : le même combat qu'une chasse, mais on le ramène vivant. On n'a
+ * qu'un compagnon à la fois, et il ne rapporte pas de protéines.
+ */
+function tamePredator(
+  state: PlayerState,
+  predatorId: string,
+  party: Readonly<Record<TroopId, number>>,
+): Outcome {
+  if (state.companion !== null) return { error: "hasCompanion" };
+  const predator = findPredator(state.worldSeed, predatorId, state.now);
+  const sent = huntPredator(state, predatorId, party);
+  if ("error" in sent || predator === null || sent.state.hunt === null) return sent;
+  return {
+    state: {
+      ...sent.state,
+      taming: predator.level,
+      hunt: { ...sent.state.hunt, proteins: 0 },
+    },
+    events: sent.events,
+  };
+}
+
+/** Partager un gène avec son compagnon : il grandit, et sa forme peut changer. */
+function shareGene(state: PlayerState, family: GeneFamily): Outcome {
+  const companion = state.companion;
+  const offer = shareOffer(state, family);
+  if (companion === null || offer.blocked === "noCompanion") return { error: "noCompanion" };
+  if (offer.blocked !== null) return { error: offer.blocked };
+  if (state.resources.proteins < offer.price) return { error: "insufficient" };
+  return {
+    state: {
+      ...state,
+      resources: { ...state.resources, proteins: state.resources.proteins - offer.price },
+      companion: {
+        ...companion,
+        genes: { ...companion.genes, [family]: companion.genes[family] + 1 },
+      },
+    },
+    events: [{ type: "geneShared", at: state.now, family }],
+  };
+}
+
+/** Relâcher son compagnon : il repart, avec tout ce qu'on lui avait donné. */
+function releaseCompanion(state: PlayerState): Outcome {
+  if (state.companion === null) return { error: "noCompanion" };
+  // Un groupe parti en apprivoiser un autre ne revient pas les mains vides pour autant.
+  return { state: { ...state, companion: null }, events: [] };
+}
+
 /** Chasser un prédateur de l'océan : le même combat qu'une chasse, mais loin de chez soi. */
 function huntPredator(
   state: PlayerState,
@@ -544,6 +595,12 @@ function execute(state: PlayerState, order: Order): Outcome {
       return migrate(state);
     case "huntPredator":
       return huntPredator(state, order.predator, order.party);
+    case "tamePredator":
+      return tamePredator(state, order.predator, order.party);
+    case "shareGene":
+      return shareGene(state, order.family);
+    case "releaseCompanion":
+      return releaseCompanion(state);
   }
 }
 

@@ -70,6 +70,18 @@ export const MutationSchema = z.strictObject({
   tier: nonNegativeInt,
 });
 
+/** Ce qu'une famille de gènes fait d'un compagnon : une force, et sa contrepartie. */
+const CompanionFamilySchema = z.strictObject({
+  stat: z.enum(STAT_IDS),
+  /** Force : première forme, forme adulte mêlée, forme adulte pure. */
+  bonus: z.tuple([z.number().int(), z.number().int(), z.number().int()]),
+  /** Faiblesse : légère (première forme, forme mêlée), puis aggravée (forme pure). */
+  weakness: z.strictObject({
+    stat: z.enum(STAT_IDS),
+    percent: z.tuple([z.number().int(), z.number().int()]),
+  }),
+});
+
 export const TroopSchema = z.strictObject({
   /** Palier à partir duquel on peut la faire naître. */
   tier: nonNegativeInt,
@@ -184,6 +196,30 @@ export const BalanceSchema = z.strictObject({
       seconds: positiveInt,
     }),
   ),
+  /**
+   * Le compagnon : un prédateur apprivoisé, qui grandit avec les gènes qu'on lui partage.
+   * Sa forme dépend des familles reçues ; chaque forme a une force et une faiblesse.
+   */
+  companion: z.strictObject({
+    tier: positiveInt,
+    /** Prix en protéines de chaque gène partagé, dans l'ordre. */
+    sharePrices: z.array(positiveInt).min(1),
+    /** Nombre de gènes reçus pour la première forme, puis pour la forme adulte. */
+    firstFormAt: positiveInt,
+    adultAt: positiveInt,
+    /** Gènes d'une même famille qui font une forme adulte « pure ». */
+    pureAt: positiveInt,
+    /** Force d'un compagnon dans la famille de prédilection de son espèce, en pourcentage. */
+    affinityPercent: z.number().int().min(100),
+    /** Une espèce par niveau de prédateur, avec sa famille de prédilection. */
+    species: z.array(z.strictObject({ affinity: z.enum(GENE_FAMILIES) })).min(1),
+    families: z.strictObject({
+      metabolism: CompanionFamilySchema,
+      predation: CompanionFamilySchema,
+      mobility: CompanionFamilySchema,
+      resilience: CompanionFamilySchema,
+    } satisfies Record<(typeof GENE_FAMILIES)[number], unknown>),
+  }),
   /** Les familles de gènes : à partir de ce palier, trois gènes d'une famille font une lignée. */
   genes: z.strictObject({ tier: positiveInt, lineageGenes: positiveInt }),
   /** Ce qu'apporte chaque lignée. */
@@ -523,6 +559,16 @@ export const OrderSchema = z.discriminatedUnion("type", [
     predator: z.string().regex(/^p:-?\d{1,4}:-?\d{1,4}:\d{1,9}$/),
     party: PartySchema,
   }),
+  /** Apprivoiser un prédateur : on le bat sans le tuer, il devient le compagnon du joueur. */
+  z.strictObject({
+    type: z.literal("tamePredator"),
+    predator: z.string().regex(/^p:-?\d{1,4}:-?\d{1,4}:\d{1,9}$/),
+    party: PartySchema,
+  }),
+  /** Partager un gène d'une famille avec son compagnon. */
+  z.strictObject({ type: z.literal("shareGene"), family: z.enum(GENE_FAMILIES) }),
+  /** Relâcher son compagnon, pour en apprivoiser un autre. */
+  z.strictObject({ type: z.literal("releaseCompanion") }),
   /** Remonter d'une zone vers la surface. */
   z.strictObject({ type: z.literal("migrate") }),
 ]);

@@ -449,11 +449,27 @@ export function WorldView({ state, hue, lang, showPredators, onBack, onOrder }: 
                 : null
           }
           order={(party) => ({ type: "huntPredator", predator: openPredator.id, party })}
+          {...(state.tier >= BALANCE.companion.tier && state.companion === null
+            ? {
+                tame: {
+                  label: t("action.tame"),
+                  note: t("companion.tameText"),
+                  order: (party) => ({
+                    type: "tamePredator",
+                    predator: openPredator.id,
+                    party,
+                  }),
+                },
+              }
+            : {})}
           onClose={() => {
             setSelected(null);
           }}
           onOrder={(order) => {
-            if (onOrder(order) && order.type === "huntPredator") setSelected(null);
+            const sent = onOrder(order);
+            if (sent && (order.type === "huntPredator" || order.type === "tamePredator")) {
+              setSelected(null);
+            }
           }}
         />
       )}

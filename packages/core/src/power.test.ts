@@ -252,7 +252,7 @@ describe("la sauvegarde", () => {
       ),
     );
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(9);
+    expect(back.version).toBe(10);
     expect(back.counters.lootTaken).toBe(0);
     expect(back.counters.attacksRepelled).toBe(0);
   });

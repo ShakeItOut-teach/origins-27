@@ -1,6 +1,7 @@
 /** Faire passer le temps : production passive, fin des chantiers, retour des expéditions, paliers. */
 import { leagueStep } from "./power";
 import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
+import type { GeneFamily } from "@o27/data";
 import { capacity, modifierPercent, productionRate } from "./stats";
 import { partyOf, partySize, resolveHunt, trainMs, upkeepRate } from "./hunt";
 import { ensureQuests, renewQuests, trackQuests } from "./quests";
@@ -136,6 +137,10 @@ function born(state: PlayerState): Step {
   };
 }
 
+function emptyGenes(): Record<GeneFamily, number> {
+  return { metabolism: 0, predation: 0, mobility: 0, resilience: 0 };
+}
+
 /** Le groupe de chasse est rentré : survivantes à la maison, protéines dans la réserve. */
 function huntBack(state: PlayerState, hunt: Hunt): Step {
   const won = hunt.outcome?.won === true;
@@ -151,6 +156,12 @@ function huntBack(state: PlayerState, hunt: Hunt): Step {
     state: {
       ...state,
       hunt: null,
+      taming: null,
+      // Le prédateur visé a été battu sans être tué : il suit le groupe jusqu'à la cellule.
+      companion:
+        won && state.taming !== null && state.companion === null
+          ? { species: state.taming, genes: emptyGenes() }
+          : state.companion,
       troops,
       resources: { ...state.resources, proteins: state.resources.proteins + gained },
       counters: won ? { ...state.counters, huntsWon: state.counters.huntsWon + 1 } : state.counters,

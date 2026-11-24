@@ -679,7 +679,7 @@ describe("garanties du moteur avec les rivaux", () => {
       organelles: Object.fromEntries(Object.entries(organelles).filter(([key]) => key !== "wall")),
     });
     const back = deserializeState(text);
-    expect(back.version).toBe(9);
+    expect(back.version).toBe(10);
     expect(back.organelles.wall).toBe(0);
     expect(back.nextRaidAt).toBeNull();
     expect(back.troops.hunter).toBe(3);

@@ -8,12 +8,14 @@ import {
   PREY_KINDS,
   QUEST_IDS,
   EVOLUTION_IDS,
+  GENE_FAMILIES,
   RESOURCE_IDS,
   TROOP_IDS,
 } from "@o27/data";
 import type { CounterId, MutationId, OrganelleId, ResourceId, TraitId, TroopId } from "@o27/data";
 import { createRng } from "./rng";
 import type {
+  Companion,
   Research,
   Construction,
   DailyQuests,
@@ -44,7 +46,9 @@ export function createPlayer(
 ): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 9,
+    version: 10,
+    companion: null,
+    taming: null,
     evolutions: fill(EVOLUTION_IDS, 0),
     research: null,
     zone: 0,
@@ -197,6 +201,14 @@ export function serializeState(state: PlayerState): string {
         .sort()
         .map((id) => [id, state.placeReadyAt[id]]),
     ),
+    companion:
+      state.companion === null
+        ? null
+        : {
+            species: state.companion.species,
+            genes: pick(GENE_FAMILIES, state.companion.genes),
+          },
+    taming: state.taming,
     evolutions: pick(EVOLUTION_IDS, state.evolutions),
     research:
       state.research === null
@@ -326,6 +338,14 @@ function readCounts<K extends string>(
     result[key] = entry;
   }
   return result;
+}
+
+function readCompanion(value: unknown): Companion | null {
+  if (value === null) return null;
+  if (!isRecord(value) || !isCount(value.species)) {
+    throw new TypeError("sauvegarde invalide : compagnon");
+  }
+  return { species: value.species, genes: readCounts(GENE_FAMILIES, value.genes) };
 }
 
 function readResearch(value: unknown): Research | null {
@@ -558,7 +578,7 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
   if (
     !isRecord(raw) ||
     typeof version !== "number" ||
-    ![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(version)
+    ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(version)
   ) {
     throw new TypeError("sauvegarde invalide : version");
   }
@@ -582,7 +602,10 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     throw new TypeError("sauvegarde invalide : carte");
   }
   return {
-    version: 9,
+    version: 10,
+    // Avant le compagnon : personne à apprivoiser, personne en route.
+    companion: version < 10 ? null : readCompanion(raw.companion),
+    taming: version < 10 || !isCount(raw.taming) ? null : raw.taming,
     // Avant les évolutions : rien d'exprimé, et trois organites de moins.
     evolutions: version < 9 ? fill(EVOLUTION_IDS, 0) : readCounts(EVOLUTION_IDS, raw.evolutions),
     research: version < 9 ? null : readResearch(raw.research),

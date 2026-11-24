@@ -212,7 +212,7 @@ describe("les cellules filles de rang 2", () => {
     old.version = 7;
     old.troops = { hunter: 4, armored: 0, swift: 0 };
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(9);
+    expect(back.version).toBe(10);
     expect(back.troops).toEqual(partyOf({ hunter: 4 }));
     const full = { ...player(8, two), troops: partyOf({ toxic: 3, hunter: 2 }) };
     expect(deserializeState(serializeState(full))).toEqual(full);

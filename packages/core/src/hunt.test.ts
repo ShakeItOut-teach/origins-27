@@ -603,7 +603,7 @@ describe("garanties du moteur avec la chasse", () => {
       ),
     });
     const back = deserializeState(text);
-    expect(back.version).toBe(9);
+    expect(back.version).toBe(10);
     expect(back.resources).toEqual({ sugar: 500 * MICRO, bricks: 300 * MICRO, proteins: 0 });
     expect(back.organelles.nursery).toBe(0);
     expect(back.troops).toEqual(NONE);
