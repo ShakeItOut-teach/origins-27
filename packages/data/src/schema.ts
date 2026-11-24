@@ -1,6 +1,7 @@
 /** Schémas de validation : une donnée invalide fait échouer le chargement et les tests. */
 import { z } from "zod";
 import {
+  GENE_FAMILIES,
   COUNTER_IDS,
   MUTATION_IDS,
   ORDER_TYPES,
@@ -53,6 +54,28 @@ export const MutationSchema = z.strictObject({
   /** Pourcentage ajouté (négatif pour une réduction de coût ou de durée). */
   percent: z.number().int().min(-90).max(500),
   trait: z.enum(TRAIT_IDS),
+  /** Sa famille : trois gènes d'une même famille ouvrent une lignée. */
+  family: z.enum(GENE_FAMILIES),
+  /** Palier à partir duquel la mutation peut être proposée. */
+  tier: nonNegativeInt,
+});
+
+export const TroopSchema = z.strictObject({
+  /** Palier à partir duquel on peut la faire naître. */
+  tier: nonNegativeInt,
+  /** Famille de gènes demandée, et combien de ses gènes il faut. `null` : aucune. */
+  family: z.enum(GENE_FAMILIES).nullable(),
+  genes: nonNegativeInt,
+  cost: CostSchema,
+  /** Protéines demandées en plus, à la naissance. */
+  proteins: nonNegativeInt,
+  seconds: positiveInt,
+  /** Ce qu'elle vaut à l'attaque, à la défense de la cellule, et ce qu'elle porte. */
+  power: positiveInt,
+  defense: positiveInt,
+  carry: positiveInt,
+  /** Ce qu'elle mange, en parts de l'entretien d'une cellule fille de rang 1. */
+  upkeep: positiveInt,
 });
 
 export const BalanceSchema = z.strictObject({
@@ -85,6 +108,12 @@ export const BalanceSchema = z.strictObject({
     digestivePouch: MutationSchema,
     quickDivision: MutationSchema,
     thrift: MutationSchema,
+    armorPlates: MutationSchema,
+    dormancy: MutationSchema,
+    flagellum: MutationSchema,
+    voracity: MutationSchema,
+    harpoon: MutationSchema,
+    swarming: MutationSchema,
   } satisfies Record<(typeof MUTATION_IDS)[number], unknown>),
   /** Palier dont l'arrivée propose une mutation, et nombre de mutations proposées. */
   mutationOffer: z.strictObject({ tier: positiveInt, choices: positiveInt }),
@@ -111,10 +140,23 @@ export const BalanceSchema = z.strictObject({
   }),
   /** Les cellules filles : ce que chacune coûte et le temps qu'elle met à naître. */
   troops: z.strictObject({
-    hunter: z.strictObject({ cost: CostSchema, seconds: positiveInt }),
-    armored: z.strictObject({ cost: CostSchema, seconds: positiveInt }),
-    swift: z.strictObject({ cost: CostSchema, seconds: positiveInt }),
+    hunter: TroopSchema,
+    armored: TroopSchema,
+    swift: TroopSchema,
+    toxic: TroopSchema,
+    guardian: TroopSchema,
+    scout: TroopSchema,
+    carrier: TroopSchema,
   } satisfies Record<(typeof TROOP_IDS)[number], unknown>),
+  /** Les familles de gènes : à partir de ce palier, trois gènes d'une famille font une lignée. */
+  genes: z.strictObject({ tier: positiveInt, lineageGenes: positiveInt }),
+  /** Ce qu'apporte chaque lignée. */
+  lineages: z.strictObject({
+    metabolism: z.strictObject({ stat: z.enum(STAT_IDS), percent: z.number().int() }),
+    predation: z.strictObject({ stat: z.enum(STAT_IDS), percent: z.number().int() }),
+    mobility: z.strictObject({ stat: z.enum(STAT_IDS), percent: z.number().int() }),
+    resilience: z.strictObject({ stat: z.enum(STAT_IDS), percent: z.number().int() }),
+  } satisfies Record<(typeof GENE_FAMILIES)[number], unknown>),
   /**
    * L'entretien : chaque cellule fille vivante consomme du sucre, en millièmes d'unité par
    * seconde. C'est ce qui limite la taille d'une armée, et non plus un plafond.
@@ -375,6 +417,18 @@ export const UnlockSchema = z.strictObject({
 });
 export type Unlock = z.infer<typeof UnlockSchema>;
 
+const troopCount = z.number().int().min(0).max(100_000);
+/** Un groupe : combien de cellules filles de chaque sorte. Une sorte absente vaut zéro. */
+const PartySchema = z.strictObject({
+  hunter: troopCount,
+  armored: troopCount,
+  swift: troopCount,
+  toxic: troopCount.default(0),
+  guardian: troopCount.default(0),
+  scout: troopCount.default(0),
+  carrier: troopCount.default(0),
+} satisfies Record<(typeof TROOP_IDS)[number], unknown>);
+
 /** Un ordre envoyé par le joueur. Le serveur valide toute entrée avec ce schéma. */
 export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("harvest"), taps: z.number().int().min(1).max(100) }),
@@ -396,11 +450,7 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("sendHunt"),
     prey: z.string().regex(/^h:-?\d{1,6}:-?\d{1,6}$/),
-    party: z.strictObject({
-      hunter: z.number().int().min(0).max(500),
-      armored: z.number().int().min(0).max(500),
-      swift: z.number().int().min(0).max(500),
-    }),
+    party: PartySchema,
   }),
   z.strictObject({ type: z.literal("strikeHunt") }),
   z.strictObject({ type: z.literal("cancelHunt") }),
@@ -415,11 +465,7 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("sendRaid"),
     rival: z.string().regex(/^r:-?\d{1,6}:-?\d{1,6}$/),
-    party: z.strictObject({
-      hunter: z.number().int().min(0).max(500),
-      armored: z.number().int().min(0).max(500),
-      swift: z.number().int().min(0).max(500),
-    }),
+    party: PartySchema,
   }),
   z.strictObject({ type: z.literal("strikeRaid") }),
   z.strictObject({ type: z.literal("cancelRaid") }),
@@ -436,11 +482,7 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("huntPredator"),
     predator: z.string().regex(/^p:-?\d{1,4}:-?\d{1,4}:\d{1,9}$/),
-    party: z.strictObject({
-      hunter: z.number().int().min(0).max(500),
-      armored: z.number().int().min(0).max(500),
-      swift: z.number().int().min(0).max(500),
-    }),
+    party: PartySchema,
   }),
   /** Remonter d'une zone vers la surface. */
   z.strictObject({ type: z.literal("migrate") }),

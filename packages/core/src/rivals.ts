@@ -5,7 +5,8 @@
  */
 import { BALANCE, ORGANELLE_IDS, PREY_KINDS, TROOP_IDS } from "@o27/data";
 import type { PreyKind, TroopId } from "@o27/data";
-import { lossesFor, partySize, winChance } from "./hunt";
+import { lossesFor, partyOf, partySize, winChance } from "./hunt";
+import { modifierPercent, travelMs } from "./stats";
 import { createRng } from "./rng";
 import type { Rng } from "./rng";
 import { MICRO } from "./types";
@@ -222,14 +223,15 @@ export interface RaidOffer extends RivalStats {
 /** Ce qu'une attaque contre ce rival demande et peut rapporter, à cet instant. */
 export function raidOffer(state: PlayerState, rival: Rival, at: number): RaidOffer {
   const raid = BALANCE.rivals.raid;
-  const seconds = raid.stepSeconds * rival.steps + BALANCE.hunt.strikeWindowSeconds;
   const stats = rivalStats(rival, seasonDay(state, at));
   return {
     ...stats,
     // On ne peut jamais prendre qu'une part des protéines d'un organisme.
     proteins: Math.floor((stats.proteins * raid.proteinSharePercent) / 100),
     energy: raid.energy,
-    durationMs: seconds * 1000,
+    durationMs:
+      travelMs(state, raid.stepSeconds * rival.steps * 1000) +
+      BALANCE.hunt.strikeWindowSeconds * 1000,
     restMs: raid.restHours * HOUR_MS,
   };
 }
@@ -241,12 +243,14 @@ export function raidChance(base: number, struck: boolean): number {
 
 /** Défense du joueur : ses cellules à la maison, plus sa Paroi. Jamais nulle. */
 export function defensePower(state: PlayerState): number {
-  let total = 1 + partySize(state.troops);
+  let total = 1;
+  // Chaque sorte de cellule fille défend plus ou moins bien.
+  for (const id of TROOP_IDS) total += state.troops[id] * BALANCE.troops[id].defense;
   for (const id of ORGANELLE_IDS) {
     const effect = BALANCE.organelles[id].effect;
     if (effect.kind === "defense") total += effect.perLevel * state.organelles[id];
   }
-  return total;
+  return Math.floor((total * (100 + modifierPercent(state, "defense"))) / 100);
 }
 
 /** Le combat de l'attaque en cours a lieu : le joueur vient de toucher, ou la fenêtre est passée. */
@@ -294,13 +298,17 @@ export function raidBack(
   room: Readonly<Record<"sugar" | "bricks" | "proteins", number>>,
 ): Step {
   const won = raid.outcome?.won === true;
-  const losses = raid.outcome?.losses ?? { hunter: 0, armored: 0, swift: 0 };
+  const losses = raid.outcome?.losses ?? partyOf();
   const troops = { ...state.troops };
   for (const id of TROOP_IDS) troops[id] += raid.party[id] - losses[id];
 
   // Chaque survivante porte une charge limitée ; une brique pèse deux sucres.
-  const survivors = partySize(raid.party) - partySize(losses);
-  const carry = survivors * BALANCE.rivals.raid.carryPerCell * MICRO;
+  let load = 0;
+  for (const id of TROOP_IDS) load += (raid.party[id] - losses[id]) * BALANCE.troops[id].carry;
+  const carry = Math.floor(
+    (load * BALANCE.rivals.raid.carryPerCell * MICRO * (100 + modifierPercent(state, "carry"))) /
+      100,
+  );
   const taken = won
     ? loadLoot(carry, { sugar: raid.sugar, bricks: raid.bricks, proteins: raid.proteins })
     : { sugar: 0, bricks: 0, proteins: 0 };

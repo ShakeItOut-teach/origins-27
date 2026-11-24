@@ -7,6 +7,7 @@ import { BALANCE, PREY_KINDS } from "@o27/data";
 import type { PreyKind } from "@o27/data";
 import { ZONE_COUNT, cellDistance, oceanRadius, playerCell, zoneAt } from "./ocean";
 import { createRng } from "./rng";
+import { travelMs } from "./stats";
 import { MICRO } from "./types";
 import type { PlayerState } from "./types";
 import type { PreyOffer } from "./world";
@@ -109,12 +110,13 @@ export function predatorOffer(state: PlayerState, predator: Predator, at: number
     1,
     Math.ceil(cellDistance(playerCell(state), predator) / BALANCE.ocean.cellsPerStep),
   );
-  const seconds = BALANCE.rivals.raid.stepSeconds * steps + BALANCE.hunt.strikeWindowSeconds;
   return {
     power: predator.power,
     proteins: predator.proteins,
     energy: BALANCE.predators.energy,
-    durationMs: seconds * 1000,
+    durationMs:
+      travelMs(state, BALANCE.rivals.raid.stepSeconds * steps * 1000) +
+      BALANCE.hunt.strikeWindowSeconds * 1000,
     // Vaincu, il ne revient pas : un autre apparaîtra ailleurs au cycle suivant.
     restMs: Math.max(0, predator.endsAt - at),
   };

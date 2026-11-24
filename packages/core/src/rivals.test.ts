@@ -23,6 +23,7 @@ import {
   visiblePrey,
   visibleRivals,
   winChance,
+  partyOf,
 } from "./index";
 import type { GameEvent, OrderErrorCode, PlayerState, Rival } from "./index";
 
@@ -31,7 +32,7 @@ const SEASON = 1_800_000_000_000;
 /** Deuxième jour de la saison : les rivaux peuvent exister. */
 const T0 = SEASON + DAY_MS + HOUR;
 const WORLD = { worldSeed: 27, slot: 4 };
-const NONE = { hunter: 0, armored: 0, swift: 0 };
+const NONE = partyOf();
 const INCOMING = BALANCE.rivals.incoming;
 /** La minute du jour (temps universel) à laquelle tombe T0. */
 const T0_MINUTE = (T0 % DAY_MS) / 60_000;
@@ -588,11 +589,11 @@ describe("garanties du moteur avec les rivaux", () => {
         fc.integer({ min: 0, max: 5 }),
         fc.integer({ min: 0, max: 5 }),
       )
-      .map(([entry, hunter, swift]): Order => raid(entry, { hunter, armored: 0, swift })),
+      .map(([entry, hunter, swift]): Order => raid(entry, partyOf({ hunter, swift }))),
     fc.constantFrom(...visiblePrey(WORLD.worldSeed, WORLD.slot)).map((prey): Order => ({
       type: "sendHunt",
       prey: prey.id,
-      party: { hunter: 2, armored: 0, swift: 2 },
+      party: partyOf({ hunter: 2, armored: 0, swift: 2 }),
     })),
   );
   const steps = fc.array(
@@ -672,7 +673,7 @@ describe("garanties du moteur avec les rivaux", () => {
       organelles: Object.fromEntries(Object.entries(organelles).filter(([key]) => key !== "wall")),
     });
     const back = deserializeState(text);
-    expect(back.version).toBe(7);
+    expect(back.version).toBe(8);
     expect(back.organelles.wall).toBe(0);
     expect(back.nextRaidAt).toBeNull();
     expect(back.troops.hunter).toBe(3);

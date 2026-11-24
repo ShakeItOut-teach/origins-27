@@ -17,6 +17,7 @@ import {
   serializeState,
   visiblePlaces,
   visiblePrey,
+  partyOf,
 } from "./index";
 import type { DailyQuests, OrderErrorCode, PlayerState, Quest } from "./index";
 
@@ -39,7 +40,7 @@ function atTier4(seed = 7, overrides: Partial<PlayerState> = {}): PlayerState {
     mutations: ["thrift"],
     organelles: { ...base.organelles, mitochondrion: 1, vacuole: 2, nursery: 1 },
     resources: { sugar: 300 * MICRO, bricks: 200 * MICRO, proteins: 0 },
-    troops: { hunter: 4, armored: 4, swift: 2 },
+    troops: partyOf({ hunter: 4, armored: 4, swift: 2 }),
     ...overrides,
   };
   return advance(ready, T0).state;
@@ -234,7 +235,7 @@ describe("progression des quêtes", () => {
     if (prey === undefined) throw new Error("proie attendue");
     const strong = TROOP_IDS.find((id) => STRONG_AGAINST[id] === prey.kind) ?? "hunter";
     const start = withQuests(
-      atTier4(7, { troops: { hunter: 3, armored: 3, swift: 1 } }),
+      atTier4(7, { troops: partyOf({ hunter: 3, armored: 3, swift: 1 }) }),
       ["trainCells", 2],
       ["winHunts", 1],
       ["strikeWin", 1],
@@ -247,7 +248,7 @@ describe("progression des quêtes", () => {
     ).state;
     expect(quest(born, 0).progress).toBe(2);
 
-    const party = { hunter: 0, armored: 0, swift: 0, [strong]: born.troops[strong] };
+    const party = partyOf({ [strong]: born.troops[strong] });
     const sent = ok(born, { type: "sendHunt", prey: prey.id, party }, T0 + 60_000);
     const struck = ok(sent, { type: "strikeHunt" }, sent.hunt?.arrivesAt ?? T0);
     expect(quest(struck, 2).progress).toBe(1);
@@ -384,7 +385,7 @@ describe("garanties du moteur avec les quêtes", () => {
     fc.constantFrom(...visiblePrey(WORLD.worldSeed, WORLD.slot)).map((prey): Order => ({
       type: "sendHunt",
       prey: prey.id,
-      party: { hunter: 2, armored: 2, swift: 1 },
+      party: partyOf({ hunter: 2, armored: 2, swift: 1 }),
     })),
   );
   // Des attentes parfois longues : on traverse plusieurs minuits.

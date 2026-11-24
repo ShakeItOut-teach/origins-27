@@ -62,17 +62,23 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
     tier: 8,
     condition: { counter: "leagueEntered", atLeast: 1 },
     minDay: 5,
-    ui: ["alliances", "gazette", "speciesSheet"],
+    ui: ["genome", "rank2Troops"],
     orders: [],
   },
-  { tier: 9, condition: null, minDay: 9, ui: ["higherRanks", "crisis", "apexRace"], orders: [] },
+  {
+    tier: 9,
+    condition: null,
+    minDay: 9,
+    ui: ["alliances", "gazette", "speciesSheet", "higherRanks", "crisis", "apexRace"],
+    orders: [],
+  },
 ]);
 
 /**
  * Dernier palier livré aux joueurs. Le moteur ne fait jamais dépasser ce palier,
  * même si la condition du suivant est remplie : on livre un palier fini à la fois.
  */
-export const MAX_RELEASED_TIER = 7;
+export const MAX_RELEASED_TIER = 8;
 
 /** Premier palier où un joueur peut être attaqué. */
 export const FIRST_ATTACKABLE_TIER = 5;

@@ -27,11 +27,13 @@ export function cellPower(state: PlayerState): number {
 
 /** Ce que valent les cellules filles, à la maison comme en sortie. */
 export function troopPower(state: PlayerState): number {
-  let count = 0;
+  let weight = 0;
   for (const id of TROOP_IDS) {
-    count += state.troops[id] + (state.hunt?.party[id] ?? 0) + (state.raid?.party[id] ?? 0);
+    const count = state.troops[id] + (state.hunt?.party[id] ?? 0) + (state.raid?.party[id] ?? 0);
+    // Une cellule vaut la moyenne de ce qu'elle apporte à l'attaque et à la défense.
+    weight += count * (BALANCE.troops[id].power + BALANCE.troops[id].defense);
   }
-  return count * BALANCE.power.perTroop;
+  return Math.floor((weight * BALANCE.power.perTroop) / 2);
 }
 
 export function totalPower(state: PlayerState): number {

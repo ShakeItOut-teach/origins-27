@@ -1,4 +1,12 @@
-import { MICRO, productionRate, trainMs, troopsOwned, upkeepRate } from "@o27/core";
+import {
+  MICRO,
+  genesMissing,
+  productionRate,
+  trainMs,
+  troopUnlocked,
+  troopsOwned,
+  upkeepRate,
+} from "@o27/core";
 import type { PlayerState } from "@o27/core";
 import { BALANCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { Order, TextKey } from "@o27/data";
@@ -18,6 +26,7 @@ const BATCHES = [1, 10] as const;
 /**
  * Dans le Centrosome : les cellules filles qu'on a, ce qu'elles coûtent à nourrir, et de quoi
  * en faire naître. Leur nombre n'a pas de plafond : c'est l'entretien qui le limite.
+ * Les cellules de rang 2 n'apparaissent qu'à leur palier ; chacune demande ses gènes.
  */
 export function TroopPanel({ state, lang, onOrder }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
@@ -36,30 +45,55 @@ export function TroopPanel({ state, lang, onOrder }: Props) {
         <strong>−{formatRate(upkeep, lang)}/s</strong>
         <small>{starving ? t("state.starving") : t("label.upkeepText")}</small>
       </p>
-      {TROOP_IDS.map((id) => {
-        const cost = BALANCE.troops[id].cost;
+      {TROOP_IDS.filter((id) => BALANCE.troops[id].tier <= state.tier).map((id) => {
+        const data = BALANCE.troops[id];
+        const strong = STRONG_AGAINST[id];
+        const missing = genesMissing(state, id);
+        const locked = !troopUnlocked(state, id);
         const poor = (count: number): boolean =>
-          state.resources.sugar < cost.sugar * MICRO * count ||
-          state.resources.bricks < cost.bricks * MICRO * count;
+          state.resources.sugar < data.cost.sugar * MICRO * count ||
+          state.resources.bricks < data.cost.bricks * MICRO * count ||
+          state.resources.proteins < data.proteins * MICRO * count;
         return (
-          <div key={id} className="troop-row">
+          <div
+            key={id}
+            className={`troop-row${data.family !== null ? " is-rank2" : ""}${locked ? " is-locked" : ""}`}
+            data-testid={`troop-row-${id}`}
+          >
             <TroopIcon id={id} />
             <span className="troop-name">
               {t(`troop.${id}.name`)}
-              <small>
-                <PreyIcon kind={STRONG_AGAINST[id]} /> ×2
-              </small>
+              {strong !== null && (
+                <small>
+                  <PreyIcon kind={strong} /> ×2
+                </small>
+              )}
+              {data.family !== null && (
+                <small className="troop-role">
+                  {locked
+                    ? t("state.geneMissing")
+                        .replace("{n}", String(missing))
+                        .replace("{family}", t(`family.${data.family}.name`))
+                    : t(`troop.${id}.role` as TextKey)}
+                </small>
+              )}
             </span>
             <span className="troop-count" data-testid={`troop-${id}`}>
               {state.troops[id]}
             </span>
             <span className={`cost${poor(1) ? " is-missing" : ""}`}>
               <ResourceIcon id="sugar" />
-              {formatAmount(cost.sugar * MICRO, lang)}
-              {cost.bricks > 0 && (
+              {formatAmount(data.cost.sugar * MICRO, lang)}
+              {data.cost.bricks > 0 && (
                 <>
                   <ResourceIcon id="bricks" />
-                  {formatAmount(cost.bricks * MICRO, lang)}
+                  {formatAmount(data.cost.bricks * MICRO, lang)}
+                </>
+              )}
+              {data.proteins > 0 && (
+                <>
+                  <ResourceIcon id="proteins" />
+                  {formatAmount(data.proteins * MICRO, lang)}
                 </>
               )}
             </span>
@@ -70,7 +104,7 @@ export function TroopPanel({ state, lang, onOrder }: Props) {
                   type="button"
                   className="step"
                   aria-label={`${t("action.train")} : ${String(count)} × ${t(`troop.${id}.name`)}`}
-                  disabled={poor(count) || training !== null}
+                  disabled={locked || poor(count) || training !== null}
                   data-testid={count === 1 ? `train-${id}` : `train-${id}-${String(count)}`}
                   onClick={() => {
                     onOrder({ type: "trainTroop", troop: id, count });

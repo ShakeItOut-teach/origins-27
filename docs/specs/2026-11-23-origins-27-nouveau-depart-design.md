@@ -27,18 +27,18 @@ Chaque ligne de la table porte : une **condition d'accomplissement** (ce que le 
 une **date minimale** facultative (jour de saison), ce qu'elle rend visible, les ordres qu'elle
 autorise, et la mise en scène du déblocage.
 
-| Palier | Condition (hypothèse à régler par l'agent équilibrage) | Date minimale | Ce qui s'ouvre                                                                   |
-| ------ | ------------------------------------------------------ | ------------- | -------------------------------------------------------------------------------- |
-| 0      | Arrivée                                                | —             | La cellule vivante, une ressource, toucher pour récolter                         |
-| 1      | Première récolte faite                                 | —             | Construire un organite, production passive                                       |
-| 2      | 3 organites                                            | —             | Deuxième ressource, première mutation à choisir : la créature change             |
-| 3      | Première mutation                                      | —             | La carte proche, envoyer récolter ; énergie                                      |
-| 4      | 5 récoltes sur la carte                                | —             | Premières troupes, chasse de proies neutres ; coffres et quêtes du jour          |
-| 5      | Première chasse gagnée                                 | Jour 2        | Rivaux, espionnage, pillage, défense et esquive, protections                     |
-| 6      | Premier combat contre un rival                         | Jour 3        | L'océan : zones de profondeur, gisements communs, remonter vers le centre        |
-| 7      | 3 combats contre des rivaux                            | Jour 4        | Puissance, cinq classements, ligues, prédateurs de l'océan                       |
-| 8      | Entrée en ligue                                        | Jour 5        | Alliances : dons, entraide, technologies ; Gazette                               |
-| 9      | —                                                      | Jour 9        | Tout est en place : rangs supérieurs, crise de saison (jour 18), course à l'APEX |
+| Palier | Condition (hypothèse à régler par l'agent équilibrage) | Date minimale | Ce qui s'ouvre                                                                 |
+| ------ | ------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------ |
+| 0      | Arrivée                                                | —             | La cellule vivante, une ressource, toucher pour récolter                       |
+| 1      | Première récolte faite                                 | —             | Construire un organite, production passive                                     |
+| 2      | 3 organites                                            | —             | Deuxième ressource, première mutation à choisir : la créature change           |
+| 3      | Première mutation                                      | —             | La carte proche, envoyer récolter ; énergie                                    |
+| 4      | 5 récoltes sur la carte                                | —             | Premières troupes, chasse de proies neutres ; coffres et quêtes du jour        |
+| 5      | Première chasse gagnée                                 | Jour 2        | Rivaux, espionnage, pillage, défense et esquive, protections                   |
+| 6      | Premier combat contre un rival                         | Jour 3        | L'océan : zones de profondeur, gisements communs, remonter vers le centre      |
+| 7      | 3 combats contre des rivaux                            | Jour 4        | Puissance, cinq classements, ligues, prédateurs de l'océan                     |
+| 8      | Première récompense de ligue                           | Jour 5        | Familles de gènes, lignées, cellules filles de rang 2                          |
+| 9      | —                                                      | Jour 9        | Événements, alliances, Gazette ; puis rangs supérieurs, crise, course à l'APEX |
 
 Règles :
 

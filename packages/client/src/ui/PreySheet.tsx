@@ -1,4 +1,4 @@
-import { partySize, strikeChance, unattendedChance, winChance } from "@o27/core";
+import { foePower, partyOf, partySize, strikeChance, unattendedChance, winChance } from "@o27/core";
 import type { PlayerState, PreyOffer } from "@o27/core";
 import { STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { Order, PreyKind, TextKey, TroopId } from "@o27/data";
@@ -34,13 +34,11 @@ export function PreySheet(props: Props) {
   const restingFor = (state.placeReadyAt[target.id] ?? 0) - state.now;
   const weakness = TROOP_IDS.find((id) => STRONG_AGAINST[id] === target.kind) ?? "hunter";
   // Par défaut, tout le monde part. Le joueur peut en garder à la maison.
-  const [kept, setKept] = useState<Record<TroopId, number>>({ hunter: 0, armored: 0, swift: 0 });
-  const party: Record<TroopId, number> = {
-    hunter: Math.max(0, state.troops.hunter - kept.hunter),
-    armored: Math.max(0, state.troops.armored - kept.armored),
-    swift: Math.max(0, state.troops.swift - kept.swift),
-  };
-  const chance = winChance(party, target.kind, offer.power);
+  const [kept, setKept] = useState<Record<TroopId, number>>(() => partyOf());
+  const party = partyOf();
+  for (const id of TROOP_IDS) party[id] = Math.max(0, state.troops[id] - kept[id]);
+  // Les bonus d'attaque du joueur affaiblissent ce qu'il affronte.
+  const chance = winChance(party, target.kind, foePower(state, offer.power));
   const sure = partySize(party) > 0 && strikeChance(chance) === 100;
 
   let blocked: string | null = null;

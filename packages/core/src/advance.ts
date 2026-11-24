@@ -1,8 +1,8 @@
 /** Faire passer le temps : production passive, fin des chantiers, retour des expéditions, paliers. */
 import { leagueStep } from "./power";
 import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
-import { capacity, productionRate } from "./stats";
-import { partySize, resolveHunt, trainMs, upkeepRate } from "./hunt";
+import { capacity, modifierPercent, productionRate } from "./stats";
+import { partyOf, partySize, resolveHunt, trainMs, upkeepRate } from "./hunt";
 import { ensureQuests, renewQuests, trackQuests } from "./quests";
 import { ensureIncoming, raidBack, resolveIncoming, resolveRaid } from "./rivals";
 import type { Construction, Expedition, GameEvent, Hunt, PlayerState, Step } from "./types";
@@ -137,11 +137,13 @@ function born(state: PlayerState): Step {
 /** Le groupe de chasse est rentré : survivantes à la maison, protéines dans la réserve. */
 function huntBack(state: PlayerState, hunt: Hunt): Step {
   const won = hunt.outcome?.won === true;
-  const losses = hunt.outcome?.losses ?? { hunter: 0, armored: 0, swift: 0 };
+  const losses = hunt.outcome?.losses ?? partyOf();
   const troops = { ...state.troops };
   for (const id of TROOP_IDS) troops[id] += hunt.party[id] - losses[id];
   const room = Math.max(0, capacity(state, "proteins") - state.resources.proteins);
-  const promised = won ? hunt.proteins : 0;
+  const promised = won
+    ? Math.floor((hunt.proteins * (100 + modifierPercent(state, "huntProteins"))) / 100)
+    : 0;
   const gained = Math.min(room, promised);
   return {
     state: {

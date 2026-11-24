@@ -1,14 +1,15 @@
 /** Point d'entrée du moteur : appliquer un ordre du joueur à un instant donné. */
-import { BALANCE, MUTATION_IDS, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
+import { BALANCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import type { MutationId, Order, OrganelleId, TroopId } from "@o27/data";
 import { advance } from "./advance";
-import { capacity, levelCost, levelDuration, tapYield } from "./stats";
+import { troopUnlocked } from "./genes";
+import { capacity, foePower, levelCost, levelDuration, tapYield } from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
-import { canTrain, partySize, resolveHunt, trainMs } from "./hunt";
+import { canTrain, partyOf, partySize, resolveHunt, trainMs } from "./hunt";
 import { openChest, trackQuests } from "./quests";
 import { dropShield, goAway, raidOffer, reachableRivals, resolveRaid, setNight } from "./rivals";
 import { MICRO } from "./types";
-import { drawMutationOffer, orderTier } from "./unlock";
+import { drawMutationOffer, mutationPool, orderTier } from "./unlock";
 import { ZONE_COUNT, cellIn, findDeposit, gatherOffer, migrateOffer } from "./ocean";
 import { findPredator, predatorOffer } from "./predators";
 import { cancelReturnMs, placeOffer, preyOffer, visiblePlaces, visiblePrey } from "./world";
@@ -193,11 +194,17 @@ function cancelExpedition(state: PlayerState): Outcome {
 
 function trainTroop(state: PlayerState, troop: TroopId, count: number): Outcome {
   if (!canTrain(state)) return { error: "notBuilt" };
+  if (!troopUnlocked(state, troop)) return { error: "geneMissing" };
   if (state.training !== null) return { error: "busy" };
   const data = BALANCE.troops[troop];
   const sugar = data.cost.sugar * MICRO * count;
   const bricks = data.cost.bricks * MICRO * count;
-  if (state.resources.sugar < sugar || state.resources.bricks < bricks) {
+  const proteins = data.proteins * MICRO * count;
+  if (
+    state.resources.sugar < sugar ||
+    state.resources.bricks < bricks ||
+    state.resources.proteins < proteins
+  ) {
     return { error: "insufficient" };
   }
   return {
@@ -207,6 +214,7 @@ function trainTroop(state: PlayerState, troop: TroopId, count: number): Outcome 
         ...state.resources,
         sugar: state.resources.sugar - sugar,
         bricks: state.resources.bricks - bricks,
+        proteins: state.resources.proteins - proteins,
       },
       training: { troop, remaining: count, nextAt: state.now + trainMs(state, troop) },
     },
@@ -242,11 +250,11 @@ function sendHunt(
       hunt: {
         prey: preyId,
         kind: prey.kind,
-        power: offer.power,
+        power: foePower(state, offer.power),
         proteins: offer.proteins,
         energy: offer.energy,
         restMs: offer.restMs,
-        party: { hunter: party.hunter, armored: party.armored, swift: party.swift },
+        party: partyOf(party),
         startedAt: state.now,
         arrivesAt,
         resolveAt: arrivesAt + windowMs,
@@ -294,11 +302,11 @@ function huntPredator(
       hunt: {
         prey: predatorId,
         kind: predator.kind,
-        power: offer.power,
+        power: foePower(state, offer.power),
         proteins: offer.proteins,
         energy: offer.energy,
         restMs: offer.restMs,
-        party: { hunter: party.hunter, armored: party.armored, swift: party.swift },
+        party: partyOf(party),
         startedAt: state.now,
         arrivesAt,
         resolveAt: arrivesAt + windowMs,
@@ -346,7 +354,7 @@ export function nextMutationPrice(state: PlayerState): number {
 
 function buyMutation(state: PlayerState): Outcome {
   if (state.mutationOffer !== null) return { error: "offerPending" };
-  if (state.mutations.length >= MUTATION_IDS.length) return { error: "noMoreMutations" };
+  if (mutationPool(state).length === 0) return { error: "noMoreMutations" };
   const price = nextMutationPrice(state);
   if (state.resources.proteins < price) return { error: "insufficient" };
   const offer = drawMutationOffer(
@@ -403,13 +411,13 @@ function sendRaid(
       raid: {
         rival: rivalId,
         kind: rival.kind,
-        power: offer.guard,
+        power: foePower(state, offer.guard),
         sugar: offer.sugar * MICRO,
         bricks: offer.bricks * MICRO,
         proteins: offer.proteins * MICRO,
         energy: offer.energy,
         restMs: offer.restMs,
-        party: { hunter: party.hunter, armored: party.armored, swift: party.swift },
+        party: partyOf(party),
         startedAt: state.now,
         arrivesAt,
         resolveAt: arrivesAt + windowMs,

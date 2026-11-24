@@ -2,6 +2,7 @@ import {
   MICRO,
   nextMutationPrice,
   leagueOf,
+  mutationPool,
   ranking,
   rivalName as nameOfRival,
   seasonDay,
@@ -14,14 +15,7 @@ import {
   productionRate,
 } from "@o27/core";
 import type { AbsenceSummary, PlayerState } from "@o27/core";
-import {
-  BALANCE,
-  MAX_RELEASED_TIER,
-  MUTATION_IDS,
-  ORGANELLE_IDS,
-  RESOURCE_IDS,
-  SEASON_DAYS,
-} from "@o27/data";
+import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS, SEASON_DAYS } from "@o27/data";
 import type { ChestReward, MutationId, Order, OrganelleId, ResourceId, TextKey } from "@o27/data";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
@@ -42,6 +36,7 @@ import { isVisible } from "./game/unlock";
 import { AccountSheet } from "./ui/AccountSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
+import { GenomeSheet } from "./ui/GenomeSheet";
 import { LexiconSheet } from "./ui/LexiconSheet";
 import { QuestSheet } from "./ui/QuestSheet";
 import { RankingSheet } from "./ui/RankingSheet";
@@ -93,6 +88,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [loss, setLoss] = useState<{ resource: ResourceId; amount: number } | null>(null);
   const [questsOpen, setQuestsOpen] = useState(false);
   const [rankingOpen, setRankingOpen] = useState(false);
+  const [genomeOpen, setGenomeOpen] = useState(false);
   /** Cellules filles mortes de faim depuis la dernière note. */
   const [starved, setStarved] = useState(0);
   /** Dernière récompense de ligue reçue. */
@@ -212,8 +208,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   ).length;
   const questsDone = (quests?.items ?? []).filter((quest) => quest.progress >= quest.target).length;
   const mutationPrice = nextMutationPrice(state);
-  const canMutate =
-    show("hunt") && state.mutationOffer === null && state.mutations.length < MUTATION_IDS.length;
+  const canMutate = show("hunt") && state.mutationOffer === null && mutationPool(state).length > 0;
   const slots = ORGANELLE_IDS.filter((id) => BALANCE.organelles[id].tier <= state.tier);
   const choosing =
     absence === null && reveal === null && state.mutationOffer !== null && show("mutationChoice");
@@ -547,6 +542,30 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         </div>
       )}
 
+      {show("genome") && (
+        <button
+          type="button"
+          className="quests-open genome-open"
+          data-testid="genome-open"
+          onClick={() => {
+            setGenomeOpen(true);
+          }}
+        >
+          {t("label.genome")}
+          <span className="badge">
+            {state.mutations.length} {t("label.genes")}
+          </span>
+        </button>
+      )}
+      {show("genome") && genomeOpen && (
+        <GenomeSheet
+          state={state}
+          lang={lang}
+          onClose={() => {
+            setGenomeOpen(false);
+          }}
+        />
+      )}
       {canMutate && (
         <button
           type="button"
@@ -828,6 +847,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       {choosing && (
         <MutationChoice
           options={state.mutationOffer}
+          families={show("genome")}
           lang={lang}
           onChoose={(mutation) => {
             store.send({ type: "chooseMutation", mutation });
@@ -935,11 +955,13 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }
 
 interface ChoiceProps {
   readonly options: readonly MutationId[];
+  /** Les familles de gènes ne se montrent qu'à leur palier. */
+  readonly families: boolean;
   readonly lang: Lang;
   readonly onChoose: (mutation: MutationId) => void;
 }
 
-function MutationChoice({ options, lang, onChoose }: ChoiceProps) {
+function MutationChoice({ options, families, lang, onChoose }: ChoiceProps) {
   const t = (key: TextKey): string => translate(lang, key);
   const [picked, setPicked] = useState<MutationId | null>(null);
   return (
@@ -960,6 +982,11 @@ function MutationChoice({ options, lang, onChoose }: ChoiceProps) {
             >
               <strong>{t(`mutation.${id}.name`)}</strong>
               <span>{t(`mutation.${id}.effect`)}</span>
+              {families && (
+                <small className="mutation-family" data-testid={`mutation-family-${id}`}>
+                  {t(`family.${BALANCE.mutations[id].family}.name`)}
+                </small>
+              )}
             </button>
           ))}
         </div>

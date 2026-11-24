@@ -129,6 +129,38 @@ export function TroopIcon({ id }: { readonly id: TroopId }) {
           <path d="M2 9h3M1 12h4M2 15h3" />
         </svg>
       );
+    case "toxic":
+      // Un dinoflagellé à cornes : un corps ceinturé, une corne devant, deux derrière.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <ellipse cx="12" cy="13" rx="5" ry="4.5" />
+          <path d="M12 8.5V2M8.5 16l-4 5M15.5 16l4 5M7 13h10" />
+        </svg>
+      );
+    case "guardian":
+      // Un macrophage : une grosse cellule aux bras qui enveloppent.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M6 5c-3 3-3 11 0 14 3 2 9 2 12 0 3-3 3-11 0-14-2 3-4 4-6 4s-4-1-6-4z" />
+          <circle cx="12" cy="14" r="2" />
+        </svg>
+      );
+    case "scout":
+      // Un trypanosome : un corps effilé qui ondule, prolongé par son flagelle.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <path d="M3 15c3-6 6 4 9-2s5 2 9-5" />
+          <path d="M5 17c3-3 6 3 9-1" />
+        </svg>
+      );
+    case "carrier":
+      // Une noctiluque : un ballon, son tentacule.
+      return (
+        <svg {...SMALL} className="icon-troop">
+          <circle cx="12" cy="10" r="7" />
+          <path d="M12 17c0 3 3 3 3 5M9 9h6" />
+        </svg>
+      );
   }
 }
 

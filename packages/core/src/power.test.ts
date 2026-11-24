@@ -22,6 +22,7 @@ import {
   totalPower,
   troopPower,
   zoneAt,
+  partyOf,
 } from "./index";
 import type { OrderErrorCode, PlayerState, Predator } from "./index";
 
@@ -51,7 +52,7 @@ function player(tier: number, day: number, zone = 0): PlayerState {
       mutations: ["thrift"],
       organelles: { ...base.organelles, mitochondrion: 2, vacuole: 5, nursery: 3 },
       resources: { sugar: 100 * MICRO, bricks: 100 * MICRO, proteins: 10 * MICRO },
-      troops: { hunter: 10, armored: 5, swift: 5 },
+      troops: partyOf({ hunter: 10, armored: 5, swift: 5 }),
       shieldUntil: now + 20 * DAY_MS,
       nextRaidAt: now + 25 * DAY_MS,
     },
@@ -212,7 +213,7 @@ describe("les prédateurs de l'océan", () => {
     expect(refusal(player(6, 5), order, state.now)).toBe("locked");
     expect(refusal(state, { ...order, predator: "p:0:0:1" }, state.now)).toBe("unknownPredator");
     expect(
-      refusal(state, { ...order, party: { hunter: 0, armored: 0, swift: 0 } }, state.now),
+      refusal(state, { ...order, party: partyOf({ hunter: 0, armored: 0, swift: 0 }) }, state.now),
     ).toBe("noTroops");
     const above = nearestPredator(state, 1);
     expect(refusal(state, { ...order, predator: above.id }, state.now)).toBe("zoneClosed");
@@ -250,7 +251,7 @@ describe("la sauvegarde", () => {
       ),
     );
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(7);
+    expect(back.version).toBe(8);
     expect(back.counters.lootTaken).toBe(0);
     expect(back.counters.attacksRepelled).toBe(0);
   });

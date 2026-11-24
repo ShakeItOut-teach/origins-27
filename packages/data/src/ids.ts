@@ -23,11 +23,30 @@ export const MUTATION_IDS = [
   "digestivePouch",
   "quickDivision",
   "thrift",
+  "armorPlates",
+  "dormancy",
+  "flagellum",
+  "voracity",
+  "harpoon",
+  "swarming",
 ] as const;
 export type MutationId = (typeof MUTATION_IDS)[number];
 
 /** Ce qu'une mutation change sur le dessin de la créature. */
-export const TRAIT_IDS = ["longCilia", "thickWall", "glow", "pouch", "buds", "spots"] as const;
+export const TRAIT_IDS = [
+  "longCilia",
+  "thickWall",
+  "glow",
+  "pouch",
+  "buds",
+  "spots",
+  "plates",
+  "cyst",
+  "whip",
+  "mouth",
+  "darts",
+  "swarm",
+] as const;
 export type TraitId = (typeof TRAIT_IDS)[number];
 
 /** Ce qu'une mutation peut modifier, en pourcentage. */
@@ -38,11 +57,22 @@ export const STAT_IDS = [
   "bricksProduction",
   "buildTime",
   "buildCost",
+  "defense",
+  "upkeep",
+  "travelTime",
+  "huntProteins",
+  "carry",
+  "trainTime",
+  "attack",
 ] as const;
 export type StatId = (typeof STAT_IDS)[number];
 
 /** Durée d'une saison, en jours : l'âge du serveur va de 1 à ce nombre. */
 export const SEASON_DAYS = 27;
+
+/** Les quatre familles de gènes. Trois gènes d'une même famille ouvrent une lignée. */
+export const GENE_FAMILIES = ["metabolism", "predation", "mobility", "resilience"] as const;
+export type GeneFamily = (typeof GENE_FAMILIES)[number];
 
 /** Ce que le joueur a accompli. Les conditions de déblocage portent sur ces compteurs. */
 export const COUNTER_IDS = [
@@ -93,15 +123,31 @@ export const PLACE_RESOURCE: Readonly<Record<PlaceKind, ResourceId>> = {
   carcass: "proteins",
 };
 
-/** Les cellules filles, et la sorte de proie contre laquelle chacune compte double. */
-export const TROOP_IDS = ["hunter", "armored", "swift"] as const;
+/**
+ * Les cellules filles, et la sorte de proie contre laquelle chacune compte double.
+ * Les trois premières sont de rang 1 ; les quatre suivantes, de rang 2, demandent des gènes.
+ */
+export const TROOP_IDS = [
+  "hunter",
+  "armored",
+  "swift",
+  "toxic",
+  "guardian",
+  "scout",
+  "carrier",
+] as const;
 export type TroopId = (typeof TROOP_IDS)[number];
 export const PREY_KINDS = ["soft", "aggressive", "fleeing"] as const;
 export type PreyKind = (typeof PREY_KINDS)[number];
-export const STRONG_AGAINST: Readonly<Record<TroopId, PreyKind>> = {
+export const STRONG_AGAINST: Readonly<Record<TroopId, PreyKind | null>> = {
   hunter: "soft",
   armored: "aggressive",
   swift: "fleeing",
+  toxic: "soft",
+  guardian: "aggressive",
+  scout: "fleeing",
+  // La porteuse n'est forte contre personne : elle porte.
+  carrier: null,
 };
 
 /**
@@ -168,6 +214,8 @@ export const UI_ELEMENT_IDS = [
   "migration",
   "power",
   "predators",
+  "genome",
+  "rank2Troops",
   "ranking",
   "leagues",
   "gazette",

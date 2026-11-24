@@ -10,7 +10,7 @@ import {
   RESOURCE_IDS,
   TROOP_IDS,
 } from "@o27/data";
-import type { CounterId, MutationId, OrganelleId, ResourceId, TraitId } from "@o27/data";
+import type { CounterId, MutationId, OrganelleId, ResourceId, TraitId, TroopId } from "@o27/data";
 import { createRng } from "./rng";
 import type {
   Construction,
@@ -42,7 +42,7 @@ export function createPlayer(
 ): PlayerState {
   if (now < seasonStart) throw new RangeError("createPlayer : la saison n'a pas commencé");
   return {
-    version: 7,
+    version: 8,
     zone: 0,
     taken: {},
     quests: null,
@@ -296,6 +296,9 @@ function isCount(value: unknown): value is number {
 }
 
 /** `added` : clés apparues depuis, absentes des anciennes sauvegardes, qui valent alors 0. */
+/** Les cellules filles de rang 2 : une sauvegarde plus ancienne n'en a simplement aucune. */
+const RANK_2: readonly TroopId[] = TROOP_IDS.filter((id) => BALANCE.troops[id].family !== null);
+
 function readCounts<K extends string>(
   keys: readonly K[],
   value: unknown,
@@ -411,7 +414,7 @@ function readHunt(value: unknown): Hunt | null {
     result = {
       won: outcome.won,
       struck: outcome.struck,
-      losses: readCounts(TROOP_IDS, outcome.losses),
+      losses: readCounts(TROOP_IDS, outcome.losses, RANK_2),
     };
   }
   return {
@@ -421,7 +424,7 @@ function readHunt(value: unknown): Hunt | null {
     proteins,
     energy,
     restMs,
-    party: readCounts(TROOP_IDS, value.party),
+    party: readCounts(TROOP_IDS, value.party, RANK_2),
     startedAt,
     arrivesAt,
     resolveAt,
@@ -467,7 +470,7 @@ function readRaid(value: unknown): Raid | null {
     result = {
       won: outcome.won,
       struck: outcome.struck,
-      losses: readCounts(TROOP_IDS, outcome.losses),
+      losses: readCounts(TROOP_IDS, outcome.losses, RANK_2),
     };
   }
   return {
@@ -479,7 +482,7 @@ function readRaid(value: unknown): Raid | null {
     proteins,
     energy,
     restMs,
-    party: readCounts(TROOP_IDS, value.party),
+    party: readCounts(TROOP_IDS, value.party, RANK_2),
     startedAt,
     arrivesAt,
     resolveAt,
@@ -528,7 +531,11 @@ export function needsWorldPlace(text: string): boolean {
 export function deserializeState(text: string, world?: WorldPlace): PlayerState {
   const raw: unknown = JSON.parse(text);
   const version = raw !== null && isRecord(raw) ? raw.version : undefined;
-  if (!isRecord(raw) || typeof version !== "number" || ![1, 2, 3, 4, 5, 6, 7].includes(version)) {
+  if (
+    !isRecord(raw) ||
+    typeof version !== "number" ||
+    ![1, 2, 3, 4, 5, 6, 7, 8].includes(version)
+  ) {
     throw new TypeError("sauvegarde invalide : version");
   }
   const old = version === 1;
@@ -551,7 +558,7 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     throw new TypeError("sauvegarde invalide : carte");
   }
   return {
-    version: 7,
+    version: 8,
     // Avant l'océan : le joueur est dans les abysses et n'a touché à aucun gisement.
     zone:
       version < 6 || !isCount(raw.zone) ? 0 : Math.min(raw.zone, BALANCE.ocean.zones.length - 1),
@@ -568,7 +575,7 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     nightReadyAt: isCount(raw.nightReadyAt) ? raw.nightReadyAt : 0,
     // Avant les quêtes : le joueur en recevra dès que le temps avancera.
     quests: version < 4 ? null : readQuests(raw.quests),
-    troops: beforeHunt ? fill(TROOP_IDS, 0) : readCounts(TROOP_IDS, raw.troops),
+    troops: beforeHunt ? fill(TROOP_IDS, 0) : readCounts(TROOP_IDS, raw.troops, RANK_2),
     training: beforeHunt ? null : readTraining(raw.training),
     hunt: beforeHunt ? null : readHunt(raw.hunt),
     worldSeed: old ? (world?.worldSeed ?? seed) >>> 0 : (worldSeed as number),

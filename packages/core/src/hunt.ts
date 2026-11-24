@@ -5,9 +5,24 @@
 import { BALANCE, ORGANELLE_IDS, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { PreyKind, TroopId } from "@o27/data";
 import { createRng } from "./rng";
+import { modifierPercent } from "./stats";
 import type { GameEvent, Hunt, PlayerState, Step } from "./types";
 
 export type Party = Readonly<Record<TroopId, number>>;
+
+/** Un groupe vide, ou complété à partir de quelques sortes seulement. */
+export function partyOf(some: Partial<Record<TroopId, number>> = {}): Record<TroopId, number> {
+  return {
+    hunter: 0,
+    armored: 0,
+    swift: 0,
+    toxic: 0,
+    guardian: 0,
+    scout: 0,
+    carrier: 0,
+    ...some,
+  };
+}
 
 export function partySize(party: Party): number {
   return TROOP_IDS.reduce((sum, id) => sum + party[id], 0);
@@ -17,7 +32,10 @@ export function partySize(party: Party): number {
 export function partyPower(party: Party, kind: PreyKind): number {
   return TROOP_IDS.reduce(
     (sum, id) =>
-      sum + party[id] * (STRONG_AGAINST[id] === kind ? BALANCE.hunt.strongMultiplier : 1),
+      sum +
+      party[id] *
+        BALANCE.troops[id].power *
+        (STRONG_AGAINST[id] === kind ? BALANCE.hunt.strongMultiplier : 1),
     0,
   );
 }
@@ -51,7 +69,7 @@ export function lossesFor(party: Party, chance: number, won: boolean): Record<Tr
     : Math.min(90, 50 + Math.floor((100 - chance) / 4));
   let toLose = Math.min(Math.max(0, size - 1), Math.floor((size * percent) / 100));
   const left: Record<TroopId, number> = { ...party };
-  const lost: Record<TroopId, number> = { hunter: 0, armored: 0, swift: 0 };
+  const lost = partyOf();
   while (toLose > 0) {
     // On retire à tour de rôle dans le type le plus nombreux : les pertes restent réparties.
     let biggest: TroopId = "hunter";
@@ -84,7 +102,8 @@ export function canTrain(state: PlayerState): boolean {
 /** Durée d'une naissance, en millisecondes : plus courte quand l'organite monte de niveau. */
 export function trainMs(state: PlayerState, troop: TroopId): number {
   const bonus = trainingBonus(state) ?? 0;
-  return Math.max(1000, Math.floor((BALANCE.troops[troop].seconds * 100_000) / (100 + bonus)));
+  const base = Math.floor((BALANCE.troops[troop].seconds * 100_000) / (100 + bonus));
+  return Math.max(1000, Math.floor((base * (100 + modifierPercent(state, "trainTime"))) / 100));
 }
 
 /**
@@ -92,8 +111,17 @@ export function trainMs(state: PlayerState, troop: TroopId): number {
  * millionièmes de sucre par milliseconde. C'est l'entretien qui limite la taille d'une armée.
  */
 export function upkeepRate(state: PlayerState): number {
-  const alive = troopsOwned(state) - (state.training?.remaining ?? 0);
-  return alive * BALANCE.troopUpkeep.milliPerSecond;
+  let parts = 0;
+  for (const id of TROOP_IDS) {
+    let alive = state.troops[id];
+    for (const sortie of [state.hunt, state.raid]) {
+      if (sortie !== null) alive += sortie.party[id] - (sortie.outcome?.losses[id] ?? 0);
+    }
+    // Une cellule de rang 2 mange davantage.
+    parts += alive * BALANCE.troops[id].upkeep;
+  }
+  const raw = parts * BALANCE.troopUpkeep.milliPerSecond;
+  return Math.max(0, Math.floor((raw * (100 + modifierPercent(state, "upkeep"))) / 100));
 }
 
 /** Toutes les cellules filles du joueur : à la maison, en chasse, et celles qui vont naître. */

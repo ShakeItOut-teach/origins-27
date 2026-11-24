@@ -314,3 +314,20 @@ suffisent le jour de l'ouverture ; une armée de 166 garde plus d'une chance sur
 jour 18 dans les abysses, et entre 25 et 50 % contre un rival moyen de la zone éclairée au
 dernier jour. La première proie n'a pas changé : le débutant gagne toujours sa première
 chasse. Le butin des rivaux n'a pas été relevé : la réserve ne pourrait pas le contenir.
+
+## 2026-11-24 — Palier 8 : premiers chiffres
+
+| Réglage                       | Valeur                                                                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Cellule de rang 2             | 2 gènes de sa famille ; entretien double ; 50 à 60 s                                                             |
+| Venimeuse                     | attaque 4 ; 90 sucres, 30 briques, 4 protéines                                                                   |
+| Gardienne                     | attaque 2, défense 5 ; 60 sucres, 60 briques, 4 protéines                                                        |
+| Éclaireuse                    | attaque 3, charge 2 ; 80 sucres, 30 briques, 4 protéines                                                         |
+| Porteuse                      | défense 2, charge 6 ; 70 sucres, 50 briques, 2 protéines                                                         |
+| Lignée                        | 3 gènes : +20 % sucre, +20 % attaque, −25 % trajets, +30 % défense                                               |
+| Nouveaux gènes                | +25 % protéines de chasse, +30 % charge, −25 % temps de naissance, −20 % trajets, +25 % défense, −15 % entretien |
+| Puissance d'une cellule fille | 5 × la moyenne de son attaque et de sa défense                                                                   |
+
+À entretien égal (une Centrale de niveau 5 nourrit 166 parts), 83 venimeuses frappent pour
+332 là où 166 cellules de rang 1 frappent pour 166 : la force des armées double au palier 8.
+Les rivaux n'ont pas été relevés pour autant ; à surveiller.

@@ -7,6 +7,7 @@
 import { BALANCE, PLACE_RESOURCE } from "@o27/data";
 import type { PlaceKind, ResourceId } from "@o27/data";
 import { createRng } from "./rng";
+import { travelMs } from "./stats";
 import { MICRO } from "./types";
 import type { PlayerState } from "./types";
 import { seasonDay } from "./unlock";
@@ -328,7 +329,10 @@ export function gatherOffer(state: PlayerState, deposit: Deposit, at: number): G
     resource: PLACE_RESOURCE[deposit.kind],
     loot: Math.min(depositLoad(deposit.kind, deposit.zone), depositLeft(deposit, state.taken, at)),
     energy: data.energy,
-    durationMs: Math.max(data.minSeconds, 2 * distance * data.secondsPerCell) * 1000,
+    durationMs: travelMs(
+      state,
+      Math.max(data.minSeconds, 2 * distance * data.secondsPerCell) * 1000,
+    ),
   };
 }
 

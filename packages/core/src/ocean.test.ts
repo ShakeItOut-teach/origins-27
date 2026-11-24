@@ -34,6 +34,7 @@ import {
   zoneAt,
   zoneInner,
   zoneOpenDay,
+  partyOf,
 } from "./index";
 import type { Deposit, OrderErrorCode, PlayerState } from "./index";
 
@@ -69,7 +70,7 @@ function atTier6(day: number, zone = 0): PlayerState {
       mutations: ["thrift"],
       organelles: { ...base.organelles, mitochondrion: 1, vacuole: 5, nursery: 3 },
       resources: { sugar: 100 * MICRO, bricks: 100 * MICRO, proteins: 10 * MICRO },
-      troops: { hunter: 6, armored: 0, swift: 0 },
+      troops: partyOf({ hunter: 6, armored: 0, swift: 0 }),
       shieldUntil: now + 20 * DAY_MS,
       nextRaidAt: now + 25 * DAY_MS,
     },
@@ -353,7 +354,7 @@ describe("les rivaux de l'océan", () => {
     const state = atTier6(3);
     const target = oceanRivals(state)[0];
     if (target === undefined) throw new Error("rival attendu");
-    const party = { hunter: 6, armored: 0, swift: 0 };
+    const party = partyOf({ hunter: 6, armored: 0, swift: 0 });
     const before = atTier5(state);
     expect(refusal(before, { type: "spyRival", rival: target.id }, state.now)).toBe("unknownRival");
     ok(state, { type: "spyRival", rival: target.id }, state.now);
@@ -382,7 +383,7 @@ describe("la sauvegarde", () => {
     delete old.zone;
     delete old.taken;
     const back = deserializeState(JSON.stringify(old));
-    expect(back.version).toBe(7);
+    expect(back.version).toBe(8);
     expect(back.zone).toBe(0);
     expect(back.taken).toEqual({});
   });

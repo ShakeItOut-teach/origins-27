@@ -119,7 +119,7 @@ export interface DailyQuests {
 }
 
 export interface PlayerState {
-  readonly version: 7;
+  readonly version: 8;
   /** Graine du joueur : fixe son apparence et tous ses tirages. */
   readonly seed: number;
   readonly rngState: number;
@@ -339,7 +339,8 @@ export type OrderErrorCode =
   | "zoneClosed"
   | "depleted"
   | "surface"
-  | "unknownPredator";
+  | "unknownPredator"
+  | "geneMissing";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

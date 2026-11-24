@@ -23,13 +23,14 @@ import {
   unattendedChance,
   visiblePrey,
   winChance,
+  partyOf,
 } from "./index";
 import type { OrderErrorCode, Prey, PlayerState } from "./index";
 
 const T0 = 1_800_000_000_000;
 const WORLD = { worldSeed: 27, slot: 4 };
 const WINDOW = BALANCE.hunt.strikeWindowSeconds * 1000;
-const NONE = { hunter: 0, armored: 0, swift: 0 };
+const NONE = partyOf();
 
 function party(values: Partial<Record<TroopId, number>>): Record<TroopId, number> {
   return { ...NONE, ...values };
@@ -108,7 +109,7 @@ describe("force, chances et pertes", () => {
   it("la cellule du bon type compte double", () => {
     expect(partyPower(party({ hunter: 3 }), "soft")).toBe(6);
     expect(partyPower(party({ hunter: 3 }), "fleeing")).toBe(3);
-    expect(partyPower(party({ hunter: 1, armored: 1, swift: 1 }), "aggressive")).toBe(4);
+    expect(partyPower(party(partyOf({ hunter: 1, armored: 1, swift: 1 })), "aggressive")).toBe(4);
   });
 
   it("à force égale, une chance sur deux ; jamais 0 ni 100", () => {
@@ -135,7 +136,8 @@ describe("force, chances et pertes", () => {
           swift: fc.integer({ min: 0, max: 40 }),
         }),
         fc.integer({ min: 1, max: 99 }),
-        (group, chance) => {
+        (some, chance) => {
+          const group = partyOf(some);
           fc.pre(partySize(group) > 0);
           const win = lossesFor(group, chance, true);
           const defeat = lossesFor(group, chance, false);
@@ -515,7 +517,9 @@ describe("garanties du moteur avec la chasse", () => {
         fc.integer({ min: 0, max: 4 }),
         fc.integer({ min: 0, max: 4 }),
       )
-      .map(([target, hunter, armored, swift]): Order => hunt(target, { hunter, armored, swift })),
+      .map(([target, hunter, armored, swift]): Order =>
+        hunt(target, partyOf({ hunter, armored, swift })),
+      ),
   );
   const steps = fc.array(fc.tuple(order, fc.integer({ min: 0, max: 400_000 })), {
     minLength: 1,
@@ -599,7 +603,7 @@ describe("garanties du moteur avec la chasse", () => {
       ),
     });
     const back = deserializeState(text);
-    expect(back.version).toBe(7);
+    expect(back.version).toBe(8);
     expect(back.resources).toEqual({ sugar: 500 * MICRO, bricks: 300 * MICRO, proteins: 0 });
     expect(back.organelles.nursery).toBe(0);
     expect(back.troops).toEqual(NONE);

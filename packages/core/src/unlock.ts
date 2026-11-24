@@ -25,8 +25,15 @@ function conditionMet(state: PlayerState, unlock: Unlock, at: number): boolean {
   return state.counters[unlock.condition.counter] >= unlock.condition.atLeast;
 }
 
+/** Les mutations que le joueur n'a pas encore et que son palier permet de proposer. */
+export function mutationPool(state: PlayerState): MutationId[] {
+  return MUTATION_IDS.filter(
+    (id) => !state.mutations.includes(id) && BALANCE.mutations[id].tier <= state.tier,
+  );
+}
+
 export function drawMutationOffer(state: PlayerState, at: number): Step {
-  const pool: MutationId[] = MUTATION_IDS.filter((id) => !state.mutations.includes(id));
+  const pool = mutationPool(state);
   const count = Math.min(BALANCE.mutationOffer.choices, pool.length);
   if (count === 0) return { state, events: [] };
   const rng = createRng(state.rngState);

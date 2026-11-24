@@ -277,12 +277,106 @@ export function drawScene(
     }
   }
 
+  // Le flagelle : un long fouet qui ondule derrière la cellule.
+  if (traits.has("whip")) {
+    const root = 2.6;
+    const r0 = membraneRadius(base, root, t, pulse);
+    g.moveTo(cx + Math.cos(root) * r0, cy + Math.sin(root) * r0);
+    for (let step = 1; step <= 14; step++) {
+      const along = r0 + (step / 14) * base * 0.95;
+      const wave = Math.sin(step * 0.9 - t * 4) * 0.09 * (step / 14);
+      g.lineTo(cx + Math.cos(root + wave) * along, cy + Math.sin(root + wave) * along);
+    }
+    g.stroke({ width: 1.4, color: glowColor, alpha: 0.85, cap: "round", join: "round" });
+  }
+
+  // La dormance : l'ébauche d'un kyste, une enveloppe en pointillé autour de la cellule.
+  if (traits.has("cyst")) {
+    for (let i = 0; i < MEMBRANE_POINTS; i += 2) {
+      const angle = (i / MEMBRANE_POINTS) * Math.PI * 2;
+      const r = membraneRadius(base, angle, t, pulse) * 1.17;
+      g.circle(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, 1).fill({
+        color: pale,
+        alpha: 0.55,
+      });
+    }
+  }
+
+  // L'essaimage : de petites cellules filles déjà libres, qui tournent autour.
+  if (traits.has("swarm")) {
+    for (let i = 0; i < 5; i++) {
+      const angle = t * 0.25 + i * 1.26;
+      const r = base * (1.42 + 0.08 * Math.sin(t * 0.9 + i * 2));
+      const sx = cx + Math.cos(angle) * r;
+      const sy = cy + Math.sin(angle) * r * 0.92;
+      g.circle(sx, sy, base * 0.055)
+        .fill({ color: hsl(hue, 0.5, 0.3), alpha: 0.35 })
+        .stroke({ width: 1, color: glowColor, alpha: 0.85 });
+      g.circle(sx, sy, base * 0.018).fill({ color: glowColor, alpha: 0.7 });
+    }
+  }
+
   // Le corps : un cytoplasme translucide, une membrane en double feuillet.
   g.poly(ring(1), true)
     .fill({ color: hsl(hue, 0.5, 0.3), alpha: 0.26 })
     .stroke({ width: 1.8, color: glowColor, alpha: 0.95 });
   g.poly(ring(0.955), true).stroke({ width: 1, color: glowColor, alpha: 0.45 });
   g.poly(ring(0.8), true).fill({ color: hsl(hue, 0.45, 0.45), alpha: 0.07 });
+
+  // Les plaques de cuirasse : la membrane se couvre de plaques jointives, comme une thèque.
+  if (traits.has("plates")) {
+    for (let i = 0; i < MEMBRANE_POINTS; i += 8) {
+      const angle = (i / MEMBRANE_POINTS) * Math.PI * 2;
+      const r = membraneRadius(base, angle, t, pulse);
+      g.moveTo(cx + Math.cos(angle) * r * 0.86, cy + Math.sin(angle) * r * 0.86).lineTo(
+        cx + Math.cos(angle) * r * 1.03,
+        cy + Math.sin(angle) * r * 1.03,
+      );
+    }
+    g.stroke({ width: 1.4, color: pale, alpha: 0.7 });
+    g.poly(ring(0.86), true).stroke({ width: 1.2, color: pale, alpha: 0.55 });
+  }
+
+  // Les harpons : de fines fléchettes rangées sous la membrane, prêtes à partir.
+  if (traits.has("darts")) {
+    for (let i = 2; i < MEMBRANE_POINTS; i += 4) {
+      const angle = (i / MEMBRANE_POINTS) * Math.PI * 2;
+      const r = membraneRadius(base, angle, t, pulse);
+      g.moveTo(cx + Math.cos(angle) * r * 0.8, cy + Math.sin(angle) * r * 0.8).lineTo(
+        cx + Math.cos(angle) * r * 0.93,
+        cy + Math.sin(angle) * r * 0.93,
+      );
+    }
+    g.stroke({ width: 1.6, color: hsl(38, 0.7, 0.72), alpha: 0.8, cap: "round" });
+  }
+
+  // La voracité : une bouche en entonnoir, bordée de cils qui rabattent les proies.
+  if (traits.has("mouth")) {
+    const lip = 0.35;
+    const r = membraneRadius(base, lip, t, pulse);
+    const throatX = cx + Math.cos(lip) * r * 0.55;
+    const throatY = cy + Math.sin(lip) * r * 0.55;
+    for (const side of [-1, 1]) {
+      const edge = lip + side * 0.2;
+      g.moveTo(cx + Math.cos(edge) * r, cy + Math.sin(edge) * r).quadraticCurveTo(
+        cx + Math.cos(edge) * r * 0.75,
+        cy + Math.sin(edge) * r * 0.75,
+        throatX,
+        throatY,
+      );
+    }
+    g.stroke({ width: 1.4, color: glowColor, alpha: 0.9 });
+    for (let i = 0; i < 4; i++) {
+      const edge = lip - 0.18 + i * 0.12;
+      const beat = Math.sin(t * 6 + i) * 0.06;
+      g.moveTo(cx + Math.cos(edge) * r, cy + Math.sin(edge) * r).lineTo(
+        cx + Math.cos(edge + beat) * r * 1.14,
+        cy + Math.sin(edge + beat) * r * 1.14,
+      );
+    }
+    g.stroke({ width: 1, color: glowColor, alpha: 0.7 });
+    g.circle(throatX, throatY, base * 0.035).fill({ color: glowColor, alpha: 0.5 });
+  }
 
   // Le cytoplasme : des grains entraînés par un lent courant.
   for (const grain of decor.grains) {

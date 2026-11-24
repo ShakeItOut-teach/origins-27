@@ -1,6 +1,8 @@
 import {
   MICRO,
   defensePower,
+  foePower,
+  partyOf,
   depthAt,
   nearRivals,
   isNewcomer,
@@ -204,13 +206,10 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
   const mine = raid !== null && raid.rival === rival.id ? raid : null;
   const weakness = TROOP_IDS.find((id) => STRONG_AGAINST[id] === rival.kind) ?? "hunter";
   const range = guardRange(offer.guard);
-  const [kept, setKept] = useState<Record<TroopId, number>>({ hunter: 0, armored: 0, swift: 0 });
-  const party: Record<TroopId, number> = {
-    hunter: Math.max(0, state.troops.hunter - kept.hunter),
-    armored: Math.max(0, state.troops.armored - kept.armored),
-    swift: Math.max(0, state.troops.swift - kept.swift),
-  };
-  const chance = winChance(party, rival.kind, offer.guard);
+  const [kept, setKept] = useState<Record<TroopId, number>>(() => partyOf());
+  const party = partyOf();
+  for (const id of TROOP_IDS) party[id] = Math.max(0, state.troops[id] - kept[id]);
+  const chance = winChance(party, rival.kind, foePower(state, offer.guard));
   const spy = BALANCE.rivals.spy;
 
   let blocked: string | null = null;

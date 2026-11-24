@@ -23,6 +23,7 @@ export {
   partySize,
   strikeChance,
   canTrain,
+  partyOf,
   trainMs,
   troopsOwned,
   upkeepRate,
@@ -82,14 +83,17 @@ export {
   troopPower,
 } from "./power";
 export type { RankRow, Ranking } from "./power";
-export { evaluateTier, orderTier, seasonDay } from "./unlock";
+export { evaluateTier, mutationPool, orderTier, seasonDay } from "./unlock";
+export { familyGenes, genesMissing, hasLineage, troopUnlocked } from "./genes";
 export {
   capacity,
+  foePower,
   levelCost,
   levelDuration,
   modifierPercent,
   productionRate,
   tapYield,
+  travelMs,
 } from "./stats";
 export {
   createPlayer,

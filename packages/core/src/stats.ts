@@ -1,12 +1,13 @@
 /** Valeurs dérivées de l'état : production, stockage, coûts, durées. Entiers uniquement. */
 import { BALANCE, ORGANELLE_IDS } from "@o27/data";
 import type { OrganelleId, ResourceId, StatId } from "@o27/data";
+import { lineagePercent } from "./genes";
 import { MICRO } from "./types";
 import type { PlayerState } from "./types";
 
-/** Somme des pourcentages apportés par les mutations pour une statistique. */
+/** Somme des pourcentages apportés par les mutations et les lignées pour une statistique. */
 export function modifierPercent(state: PlayerState, stat: StatId): number {
-  let total = 0;
+  let total = lineagePercent(state, stat);
   for (const id of state.mutations) {
     const mutation = BALANCE.mutations[id];
     if (mutation.stat === stat) total += mutation.percent;
@@ -16,6 +17,19 @@ export function modifierPercent(state: PlayerState, stat: StatId): number {
 
 function applyPercent(value: number, percent: number): number {
   return Math.floor((value * (100 + percent)) / 100);
+}
+
+/**
+ * La force d'un adversaire telle que le joueur la rencontre : ses bonus d'attaque reviennent
+ * à affaiblir ce qu'il affronte. Jamais moins de 1.
+ */
+export function foePower(state: PlayerState, power: number): number {
+  return Math.max(1, Math.floor((power * 100) / (100 + modifierPercent(state, "attack"))));
+}
+
+/** Durée d'un trajet dans l'océan, une fois comptés les gènes de mobilité. */
+export function travelMs(state: PlayerState, ms: number): number {
+  return Math.max(1000, applyPercent(ms, modifierPercent(state, "travelTime")));
 }
 
 /** Multiplie `times` fois par `growthPercent` %, en arrondissant vers le bas à chaque pas. */
