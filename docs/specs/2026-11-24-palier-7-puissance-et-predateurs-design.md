@@ -18,8 +18,11 @@ la biologie, et un dessin de la carte inspiré du réel.
   remontée. **Puissance des troupes** : 5 par cellule fille, à la maison comme en sortie.
 - **Cinq classements** : puissance totale, cellule, troupes, pillards (tout ce qui a été pris
   à des rivaux), défense (attaques repoussées). À score égal, le joueur passe devant.
-- **Organismes simulés** : leur score grandit chaque jour, selon leur tempérament et leur
-  zone. Chacun a ses penchants : plus ou moins de troupes, de pillages, de défense.
+- **Organismes simulés** : comme de vrais joueurs, ils ne jouent pas tous autant. Chacun a son
+  ambition : quelques-uns filent devant, beaucoup suivent, et les moins ambitieux (30 %)
+  abandonnent en route, leur score figé. Certains partent vite puis ralentissent, d'autres
+  l'inverse. Chacun a ses penchants : plus ou moins de troupes, de pillages, de défense.
+  (Revu le 2026-11-25 : avant, tous suivaient la même courbe à 30 % près.)
 - **Six ligues**, d'après le rang de puissance : Superprédateur (1 % des organismes),
   Prédateur (5 %), Chasseur (15 %), Brouteur (35 %), Filtreur (65 %), Plancton (le reste).
 - **Chaque minuit**, la ligue donne 100 sucres, 50 briques et 10 protéines, multipliés par

@@ -63,6 +63,38 @@ describe("équilibrage", () => {
     expect(BalanceSchema.safeParse({ ...BALANCE, surprise: 1 }).success).toBe(false);
   });
 
+  it("les courbes des organismes simulés couvrent toute la saison", () => {
+    const { median, drive, quit } = BALANCE.ranking;
+    for (const curve of Object.values(median)) {
+      expect(curve[0]?.[0]).toBe(1);
+      expect(curve[curve.length - 1]?.[0]).toBe(SEASON_DAYS);
+      // Un organisme moyen ne perd jamais de terrain.
+      curve.forEach((point, index) => {
+        expect(point[1]).toBeGreaterThanOrEqual(curve[index - 1]?.[1] ?? 0);
+      });
+    }
+    // L'élan va du moins ambitieux (centile 0) au plus ambitieux (centile 100), en montant.
+    expect(drive[0]?.[0]).toBe(0);
+    expect(drive[drive.length - 1]?.[0]).toBe(100);
+    drive.forEach((point, index) => {
+      expect(point[1]).toBeGreaterThan(drive[index - 1]?.[1] ?? -1);
+    });
+    expect(quit.fromDay).toBeLessThanOrEqual(quit.toDay);
+    expect(quit.toDay).toBeLessThanOrEqual(SEASON_DAYS);
+    // Une courbe dont les jours reculent est refusée.
+    const broken = {
+      ...BALANCE,
+      ranking: {
+        ...BALANCE.ranking,
+        drive: [
+          [0, 10],
+          [0, 20],
+        ],
+      },
+    };
+    expect(BalanceSchema.safeParse(broken).success).toBe(false);
+  });
+
   it("le premier organite est payable avec la réserve de départ", () => {
     const cheapest = Math.min(...ORGANELLE_IDS.map((id) => BALANCE.organelles[id].buildCost.sugar));
     expect(cheapest).toBeLessThanOrEqual(BALANCE.baseStorage.sugar);

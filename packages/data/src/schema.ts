@@ -27,6 +27,18 @@ import {
 const positiveInt = z.number().int().positive();
 const nonNegativeInt = z.number().int().nonnegative();
 
+/** Une courbe : des points [abscisse, valeur] dont les abscisses montent strictement. */
+const curve = z
+  .array(z.tuple([nonNegativeInt, nonNegativeInt]))
+  .min(2)
+  .refine(
+    (points) =>
+      points.every((point, index) => index === 0 || point[0] > (points[index - 1]?.[0] ?? -1)),
+    {
+      message: "les abscisses d'une courbe doivent monter",
+    },
+  );
+
 /** Un coût, en unités entières de chaque ressource. */
 export const CostSchema = z.strictObject({ sugar: nonNegativeInt, bricks: nonNegativeInt });
 
@@ -446,18 +458,46 @@ export const BalanceSchema = z.strictObject({
     perZone: positiveInt,
     perTroop: positiveInt,
   }),
-  /** Les scores des organismes simulés : ils grandissent avec la saison. */
+  /**
+   * Les scores des organismes simulés. Comme de vrais joueurs, ils ne jouent pas tous autant :
+   * quelques-uns filent devant, beaucoup suivent, les moins ambitieux abandonnent en route.
+   */
   ranking: z.strictObject({
     tier: positiveInt,
-    power: z.strictObject({ base: positiveInt, perDay: positiveInt }),
-    /** À partir de ce jour, les organismes grandissent bien plus vite : rangs supérieurs obligent. */
-    late: z.strictObject({ fromDay: positiveInt, perDay: nonNegativeInt }),
-    /** Supplément de puissance par zone remontée, en pourcentage. */
-    zonePercent: nonNegativeInt,
-    /** Butin pillé par jour par un organisme moyen. */
-    lootPerDay: positiveInt,
-    /** Attaques repoussées en cent jours par un organisme moyen. */
-    defensePerHundredDays: positiveInt,
+    /**
+     * Le score d'un organisme moyen, jour par jour : des points [jour, score], du premier jour
+     * au dernier ; entre deux points, la ligne droite. La cellule ne compte pas ses zones, qui
+     * s'ajoutent comme pour le joueur.
+     */
+    median: z.strictObject({
+      cell: curve,
+      troops: curve,
+      loot: curve,
+      defense: curve,
+    }),
+    /**
+     * L'élan d'un organisme d'après son ambition : des points [centile, pourcentage du score
+     * moyen], du moins ambitieux (0) au plus ambitieux (100).
+     */
+    drive: curve,
+    /** Ce que l'élan pèse dans chaque classement, en pourcentage : la cellule s'écarte moins. */
+    spread: z.strictObject({
+      cell: nonNegativeInt,
+      troops: nonNegativeInt,
+      loot: nonNegativeInt,
+      defense: nonNegativeInt,
+    }),
+    /**
+     * Certains partent vite puis ralentissent, d'autres l'inverse : jusqu'à ce pourcentage de
+     * plus le premier jour, et de moins le dernier (ou l'inverse).
+     */
+    pacePercent: z.number().int().min(0).max(90),
+    /** Sous ce centile d'ambition, l'organisme abandonne un jour entre ces deux-là : son score se fige. */
+    quit: z.strictObject({
+      belowPercentile: z.number().int().min(0).max(100),
+      fromDay: positiveInt,
+      toDay: positiveInt,
+    }),
   }),
   /**
    * Les ligues, de la plus haute à la plus basse. Chaque minuit, le joueur reçoit la

@@ -25,6 +25,7 @@ import {
   partyOf,
 } from "./index";
 import type { OrderErrorCode, PlayerState, Predator } from "./index";
+import { along, organismHabits, organismScore } from "./power";
 
 const HOUR = 3_600_000;
 const SEASON = 1_800_000_000_000;
@@ -141,6 +142,82 @@ describe("les classements", () => {
     expect(ranking(raider, "loot").mine.rank).toBe(1);
     const wall = { ...state, counters: { ...state.counters, attacksRepelled: 1000 } };
     expect(ranking(wall, "defense").mine.rank).toBe(1);
+  });
+});
+
+describe("l'océan des organismes simulés", () => {
+  const scores = (day: number): number[] =>
+    Array.from({ length: ORGANISMS }, (_, slot) => organismScore(27, slot, day, "power")).sort(
+      (one, other) => other - one,
+    );
+  const place = (list: readonly number[], rank: number): number => list[rank - 1] ?? 0;
+
+  it("une courbe passe en ligne droite d'un point à l'autre", () => {
+    const points = [
+      [1, 100],
+      [5, 500],
+      [9, 300],
+    ] as const;
+    expect(along(points, 0)).toBe(100);
+    expect(along(points, 3)).toBe(300);
+    expect(along(points, 7)).toBe(400);
+    expect(along(points, 30)).toBe(300);
+  });
+
+  it("il est inégal : quelques-uns filent devant, beaucoup suivent, d'autres traînent", () => {
+    for (const day of [9, 13, 21, 27]) {
+      const list = scores(day);
+      // Le premier vaut au moins trois fois l'organisme du milieu…
+      expect(place(list, 1)).toBeGreaterThan(3 * place(list, 250));
+      // … le 25e (le haut de la ligue des Prédateurs), au moins deux fois…
+      expect(place(list, 25)).toBeGreaterThan(2 * place(list, 250));
+      // … et le milieu, au moins deux fois les derniers, qui ont souvent abandonné.
+      expect(place(list, 250)).toBeGreaterThan(2 * place(list, 450));
+    }
+  });
+
+  it("les moins ambitieux abandonnent en route : leur score ne bouge plus", () => {
+    const habits = Array.from({ length: ORGANISMS }, (_, slot) => organismHabits(27, slot));
+    const quitters = habits.flatMap((entry, slot) => (entry.quitDay === null ? [] : [slot]));
+    const share = (quitters.length * 100) / ORGANISMS;
+    expect(share).toBeGreaterThan(BALANCE.ranking.quit.belowPercentile - 2);
+    expect(share).toBeLessThan(BALANCE.ranking.quit.belowPercentile + 2);
+    for (const slot of quitters) {
+      const day = habits[slot]?.quitDay ?? 0;
+      expect(organismScore(27, slot, 27, "power")).toBe(organismScore(27, slot, day, "power"));
+      expect(habits[slot]?.percentile).toBeLessThan(BALANCE.ranking.quit.belowPercentile);
+    }
+    // Les autres grandissent jusqu'au bout.
+    const keeper = habits.findIndex((entry) => entry.quitDay === null);
+    expect(organismScore(27, keeper, 27, "power")).toBeGreaterThan(
+      organismScore(27, keeper, 20, "power"),
+    );
+  });
+
+  it("le classement bouge : la tête de l'océan change au fil de la saison", () => {
+    const top = (day: number): number[] =>
+      Array.from({ length: ORGANISMS }, (_, slot) => slot)
+        .sort(
+          (one, other) =>
+            organismScore(27, other, day, "power") - organismScore(27, one, day, "power"),
+        )
+        .slice(0, 10);
+    const early = top(7);
+    const late = top(21);
+    expect(late.filter((slot) => early.includes(slot)).length).toBeLessThan(10);
+  });
+
+  it("chaque classement suit sa catégorie : la puissance est la cellule plus les troupes", () => {
+    for (const slot of [0, 17, 250, 499]) {
+      for (const day of [4, 13, 27]) {
+        expect(organismScore(27, slot, day, "power")).toBe(
+          organismScore(27, slot, day, "cell") + organismScore(27, slot, day, "troops"),
+        );
+        for (const category of RANKING_IDS) {
+          expect(organismScore(27, slot, day, category)).toBeGreaterThanOrEqual(0);
+        }
+      }
+    }
   });
 });
 

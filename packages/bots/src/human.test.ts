@@ -49,6 +49,15 @@ describe("une saison au rythme humain (dix connexions par jour)", () => {
     expect(idle).toBeLessThanOrEqual(25);
   });
 
+  it("il n'est pas premier d'office : il tient le haut du classement, et rarement la tête", () => {
+    const ranked = report.days.filter((day) => day.day >= 9);
+    // Dans les 15 % les plus puissants (la ligue des Chasseurs ou mieux) presque chaque jour…
+    const high = ranked.filter((day) => day.rank >= 1 && day.rank <= 75).length;
+    expect(high).toBeGreaterThanOrEqual(ranked.length - 3);
+    // … mais premier quelques jours au plus : les plus ambitieux de l'océan vont plus vite.
+    expect(ranked.filter((day) => day.rank === 1).length).toBeLessThanOrEqual(3);
+  });
+
   it("il ne meurt pas de faim et garde une armée", () => {
     for (const day of report.days) expect(day.starved).toBe(0);
     // Une chasse ratée peut coûter cher un jour donné : on regarde la dernière semaine.

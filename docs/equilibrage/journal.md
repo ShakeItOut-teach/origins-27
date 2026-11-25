@@ -535,3 +535,40 @@ Mesure, cinq saisons simulées (somme des niveaux d'organites, avant → après)
 L'écart entre le joueur à 3 connexions et celui à 10 passe de 53 à 23 niveaux en fin de
 saison. Tous sortent des eaux au jour 22. Le classement simulé, déjà trop serré, l'est encore
 plus : presque tous les profils finissent premiers.
+
+## 2026-11-25 (suite) — Un océan inégal
+
+Le classement simulé était trop serré : le 1er n'avait que 46 % de plus que le 250e, et
+presque tous les profils de joueurs finissaient premiers. Les 500 organismes simulés jouent
+maintenant comme de vrais joueurs, qui ne jouent pas tous autant.
+
+| Réglage   | Avant                                     | Après                                                                              |
+| --------- | ----------------------------------------- | ---------------------------------------------------------------------------------- |
+| Forme     | une seule courbe pour tous, à 30 % près   | une courbe moyenne par classement (cellule, troupes, pillage, défense)             |
+| Ambition  | sans effet sur le score                   | de 5 % à 575 % d'un organisme moyen ; c'est aussi l'ordre de remontée dans l'océan |
+| Abandons  | aucun                                     | les 30 % les moins ambitieux abandonnent entre les jours 3 et 21 : score figé      |
+| Allure    | aucune                                    | jusqu'à ±20 % : certains partent vite puis ralentissent, d'autres l'inverse        |
+| Puissance | une formule, la cellule en était une part | la cellule plus les troupes, comme pour le joueur ; 100 par zone remontée          |
+
+La cellule s'écarte moins que le reste (un organisme très ambitieux a au plus 1,7 fois la
+cellule d'un organisme moyen) : ses niveaux coûtent de plus en plus cher.
+
+Écart entre le 1er et le 250e (monde 27) : 1,46 → 4,6 au jour 13, 1,46 → 6,0 au jour 27.
+
+Rang de puissance, cinq saisons simulées :
+
+| Saison | Connexions par jour | Avant                                   | Après                                                 |
+| ------ | ------------------- | --------------------------------------- | ----------------------------------------------------- |
+| s2     | 3                   | 1er aux jours 4 à 6, 9, 11 ; 500e au 19 | entre le 220e et le 315e des jours 6 à 20 ; 29e au 27 |
+| s5     | 6                   | 1er tous les jours                      | entre le 84e et le 270e des jours 5 à 20 ; 1er au 27  |
+| s1     | 10                  | 1er du jour 4 au jour 22                | entre le 13e et le 46e à partir du jour 8             |
+| s4     | 10                  | 1er presque tous les jours              | entre le 1er et le 38e ; 1er aux jours 17 et 18       |
+| s3     | 20                  | 1er tous les jours                      | entre le 1er et le 29e ; 1er au jour 5                |
+
+Le concours de la semaine devient une vraie course : les profils actifs finissent dans les
+50 premiers (ceux qui sont récompensés), parfois premiers ; le joueur à 3 connexions en est
+loin, sauf la dernière semaine où sa puissance grimpe.
+
+L'économie ne bouge pas : aucune connexion sans rien à lancer, la même somme de niveaux, et
+tous sortent des eaux au jour 22. Les récompenses de ligue baissent pour les profils qui
+étaient premiers sans le mériter (×3 avant, ×2 ou ×1,5 maintenant).

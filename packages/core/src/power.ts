@@ -1,9 +1,10 @@
 /**
  * La puissance, les classements et les ligues.
  * La puissance d'un joueur se calcule à partir de son état. Celle des organismes simulés se
- * calcule à partir de la graine du monde, de leur place et du jour : elle grandit avec la saison.
+ * calcule à partir de la graine du monde, de leur place et du jour : elle grandit avec la saison,
+ * plus ou moins vite selon leur ambition.
  */
-import { BALANCE, ORGANELLE_IDS, TROOP_IDS } from "@o27/data";
+import { BALANCE, ORGANELLE_IDS, SEASON_DAYS, TROOP_IDS } from "@o27/data";
 import type { RankingId, ResourceId } from "@o27/data";
 import { earnChest } from "./chests";
 import { evolutionLevels } from "./evolutions";
@@ -58,7 +59,71 @@ export function playerScore(state: PlayerState, category: RankingId): number {
   }
 }
 
-/** Le score d'un organisme simulé un jour donné. */
+/** La valeur d'une courbe en un point : la ligne droite entre ses deux voisins. */
+export function along(points: readonly (readonly [number, number])[], x: number): number {
+  const first = points[0];
+  if (first === undefined) return 0;
+  if (x <= first[0]) return first[1];
+  for (let index = 1; index < points.length; index++) {
+    const point = points[index];
+    const previous = points[index - 1];
+    if (point === undefined || previous === undefined) continue;
+    if (x <= point[0]) {
+      return (
+        previous[1] + ((point[1] - previous[1]) * (x - previous[0])) / (point[0] - previous[0])
+      );
+    }
+  }
+  return points[points.length - 1]?.[1] ?? 0;
+}
+
+/** Ce qui distingue un organisme simulé des autres. */
+export interface OrganismHabits {
+  /** Son ambition : 100 pour le plus ambitieux de l'océan, 0 pour le moins ambitieux. */
+  readonly percentile: number;
+  /** Le jour où il abandonne, ou `null` s'il joue jusqu'au bout. */
+  readonly quitDay: number | null;
+  /** Ses penchants, en pourcentage d'un organisme moyen. */
+  readonly troops: number;
+  readonly raider: number;
+  readonly defender: number;
+  /** Positif : il part vite puis ralentit ; négatif : l'inverse. */
+  readonly pace: number;
+  /** Ses petites différences d'un jour à l'autre avec ses semblables, en pourcentage. */
+  readonly jitter: number;
+}
+
+export function organismHabits(worldSeed: number, slot: number): OrganismHabits {
+  const data = BALANCE.ranking;
+  const count = BALANCE.world.organisms;
+  const ambition = rankOf(worldSeed, slot);
+  const percentile = count > 1 ? (100 * (count - 1 - ambition)) / (count - 1) : 100;
+  const rng = createRng((worldSeed ^ 0x9e3779b9 ^ Math.imul(slot + 1, 0xc2b2ae35)) >>> 0);
+  rng.next();
+  rng.next();
+  const troops = 70 + rng.int(61);
+  const raider = rng.int(201);
+  const defender = 30 + rng.int(141);
+  const pace = rng.int(2 * data.pacePercent + 1) - data.pacePercent;
+  const quitDay = data.quit.fromDay + rng.int(data.quit.toDay - data.quit.fromDay + 1);
+  // Le tempérament qui règle sa force sur la carte le distingue un peu de ses voisins de rang.
+  const { temper } = organismProfile(worldSeed, slot);
+  return {
+    percentile,
+    quitDay: percentile < data.quit.belowPercentile ? quitDay : null,
+    troops,
+    raider,
+    defender,
+    pace,
+    jitter: 100 + (temper - 100) / 3,
+  };
+}
+
+/**
+ * Le score d'un organisme simulé un jour donné : celui d'un organisme moyen ce jour-là, que son
+ * ambition, son allure et ses penchants font monter ou descendre. Un organisme qui abandonne
+ * garde le score de son dernier jour.
+ */
 export function organismScore(
   worldSeed: number,
   slot: number,
@@ -66,35 +131,30 @@ export function organismScore(
   category: RankingId,
 ): number {
   const data = BALANCE.ranking;
-  const { temper } = organismProfile(worldSeed, slot);
-  const rng = createRng((worldSeed ^ 0x9e3779b9 ^ Math.imul(slot + 1, 0xc2b2ae35)) >>> 0);
-  rng.next();
-  rng.next();
-  // Chaque organisme a ses penchants : plus ou moins de troupes, de pillages, de défense.
-  const troopShare = 25 + rng.int(31);
-  const raider = 20 + rng.int(161);
-  const defender = 30 + rng.int(141);
-  const zone = organismZone(rankOf(worldSeed, slot), day);
-  const power = Math.round(
-    ((data.power.base +
-      data.power.perDay * (day - 1) +
-      data.late.perDay * Math.max(0, day - data.late.fromDay)) *
-      temper *
-      (100 + data.zonePercent * zone)) /
-      10_000,
-  );
-  const troops = Math.round((power * troopShare) / 100);
+  const habits = organismHabits(worldSeed, slot);
+  const last = habits.quitDay === null ? day : Math.min(day, habits.quitDay);
+  const drive = along(data.drive, habits.percentile);
+  const lean = (spread: number): number => 100 + ((drive - 100) * spread) / 100;
+  const late = Math.min(1, Math.max(0, (last - 1) / (SEASON_DAYS - 1)));
+  const pace = 100 + habits.pace * (1 - 2 * late);
+  const grown = (curve: readonly (readonly [number, number])[], spread: number): number =>
+    (along(curve, last) * lean(spread) * habits.jitter * pace) / 1_000_000;
+  const zone = organismZone(rankOf(worldSeed, slot), last);
+  const cell = Math.round(grown(data.median.cell, data.spread.cell)) + zone * BALANCE.power.perZone;
+  const troops = Math.round((grown(data.median.troops, data.spread.troops) * habits.troops) / 100);
   switch (category) {
     case "power":
-      return power;
+      return cell + troops;
     case "cell":
-      return power - troops;
+      return cell;
     case "troops":
       return troops;
     case "loot":
-      return Math.round((data.lootPerDay * (day - 1) * temper * raider) / 10_000);
+      return Math.round((grown(data.median.loot, data.spread.loot) * habits.raider) / 100);
     case "defense":
-      return Math.floor((data.defensePerHundredDays * (day - 1) * defender) / 10_000);
+      return Math.floor(
+        (along(data.median.defense, last) * lean(data.spread.defense) * habits.defender) / 10_000,
+      );
   }
 }
 
