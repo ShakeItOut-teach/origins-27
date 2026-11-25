@@ -1,6 +1,8 @@
-import "@fontsource/instrument-serif/400.css";
-import "@fontsource/ibm-plex-sans/400.css";
-import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource-variable/bodoni-moda/opsz.css";
+import "@fontsource-variable/bodoni-moda/opsz-italic.css";
+import "@fontsource/spectral/400.css";
+import "@fontsource/spectral/400-italic.css";
+import "@fontsource/spectral/600.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./theme/tokens.css";
 import "./theme/app.css";

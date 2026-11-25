@@ -1,20 +1,41 @@
-/* Jetons de design : le carnet de laboratoire. Aucune couleur n'est écrite ailleurs. */
+/*
+ * Jetons de design : l'identité « Atlas » (docs/identite/charte.md, ADR 0014).
+ * Un atlas d'histoire naturelle gravé : papier, encre, hachures, lavis d'aquarelle.
+ * Aucune couleur, aucune police n'est écrite ailleurs que dans ce fichier.
+ */
 :root {
-  --ink: #1d2433;
-  --ink-soft: #5b6477;
-  --paper: #f4efe4;
-  --paper-deep: #e9e1d0;
-  --grid: rgba(74, 111, 165, 0.14);
-  --eosin: #a8402c;
-  --algae: #3f7d5c;
-  --iodine: #d9a441;
-  --slide: #4a6fa5;
-  --lens-center: #17283f;
-  --lens-edge: #060a12;
-  --on-dark: #e8eef7;
+  /* Le papier et l'encre. */
+  --ink: #1e1b18;
+  --ink-soft: #5a5148;
+  --paper: #ede6d6;
+  --paper-deep: #e0d7c3;
+  --rule: rgba(30, 27, 24, 0.16);
 
-  --font-title: "Instrument Serif", Georgia, serif;
-  --font-text: "IBM Plex Sans", system-ui, sans-serif;
+  /* Les teintes d'aquarelle. Chacune a un rôle, et un seul. */
+  --prussian: #1d4f73; /* agir : le bouton principal, ce qui est choisi */
+  --madder: #a63d60; /* alerter : ce qui manque, ce qui menace */
+  --gamboge: #d9a520; /* récompenser : jamais en texte sur le papier */
+  --verdigris: #356b5e; /* gagner : production, vie, ce qui pousse */
+
+  /* La planche noire : le fond des vues vivantes (cellule, carte). */
+  --plate: #14110e;
+  --plate-glow: #221d18;
+  --bone: #f1ebdd;
+
+  /* Anciens noms, gardés pour le code déjà écrit. Le code neuf emploie les noms ci-dessus. */
+  --grid: var(--rule);
+  --eosin: var(--madder);
+  --algae: var(--verdigris);
+  --iodine: var(--gamboge);
+  --slide: var(--prussian);
+  --lens-center: var(--plate-glow);
+  --lens-edge: var(--plate);
+  --on-dark: var(--bone);
+  --action: var(--prussian);
+
+  /* Titres en Bodoni (capitales), texte en Spectral, chiffres en Plex Mono. */
+  --font-title: "Bodoni Moda Variable", "Bodoni Moda", "Didot", "Bodoni MT", Georgia, serif;
+  --font-text: "Spectral", Georgia, "Times New Roman", serif;
   --font-number: "IBM Plex Mono", ui-monospace, monospace;
 
   --space-1: 4px;
@@ -24,9 +45,10 @@
   --space-5: 24px;
   --space-6: 32px;
 
-  --line: 2px solid var(--ink);
-  --shadow: 4px 4px 0 var(--ink);
-  --shadow-big: 6px 6px 0 var(--ink);
-  --radius: 10px;
+  /* Le filet : un trait d'encre. Le double filet remplace les anciennes ombres dures. */
+  --line: 1.5px solid var(--ink);
+  --shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--ink);
+  --shadow-big: 0 0 0 3px var(--paper), 0 0 0 4.5px var(--ink);
+  --radius: 2px;
   --touch: 48px;
 }

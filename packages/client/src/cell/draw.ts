@@ -2,7 +2,11 @@
  * Dessin de la lame de microscope : la cellule, ses organites, ses mutations.
  * Le dessin suit ce que montre un vrai microscope à fond noir : une membrane en double
  * feuillet, un cytoplasme granuleux, un noyau avec son enveloppe et ses pores, des
- * mitochondries à crêtes, un réticulum en feuillets. Des traits fins, des corps translucides.
+ * mitochondries à crêtes, un réticulum en feuillets.
+ *
+ * Le style est celui de la charte « Atlas » (docs/identite/charte.md) : une gravure en clair
+ * sur une planche noire. Le trait est couleur d'os ; la matière se dit en pointillé ; la
+ * couleur n'est qu'un lavis léger, une teinte par organite.
  */
 import { createRng } from "@o27/core";
 import type { Creature } from "@o27/core";
@@ -66,10 +70,11 @@ export function makeDecor(seed: number): Decor {
     distance: 0.25 + rng.next() * 0.5,
     r: 0.035 + rng.next() * 0.045,
   }));
-  const grains = Array.from({ length: 90 }, () => ({
+  // Le pointillé du cytoplasme : serré vers le bord, c'est l'ombre des gravures.
+  const grains = Array.from({ length: 240 }, () => ({
     angle: rng.next() * Math.PI * 2,
-    distance: Math.sqrt(rng.next()) * 0.86,
-    r: 0.006 + rng.next() * 0.012,
+    distance: Math.pow(rng.next(), 0.38) * 0.9,
+    r: 0.004 + rng.next() * 0.007,
   }));
   return { motes, spots, grains };
 }
@@ -112,6 +117,17 @@ export const ORGANELLE_ANGLE: Readonly<Record<OrganelleId, number>> = {
 
 const MEMBRANE_POINTS = 96;
 
+/** Le trait de la gravure sur la planche noire (jeton --bone). */
+const BONE = 0xf1ebdd;
+/** Les teintes de lavis, éclaircies pour rester lisibles sur le noir. */
+const WASH = {
+  gamboge: 0xe6b94a,
+  prussian: 0x8fb4cf,
+  verdigris: 0x8dbfaf,
+  madder: 0xd98ba6,
+  moss: 0xb9c48a,
+} as const;
+
 function membraneRadius(base: number, angle: number, t: number, pulse: number): number {
   return (
     base *
@@ -153,11 +169,11 @@ function mitochondrion(
   angle: number,
   alpha: number,
 ): void {
-  const amber = hsl(28, 0.75, 0.7);
+  const amber = WASH.gamboge;
   const wide = long * 0.46;
   g.poly(ellipse(x, y, long, wide, angle))
-    .fill({ color: hsl(24, 0.6, 0.35), alpha: alpha * 0.35 })
-    .stroke({ width: 1.4, color: amber, alpha });
+    .fill({ color: amber, alpha: alpha * 0.16 })
+    .stroke({ width: 1.4, color: BONE, alpha });
   // Les crêtes : des replis qui partent d'un bord, puis de l'autre.
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -173,7 +189,7 @@ function mitochondrion(
       y + along * sin + toY * cos,
     );
   }
-  g.stroke({ width: 1, color: amber, alpha: alpha * 0.75 });
+  g.stroke({ width: 1, color: BONE, alpha: alpha * 0.8 });
 }
 
 export function drawScene(
@@ -194,24 +210,33 @@ export function drawScene(
   const unit = Math.min(width, height);
   const hue = creature.hue;
   const traits = new Set(creature.traits);
-  const glowColor = hsl(hue, 0.5, 0.76);
-  const pale = hsl(hue, 0.25, 0.88);
+  // Le trait : couleur d'os, à peine teinté par la couleur propre à la créature.
+  const glowColor = hsl(hue, 0.22, 0.88);
+  const pale = hsl(hue, 0.1, 0.9);
   g.clear();
+
+  // Le cercle gradué de l'objectif : une graduation tous les trois degrés, plus longue tous les trente.
+  for (let i = 0; i < 120; i++) {
+    const angle = (i / 120) * Math.PI * 2;
+    const from = unit * (i % 10 === 0 ? 0.468 : 0.48);
+    g.moveTo(cx + Math.cos(angle) * from, cy + Math.sin(angle) * from).lineTo(
+      cx + Math.cos(angle) * unit * 0.492,
+      cy + Math.sin(angle) * unit * 0.492,
+    );
+  }
+  g.stroke({ width: 1, color: BONE, alpha: 0.32 });
 
   // Le fond : des taches floues, hors de la mise au point, et le plancton en suspension.
   decor.motes.slice(0, 7).forEach((mote, index) => {
     const x = ((mote.x + t * mote.speed * 0.3) % 1) * width;
     const y = (mote.y + 0.02 * Math.sin(t * 0.2 + mote.phase)) * height;
-    g.circle(x, y, unit * (0.05 + (index % 3) * 0.03)).fill({
-      color: hsl(hue + 160, 0.3, 0.7),
-      alpha: 0.03,
-    });
+    g.circle(x, y, unit * (0.05 + (index % 3) * 0.03)).fill({ color: BONE, alpha: 0.018 });
   });
   for (const mote of decor.motes) {
     const x = ((mote.x + t * mote.speed) % 1) * width;
     const y = (mote.y + 0.015 * Math.sin(t * 0.4 + mote.phase)) * height;
     const alpha = 0.08 + 0.14 * (0.5 + 0.5 * Math.sin(t * 0.7 + mote.phase));
-    g.circle(x, y, mote.r * 0.7).fill({ color: hsl(hue + 150, 0.2, 0.85), alpha });
+    g.circle(x, y, mote.r * 0.6).fill({ color: BONE, alpha });
   }
 
   const breathing = 1 + 0.03 * Math.sin(t * 1.2) - pulse * 0.05;
@@ -220,7 +245,7 @@ export function drawScene(
   // Le halo : la lumière que diffuse un être vivant sur fond noir. Plus fort avec la mutation.
   const shine = traits.has("glow") ? 2.4 + 0.8 * Math.sin(t * 1.6) : 1;
   for (let step = 0; step < 10; step++) {
-    g.circle(cx, cy, base * (1.9 - step * 0.08)).fill({ color: glowColor, alpha: 0.008 * shine });
+    g.circle(cx, cy, base * (1.9 - step * 0.08)).fill({ color: glowColor, alpha: 0.004 * shine });
   }
 
   const ring = (scale: number): number[] => {
@@ -328,12 +353,21 @@ export function drawScene(
     }
   }
 
-  // Le corps : un cytoplasme translucide, une membrane en double feuillet.
+  // Le corps : un lavis de la couleur de la créature, une membrane en double feuillet, et
+  // de petits traits entre les deux feuillets, comme sur une gravure.
   g.poly(ring(1), true)
-    .fill({ color: hsl(hue, 0.5, 0.3), alpha: 0.26 })
-    .stroke({ width: 1.8, color: glowColor, alpha: 0.95 });
-  g.poly(ring(0.955), true).stroke({ width: 1, color: glowColor, alpha: 0.45 });
-  g.poly(ring(0.8), true).fill({ color: hsl(hue, 0.45, 0.45), alpha: 0.07 });
+    .fill({ color: hsl(hue, 0.4, 0.42), alpha: 0.2 })
+    .stroke({ width: 2, color: glowColor, alpha: 0.95 });
+  g.poly(ring(0.955), true).stroke({ width: 1, color: glowColor, alpha: 0.7 });
+  for (let i = 0; i < MEMBRANE_POINTS; i += 2) {
+    const angle = (i / MEMBRANE_POINTS) * Math.PI * 2;
+    const r = membraneRadius(base, angle, t, pulse);
+    g.moveTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r).lineTo(
+      cx + Math.cos(angle) * r * 0.955,
+      cy + Math.sin(angle) * r * 0.955,
+    );
+  }
+  g.stroke({ width: 0.8, color: glowColor, alpha: 0.5 });
 
   // Les plaques de cuirasse : la membrane se couvre de plaques jointives, comme une thèque.
   if (traits.has("plates")) {
@@ -397,7 +431,7 @@ export function drawScene(
       cx + Math.cos(angle) * base * grain.distance,
       cy + Math.sin(angle) * base * grain.distance,
       Math.max(0.7, base * grain.r),
-    ).fill({ color: pale, alpha: 0.16 + grain.r * 12 });
+    ).fill({ color: BONE, alpha: 0.3 + grain.r * 40 });
   }
 
   // Les grains de pigment : propres à chaque joueur, plus nombreux avec la mutation.
@@ -454,9 +488,9 @@ export function drawScene(
     const { x, y } = place("vacuole");
     const k = growing("vacuole");
     const r = base * (0.15 + 0.008 * scene.organelles.vacuole) * k;
-    const cool = hsl(200, 0.45, 0.82);
+    const cool = BONE;
     g.circle(x, y, r)
-      .fill({ color: hsl(205, 0.5, 0.6), alpha: 0.14 })
+      .fill({ color: WASH.prussian, alpha: 0.22 })
       .stroke({ width: 1.3, color: cool, alpha: 0.9 });
     // Un reflet sur la paroi, et quelques réserves qui flottent dedans.
     g.moveTo(x + Math.cos(Math.PI * 1.05) * r * 0.72, y + Math.sin(Math.PI * 1.05) * r * 0.72)
@@ -479,7 +513,7 @@ export function drawScene(
     // Le réticulum : des feuillets de membrane empilés, piqués de ribosomes.
     const { x, y } = place("ribosome");
     const k = growing("ribosome");
-    const green = hsl(150, 0.4, 0.72);
+    const green = WASH.verdigris;
     const sheets = 3 + Math.min(2, Math.floor(scene.organelles.ribosome / 2));
     for (let sheet = 0; sheet < sheets; sheet++) {
       const r = base * (0.1 + sheet * 0.045) * k;
@@ -507,7 +541,7 @@ export function drawScene(
     // Le centrosome : deux centrioles à angle droit, d'où rayonnent des filaments.
     const { x, y } = place("nursery");
     const k = growing("nursery");
-    const violet = hsl(275, 0.4, 0.8);
+    const violet = BONE;
     const rays = 8 + scene.organelles.nursery * 2;
     for (let i = 0; i < rays; i++) {
       const a = (i / rays) * Math.PI * 2 + t * 0.15;
@@ -539,7 +573,7 @@ export function drawScene(
     // L'appareil de Golgi : des saccules aplatis, empilés, d'où bourgeonnent des vésicules.
     const { x, y } = place("golgi");
     const k = growing("golgi");
-    const rose = hsl(330, 0.4, 0.78);
+    const rose = WASH.madder;
     const stacks = 3 + Math.min(2, Math.floor(scene.organelles.golgi / 2));
     for (let index = 0; index < stacks; index++) {
       const offset = (index - (stacks - 1) / 2) * base * 0.045 * k;
@@ -566,7 +600,7 @@ export function drawScene(
     // Les lysosomes : de petits sacs sombres, pleins d'enzymes.
     const { x, y } = place("lysosome");
     const k = growing("lysosome");
-    const acid = hsl(95, 0.45, 0.72);
+    const acid = WASH.moss;
     const count = 2 + Math.min(3, Math.floor(scene.organelles.lysosome / 2));
     for (let index = 0; index < count; index++) {
       const a = index * 2.2 + 0.4;
@@ -574,7 +608,7 @@ export function drawScene(
       const ly = y + Math.sin(a) * base * 0.07 * (index === 0 ? 0 : 1);
       const lr = base * (index === 0 ? 0.055 : 0.038) * k;
       g.circle(lx, ly, lr)
-        .fill({ color: hsl(95, 0.4, 0.2), alpha: 0.6 })
+        .fill({ color: WASH.moss, alpha: 0.14 })
         .stroke({ width: 1.2, color: acid, alpha: 0.9 });
       for (let grain = 0; grain < 3; grain++) {
         const b = grain * 2.1 + t * 0.6 + index;
@@ -591,10 +625,11 @@ export function drawScene(
   const nx = cx + base * 0.04 * Math.sin(t * 0.5);
   const ny = cy + base * 0.04 * Math.cos(t * 0.4);
   const nr = base * 0.25;
-  const nucleus = hsl(hue - 25, 0.4, 0.78);
+  const nucleus = BONE;
   g.circle(nx, ny, nr)
-    .fill({ color: hsl(hue - 25, 0.45, 0.16), alpha: 0.7 })
-    .stroke({ width: 1.5, color: nucleus, alpha: 0.9 });
+    .fill({ color: 0x14110e, alpha: 0.55 })
+    .stroke({ width: 1.6, color: nucleus, alpha: 0.95 });
+  g.circle(nx, ny, nr).fill({ color: WASH.madder, alpha: 0.2 });
   g.circle(nx, ny, nr * 0.9).stroke({ width: 1, color: nucleus, alpha: 0.4 });
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2 + t * 0.05;
