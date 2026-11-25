@@ -4,7 +4,7 @@ import {
   crisisRate,
   speciesOf,
   maxLevelOf,
-  nextLevelStep,
+  isHigherLevel,
   allianceToday,
   contestBoard,
   attackWarning,
@@ -71,6 +71,7 @@ import type { ChestLoot, ChestTone } from "./ui/ChestOverlay";
 import { CompanionSheet, companionName } from "./ui/CompanionSheet";
 import { ContestSheet } from "./ui/ContestSheet";
 import { EvolutionPanel } from "./ui/EvolutionPanel";
+import { AdvancedSheet, ordinaryPathDone } from "./ui/AdvancedSheet";
 import { StorageHint } from "./ui/StorageHint";
 import { GenomeSheet } from "./ui/GenomeSheet";
 import { LexiconSheet } from "./ui/LexiconSheet";
@@ -97,6 +98,8 @@ type Opening =
 
 /** Où l'appareil retient l'heure du dernier rapport lu. */
 const REPORTS_SEEN_KEY = "o27.rapports.vus";
+/** Où l'appareil retient que la fenêtre « Aller plus loin » a déjà été montrée. */
+const ADVANCED_SEEN_KEY = "o27.plus-loin.vu";
 /** Durée du rougeoiement après un coup reçu. */
 const ALARM_FLASH_MS = 6000;
 
@@ -159,6 +162,8 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [contestOpen, setContestOpen] = useState(false);
   const [crisisOpen, setCrisisOpen] = useState(false);
   const [apexOpen, setApexOpen] = useState(false);
+  /** La fenêtre « Aller plus loin » : ouverte d'elle-même une fois, au bout du chemin ordinaire. */
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [museumOpen, setMuseumOpen] = useState(false);
   /** La place obtenue en sortant des eaux, quand la lignée vient d'arriver. */
   const [landed, setLanded] = useState<number | null>(null);
@@ -324,6 +329,14 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   };
   const show = (element: Parameters<typeof isVisible>[0]): boolean =>
     isVisible(element, state.tier);
+  // Au bout du chemin ordinaire, la fenêtre « Aller plus loin » s'ouvre d'elle-même, une fois.
+  const quiet = absence === null && reveal === null && selected === null && termsAsked;
+  const pathDone = show("upgradeButton") && ordinaryPathDone(state);
+  useEffect(() => {
+    if (!quiet || !pathDone || window.localStorage.getItem(ADVANCED_SEEN_KEY) !== null) return;
+    window.localStorage.setItem(ADVANCED_SEEN_KEY, String(Date.now()));
+    setAdvancedOpen(true);
+  }, [quiet, pathDone]);
   const counters: ResourceId[] = ["sugar"];
   if (show("bricksCounter")) counters.push("bricks");
   if (show("hunt")) counters.push("proteins");
@@ -1004,6 +1017,22 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           )}
         </button>
       )}
+      {advancedOpen && (
+        <AdvancedSheet
+          state={state}
+          lang={lang}
+          showEvolutions={show("evolutions")}
+          showDrills={show("militaryResearch")}
+          onClose={() => {
+            setAdvancedOpen(false);
+          }}
+          onOpen={(id) => {
+            setAdvancedOpen(false);
+            setView("cell");
+            setSelected(id);
+          }}
+        />
+      )}
       {show("apexRace") && apexOpen && (
         <ApexSheet
           state={state}
@@ -1358,6 +1387,10 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setSelected(null);
           }}
           onOpen={setSelected}
+          onGoFurther={() => {
+            setSelected(null);
+            setAdvancedOpen(true);
+          }}
           onAct={(order) => {
             if (store.send(order).ok) setSelected(null);
           }}
@@ -1468,6 +1501,8 @@ interface SheetProps {
   readonly onClose: () => void;
   /** Ouvre la fiche d'un autre organite (la Vacuole, quand la réserve est trop petite). */
   readonly onOpen: (id: OrganelleId) => void;
+  /** Ouvre la fenêtre « Aller plus loin ». */
+  readonly onGoFurther: () => void;
   readonly onAct: (
     order: { type: "build"; organelle: OrganelleId } | { type: "upgrade"; organelle: OrganelleId },
   ) => void;
@@ -1480,6 +1515,7 @@ function OrganelleSheet({
   canUpgrade,
   onClose,
   onOpen,
+  onGoFurther,
   onAct,
   onOrder,
 }: SheetProps) {
@@ -1494,8 +1530,6 @@ function OrganelleSheet({
   const openStore = (): void => {
     onOpen("vacuole");
   };
-  // Au plus haut : on dit quand s'ouvre le niveau suivant.
-  const next = nextLevelStep(state, id);
 
   return (
     <div className="veil veil-bottom" onClick={onClose}>
@@ -1553,11 +1587,20 @@ function OrganelleSheet({
 
         {level > 0 && canUpgrade && maxed && !building && (
           <p className="sheet-note" data-testid="sheet-maxed">
-            {next === null
-              ? t("sheet.maxed")
-              : t("sheet.maxedUntil")
-                  .replace("{n}", String(next.maxLevel))
-                  .replace("{d}", String(next.day))}
+            {t("sheet.maxed")}
+          </p>
+        )}
+        {offersAction && level > 0 && isHigherLevel(id, toLevel) && (
+          <p className="storage-hint sheet-higher" data-testid="sheet-higher">
+            <span>{t("sheet.higher")}</span>
+            <button
+              type="button"
+              className="link-button"
+              data-testid="sheet-go-further"
+              onClick={onGoFurther}
+            >
+              {t("sheet.goFurther")} →
+            </button>
           </p>
         )}
 

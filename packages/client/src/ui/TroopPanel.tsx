@@ -139,7 +139,7 @@ export function TroopPanel({ state, lang, onOrder, onOpenStore }: Props) {
                 <div className="tech-head">
                   <strong>{t(`drill.${id}.name`)}</strong>
                   <span className="tech-level">
-                    {t("label.level")} {level} / {drillMaxLevel(state)}
+                    {t("label.level")} {level} / {drillMaxLevel()}
                   </span>
                 </div>
                 <p className="tech-effect">

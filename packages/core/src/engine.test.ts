@@ -222,7 +222,7 @@ describe("palier 2 : muter", () => {
     const base = atTier2();
     const maxed: PlayerState = {
       ...give(base, 100_000, 100_000),
-      organelles: { ...base.organelles, mitochondrion: BALANCE.organelles.mitochondrion.maxLevel },
+      organelles: { ...base.organelles, mitochondrion: BALANCE.higherRanks.maxLevel },
     };
     expect(refusal(maxed, { type: "upgrade", organelle: "mitochondrion" }, maxed.now)).toBe(
       "maxLevel",

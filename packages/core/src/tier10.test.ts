@@ -11,7 +11,6 @@ import {
   levelCost,
   levelDuration,
   maxLevelOf,
-  nextLevelStep,
   partyOf,
   productionRate,
   troopUnlocked,
@@ -53,27 +52,20 @@ function player(day: number, mutations: MutationId[] = ["thrift"]): PlayerState 
 }
 
 describe("palier 10 : les rangs supérieurs", () => {
-  it("le niveau le plus haut monte jour après jour : un joueur assidu a toujours un chantier", () => {
+  it("aucun plafond daté : dès le jour 1, qui a de quoi payer dépasse le niveau 5", () => {
     const first = player(1);
-    expect(maxLevelOf(first, "mitochondrion")).toBe(5);
-    expect(applyOrder(first, { type: "upgrade", organelle: "mitochondrion" }, first.now)).toEqual({
+    for (const id of ORGANELLE_IDS) expect(maxLevelOf(first, id)).toBe(RULES.maxLevel);
+    const sent = applyOrder(first, { type: "upgrade", organelle: "mitochondrion" }, first.now);
+    expect(sent.ok).toBe(true);
+    // Mais c'est un long chantier : au moins une heure et demie, avant les bonus.
+    expect(levelDuration(first, "mitochondrion", 6)).toBeGreaterThanOrEqual(
+      (RULES.minMinutesPerLevel * 60_000 * 80) / 100,
+    );
+    const top = { ...first, organelles: { ...first.organelles, mitochondrion: RULES.maxLevel } };
+    expect(applyOrder(top, { type: "upgrade", organelle: "mitochondrion" }, top.now)).toEqual({
       ok: false,
       error: "maxLevel",
     });
-    expect(nextLevelStep(first, "mitochondrion")).toEqual({ day: 2, maxLevel: 6 });
-    const second = player(2);
-    expect(maxLevelOf(second, "mitochondrion")).toBe(6);
-    expect(applyOrder(second, { type: "upgrade", organelle: "mitochondrion" }, second.now).ok).toBe(
-      true,
-    );
-    let previous = 5;
-    for (const step of RULES.steps) {
-      expect(maxLevelOf(player(step.day), "vacuole")).toBe(step.maxLevel);
-      expect(maxLevelOf(player(step.day - 1), "vacuole")).toBeLessThan(step.maxLevel);
-      expect(step.maxLevel).toBeGreaterThan(previous);
-      previous = step.maxLevel;
-    }
-    expect(nextLevelStep(player(21), "nucleus")).toBeNull();
     // Le palier 10 arrive toujours au jour 13, avec ses cellules filles de rang 3.
     const before = player(12);
     expect(before.tier).toBe(9);
@@ -118,10 +110,10 @@ describe("palier 10 : les rangs supérieurs", () => {
     expect(state.organelles.mitochondrion).toBe(TEN);
     // Deux fois plus de niveaux, au moins deux fois plus de production.
     expect(productionRate(state, "sugar")).toBeGreaterThanOrEqual(rate * 2);
-    expect(applyOrder(state, { type: "upgrade", organelle: "mitochondrion" }, state.now)).toEqual({
-      ok: false,
-      error: "maxLevel",
-    });
+    // Et rien n'empêche de continuer.
+    expect(applyOrder(state, { type: "upgrade", organelle: "mitochondrion" }, state.now).ok).toBe(
+      true,
+    );
     const big = { ...state, organelles: { ...state.organelles, vacuole: 10 } };
     expect(capacity(big, "sugar")).toBeGreaterThan(store * 3);
     // De quoi payer le plus cher des niveaux 10.

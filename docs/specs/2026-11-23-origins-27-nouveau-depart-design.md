@@ -27,27 +27,29 @@ Chaque ligne de la table porte : une **condition d'accomplissement** (ce que le 
 une **date minimale** facultative (jour de saison), ce qu'elle rend visible, les ordres qu'elle
 autorise, et la mise en scène du déblocage.
 
-| Palier | Condition (hypothèse à régler par l'agent équilibrage) | Date minimale | Ce qui s'ouvre                                                              |
-| ------ | ------------------------------------------------------ | ------------- | --------------------------------------------------------------------------- |
-| 0      | Arrivée                                                | —             | La cellule vivante, une ressource, toucher pour récolter                    |
-| 1      | Première récolte faite                                 | —             | Construire un organite, production passive                                  |
-| 2      | 3 organites                                            | —             | Deuxième ressource, première mutation à choisir : la créature change        |
-| 3      | Première mutation                                      | —             | La carte proche, envoyer récolter ; énergie                                 |
-| 4      | 5 récoltes sur la carte                                | —             | Premières troupes, chasse de proies neutres ; coffres et quêtes du jour     |
-| 5      | Première chasse gagnée                                 | Jour 2        | Rivaux, espionnage, pillage, défense et esquive, protections                |
-| 6      | — (date seule)                                         | Jour 3        | L'océan : zones de profondeur, gisements communs, remonter vers le centre   |
-| 7      | — (date seule)                                         | Jour 4        | Puissance, classements, ligues, prédateurs ; Noyau et évolutions            |
-| 8      | — (date seule)                                         | Jour 5        | Familles de gènes, lignées, cellules filles de rang 2                       |
-| 9      | — (date seule)                                         | Jour 9        | Événements de zone, alliances, Gazette                                      |
-| 10     | — (date seule)                                         | Jour 13       | Rangs supérieurs : cellules filles de rang 3 ; organites jusqu'au niveau 12 |
-| 11     | — (date seule)                                         | Jour 17       | Crise de saison, fiche d'espèce, organites jusqu'au niveau 15, rang 4       |
-| 12     | — (date seule)                                         | Jour 21       | Course à l'APEX, lignées de la terre ferme, niveau 20, rang 5, Muséum       |
+| Palier | Condition (hypothèse à régler par l'agent équilibrage) | Date minimale | Ce qui s'ouvre                                                            |
+| ------ | ------------------------------------------------------ | ------------- | ------------------------------------------------------------------------- |
+| 0      | Arrivée                                                | —             | La cellule vivante, une ressource, toucher pour récolter                  |
+| 1      | Première récolte faite                                 | —             | Construire un organite, production passive                                |
+| 2      | 3 organites                                            | —             | Deuxième ressource, première mutation à choisir : la créature change      |
+| 3      | Première mutation                                      | —             | La carte proche, envoyer récolter ; énergie                               |
+| 4      | 5 récoltes sur la carte                                | —             | Premières troupes, chasse de proies neutres ; coffres et quêtes du jour   |
+| 5      | Première chasse gagnée                                 | Jour 2        | Rivaux, espionnage, pillage, défense et esquive, protections              |
+| 6      | — (date seule)                                         | Jour 3        | L'océan : zones de profondeur, gisements communs, remonter vers le centre |
+| 7      | — (date seule)                                         | Jour 4        | Puissance, classements, ligues, prédateurs ; Noyau et évolutions          |
+| 8      | — (date seule)                                         | Jour 5        | Familles de gènes, lignées, cellules filles de rang 2                     |
+| 9      | — (date seule)                                         | Jour 9        | Événements de zone, alliances, Gazette                                    |
+| 10     | — (date seule)                                         | Jour 13       | Rangs supérieurs : cellules filles de rang 3                              |
+| 11     | — (date seule)                                         | Jour 17       | Crise de saison, fiche d'espèce, rang 4                                   |
+| 12     | — (date seule)                                         | Jour 21       | Course à l'APEX, lignées de la terre ferme, rang 5, Muséum                |
 
 Règles :
 
-- Le niveau le plus haut des organites ne dépend pas du palier mais du jour : 5 au jour 1,
-  puis 6, 7, 8, 9, 10, 11, 12, 13, 15, 17 et 20 aux jours 2, 3, 5, 7, 9, 11, 13, 15, 17, 19
-  et 21 (décision du propriétaire, 2026-11-25 : qu'un joueur assidu ait toujours un chantier).
+- On ne bloque jamais un joueur qui a de quoi payer (décision du propriétaire, 2026-11-25) :
+  aucun plafond de niveau n'est daté. Organites jusqu'au niveau 20, évolutions du Noyau
+  jusqu'au niveau 10, recherche militaire jusqu'au niveau 8, dès que leur mécanique est
+  ouverte. Ce sont les prix et les durées qui ralentissent. Au bout du chemin ordinaire
+  (organites au niveau 5), la fenêtre « Aller plus loin » montre ces voies aux plus assidus.
 
 - Jusqu'au palier 5, on avance par ce que l'on accomplit. À partir du palier 6, tout s'ouvre à
   date fixe, et le joueur voit le compte à rebours (décision du propriétaire, 2026-11-24).

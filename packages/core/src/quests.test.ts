@@ -150,7 +150,7 @@ describe("tirage des quêtes du jour", () => {
       const maxed = atTier4(seed, { mutations: [...MUTATION_IDS] });
       const full: PlayerState = {
         ...maxed,
-        organelles: { ...maxed.organelles, vacuole: BALANCE.organelles.vacuole.maxLevel },
+        organelles: { ...maxed.organelles, vacuole: BALANCE.higherRanks.maxLevel },
       };
       const drawn = ids(drawQuests({ ...full, quests: null }, 3));
       expect(drawn).not.toContain("mutate");

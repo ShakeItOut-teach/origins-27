@@ -472,3 +472,41 @@ encore des eaux entre les jours 22 et 25 (le joueur à trois connexions : 26 →
 le cas avant pour les plus actifs), et souvent dernier les trois derniers jours, quand il perd
 beaucoup de cellules filles. Les 500 organismes simulés sont trop serrés (le 1er n'a que 40 %
 de plus que le 250e) : à reprendre.
+
+## 2026-11-25 (suite) — On ne bloque jamais qui a de quoi payer
+
+Décision du propriétaire : « On ne bloque jamais un joueur qui possède les ressources
+d'évoluer. » Le calendrier des niveaux de l'entrée précédente est retiré.
+
+| Réglage                  | Avant                      | Après                                        |
+| ------------------------ | -------------------------- | -------------------------------------------- |
+| Niveau le plus haut      | 5 au jour 1, 20 au jour 21 | 20 dès le jour 1                             |
+| Évolutions du Noyau      | niveau 5 au plus           | niveau 10 au plus (Noyau du même niveau)     |
+| Recherche militaire      | 3, 5, 6, 8 selon le palier | 8 dès son ouverture                          |
+| Bonus cumulés            | sans limite                | jamais sous −75 % (une durée garde un quart) |
+| Rang au-delà du niveau 5 | 90 min par rang, au moins  | inchangé                                     |
+
+Une fenêtre « Aller plus loin » s'ouvre une fois, quand tous les organites ouverts sont au
+niveau 5, et reste accessible depuis leurs fiches : elle montre les rangs supérieurs, les
+évolutions poussées et la recherche militaire.
+
+Le robot humain a dû apprendre à jouer sans plafond : sinon il montait la Mitochondrie au
+niveau 20 avant tout le reste. Il monte maintenant d'abord l'organite le moins avancé, met
+le Noyau et la Vacuole en tête à l'approche de la course à l'APEX, et économise pour la
+sortie quand elle est à sa portée.
+
+Mesure, cinq saisons simulées :
+
+| Saison | Connexions par jour | Sans rien à lancer (avant → après) | Sortie des eaux (avant → après) |
+| ------ | ------------------- | ---------------------------------- | ------------------------------- |
+| s1     | 10                  | 67 → 0                             | jour 22 → 22                    |
+| s2     | 3                   | 0 → 0                              | jour 26 → 22                    |
+| s3     | 20                  | 209 → 0                            | jour 24 → 22                    |
+| s4     | 10                  | 72 → 0                             | jour 22 → 22                    |
+| s5     | 6                   | 16 → 0                             | jour 22 → 22                    |
+
+(« avant » : la mesure faite juste après la correction de la réserve.)
+
+À reprendre : le classement. Les joueurs à 10 et 20 connexions par jour sont premiers presque
+toute la saison, celui à 3 connexions entre le 200e et le 500e. Les 500 organismes simulés
+sont trop serrés (le 1er n'a que 40 % de plus que le 250e).

@@ -7,6 +7,7 @@
 import {
   advance,
   allianceToday,
+  apexOffer,
   allianceView,
   applyOrder,
   canTrain,
@@ -216,16 +217,17 @@ export function simulateHuman(options: HumanOptions): HumanReport {
   /** Lance un chantier : ce qui manque d'abord, puis l'amélioration la plus utile. */
   const build = (now: number): "started" | "nothing" | "poor" | "busy" => {
     if (state.construction !== null) return "busy";
-    // Pour sortir des eaux, il faut un Noyau évolué : il passe alors devant tout le reste.
-    const order: readonly OrganelleId[] =
-      state.tier >= BALANCE.apex.tier - 1
-        ? [
-            "nucleus",
-            "vacuole",
-            ...BUILD_ORDER.filter((id) => id !== "nucleus" && id !== "vacuole"),
-          ]
-        : BUILD_ORDER;
-    const open = order.filter((id) => BALANCE.organelles[id].tier <= state.tier);
+    // Comme un joueur avisé : on monte d'abord le moins avancé, l'ordre de préférence départage.
+    const even = BUILD_ORDER.filter((id) => BALANCE.organelles[id].tier <= state.tier).sort(
+      (one, other) => state.organelles[one] - state.organelles[other],
+    );
+    // Pour sortir des eaux, il faut un Noyau évolué : à l'approche de la course, il passe devant.
+    // Et une Vacuole assez grande pour en contenir le prix.
+    const race = state.tier >= BALANCE.apex.tier - 2 && state.apex === null;
+    const first: OrganelleId[] = [];
+    if (race && state.organelles.nucleus < BALANCE.apex.nucleusLevel) first.push("nucleus");
+    if (race && capacity(state, "sugar") < BALANCE.apex.cost.sugar * MICRO) first.push("vacuole");
+    const open: readonly OrganelleId[] = [...first, ...even.filter((id) => !first.includes(id))];
     let wanted = false;
     for (const id of open) {
       const level = state.organelles[id];
@@ -239,7 +241,11 @@ export function simulateHuman(options: HumanOptions): HumanReport {
         if (send({ type: "upgrade", organelle: "vacuole" }, now)) return "started";
         continue;
       }
-      if (!affordable(state, cost)) continue;
+      // Pendant la course, on économise pour ce qui compte plutôt que de bâtir le reste.
+      if (!affordable(state, cost)) {
+        if (first.includes(id)) return "poor";
+        continue;
+      }
       if (
         send(
           level === 0 ? { type: "build", organelle: id } : { type: "upgrade", organelle: id },
@@ -419,8 +425,14 @@ export function simulateHuman(options: HumanOptions): HumanReport {
       if (helpRequests(state) > 0) send({ type: "helpAllies" }, now);
       if (state.construction !== null && !state.construction.helped) send({ type: "askHelp" }, now);
     }
-    const built = build(now);
-    const researched = research(now);
+    // Prêt à sortir des eaux : on économise pour la sortie plutôt que de bâtir ou d'exprimer.
+    const ready =
+      state.tier >= BALANCE.apex.tier &&
+      state.apex === null &&
+      apexOffer(state).blocked === null &&
+      !send({ type: "leaveWater" }, now);
+    const built = ready ? "poor" : build(now);
+    const researched = ready ? "poor" : research(now);
     if (state.boosts > 0) {
       if (state.research !== null && state.research.endsAt - now > 20 * 60_000) {
         send({ type: "useBoost", target: "research" }, now);
@@ -428,7 +440,7 @@ export function simulateHuman(options: HumanOptions): HumanReport {
         send({ type: "useBoost", target: "construction" }, now);
       }
     }
-    train(now);
+    if (!ready) train(now);
     // Remonter passe avant tout : on ne déménage pas avec des cellules dehors, donc on les attend.
     const move = state.tier >= BALANCE.ocean.tier ? migrateOffer(state, now) : null;
     const moving = move !== null && move.open && affordable(state, move.cost);

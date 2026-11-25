@@ -89,7 +89,7 @@ describe("tout ce qui s'achète tient dans la réserve", () => {
     }
     if (tier >= BALANCE.drills.tier) {
       for (const id of DRILL_IDS) {
-        for (let level = 0; level < drillMaxLevel(state); level++) {
+        for (let level = 0; level < drillMaxLevel(); level++) {
           fits(
             `pouvoir ${id} niveau ${String(level + 1)}`,
             drillOffer({ ...state, drills: { ...state.drills, [id]: level } }, id).cost,
@@ -137,5 +137,41 @@ describe("tout ce qui s'achète tient dans la réserve", () => {
 
   it("aucun achat n'est plus cher que la plus grande réserve du jour", () => {
     expect(blocked).toEqual([]);
+  });
+
+  it("la Vacuole ouvre toujours la voie : chaque niveau tient dans une Vacuole du même niveau", () => {
+    const base = bestStorage(1);
+    const late: string[] = [];
+    for (let level = 1; level <= BALANCE.higherRanks.maxLevel; level++) {
+      const store = { ...base, organelles: { ...base.organelles, vacuole: level } };
+      const before = {
+        ...base,
+        organelles: { ...base.organelles, vacuole: Math.max(1, level - 1) },
+      };
+      for (const id of RESOURCE_IDS) {
+        // On peut toujours payer la Vacuole suivante avec celle qu'on a.
+        if (level > 1 && levelCost(before, "vacuole", level)[id] > capacity(before, id)) {
+          late.push(`Vacuole ${String(level)} : ${id}`);
+        }
+        for (const organelle of ORGANELLE_IDS) {
+          if (levelCost(store, organelle, level)[id] > capacity(store, id)) {
+            late.push(`${organelle} ${String(level)} : ${id}`);
+          }
+        }
+      }
+      if (level <= BALANCE.research.maxLevel) {
+        for (const evolution of EVOLUTION_IDS) {
+          const offer = researchOffer(
+            { ...store, evolutions: { ...store.evolutions, [evolution]: level - 1 } },
+            evolution,
+          );
+          for (const id of RESOURCE_IDS) {
+            if (offer.cost[id] > capacity(store, id))
+              late.push(`évolution ${evolution} ${String(level)}`);
+          }
+        }
+      }
+    }
+    expect(late).toEqual([]);
   });
 });

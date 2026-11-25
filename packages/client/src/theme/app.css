@@ -2751,3 +2751,19 @@ p.season-next {
   text-underline-offset: 3px;
   cursor: pointer;
 }
+
+/* « Aller plus loin » : une partie par voie d'évolution, et un lien vers la bonne fiche. */
+.advanced-part {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+}
+
+.advanced-part h3,
+.advanced-part p {
+  margin: 0;
+}
+
+.sheet-higher {
+  color: var(--ink-soft);
+}

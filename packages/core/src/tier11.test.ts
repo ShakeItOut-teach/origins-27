@@ -16,7 +16,6 @@ import {
   drillMaxLevel,
   drillOffer,
   foePower,
-  maxLevelOf,
   partyOf,
   productionRate,
   serializeState,
@@ -59,7 +58,7 @@ function player(day: number, patch: Partial<PlayerState> = {}, tier = 9): Player
 }
 
 describe("la recherche militaire", () => {
-  it("s'ouvre au jour 5 ; chaque niveau coûte le double du précédent ; les plus hauts attendent les rangs supérieurs", () => {
+  it("s'ouvre au jour 5 ; chaque niveau coûte le double du précédent", () => {
     const early = { ...player(4), tier: 7 };
     expect(applyOrder(early, { type: "drill", power: "fury" }, early.now)).toEqual({
       ok: false,
@@ -79,19 +78,15 @@ describe("la recherche militaire", () => {
       level: 1,
     });
     expect(drillOffer(step.state, "fury").cost.sugar).toBe(2 * first.cost.sugar);
-    const top = { ...state, drills: { ...state.drills, fury: drillMaxLevel(state) - 1 } };
-    expect(drillOffer(top, "fury").cost.sugar).toBe(
-      first.cost.sugar * 2 ** (drillMaxLevel(state) - 1),
-    );
-    const maxed = { ...state, drills: { ...state.drills, fury: drillMaxLevel(state) } };
+    const top = { ...state, drills: { ...state.drills, fury: drillMaxLevel() - 1 } };
+    expect(drillOffer(top, "fury").cost.sugar).toBe(first.cost.sugar * 2 ** (drillMaxLevel() - 1));
+    const maxed = { ...state, drills: { ...state.drills, fury: drillMaxLevel() } };
     expect(applyOrder(maxed, { type: "drill", power: "fury" }, state.now)).toEqual({
       ok: false,
       error: "maxLevel",
     });
-    // Les niveaux les plus chers attendent une réserve assez grande pour les payer.
-    expect(drillMaxLevel(state)).toBe(3);
-    expect(drillMaxLevel({ ...state, tier: 10 })).toBe(5);
-    expect(drillMaxLevel({ ...state, tier: 12 })).toBe(8);
+    // Tous les niveaux sont ouverts dès le jour 5 : seule la réserve les rend chers à payer.
+    expect(drillMaxLevel()).toBe(BALANCE.drills.maxLevel);
     const poor = { ...state, resources: { sugar: 0, bricks: 0, proteins: 0 } };
     expect(applyOrder(poor, { type: "drill", power: "fury" }, state.now)).toEqual({
       ok: false,
@@ -173,15 +168,13 @@ describe("la récolte automatique", () => {
 describe("palier 11 : la crise de saison, l'espèce, le rang 4", () => {
   const rules = BALANCE.crisis;
 
-  it("au jour 17 : niveaux jusqu'à 15 et cellules filles de rang 4", () => {
+  it("au jour 17 : cellules filles de rang 4", () => {
     const predation: MutationId[] = ["voracity", "harpoon", "swarming"];
     const before = player(16, { mutations: predation });
     expect(before.tier).toBe(10);
-    expect(maxLevelOf(before, "nucleus")).toBeLessThan(15);
     expect(troopUnlocked(before, "chaetognath")).toBe(false);
     const open = player(17, { mutations: predation });
     expect(open.tier).toBe(11);
-    expect(maxLevelOf(open, "nucleus")).toBe(15);
     expect(troopUnlocked(open, "chaetognath")).toBe(true);
     expect(troopUnlocked(open, "rotifer")).toBe(true);
     expect(BALANCE.troops.chaetognath.power).toBeGreaterThan(BALANCE.troops.rotifer.power * 2);

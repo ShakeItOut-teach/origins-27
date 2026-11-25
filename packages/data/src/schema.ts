@@ -118,6 +118,11 @@ export const BalanceSchema = z.strictObject({
     burst: positiveInt,
   }),
   baseStorage: z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
+  /**
+   * Les bonus et malus d'une statistique s'additionnent, mais jamais en dessous de ce pourcentage :
+   * une durée ne tombe jamais sous le quart de sa valeur.
+   */
+  modifierFloorPercent: z.number().int().min(-99).max(0),
   upgrade: z.strictObject({
     /** Le coût est multiplié par ce pourcentage à chaque niveau (160 = ×1,6). */
     costGrowthPercent: z.number().int().min(101),
@@ -539,10 +544,10 @@ export const BalanceSchema = z.strictObject({
    */
   higherRanks: z.strictObject({
     /**
-     * Le niveau maximum des organites, jour après jour : un ou deux niveaux de plus tous les
-     * deux jours, pour qu'un joueur assidu ait toujours un chantier à lancer.
+     * Le niveau le plus haut des organites, ouvert dès le premier jour : on ne bloque jamais un
+     * joueur qui a de quoi payer ; les prix et les durées suffisent à le ralentir.
      */
-    steps: z.array(z.strictObject({ day: positiveInt, maxLevel: positiveInt })).min(1),
+    maxLevel: positiveInt,
     /** Croissance du coût et de la durée d'un niveau au suivant, au-delà du maximum d'origine. */
     costGrowthPercent: z.number().int().min(100),
     timeGrowthPercent: z.number().int().min(100),
@@ -577,8 +582,7 @@ export const BalanceSchema = z.strictObject({
    */
   drills: z.strictObject({
     tier: positiveInt,
-    /** Le niveau le plus haut permis, palier après palier : chaque niveau doit tenir dans la réserve. */
-    levels: z.array(z.strictObject({ tier: positiveInt, maxLevel: positiveInt })).min(1),
+    maxLevel: positiveInt,
     cost: z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
     costGrowthPercent: z.number().int().min(100),
     powers: z.record(

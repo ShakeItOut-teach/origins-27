@@ -8,6 +8,7 @@ import type { Balance } from "./schema";
 export const BALANCE: Balance = BalanceSchema.parse({
   tap: { yieldMilli: 100, minIntervalMs: 100, burst: 30 },
   baseStorage: { sugar: 80, bricks: 100, proteins: 100 },
+  modifierFloorPercent: -75,
   upgrade: { costGrowthPercent: 160, timeGrowthPercent: 150 },
   organelles: {
     mitochondrion: {
@@ -113,7 +114,8 @@ export const BALANCE: Balance = BalanceSchema.parse({
   mutationOffer: { tier: 2, choices: 3 },
   research: {
     tier: 7,
-    maxLevel: 5,
+    // Les niveaux 6 à 10 sont les apprentissages poussés : il faut un Noyau du même niveau.
+    maxLevel: 10,
     costGrowthPercent: 130,
     timeGrowthPercent: 180,
     dormantPerBranch: 1,
@@ -668,19 +670,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     anoxia: { weight: 20, hours: 16, radius: 9, productionPercent: -30, guardPercent: -30 },
   },
   higherRanks: {
-    steps: [
-      { day: 2, maxLevel: 6 },
-      { day: 3, maxLevel: 7 },
-      { day: 5, maxLevel: 8 },
-      { day: 7, maxLevel: 9 },
-      { day: 9, maxLevel: 10 },
-      { day: 11, maxLevel: 11 },
-      { day: 13, maxLevel: 12 },
-      { day: 15, maxLevel: 13 },
-      { day: 17, maxLevel: 15 },
-      { day: 19, maxLevel: 17 },
-      { day: 21, maxLevel: 20 },
-    ],
+    maxLevel: 20,
     costGrowthPercent: 130,
     timeGrowthPercent: 170,
     minMinutesPerLevel: 90,
@@ -702,12 +692,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
   },
   drills: {
     tier: 8,
-    levels: [
-      { tier: 8, maxLevel: 3 },
-      { tier: 10, maxLevel: 5 },
-      { tier: 11, maxLevel: 6 },
-      { tier: 12, maxLevel: 8 },
-    ],
+    maxLevel: 8,
     cost: { sugar: 300, bricks: 200, proteins: 40 },
     costGrowthPercent: 200,
     powers: {

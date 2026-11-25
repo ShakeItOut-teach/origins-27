@@ -174,7 +174,7 @@ export {
   levelCost,
   levelDuration,
   maxLevelOf,
-  nextLevelStep,
+  isHigherLevel,
   modifierPercent,
   productionRate,
   tapYield,

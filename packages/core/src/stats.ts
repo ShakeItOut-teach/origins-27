@@ -9,7 +9,6 @@ import { evolutionPercent } from "./evolutions";
 import { lineagePercent } from "./genes";
 import { MICRO } from "./types";
 import type { PlayerState } from "./types";
-import { seasonDay } from "./unlock";
 
 /** Les organites qui donnent un bonus par niveau : la liste ne change jamais. */
 const BONUS_ORGANELLES = ORGANELLE_IDS.filter(
@@ -37,7 +36,8 @@ export function modifierPercent(state: PlayerState, stat: StatId): number {
     const mutation = BALANCE.mutations[id];
     if (mutation.stat === stat) total += mutation.percent;
   }
-  return total;
+  // Les bonus s'additionnent, mais une durée ou un coût ne tombe jamais sous le quart.
+  return Math.max(BALANCE.modifierFloorPercent, total);
 }
 
 function applyPercent(value: number, percent: number): number {
@@ -61,23 +61,14 @@ export function travelMs(state: PlayerState, ms: number): number {
  * Niveau maximum d'un organite pour ce joueur : celui d'origine, puis davantage une fois les
  * rangs supérieurs ouverts.
  */
-export function maxLevelOf(state: PlayerState, organelle: OrganelleId): number {
-  let max = BALANCE.organelles[organelle].maxLevel;
-  const day = seasonDay(state, state.now);
-  for (const step of BALANCE.higherRanks.steps) {
-    if (day >= step.day) max = Math.max(max, step.maxLevel);
-  }
-  return max;
+export function maxLevelOf(_state: PlayerState, organelle: OrganelleId): number {
+  // Aucun plafond daté : un joueur qui a de quoi payer peut toujours évoluer.
+  return Math.max(BALANCE.organelles[organelle].maxLevel, BALANCE.higherRanks.maxLevel);
 }
 
-/** Le prochain niveau d'un organite à s'ouvrir, et son jour ; `null` s'il n'y en a plus. */
-export function nextLevelStep(
-  state: PlayerState,
-  organelle: OrganelleId,
-): { readonly day: number; readonly maxLevel: number } | null {
-  const now = maxLevelOf(state, organelle);
-  const day = seasonDay(state, state.now);
-  return BALANCE.higherRanks.steps.find((step) => step.day > day && step.maxLevel > now) ?? null;
+/** Vrai au-delà du niveau d'origine : les rangs supérieurs, longs et chers, pour les plus assidus. */
+export function isHigherLevel(organelle: OrganelleId, level: number): boolean {
+  return level > BALANCE.organelles[organelle].maxLevel;
 }
 
 /**

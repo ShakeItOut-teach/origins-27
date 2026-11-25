@@ -156,11 +156,13 @@ describe("exprimer une évolution", () => {
     expect(first.durationMs).toBeLessThan(researchOffer(player(1), id).durationMs);
     const top = { ...player(5), evolutions: { ...player(5).evolutions, [id]: RULES.maxLevel } };
     expect(researchOffer(top, id).blocked).toBe("maxLevel");
-    // Même le dernier niveau reste payable avec une Réserve au maximum.
+    // Même le dernier niveau reste payable, avec une Réserve du niveau du Noyau qu'il demande.
     const last = {
       ...player(5),
+      organelles: { ...player(5).organelles, vacuole: RULES.maxLevel, nucleus: RULES.maxLevel },
       evolutions: { ...player(5).evolutions, [id]: RULES.maxLevel - 1 },
     };
+    expect(researchOffer(last, id).blocked).toBeNull();
     expect(researchOffer(last, id).cost.sugar).toBeLessThanOrEqual(capacity(last, "sugar"));
   });
 

@@ -671,7 +671,7 @@ export const en = {
   "chest.kind.contest": "Contest chest",
   "unlock.10.title": "The higher ranks",
   "unlock.10.text":
-    "Three genes of the same family open its rank 3 daughter cell. Your organelles now go up to level 12: long worksites, which boosters shorten.",
+    "Three genes of the same family open its rank 3 daughter cell: nine times stronger than a rank 1 cell.",
   "troop.rotifer.name": "Devourer",
   "troop.rotifer.role": "Rank 3. Hits nine times harder than a rank 1 cell.",
   "troop.tardigrade.name": "Ironclad",
@@ -683,7 +683,7 @@ export const en = {
   "label.rank3": "Rank 3",
   "unlock.11.title": "The crisis is coming",
   "unlock.11.text":
-    "A great extinction threatens the whole ocean: it will strike in two days, and the highest ranked will lose the most. Two genes of the right family halve its effect. Your organelles now go up to level 15, the lineage opens a rank 4 daughter cell, and your species now has a name.",
+    "A great extinction threatens the whole ocean: it will strike in two days, and the highest ranked will lose the most. Two genes of the right family halve its effect. The lineage opens a rank 4 daughter cell, and your species now has a name.",
   "troop.chaetognath.name": "Arrow",
   "troop.chaetognath.role": "Rank 4. Hits twenty times harder than a rank 1 cell.",
   "troop.ostracod.name": "Shell",
@@ -730,7 +730,7 @@ export const en = {
   "species.rank": "Rank {n} of {total}",
   "unlock.12.title": "Dry land",
   "unlock.12.text":
-    "The end of the season is played out of the water. From the sunlit zone, with a level 15 Nucleus, your lineage can leave the water: it is long, very expensive, and the first to arrive are the best rewarded. Your organelles now go up to level 20, and the lineage opens a rank 5 daughter cell.",
+    "The end of the season is played out of the water. From the sunlit zone, with a level 15 Nucleus, your lineage can leave the water: it is long, very expensive, and the first to arrive are the best rewarded. The lineage opens a rank 5 daughter cell.",
   "troop.eurypterid.name": "Scorpion",
   "troop.eurypterid.role": "Rank 5. Hits forty-five times harder than a rank 1 cell.",
   "troop.trilobite.name": "Carapace",
@@ -783,7 +783,22 @@ export const en = {
   "sheet.tooBig": "This price is more than your {o} can hold.",
   "sheet.openStore": "Upgrade the {o}",
   "sheet.buildStore": "Build the {o}",
-  "sheet.maxedUntil": "Highest level for now. Level {n} opens on day {d}.",
+  "sheet.higher": "Higher rank: a long worksite, for the most dedicated.",
+  "sheet.goFurther": "Go further",
+  "advanced.title": "Go further",
+  "advanced.intro":
+    "Your organelles have reached level 5: the ordinary path ends here. Nothing stops you from going on: as long as you can pay, you evolve.",
+  "advanced.levels.title": "Higher ranks",
+  "advanced.levels.text":
+    "Each organelle can rise up to level {n}. These are long, ever more expensive worksites: enlarge your {o} first.",
+  "advanced.count": "Beyond level 5: {n} / {m}",
+  "advanced.evolutions.title": "Advanced evolutions",
+  "advanced.evolutions.text":
+    "The {o} expresses its evolutions up to level {n}, if it has reached that level itself. Each level costs and lasts more.",
+  "advanced.drills.title": "Military research",
+  "advanced.drills.text": "{n} levels per power, each twice as expensive as the one before.",
+  "advanced.drills.count": "Powers at their highest: {n} / {m}",
+  "advanced.open": "Open: {o}",
   "sheet.maxed": "Highest level reached.",
   "speed.title": "Trial ×{n}",
   "speed.note":

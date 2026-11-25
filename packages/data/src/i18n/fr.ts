@@ -678,7 +678,7 @@ export const fr = {
   "chest.kind.contest": "Coffre du concours",
   "unlock.10.title": "Les rangs supérieurs",
   "unlock.10.text":
-    "Trois gènes d’une même famille ouvrent sa cellule fille de rang 3. Vos organites montent jusqu’au niveau 12 : de longs chantiers, que les accélérateurs raccourcissent.",
+    "Trois gènes d’une même famille ouvrent sa cellule fille de rang 3 : neuf fois plus forte qu’une cellule de rang 1.",
   "troop.rotifer.name": "Dévoreuse",
   "troop.rotifer.role": "Rang 3. Frappe neuf fois plus fort qu’une cellule de rang 1.",
   "troop.tardigrade.name": "Blindée",
@@ -690,7 +690,7 @@ export const fr = {
   "label.rank3": "Rang 3",
   "unlock.11.title": "La crise approche",
   "unlock.11.text":
-    "Une grande extinction menace tout l’océan : elle frappera dans deux jours, et les mieux classés y perdront le plus. Deux gènes de la bonne famille en divisent l’effet par deux. Vos organites montent jusqu’au niveau 15, la lignée ouvre une cellule fille de rang 4, et votre espèce a désormais un nom.",
+    "Une grande extinction menace tout l’océan : elle frappera dans deux jours, et les mieux classés y perdront le plus. Deux gènes de la bonne famille en divisent l’effet par deux. La lignée ouvre une cellule fille de rang 4, et votre espèce a désormais un nom.",
   "troop.chaetognath.name": "Sagittaire",
   "troop.chaetognath.role": "Rang 4. Frappe vingt fois plus fort qu’une cellule de rang 1.",
   "troop.ostracod.name": "Coquille",
@@ -737,7 +737,7 @@ export const fr = {
   "species.rank": "Rang {n} sur {total}",
   "unlock.12.title": "La terre ferme",
   "unlock.12.text":
-    "La fin de la saison se joue hors de l’eau. Depuis la zone éclairée, avec un Noyau de niveau 15, votre lignée peut sortir des eaux : c’est long, très cher, et les premiers arrivés sont les mieux récompensés. Vos organites montent jusqu’au niveau 20, et la lignée ouvre une cellule fille de rang 5.",
+    "La fin de la saison se joue hors de l’eau. Depuis la zone éclairée, avec un Noyau de niveau 15, votre lignée peut sortir des eaux : c’est long, très cher, et les premiers arrivés sont les mieux récompensés. La lignée ouvre une cellule fille de rang 5.",
   "troop.eurypterid.name": "Scorpion",
   "troop.eurypterid.role": "Rang 5. Frappe quarante-cinq fois plus fort qu’une cellule de rang 1.",
   "troop.trilobite.name": "Cuirasse",
@@ -791,7 +791,22 @@ export const fr = {
   "sheet.tooBig": "Ce prix dépasse ce que peut contenir votre {o}.",
   "sheet.openStore": "Améliorer la {o}",
   "sheet.buildStore": "Construire la {o}",
-  "sheet.maxedUntil": "Niveau le plus haut pour l’instant. Le niveau {n} s’ouvre au jour {d}.",
+  "sheet.higher": "Rang supérieur : un long chantier, pour les plus assidus.",
+  "sheet.goFurther": "Aller plus loin",
+  "advanced.title": "Aller plus loin",
+  "advanced.intro":
+    "Vos organites ont atteint le niveau 5 : le chemin ordinaire s’arrête là. Rien ne vous empêche de continuer : tant que vous avez de quoi payer, vous évoluez.",
+  "advanced.levels.title": "Rangs supérieurs",
+  "advanced.levels.text":
+    "Chaque organite peut monter jusqu’au niveau {n}. Ce sont de longs chantiers, de plus en plus chers : agrandissez d’abord votre {o}.",
+  "advanced.count": "Au-delà du niveau 5 : {n} / {m}",
+  "advanced.evolutions.title": "Évolutions poussées",
+  "advanced.evolutions.text":
+    "Le {o} exprime ses évolutions jusqu’au niveau {n}, s’il a lui-même atteint ce niveau. Chaque niveau coûte et dure davantage.",
+  "advanced.drills.title": "Recherche militaire",
+  "advanced.drills.text": "{n} niveaux par pouvoir, chacun deux fois plus cher que le précédent.",
+  "advanced.drills.count": "Pouvoirs au plus haut : {n} / {m}",
+  "advanced.open": "Ouvrir : {o}",
   "sheet.maxed": "Niveau le plus haut atteint.",
   "speed.title": "Essai ×{n}",
   "speed.note":
