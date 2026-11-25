@@ -945,12 +945,12 @@ p {
   display: grid;
   place-items: center;
   padding: 0;
-  border: 1.5px solid color-mix(in srgb, var(--iodine) 75%, transparent);
+  /* Un médaillon gravé sur la planche : fond noir, filet et pictogramme dans la teinte du lieu. */
+  border: 1.5px solid var(--plate-gamboge);
   border-radius: 50%;
-  background: color-mix(in srgb, var(--lens-edge) 72%, transparent);
-  color: var(--iodine);
+  background: var(--plate);
+  color: var(--plate-gamboge);
   cursor: pointer;
-  backdrop-filter: blur(2px);
   animation: appear 0.5s ease-out;
 }
 
@@ -965,8 +965,11 @@ p {
 }
 
 .place.is-target {
-  border-color: var(--iodine);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--iodine) 35%, transparent);
+  /* Le lieu visé : un double filet, pas un halo. */
+  border-color: var(--plate-gamboge);
+  box-shadow:
+    0 0 0 2px var(--plate),
+    0 0 0 3.5px var(--plate-gamboge);
 }
 
 .views {
@@ -1076,9 +1079,9 @@ p {
 }
 
 .place-prey {
-  color: var(--algae);
-  background: color-mix(in srgb, var(--lens-edge) 55%, transparent);
-  border-color: var(--algae);
+  color: var(--plate-verdigris);
+  background: var(--plate);
+  border-color: var(--plate-verdigris);
   border-radius: 38% 62% 55% 45%;
 }
 
@@ -3236,4 +3239,13 @@ body.trial {
 
 .stat-totals {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+/* Sur la planche noire, les pictogrammes prennent les teintes éclaircies. */
+.place .icon-bricks {
+  color: var(--plate-madder);
+}
+
+.place .icon-sugar {
+  color: var(--plate-gamboge);
 }

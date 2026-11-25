@@ -58,6 +58,10 @@ Règles :
 - Sur la gomme-gutte, le texte est à l'encre (contraste 7,6). Sur le bleu de Prusse et la
   garance, il est couleur papier (7,0 et 4,9).
 - Sur le papier foncé, la garance et le vert-de-gris ne passent plus (4,2 et 4,3) : texte à l'encre.
+- **Sur la planche noire, les quatre teintes sont éclaircies** (elles seraient trop sombres) :
+  `--plate-prussian` `#8FB4CF`, `--plate-madder` `#D98BA6`, `--plate-gamboge` `#E6B94A`,
+  `--plate-verdigris` `#8DBFAF`, plus `--plate-moss` `#B9C48A` pour le plancton. Elles ne servent
+  nulle part ailleurs. PixiJS les lit dans `packages/client/src/cell/plate.ts`.
 - Deux états qu'on doit distinguer diffèrent aussi par la forme ou par un mot, pas seulement
   par la teinte.
 - Les anciens noms (`--eosin`, `--algae`, `--iodine`, `--slide`, `--lens-*`, `--on-dark`,
@@ -129,6 +133,17 @@ Sur la planche noire, on inverse : trait couleur d'os, pas de hachures pleines, 
 et un lavis très léger par organite (gomme-gutte pour la mitochondrie, bleu de Prusse pour la
 vacuole, garance pour le noyau, vert-de-gris pour le réticulum).
 
+**Les cartes** (la goutte, l'océan) sont des planches noires comme les autres :
+
+- Rien ne brille : pas de halo autour d'un lieu ou d'un être vivant. Un lieu est un médaillon
+  au trait (un cercle, des graduations, un lavis, du pointillé).
+- L'eau est noire au large et se lave de bleu de Prusse **par paliers** vers le rivage, comme
+  les teintes de profondeur d'une carte marine. Jamais un dégradé lisse.
+- **La terre ferme est en papier**, cernée d'encre, avec ses courbes de niveau et les hachures
+  du rivage : sortir de l'eau, c'est atteindre le papier.
+- Le danger est en garance (prédateurs, Léviathan), la chaleur en gomme-gutte (sources,
+  éruptions), la vie qui pousse en vert-de-gris (plancton).
+
 **Une planche d'APEX** porte toujours : un numéro (« Pl. I »), le nom en capitales de Bodoni, le
 nom latin en italique, la figure principale, une barre d'échelle en mètres, et les faits réels
 (époque, âge, longueur). L'animal est montré de profil, tête à gauche, **dans une posture qui
@@ -174,20 +189,22 @@ une ressource peut-être payante.
 
 ## 11. Où sont les choses
 
-| Quoi                               | Où                                                                                               |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Jetons (couleurs, polices, filets) | `packages/client/src/theme/tokens.css`                                                           |
-| Les mêmes, pour les outils         | `docs/identite/jetons.json`                                                                      |
-| Styles des écrans                  | `packages/client/src/theme/app.css`                                                              |
-| Dessin de la cellule dans le jeu   | `packages/client/src/cell/draw.ts`                                                               |
-| Pictogrammes                       | `packages/client/src/ui/icons.tsx`                                                               |
-| Outils de gravure                  | `scripts/identite/`                                                                              |
-| Figures des lignées d'APEX         | `packages/client/public/planches/` (faites par `scripts/make-plates.cjs`)                        |
-| Icônes                             | `packages/client/public/icons/` (faites par `scripts/make-icons.cjs`)                            |
-| Page de présentation               | `packages/client/public/decouvrir/` et `/discover/` (faites par `scripts/make-presentation.cjs`) |
-| Vidéo de présentation              | `packages/client/public/decouvrir/origins27.webm` (faite par `scripts/make-video.cjs`)           |
-| Pourquoi cette direction           | `docs/adr/0014-identite-atlas.md`                                                                |
-| Les trois directions comparées     | <https://claude.ai/artifact/WMAvYRoCHWkF6YzwC67mUr>                                              |
+| Quoi                                 | Où                                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Jetons (couleurs, polices, filets)   | `packages/client/src/theme/tokens.css`                                                           |
+| Les mêmes, pour les outils           | `docs/identite/jetons.json`                                                                      |
+| Styles des écrans                    | `packages/client/src/theme/app.css`                                                              |
+| Dessin de la cellule dans le jeu     | `packages/client/src/cell/draw.ts`                                                               |
+| Dessin des cartes dans le jeu        | `packages/client/src/cell/MapCanvas.tsx`, `OceanCanvas.tsx`, `oceanLife.ts`                      |
+| Teintes de la planche noire (PixiJS) | `packages/client/src/cell/plate.ts`                                                              |
+| Pictogrammes                         | `packages/client/src/ui/icons.tsx`                                                               |
+| Outils de gravure                    | `scripts/identite/`                                                                              |
+| Figures des lignées d'APEX           | `packages/client/public/planches/` (faites par `scripts/make-plates.cjs`)                        |
+| Icônes                               | `packages/client/public/icons/` (faites par `scripts/make-icons.cjs`)                            |
+| Page de présentation                 | `packages/client/public/decouvrir/` et `/discover/` (faites par `scripts/make-presentation.cjs`) |
+| Vidéo de présentation                | `packages/client/public/decouvrir/origins27.webm` (faite par `scripts/make-video.cjs`)           |
+| Pourquoi cette direction             | `docs/adr/0014-identite-atlas.md`                                                                |
+| Les trois directions comparées       | <https://claude.ai/artifact/WMAvYRoCHWkF6YzwC67mUr>                                              |
 
 ## 12. Présenter le jeu
 

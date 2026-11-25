@@ -21,6 +21,13 @@
   --plate: #14110e;
   --plate-glow: #221d18;
   --bone: #f1ebdd;
+  /* Les mêmes teintes, éclaircies : seulement sur la planche noire, où les teintes du papier
+     seraient trop sombres. PixiJS les lit dans src/cell/plate.ts. */
+  --plate-prussian: #8fb4cf;
+  --plate-madder: #d98ba6;
+  --plate-gamboge: #e6b94a;
+  --plate-verdigris: #8dbfaf;
+  --plate-moss: #b9c48a;
 
   /* Anciens noms, gardés pour le code déjà écrit. Le code neuf emploie les noms ci-dessus. */
   --grid: var(--rule);

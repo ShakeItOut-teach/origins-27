@@ -12,6 +12,7 @@ import { createRng } from "@o27/core";
 import type { Creature } from "@o27/core";
 import type { OrganelleId } from "@o27/data";
 import type { Graphics } from "pixi.js";
+import { PLATE } from "./plate";
 
 export interface Scene {
   readonly seed: number;
@@ -117,16 +118,9 @@ export const ORGANELLE_ANGLE: Readonly<Record<OrganelleId, number>> = {
 
 const MEMBRANE_POINTS = 96;
 
-/** Le trait de la gravure sur la planche noire (jeton --bone). */
-const BONE = 0xf1ebdd;
-/** Les teintes de lavis, éclaircies pour rester lisibles sur le noir. */
-const WASH = {
-  gamboge: 0xe6b94a,
-  prussian: 0x8fb4cf,
-  verdigris: 0x8dbfaf,
-  madder: 0xd98ba6,
-  moss: 0xb9c48a,
-} as const;
+/** Le trait de la gravure sur la planche noire, et les teintes de lavis. */
+const BONE = PLATE.bone;
+const WASH = PLATE;
 
 function membraneRadius(base: number, angle: number, t: number, pulse: number): number {
   return (
@@ -627,7 +621,7 @@ export function drawScene(
   const nr = base * 0.25;
   const nucleus = BONE;
   g.circle(nx, ny, nr)
-    .fill({ color: 0x14110e, alpha: 0.55 })
+    .fill({ color: PLATE.ground, alpha: 0.55 })
     .stroke({ width: 1.6, color: nucleus, alpha: 0.95 });
   g.circle(nx, ny, nr).fill({ color: WASH.madder, alpha: 0.2 });
   g.circle(nx, ny, nr * 0.9).stroke({ width: 1, color: nucleus, alpha: 0.4 });

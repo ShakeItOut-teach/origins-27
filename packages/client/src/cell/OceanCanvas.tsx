@@ -3,7 +3,6 @@ import { Application, Graphics } from "pixi.js";
 import { useEffect, useRef } from "react";
 import type { WorldCamera } from "../game/worldView";
 import { project } from "../game/worldView";
-import { hsl } from "./draw";
 import {
   HOME_FORM,
   drawCarcass,
@@ -14,6 +13,7 @@ import {
   drawPredator,
   drawVent,
 } from "./oceanLife";
+import { PLATE, blend } from "./plate";
 
 export interface OceanScene {
   readonly camera: WorldCamera;
@@ -70,30 +70,13 @@ export interface OceanScene {
   }[];
 }
 
-/** Lit une couleur des jetons de design et la donne à PixiJS. */
-function token(name: string, fallback: number): number {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  const match = /^#([0-9a-f]{6})$/i.exec(value);
-  return match?.[1] === undefined ? fallback : Number.parseInt(match[1], 16);
-}
-
-/** Teinte, saturation et clarté de l'eau à chaque frontière, du bord jusqu'au rivage. */
-const WATER = [
-  [234, 0.6, 0.04],
-  [226, 0.62, 0.075],
-  [214, 0.64, 0.125],
-  [203, 0.62, 0.2],
-  [192, 0.5, 0.3],
-] as const;
-
-function water(index: number, part: number): number {
-  const from = WATER[Math.min(index, WATER.length - 1)] ?? WATER[0];
-  const to = WATER[Math.min(index + 1, WATER.length - 1)] ?? from;
-  return hsl(
-    from[0] + (to[0] - from[0]) * part,
-    from[1] + (to[1] - from[1]) * part,
-    from[2] + (to[2] - from[2]) * part,
-  );
+/**
+ * La teinte de l'eau : le noir de la planche au large, de plus en plus lavé de bleu de Prusse
+ * vers le rivage. La profondeur vaut 0 au bord de la carte et 1 à la côte. Des paliers, comme
+ * les teintes de profondeur d'une carte marine : jamais un dégradé lisse.
+ */
+function water(depth: number): number {
+  return blend(PLATE.ground, PLATE.prussian, 0.02 + depth * 0.24);
 }
 
 /** Un nombre entre 0 et 1, toujours le même pour une case donnée. */
@@ -103,8 +86,9 @@ function grain(x: number, y: number): number {
 }
 
 /**
- * La carte de l'océan, dessinée comme une planche d'océanographie : l'eau qui s'éclaircit
- * vers le rivage, des lignes de niveau, et la vie comme on la voit au microscope à fond noir.
+ * La carte de l'océan, dessinée comme une planche d'océanographie gravée (charte « Atlas ») :
+ * l'eau noire qui s'éclaircit par paliers vers le rivage, des lignes de niveau au trait, la vie
+ * comme on la voit au microscope à fond noir, et la terre ferme en papier, au milieu.
  */
 export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
   const host = useRef<HTMLDivElement>(null);
@@ -118,9 +102,9 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
     const app = new Application();
     const graphics = new Graphics();
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const light = token("--on-dark", 0xe8eef7);
-    const warm = token("--iodine", 0xd9a441);
-    const dark = token("--lens-edge", 0x060a12);
+    const light = PLATE.bone;
+    const warm = PLATE.gamboge;
+    const dark = PLATE.ground;
     let disposed = false;
     let ready = false;
 
@@ -167,7 +151,7 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
             point.y < high + margin;
           graphics.clear();
 
-          // L'eau : un dégradé continu, du noir des abysses au bleu du rivage.
+          // L'eau : des paliers, du noir des abysses au bleu de Prusse du rivage.
           const centre = at(0, 0);
           const land = current.landRadius;
           const STEPS = 5;
@@ -177,7 +161,7 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
               const part = step / STEPS;
               graphics
                 .circle(centre.x, centre.y, (zone.outer - (zone.outer - inner) * part) * cell)
-                .fill({ color: water(index, part) });
+                .fill({ color: water((index + part) / current.zones.length) });
             }
             // Une zone encore fermée reste dans l'ombre.
             if (!zone.open) {
@@ -200,13 +184,22 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
             }
             return points;
           };
-          graphics.poly(coast(1.04)).fill({ color: hsl(190, 0.35, 0.42), alpha: 0.5 });
+          // Les hachures du rivage : de petits traits qui partent de la côte vers le large.
+          const shore = coast(0.99);
+          const offshore = coast(1.1);
+          for (let index = 0; index < shore.length; index += 2) {
+            graphics
+              .moveTo(shore[index] ?? 0, shore[index + 1] ?? 0)
+              .lineTo(offshore[index] ?? 0, offshore[index + 1] ?? 0);
+          }
+          graphics.stroke({ color: light, alpha: 0.5, width: 1 });
+          // La terre : du papier, cerné d'encre, avec ses courbes de niveau.
           graphics
             .poly(coast(0.97))
-            .fill({ color: hsl(36, 0.2, 0.3) })
-            .stroke({ color: hsl(40, 0.3, 0.62), alpha: 0.7, width: 1.2 });
+            .fill({ color: PLATE.paper })
+            .stroke({ color: PLATE.ink, width: 1.6 });
           for (const scale of [0.74, 0.5, 0.27]) {
-            graphics.poly(coast(scale)).stroke({ color: hsl(40, 0.3, 0.7), alpha: 0.22, width: 1 });
+            graphics.poly(coast(scale)).stroke({ color: PLATE.ink, alpha: 0.45, width: 1 });
           }
 
           // Les lignes de la carte : rayons, courbes de niveau, frontières des zones.

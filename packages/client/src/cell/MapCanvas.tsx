@@ -2,6 +2,7 @@ import { Application, Graphics } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { makeDecor } from "./draw";
 import { HOME_FORM, drawOrganism } from "./oceanLife";
+import { PLATE } from "./plate";
 
 export interface MapScene {
   readonly seed: number;
@@ -27,14 +28,11 @@ export interface MapScene {
   }[];
 }
 
-/** Lit une couleur des jetons de design et la donne à PixiJS. */
-function token(name: string, fallback: number): number {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  const match = /^#([0-9a-f]{6})$/i.exec(value);
-  return match?.[1] === undefined ? fallback : Number.parseInt(match[1], 16);
-}
-
-/** La goutte vue de loin : la cellule au centre, les lieux autour, ce qui est en route. */
+/**
+ * La goutte vue de loin : la cellule au centre, les lieux autour, ce qui est en route.
+ * Une planche noire gravée (docs/identite/charte.md) : chaque lieu est un médaillon au trait,
+ * teinté d'un lavis ; rien ne brille.
+ */
 export function MapCanvas({ scene }: { readonly scene: MapScene }) {
   const host = useRef<HTMLDivElement>(null);
   const sceneRef = useRef(scene);
@@ -47,12 +45,8 @@ export function MapCanvas({ scene }: { readonly scene: MapScene }) {
     const app = new Application();
     const graphics = new Graphics();
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const tones = {
-      sugar: token("--iodine", 0xd9a441),
-      bricks: token("--eosin", 0xa8402c),
-      prey: token("--algae", 0x3f7d5c),
-    };
-    const light = token("--on-dark", 0xe8eef7);
+    const tones = { sugar: PLATE.gamboge, bricks: PLATE.madder, prey: PLATE.verdigris };
+    const light = PLATE.bone;
     const decor = makeDecor(sceneRef.current.seed ^ 0x51ed);
     let disposed = false;
     let ready = false;
@@ -91,6 +85,19 @@ export function MapCanvas({ scene }: { readonly scene: MapScene }) {
           const t = (reducedMotion ? 0.12 : 1) * (performance.now() / 1000);
           graphics.clear();
 
+          // Le cercle gradué de l'objectif, comme autour de la cellule.
+          for (let index = 0; index < 120; index++) {
+            const angle = (index / 120) * Math.PI * 2;
+            const from = size * (index % 10 === 0 ? 0.468 : 0.48);
+            graphics
+              .moveTo(size / 2 + Math.cos(angle) * from, size / 2 + Math.sin(angle) * from)
+              .lineTo(
+                size / 2 + Math.cos(angle) * size * 0.492,
+                size / 2 + Math.sin(angle) * size * 0.492,
+              );
+          }
+          graphics.stroke({ color: light, alpha: 0.32, width: 1 });
+
           for (const mote of decor.motes) {
             const x = ((mote.x + t * mote.speed) % 1) * size;
             const y = (mote.y + Math.sin(t * 0.3 + mote.phase) * 0.01) * size;
@@ -100,15 +107,29 @@ export function MapCanvas({ scene }: { readonly scene: MapScene }) {
           for (const place of current.places) {
             const color = tones[place.tone];
             const breath = 1 + Math.sin(t * 1.3 + place.x * 9) * 0.06;
-            const alpha = place.resting ? 0.07 : 0.22;
-            graphics.circle(place.x * size, place.y * size, size * 0.075 * breath).fill({
-              color,
-              alpha,
-            });
-            graphics.circle(place.x * size, place.y * size, size * 0.05).fill({
-              color,
-              alpha: alpha * 1.4,
-            });
+            // Un médaillon : un lavis, un cercle au trait, des graduations, du pointillé.
+            const strength = place.resting ? 0.35 : 1;
+            const px = place.x * size;
+            const py = place.y * size;
+            const r = size * 0.074 * breath;
+            graphics
+              .circle(px, py, r)
+              .fill({ color, alpha: 0.16 * strength })
+              .stroke({ color: light, alpha: 0.7 * strength, width: 1.2 });
+            for (let index = 0; index < 16; index++) {
+              const angle = (index * Math.PI) / 8 + place.x * 7;
+              graphics
+                .moveTo(px + Math.cos(angle) * r * 1.07, py + Math.sin(angle) * r * 1.07)
+                .lineTo(px + Math.cos(angle) * r * 1.2, py + Math.sin(angle) * r * 1.2);
+            }
+            graphics.stroke({ color: light, alpha: 0.42 * strength, width: 1 });
+            for (let index = 0; index < 9; index++) {
+              const angle = index * 2.4 + place.y * 11;
+              const far = r * (0.72 + (index % 3) * 0.1);
+              graphics
+                .circle(px + Math.cos(angle) * far, py + Math.sin(angle) * far, 1)
+                .fill({ color, alpha: 0.85 * strength });
+            }
           }
 
           const centre = size / 2;

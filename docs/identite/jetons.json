@@ -2,7 +2,12 @@
   "name": "Origins 27 — Atlas",
   "version": 1,
   "color": {
-    "themes": [{ "id": "atlas", "name": "Atlas" }],
+    "themes": [
+      {
+        "id": "atlas",
+        "name": "Atlas"
+      }
+    ],
     "tokens": [
       {
         "name": "paper",
@@ -53,6 +58,31 @@
         "name": "bone",
         "value": "#f1ebdd",
         "usage": "Le trait et le texte sur la planche noire (15,8)."
+      },
+      {
+        "name": "plate-prussian",
+        "value": "#8fb4cf",
+        "usage": "Bleu de Prusse éclairci : l'eau, la vacuole, les zones sans oxygène. Sur la planche noire seulement."
+      },
+      {
+        "name": "plate-madder",
+        "value": "#d98ba6",
+        "usage": "Garance éclaircie : le danger (prédateurs, Léviathan), le noyau. Sur la planche noire seulement."
+      },
+      {
+        "name": "plate-gamboge",
+        "value": "#e6b94a",
+        "usage": "Gomme-gutte éclaircie : la chaleur (sources, éruptions), le sucre, la mitochondrie. Sur la planche noire seulement."
+      },
+      {
+        "name": "plate-verdigris",
+        "value": "#8dbfaf",
+        "usage": "Vert-de-gris éclairci : la vie qui pousse, les proies, le réticulum. Sur la planche noire seulement."
+      },
+      {
+        "name": "plate-moss",
+        "value": "#b9c48a",
+        "usage": "Mousse : le plancton, les lysosomes. Sur la planche noire seulement."
       }
     ]
   },
@@ -162,16 +192,36 @@
   },
   "spacing": {
     "tokens": [
-      { "name": "space-1", "value": "4px", "usage": "Entre un pictogramme et son chiffre." },
-      { "name": "space-2", "value": "8px", "usage": "Entre deux éléments d'un même groupe." },
-      { "name": "space-3", "value": "12px", "usage": "Marge intérieure d'une ligne." },
-      { "name": "space-4", "value": "16px", "usage": "Marge de la page sur téléphone." },
+      {
+        "name": "space-1",
+        "value": "4px",
+        "usage": "Entre un pictogramme et son chiffre."
+      },
+      {
+        "name": "space-2",
+        "value": "8px",
+        "usage": "Entre deux éléments d'un même groupe."
+      },
+      {
+        "name": "space-3",
+        "value": "12px",
+        "usage": "Marge intérieure d'une ligne."
+      },
+      {
+        "name": "space-4",
+        "value": "16px",
+        "usage": "Marge de la page sur téléphone."
+      },
       {
         "name": "space-5",
         "value": "24px",
         "usage": "Entre deux groupes ; marge intérieure d'une fiche."
       },
-      { "name": "space-6", "value": "32px", "usage": "Entre deux sections." },
+      {
+        "name": "space-6",
+        "value": "32px",
+        "usage": "Entre deux sections."
+      },
       {
         "name": "touch",
         "value": "48px",

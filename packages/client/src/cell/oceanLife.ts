@@ -3,9 +3,13 @@
  * microscope à fond noir (un contour lumineux, un corps translucide, une structure fine), des
  * sources hydrothermales, de la neige marine, et les grands chasseurs du Cambrien.
  * Tout est tracé à la plume : des traits fins, presque pas d'aplats.
+ *
+ * Style « Atlas » (docs/identite/charte.md) : le trait est couleur d'os, la couleur n'est qu'un
+ * lavis, et rien ne brille : pas de halo autour des êtres vivants.
  */
 import type { Graphics } from "pixi.js";
 import { hsl } from "./draw";
+import { PLATE } from "./plate";
 
 interface Spot {
   readonly x: number;
@@ -50,12 +54,12 @@ export function drawOrganism(
   t: number,
   seed: number,
 ): void {
-  const glow = hsl(hue, 0.5, 0.74);
-  const body = hsl(hue, 0.55, 0.42);
+  // Le trait : couleur d'os, à peine teinté ; le corps : un lavis de la teinte de l'organisme.
+  const glow = hsl(hue, 0.26, 0.86);
+  const body = hsl(hue, 0.42, 0.44);
   if (radius < 4.5) {
-    // De loin : une lueur pâle, à peine teintée, comme du plancton qui luit.
-    const spark = hsl(hue, 0.3, 0.8);
-    g.circle(spot.x, spot.y, radius * 2.2).fill({ color: spark, alpha: alpha * 0.1 });
+    // De loin : un point clair, à peine teinté, comme sur une carte.
+    const spark = hsl(hue, 0.22, 0.86);
     g.circle(spot.x, spot.y, radius * 0.8).fill({ color: spark, alpha: alpha * 0.85 });
     return;
   }
@@ -65,8 +69,6 @@ export function drawOrganism(
   const r = radius * breath;
   const line = Math.max(1, radius * 0.09);
   const fine = { color: glow, alpha: alpha * 0.55, width: Math.max(0.8, line * 0.6) };
-  // Le halo : la lumière diffusée autour d'un être vivant sur fond noir.
-  g.circle(spot.x, spot.y, r * 1.5).fill({ color: glow, alpha: alpha * 0.06 });
 
   if (form === 0) {
     // Diatomée centrique : un disque de verre, des stries qui rayonnent.
@@ -181,13 +183,11 @@ export function drawVent(
   t: number,
   seed: number,
 ): void {
-  const ember = hsl(28, 0.9, 0.58);
+  const ember = PLATE.gamboge;
   if (size < 4.5) {
-    g.circle(spot.x, spot.y, size * 1.8).fill({ color: ember, alpha: alpha * 0.16 });
     g.circle(spot.x, spot.y, size * 0.8).fill({ color: ember, alpha });
     return;
   }
-  g.circle(spot.x, spot.y - size * 0.6, size * 1.5).fill({ color: ember, alpha: alpha * 0.08 });
   // Le panache : des bouffées qui montent, s'élargissent et s'éteignent.
   for (let index = 0; index < 5; index++) {
     const rise = (t * 0.35 + index / 5 + seed) % 1;
@@ -195,7 +195,7 @@ export function drawVent(
       spot.x + Math.sin(rise * 5 + index + seed * 9) * size * 0.3,
       spot.y - size * (0.7 + rise * 1.4),
       size * (0.16 + rise * 0.3),
-    ).fill({ color: hsl(26 - rise * 10, 0.7, 0.55 - rise * 0.2), alpha: alpha * (1 - rise) * 0.6 });
+    ).stroke({ color: ember, alpha: alpha * (1 - rise) * 0.8, width: 1 });
   }
   g.poly([
     spot.x - size * 0.7,
@@ -207,8 +207,8 @@ export function drawVent(
     spot.x + size * 0.7,
     spot.y + size * 0.8,
   ])
-    .fill({ color: hsl(20, 0.25, 0.14), alpha })
-    .stroke({ color: hsl(24, 0.5, 0.45), alpha: alpha * 0.9, width: Math.max(1, size * 0.08) });
+    .fill({ color: PLATE.ground, alpha })
+    .stroke({ color: PLATE.bone, alpha: alpha * 0.9, width: Math.max(1, size * 0.08) });
   g.ellipse(spot.x, spot.y - size * 0.55, size * 0.28, size * 0.1).fill({ color: ember, alpha });
 }
 
@@ -221,7 +221,7 @@ export function drawMarineSnow(
   t: number,
   seed: number,
 ): void {
-  const pale = hsl(205, 0.3, 0.86);
+  const pale = PLATE.bone;
   if (size < 4.5) {
     g.circle(spot.x, spot.y, size * 0.8).fill({ color: pale, alpha: alpha * 0.9 });
     return;
@@ -246,9 +246,9 @@ export function drawCarcass(
   alpha: number,
   seed: number,
 ): void {
-  const bone = hsl(18, 0.35, 0.82);
+  const bone = PLATE.bone;
   if (size < 4.5) {
-    g.circle(spot.x, spot.y, size * 0.8).fill({ color: hsl(350, 0.55, 0.62), alpha });
+    g.circle(spot.x, spot.y, size * 0.8).fill({ color: PLATE.madder, alpha });
     return;
   }
   const angle = seed * Math.PI * 2;
@@ -282,12 +282,12 @@ export function drawPredator(
   alpha: number,
   t: number,
   seed: number,
-  hue = 352,
+  hue = 339,
 ): void {
-  const blood = hsl(hue, 0.72, 0.62);
-  const flesh = hsl(hue, 0.6, 0.3);
+  // La garance, la teinte du danger : en trait clair, et en lavis sombre pour la chair.
+  const blood = hsl(hue, 0.52, 0.72);
+  const flesh = hsl(hue, 0.4, 0.3);
   if (size < 5) {
-    g.circle(spot.x, spot.y, size * 1.8).fill({ color: blood, alpha: alpha * 0.16 });
     g.poly([
       spot.x,
       spot.y - size,
@@ -402,11 +402,10 @@ export function drawLeviathan(
   t: number,
   seed: number,
 ): void {
-  const blood = hsl(352, 0.78, 0.62);
-  const shell = hsl(18, 0.32, 0.26);
-  const pale = hsl(30, 0.4, 0.72);
+  const blood = PLATE.madder;
+  const shell = hsl(30, 0.2, 0.16);
+  const pale = PLATE.bone;
   if (size < 7) {
-    g.circle(spot.x, spot.y, size * 1.9).fill({ color: blood, alpha: alpha * 0.18 });
     g.poly([
       spot.x - size * 1.3,
       spot.y,
@@ -419,7 +418,6 @@ export function drawLeviathan(
   }
   const angle = seed * Math.PI * 2 + Math.sin(t * 0.3 + seed * 20) * 0.12;
   const line = Math.max(1, size * 0.05);
-  g.circle(spot.x, spot.y, size * 2).fill({ color: blood, alpha: alpha * 0.06 });
   // La coquille : un long cône, pointe en arrière, cerclé de cloisons.
   const tip = turned(spot, angle, -size * 2.1, 0);
   const upper = turned(spot, angle, size * 0.7, -size * 0.5);
@@ -439,7 +437,7 @@ export function drawLeviathan(
   // La tête et son œil.
   const head = turned(spot, angle, size * 0.95, 0);
   g.poly(ellipse(head, size * 0.42, size * 0.46, angle, 16))
-    .fill({ color: hsl(352, 0.5, 0.3), alpha: alpha * 0.9 })
+    .fill({ color: hsl(339, 0.4, 0.3), alpha: alpha * 0.9 })
     .stroke({ color: blood, alpha, width: line });
   const eye = turned(spot, angle, size * 0.92, -size * 0.2);
   g.circle(eye.x, eye.y, Math.max(1.5, size * 0.11)).fill({ color: pale, alpha });
@@ -473,10 +471,16 @@ export function drawEventZone(
   const pulse = 1 + Math.sin(t * 1.4 + seed * 9) * 0.025;
   const ring = Math.max(1, Math.min(2.2, radius * 0.02));
   if (kind === "eruption") {
-    const ember = hsl(24, 0.9, 0.55);
-    for (const part of [1, 0.66, 0.36]) {
-      g.circle(spot.x, spot.y, radius * part * pulse).fill({ color: ember, alpha: alpha * 0.07 });
+    const ember = PLATE.gamboge;
+    // Des cercles au trait, comme les ondes d'une secousse sur une carte.
+    for (const part of [0.66, 0.36]) {
+      g.circle(spot.x, spot.y, radius * part * pulse).stroke({
+        color: ember,
+        alpha: alpha * 0.3,
+        width: ring * 0.8,
+      });
     }
+    g.circle(spot.x, spot.y, radius).fill({ color: ember, alpha: alpha * 0.06 });
     g.circle(spot.x, spot.y, radius * pulse).stroke({
       color: ember,
       alpha: alpha * 0.6,
@@ -485,7 +489,7 @@ export function drawEventZone(
     return;
   }
   if (kind === "bloom") {
-    const leaf = hsl(96, 0.6, 0.5);
+    const leaf = PLATE.moss;
     g.circle(spot.x, spot.y, radius).fill({ color: leaf, alpha: alpha * 0.1 });
     g.circle(spot.x, spot.y, radius).stroke({ color: leaf, alpha: alpha * 0.55, width: ring });
     // Le plancton : des grains de lumière verte qui dérivent dans toute la zone.
@@ -498,12 +502,12 @@ export function drawEventZone(
         spot.x + Math.cos(a) * far + drift,
         spot.y + Math.sin(a) * far - drift,
         Math.max(0.7, radius * 0.012 + (index % 3) * 0.3),
-      ).fill({ color: hsl(88 + (index % 4) * 8, 0.7, 0.62), alpha: alpha * 0.55 });
+      ).fill({ color: index % 3 === 0 ? PLATE.verdigris : leaf, alpha: alpha * 0.6 });
     }
     return;
   }
   if (kind === "leviathan") {
-    const blood = hsl(352, 0.8, 0.58);
+    const blood = PLATE.madder;
     g.circle(spot.x, spot.y, radius).fill({ color: blood, alpha: alpha * 0.06 });
     g.circle(spot.x, spot.y, radius * pulse).stroke({
       color: blood,
@@ -521,12 +525,15 @@ export function drawEventZone(
     }
     return;
   }
-  // Zone anoxique : l'eau s'assombrit et vire au violet terne.
-  const dead = hsl(276, 0.3, 0.22);
-  g.circle(spot.x, spot.y, radius).fill({ color: dead, alpha: alpha * 0.5 });
-  g.circle(spot.x, spot.y, radius * 0.6).fill({ color: hsl(280, 0.25, 0.1), alpha: alpha * 0.3 });
+  // Zone anoxique : l'eau s'assombrit encore, cerclée de bleu de Prusse.
+  g.circle(spot.x, spot.y, radius).fill({ color: PLATE.ground, alpha: alpha * 0.6 });
+  g.circle(spot.x, spot.y, radius * 0.6).stroke({
+    color: PLATE.prussian,
+    alpha: alpha * 0.25,
+    width: ring * 0.8,
+  });
   g.circle(spot.x, spot.y, radius).stroke({
-    color: hsl(276, 0.45, 0.62),
+    color: PLATE.prussian,
     alpha: alpha * 0.6,
     width: ring,
   });
