@@ -58,6 +58,8 @@ import {
   translate,
 } from "./game/text";
 import type { Lang } from "./game/text";
+import { researchParts } from "./game/research";
+import type { ResearchPart } from "./game/research";
 import { isVisible } from "./game/unlock";
 import { AccountSheet } from "./ui/AccountSheet";
 import { AllianceSheet, bannerLabel, bannerTag } from "./ui/AllianceSheet";
@@ -70,17 +72,16 @@ import { MapView } from "./ui/MapView";
 import { CalendarSheet, openingName } from "./ui/CalendarSheet";
 import { ChestOverlay } from "./ui/ChestOverlay";
 import type { ChestLoot, ChestTone } from "./ui/ChestOverlay";
-import { CompanionSheet, companionName } from "./ui/CompanionSheet";
+import { companionName } from "./ui/CompanionPanel";
 import { ContestSheet } from "./ui/ContestSheet";
-import { EvolutionPanel } from "./ui/EvolutionPanel";
 import { AdvancedSheet, ordinaryPathDone } from "./ui/AdvancedSheet";
 import { MissingHint } from "./ui/MissingHint";
 import { StorageHint } from "./ui/StorageHint";
-import { GenomeSheet } from "./ui/GenomeSheet";
 import { LexiconSheet } from "./ui/LexiconSheet";
 import { QuestSheet } from "./ui/QuestSheet";
 import { RankingSheet } from "./ui/RankingSheet";
 import { RaidBubble } from "./ui/RaidBubble";
+import { ResearchView } from "./ui/ResearchView";
 import { RivalsView } from "./ui/RivalsView";
 import { CrisisSheet, SpeciesSheet } from "./ui/SeasonSheets";
 import { TroopPanel } from "./ui/TroopPanel";
@@ -106,17 +107,21 @@ const ADVANCED_SEEN_KEY = "o27.plus-loin.vu";
 /** Durée du rougeoiement après un coup reçu. */
 const ALARM_FLASH_MS = 6000;
 
-/** Position de chaque emplacement sur la lame, en pourcentage. */
+/** Les grands onglets du jeu. */
+type View = "cell" | "map" | "rivals" | "research";
+
+/** Position de chaque emplacement sur la lame, en pourcentage : huit autour, le Noyau au centre. */
 const SLOT_POSITION: Readonly<Record<OrganelleId, { left: string; top: string }>> = {
   wall: { left: "50%", top: "9%" },
-  vacuole: { left: "76%", top: "19%" },
-  golgi: { left: "90%", top: "43%" },
-  ribosome: { left: "85%", top: "70%" },
-  nursery: { left: "64%", top: "88%" },
-  lysosome: { left: "36%", top: "88%" },
-  cilia: { left: "15%", top: "70%" },
-  nucleus: { left: "10%", top: "43%" },
-  mitochondrion: { left: "24%", top: "19%" },
+  vacuole: { left: "79%", top: "21%" },
+  golgi: { left: "91%", top: "50%" },
+  ribosome: { left: "79%", top: "79%" },
+  nursery: { left: "50%", top: "91%" },
+  lysosome: { left: "21%", top: "79%" },
+  cilia: { left: "9%", top: "50%" },
+  // Le Noyau est au cœur de la cellule : son repère se pose sur lui.
+  nucleus: { left: "50%", top: "50%" },
+  mitochondrion: { left: "21%", top: "21%" },
 };
 
 /** La teinte du compagnon : celle de la famille qui l'a façonné. */
@@ -135,7 +140,9 @@ function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number):
 
 export function App({ store, lang, onSwitchLang, account }: Props) {
   const [accountOpen, setAccountOpen] = useState(false);
-  const [view, setView] = useState<"cell" | "map" | "rivals">("cell");
+  const [view, setView] = useState<View>("cell");
+  /** La rubrique de l'onglet Recherche que le joueur regarde. */
+  const [researchPart, setResearchPart] = useState<ResearchPart>("cell");
   /** Résultat de la dernière attaque rentrée, et dernière attaque subie. */
   const [raidNote, setRaidNote] = useState<{
     won: boolean;
@@ -154,9 +161,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
   const [loss, setLoss] = useState<{ resource: ResourceId; amount: number } | null>(null);
   const [questsOpen, setQuestsOpen] = useState(false);
   const [rankingOpen, setRankingOpen] = useState(false);
-  const [genomeOpen, setGenomeOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [companionOpen, setCompanionOpen] = useState(false);
   const [tamed, setTamed] = useState(false);
   const [eventsOpen, setEventsOpen] = useState(false);
   const [allianceOpen, setAllianceOpen] = useState(false);
@@ -354,17 +359,32 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
     (quest) => !quest.claimed && quest.progress >= quest.target,
   ).length;
   const questsDone = (quests?.items ?? []).filter((quest) => quest.progress >= quest.target).length;
-  const mutationPrice = nextMutationPrice(state);
-  const canMutate = show("hunt") && state.mutationOffer === null && mutationPool(state).length > 0;
+  // Une mutation à portée de main : l'onglet Recherche le signale d'un point.
+  const mutationReady =
+    show("hunt") &&
+    state.mutationOffer === null &&
+    mutationPool(state).length > 0 &&
+    state.resources.proteins >= nextMutationPrice(state);
   const slots = ORGANELLE_IDS.filter((id) => BALANCE.organelles[id].tier <= state.tier);
   const choosing =
     absence === null && reveal === null && state.mutationOffer !== null && show("mutationChoice");
 
   const onMap = view === "map" && show("map");
   const onRivals = view === "rivals" && show("rivals");
-  const views: ("cell" | "map" | "rivals")[] = show("rivals")
-    ? ["cell", "map", "rivals"]
-    : ["cell", "map"];
+  // L'onglet Recherche range tout ce qui fait évoluer l'organisme : il existe dès qu'une
+  // rubrique est ouverte, et s'ouvre sur la première si celle que l'on regardait n'existe pas.
+  const parts = researchParts(state.tier);
+  const part = parts.find((id) => id === researchPart) ?? parts[0];
+  const onResearch = view === "research" && part !== undefined;
+  const openResearch = (next: ResearchPart): void => {
+    setSelected(null);
+    setAdvancedOpen(false);
+    setResearchPart(next);
+    setView("research");
+  };
+  const views: View[] = ["cell", "map"];
+  if (show("rivals")) views.push("rivals");
+  if (parts.length > 0) views.push("research");
   const raid = state.raid;
   /** Le groupe se bat chez un rival : le joueur peut l'aider. */
   const raidStrikeLeft =
@@ -667,7 +687,26 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         <RivalsView state={state} lang={lang} onOrder={(order) => store.send(order).ok} />
       )}
 
-      <section className="lens" hidden={onMap || onRivals}>
+      {onResearch && (
+        <ResearchView
+          state={state}
+          lang={lang}
+          parts={parts}
+          part={part}
+          onPart={setResearchPart}
+          families={show("genome")}
+          onOrder={(order) => {
+            store.send(order);
+          }}
+          onOpenStore={openStore}
+          onOpenOrganelle={(id) => {
+            setView("cell");
+            setSelected(id);
+          }}
+        />
+      )}
+
+      <section className="lens" hidden={onMap || onRivals || onResearch}>
         <CellCanvas scene={scene} label={t("label.cell")} onTap={tap} />
         <span className="scale-bar" aria-hidden="true">
           10 µm
@@ -684,7 +723,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               <button
                 key={id}
                 type="button"
-                className={`slot${level > 0 ? " is-built" : ""}${building ? " is-building" : ""}${ready ? " is-ready" : ""}`}
+                className={`slot${id === "nucleus" ? " is-core" : ""}${level > 0 ? " is-built" : ""}${building ? " is-building" : ""}${ready ? " is-ready" : ""}`}
                 style={SLOT_POSITION[id]}
                 aria-label={t(`organelle.${id}.name`)}
                 data-testid={`slot-${id}`}
@@ -700,6 +739,11 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
                 {building && show("constructionTimer") && (
                   <span className="slot-timer">{formatDuration(building.endsAt - state.now)}</span>
                 )}
+                {id === "nucleus" && level > 0 && !building && (
+                  <span className="slot-level" data-testid="nucleus-level">
+                    {t("label.levelShort")} {level}
+                  </span>
+                )}
                 {queued > 0 && (
                   <span className="slot-queue" data-testid={`slot-queue-${id}`}>
                     +{queued}
@@ -710,7 +754,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           })}
       </section>
 
-      {!onMap && !onRivals && state.buildQueue.length > 0 && (
+      {!onMap && !onRivals && !onResearch && state.buildQueue.length > 0 && (
         <div className="build-queue" data-testid="build-queue">
           <span className="build-queue-label">{t("queue.label")}</span>
           {state.buildQueue.map((entry, index) => (
@@ -747,6 +791,9 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
               }}
             >
               {t(`view.${id}`)}
+              {id === "research" && mutationReady && (
+                <span className="view-dot" data-testid="research-dot" aria-hidden="true" />
+              )}
             </button>
           ))}
         </div>
@@ -875,30 +922,6 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         />
       )}
 
-      {show("genome") && (
-        <button
-          type="button"
-          className="quests-open genome-open"
-          data-testid="genome-open"
-          onClick={() => {
-            setGenomeOpen(true);
-          }}
-        >
-          {t("label.genome")}
-          <span className="badge">
-            {state.mutations.length} {t("label.genes")}
-          </span>
-        </button>
-      )}
-      {show("genome") && genomeOpen && (
-        <GenomeSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setGenomeOpen(false);
-          }}
-        />
-      )}
       {contest !== null && (
         <button
           type="button"
@@ -1062,6 +1085,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setView("cell");
             setSelected(id);
           }}
+          onResearch={openResearch}
         />
       )}
       {show("apexRace") && apexOpen && (
@@ -1182,33 +1206,6 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           </button>
         </div>
       )}
-      {show("companion") && (
-        <button
-          type="button"
-          className="quests-open companion-open"
-          data-testid="companion-open"
-          onClick={() => {
-            setCompanionOpen(true);
-          }}
-        >
-          {t("label.companion")}
-          {state.companion !== null && (
-            <span className="badge">{companionName(lang, state.companion)}</span>
-          )}
-        </button>
-      )}
-      {show("companion") && companionOpen && (
-        <CompanionSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setCompanionOpen(false);
-          }}
-          onOrder={(order) => {
-            if (store.send(order).ok && order.type === "releaseCompanion") setCompanionOpen(false);
-          }}
-        />
-      )}
       {tamed && state.companion !== null && (
         <div className="loss is-good" role="status" data-testid="companion-note">
           <strong>{t("companion.tamed")}</strong>
@@ -1225,21 +1222,6 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           </button>
         </div>
       )}
-      {canMutate && (
-        <button
-          type="button"
-          className="mutate"
-          disabled={state.resources.proteins < mutationPrice}
-          data-testid="mutate"
-          onClick={() => {
-            store.send({ type: "buyMutation" });
-          }}
-        >
-          {t("action.mutate")} · <ResourceIcon id="proteins" />
-          {formatAmount(mutationPrice, lang)}
-        </button>
-      )}
-
       {strikeLeft !== null && (
         <button
           type="button"
@@ -1422,6 +1404,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setSelected(null);
             setAdvancedOpen(true);
           }}
+          onResearch={openResearch}
           onAct={(order) => {
             if (store.send(order).ok) setSelected(null);
           }}
@@ -1534,6 +1517,8 @@ interface SheetProps {
   readonly onOpen: (id: OrganelleId) => void;
   /** Ouvre la fenêtre « Aller plus loin ». */
   readonly onGoFurther: () => void;
+  /** Ouvre l'onglet Recherche à la bonne rubrique. */
+  readonly onResearch: (part: ResearchPart) => void;
   readonly onAct: (
     order: { type: "build"; organelle: OrganelleId } | { type: "upgrade"; organelle: OrganelleId },
   ) => void;
@@ -1547,6 +1532,7 @@ function OrganelleSheet({
   onClose,
   onOpen,
   onGoFurther,
+  onResearch,
   onAct,
   onOrder,
 }: SheetProps) {
@@ -1596,10 +1582,26 @@ function OrganelleSheet({
         </div>
         <p className="sheet-role">{t(`organelle.${id}.role`)}</p>
         {id === "nursery" && level > 0 && (
-          <TroopPanel state={state} lang={lang} onOrder={onOrder} onOpenStore={openStore} />
+          <TroopPanel
+            state={state}
+            lang={lang}
+            onOrder={onOrder}
+            onResearch={() => {
+              onResearch("troops");
+            }}
+          />
         )}
         {id === "nucleus" && level > 0 && (
-          <EvolutionPanel state={state} lang={lang} onOrder={onOrder} onOpenStore={openStore} />
+          <button
+            type="button"
+            className="button button-quiet"
+            data-testid="nucleus-research"
+            onClick={() => {
+              onResearch("cell");
+            }}
+          >
+            {t("research.seeEvolutions")} →
+          </button>
         )}
 
         {building && (

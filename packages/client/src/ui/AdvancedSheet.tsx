@@ -2,6 +2,7 @@ import { drillMaxLevel, maxLevelOf, seasonDraw } from "@o27/core";
 import type { PlayerState } from "@o27/core";
 import { BALANCE, DRILL_IDS, EVOLUTION_IDS, ORGANELLE_IDS } from "@o27/data";
 import type { OrganelleId, TextKey } from "@o27/data";
+import type { ResearchPart } from "../game/research";
 import { translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { SheetFrame } from "./SheetFrame";
@@ -15,6 +16,8 @@ interface Props {
   readonly onClose: () => void;
   /** Ouvre la fiche d'un organite. */
   readonly onOpen: (id: OrganelleId) => void;
+  /** Ouvre l'onglet Recherche à la bonne rubrique. */
+  readonly onResearch: (part: ResearchPart) => void;
 }
 
 /** Les organites que le palier du joueur a ouverts. */
@@ -34,7 +37,15 @@ export function ordinaryPathDone(state: PlayerState): boolean {
  * Pour les plus assidus : le chemin ordinaire s'arrête au niveau 5, mais rien ne les bloque.
  * La fenêtre montre ce qui reste à conquérir, et emmène tout droit à la bonne fiche.
  */
-export function AdvancedSheet({ state, lang, showEvolutions, showDrills, onClose, onOpen }: Props) {
+export function AdvancedSheet({
+  state,
+  lang,
+  showEvolutions,
+  showDrills,
+  onClose,
+  onOpen,
+  onResearch,
+}: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const name = (id: OrganelleId): string => t(`organelle.${id}.name`);
   const open = openOrganelles(state);
@@ -55,6 +66,19 @@ export function AdvancedSheet({ state, lang, showEvolutions, showDrills, onClose
       }}
     >
       {label.replace("{o}", name(id))} →
+    </button>
+  );
+
+  const research = (part: ResearchPart) => (
+    <button
+      type="button"
+      className="link-button"
+      data-testid={`advanced-research-${part}`}
+      onClick={() => {
+        onResearch(part);
+      }}
+    >
+      {t("advanced.open").replace("{o}", t(`research.title.${part}`))} →
     </button>
   );
 
@@ -93,7 +117,7 @@ export function AdvancedSheet({ state, lang, showEvolutions, showDrills, onClose
               .replace("{n}", String(deepEvolutions))
               .replace("{m}", String(awake.length))}
           </p>
-          {go("nucleus", t("advanced.open"))}
+          {research("cell")}
         </section>
       )}
       {showDrills && (
@@ -105,7 +129,7 @@ export function AdvancedSheet({ state, lang, showEvolutions, showDrills, onClose
               .replace("{n}", String(topDrills))
               .replace("{m}", String(DRILL_IDS.length))}
           </p>
-          {go("nursery", t("advanced.open"))}
+          {research("troops")}
         </section>
       )}
     </SheetFrame>

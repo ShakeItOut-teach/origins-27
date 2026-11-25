@@ -1,7 +1,5 @@
 import {
   MICRO,
-  drillMaxLevel,
-  drillOffer,
   genesMissing,
   productionRate,
   trainMs,
@@ -10,19 +8,18 @@ import {
   upkeepRate,
 } from "@o27/core";
 import type { PlayerState } from "@o27/core";
-import { BALANCE, DRILL_IDS, RESOURCE_IDS, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
+import { BALANCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { Order, TextKey } from "@o27/data";
 import { formatAmount, formatDuration, formatRate, translate } from "../game/text";
 import type { Lang } from "../game/text";
-import { MissingHint } from "./MissingHint";
-import { StorageHint } from "./StorageHint";
 import { PreyIcon, ResourceIcon, TroopIcon } from "./icons";
 
 interface Props {
   readonly state: PlayerState;
   readonly lang: Lang;
   readonly onOrder: (order: Order) => void;
-  readonly onOpenStore: () => void;
+  /** Ouvre l’onglet Recherche, à la rubrique des troupes. */
+  readonly onResearch: () => void;
 }
 
 /** On fait naître les cellules filles une par une, ou par dix. */
@@ -32,8 +29,9 @@ const BATCHES = [1, 10] as const;
  * Dans le Centrosome : les cellules filles qu'on a, ce qu'elles coûtent à nourrir, et de quoi
  * en faire naître. Leur nombre n'a pas de plafond : c'est l'entretien qui le limite.
  * Les cellules de rang 2 n'apparaissent qu'à leur palier ; chacune demande ses gènes.
+ * Leurs pouvoirs se cherchent dans l'onglet Recherche : un lien y mène.
  */
-export function TroopPanel({ state, lang, onOrder, onOpenStore }: Props) {
+export function TroopPanel({ state, lang, onOrder, onResearch }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const owned = troopsOwned(state);
   const training = state.training;
@@ -123,72 +121,14 @@ export function TroopPanel({ state, lang, onOrder, onOpenStore }: Props) {
         );
       })}
       {state.tier >= BALANCE.drills.tier && (
-        <section className="drills" data-testid="drills">
-          <h3 className="sheet-title">{t("label.drills")}</h3>
-          <p className="sheet-role">{t("drills.text")}</p>
-          {DRILL_IDS.map((id) => {
-            const offer = drillOffer(state, id);
-            const power = BALANCE.drills.powers[id];
-            const level = state.drills[id];
-            const percent = power.percentPerLevel * level;
-            const next = power.percentPerLevel * (level + 1);
-            const poor = RESOURCE_IDS.some((key) => state.resources[key] < offer.cost[key]);
-            const show = (value: number): string =>
-              `${value > 0 ? "+" : "−"}${String(Math.abs(value))} %`;
-            return (
-              <div key={id} className="tech-row" data-testid={`drill-${id}`} data-level={level}>
-                <div className="tech-head">
-                  <strong>{t(`drill.${id}.name`)}</strong>
-                  <span className="tech-level">
-                    {t("label.level")} {level} / {drillMaxLevel()}
-                  </span>
-                </div>
-                <p className="tech-effect">
-                  {t(`stat.${power.stat}` as TextKey)} {level > 0 && show(percent)}
-                  {level > 0 && offer.blocked === null && " → "}
-                  {offer.blocked === null && show(next)}
-                </p>
-                {offer.blocked === null && (
-                  <StorageHint
-                    state={state}
-                    cost={offer.cost}
-                    lang={lang}
-                    onOpenStore={onOpenStore}
-                  />
-                )}
-                {offer.blocked === null && (
-                  <MissingHint state={state} cost={offer.cost} lang={lang} />
-                )}
-                {offer.blocked === null && (
-                  <div className="tech-act">
-                    <span className="costs">
-                      {RESOURCE_IDS.map((key) => (
-                        <span
-                          key={key}
-                          className={`cost${state.resources[key] < offer.cost[key] ? " is-missing" : ""}`}
-                        >
-                          <ResourceIcon id={key} />
-                          {formatAmount(offer.cost[key], lang)}
-                        </span>
-                      ))}
-                    </span>
-                    <button
-                      type="button"
-                      className="button button-small"
-                      disabled={poor}
-                      data-testid={`drill-buy-${id}`}
-                      onClick={() => {
-                        onOrder({ type: "drill", power: id });
-                      }}
-                    >
-                      {t("action.drill")}
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </section>
+        <button
+          type="button"
+          className="link-button"
+          data-testid="troops-research"
+          onClick={onResearch}
+        >
+          {t("research.seeDrills")} →
+        </button>
       )}
       {training !== null && (
         <p className="sheet-building" data-testid="training">

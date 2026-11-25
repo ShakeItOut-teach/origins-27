@@ -199,7 +199,7 @@ export const fr = {
   "place.carcass.name": "Carcasse",
   "unlock.7.title": "Qui est le plus fort ?",
   "unlock.7.text":
-    "Votre puissance vous classe parmi les 500 organismes de l’océan, et votre ligue vous récompense chaque minuit. Des prédateurs rôdent sur la carte. Et le Noyau peut exprimer des évolutions : elles changent à chaque saison.",
+    "Votre puissance vous classe parmi les 500 organismes de l’océan, et votre ligue vous récompense chaque minuit. Des prédateurs rôdent sur la carte. Et le Noyau, au centre de la cellule, peut exprimer des évolutions : elles changent à chaque saison. Vous les trouverez dans l’onglet Recherche.",
   "label.power": "Puissance",
   "label.ranking": "Classement",
   "label.league": "Ligue",
@@ -257,7 +257,7 @@ export const fr = {
   "absence.starved": "Cellules filles mortes de faim",
   "unlock.8.title": "Vos gènes dessinent une lignée",
   "unlock.8.text":
-    "Chaque mutation appartient à une famille. Deux gènes d’une même famille : une cellule fille de rang 2. Trois gènes : une lignée, et son avantage. De nouvelles mutations vous seront proposées. Et vous pouvez apprivoiser un prédateur de l’océan.",
+    "Chaque mutation appartient à une famille. Deux gènes d’une même famille : une cellule fille de rang 2. Trois gènes : une lignée, et son avantage. De nouvelles mutations vous seront proposées. Et vous pouvez apprivoiser un prédateur de l’océan. Gènes, pouvoirs des cellules filles et compagnon : tout est dans l’onglet Recherche.",
   "mutation.armorPlates.name": "Plaques de cuirasse",
   "mutation.armorPlates.effect": "Votre cellule se défend un quart mieux.",
   "mutation.dormancy.name": "Dormance",
@@ -829,6 +829,30 @@ export const fr = {
   "speed.switch": "Passer à ×{n}",
   "speed.restart": "Recommencer une saison",
   "speed.leave": "Revenir au temps normal",
+  "view.research": "Recherche",
+  "label.levelShort": "Niv.",
+  "research.part.cell": "Cellule",
+  "research.part.troops": "Troupes",
+  "research.part.genes": "Gènes",
+  "research.part.companion": "Compagnon",
+  "research.title.cell": "Évolutions de la cellule",
+  "research.title.troops": "Recherche militaire",
+  "research.title.genes": "Vos gènes",
+  "research.title.companion": "Votre compagnon",
+  "research.open": "Ouvrir",
+  "research.notBuilt": "pas encore construit",
+  "research.cell.text":
+    "Le niveau du Noyau fixe jusqu’où chaque évolution peut aller. Une seule évolution s’exprime à la fois.",
+  "research.cell.needsNucleus":
+    "Construisez d’abord le Noyau, au centre de la cellule : c’est lui qui exprime les évolutions.",
+  "research.genes.text":
+    "Une mutation ajoute un gène à votre organisme. Elle se paie en protéines, que l’on gagne en chassant.",
+  "research.genes.families":
+    "Chaque mutation appartient à une famille. Deux gènes d’une même famille : une cellule fille de rang 2. Trois gènes : une lignée, et son avantage.",
+  "research.genes.all": "Vous portez tous les gènes de cette saison.",
+  "research.genes.none": "Aucun gène pour l’instant.",
+  "research.seeEvolutions": "Voir les évolutions",
+  "research.seeDrills": "Recherche militaire",
 } as const;
 
 export type TextKey = keyof typeof fr;

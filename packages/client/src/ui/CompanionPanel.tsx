@@ -5,12 +5,10 @@ import type { Order, TextKey } from "@o27/data";
 import { formatAmount, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { ResourceIcon } from "./icons";
-import { SheetFrame } from "./SheetFrame";
 
 interface Props {
   readonly state: PlayerState;
   readonly lang: Lang;
-  readonly onClose: () => void;
   readonly onOrder: (order: Order) => void;
 }
 
@@ -27,36 +25,29 @@ export function companionName(lang: Lang, companion: Companion): string {
  * Le compagnon : ce qu'il est devenu, ce qu'il apporte, ce qu'il coûte, et les gènes que l'on
  * peut encore lui partager.
  */
-export function CompanionSheet({ state, lang, onClose, onOrder }: Props) {
+export function CompanionPanel({ state, lang, onOrder }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const companion = state.companion;
   const rules = BALANCE.companion;
 
   if (companion === null) {
     return (
-      <SheetFrame
-        title={t("label.companion")}
-        testId="companion-sheet"
-        closeLabel={t("action.close")}
-        onClose={onClose}
-      >
+      <div className="companion" data-testid="companion">
         <p className="sheet-role" data-testid="companion-none">
           {t("state.noCompanion")}
         </p>
         <p className="sheet-role">{t("companion.text")}</p>
-      </SheetFrame>
+      </div>
     );
   }
 
   const points = companionPoints(companion);
   const affinity = rules.species[companion.species]?.affinity;
   return (
-    <SheetFrame
-      title={companionName(lang, companion)}
-      testId="companion-sheet"
-      closeLabel={t("action.close")}
-      onClose={onClose}
-    >
+    <div className="companion" data-testid="companion">
+      <h3 className="research-title" data-testid="companion-name">
+        {companionName(lang, companion)}
+      </h3>
       <p className="sheet-role">{t("companion.text")}</p>
       <p className="sheet-level" data-testid="companion-points">
         {t("label.genesShared")
@@ -122,6 +113,6 @@ export function CompanionSheet({ state, lang, onClose, onOrder }: Props) {
       >
         {t("action.release")}
       </button>
-    </SheetFrame>
+    </div>
   );
 }

@@ -199,7 +199,7 @@ export const en = {
   "place.carcass.name": "Carcass",
   "unlock.7.title": "Who is the strongest?",
   "unlock.7.text":
-    "Your power ranks you among the 500 organisms of the ocean, and your league rewards you every midnight. Predators roam the map. And the Nucleus can express evolutions: they change every season.",
+    "Your power ranks you among the 500 organisms of the ocean, and your league rewards you every midnight. Predators roam the map. And the Nucleus, at the centre of the cell, can express evolutions: they change every season. You will find them in the Research tab.",
   "label.power": "Power",
   "label.ranking": "Ranking",
   "label.league": "League",
@@ -256,7 +256,7 @@ export const en = {
   "absence.starved": "Daughter cells starved",
   "unlock.8.title": "Your genes draw a lineage",
   "unlock.8.text":
-    "Every mutation belongs to a family. Two genes of one family: a rank 2 daughter cell. Three genes: a lineage, and its advantage. New mutations will be offered to you. And you can tame a predator of the ocean.",
+    "Every mutation belongs to a family. Two genes of one family: a rank 2 daughter cell. Three genes: a lineage, and its advantage. New mutations will be offered to you. And you can tame a predator of the ocean. Genes, daughter cell powers and companion: everything is in the Research tab.",
   "mutation.armorPlates.name": "Armour plates",
   "mutation.armorPlates.effect": "Your cell defends itself a quarter better.",
   "mutation.dormancy.name": "Dormancy",
@@ -821,4 +821,28 @@ export const en = {
   "speed.switch": "Switch to ×{n}",
   "speed.restart": "Start a new season",
   "speed.leave": "Back to normal time",
+  "view.research": "Research",
+  "label.levelShort": "Lv.",
+  "research.part.cell": "Cell",
+  "research.part.troops": "Troops",
+  "research.part.genes": "Genes",
+  "research.part.companion": "Companion",
+  "research.title.cell": "Cell evolutions",
+  "research.title.troops": "Military research",
+  "research.title.genes": "Your genes",
+  "research.title.companion": "Your companion",
+  "research.open": "Open",
+  "research.notBuilt": "not built yet",
+  "research.cell.text":
+    "The level of the Nucleus sets how far each evolution can go. Only one evolution is expressed at a time.",
+  "research.cell.needsNucleus":
+    "Build the Nucleus first, at the centre of the cell: it is the one that expresses evolutions.",
+  "research.genes.text":
+    "A mutation adds a gene to your organism. It is paid in proteins, which you win by hunting.",
+  "research.genes.families":
+    "Every mutation belongs to a family. Two genes of one family: a rank 2 daughter cell. Three genes: a lineage, and its advantage.",
+  "research.genes.all": "You carry every gene of this season.",
+  "research.genes.none": "No gene yet.",
+  "research.seeEvolutions": "See the evolutions",
+  "research.seeDrills": "Military research",
 } as const satisfies Record<TextKey, string>;
