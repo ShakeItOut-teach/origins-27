@@ -4,6 +4,7 @@ import { BALANCE, EVOLUTION_BRANCHES, EVOLUTION_IDS, RESOURCE_IDS } from "@o27/d
 import type { Order, TextKey } from "@o27/data";
 import { formatAmount, formatAway, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
+import { MissingHint } from "./MissingHint";
 import { StorageHint } from "./StorageHint";
 import { ResourceIcon } from "./icons";
 
@@ -92,6 +93,9 @@ export function EvolutionPanel({ state, lang, onOrder, onOpenStore }: Props) {
                     lang={lang}
                     onOpenStore={onOpenStore}
                   />
+                )}
+                {offer.blocked === null && running === null && (
+                  <MissingHint state={state} cost={offer.cost} lang={lang} />
                 )}
                 {offer.blocked === null && (
                   <div className="evolution-act">

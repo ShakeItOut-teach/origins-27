@@ -74,6 +74,7 @@ import { CompanionSheet, companionName } from "./ui/CompanionSheet";
 import { ContestSheet } from "./ui/ContestSheet";
 import { EvolutionPanel } from "./ui/EvolutionPanel";
 import { AdvancedSheet, ordinaryPathDone } from "./ui/AdvancedSheet";
+import { MissingHint } from "./ui/MissingHint";
 import { StorageHint } from "./ui/StorageHint";
 import { GenomeSheet } from "./ui/GenomeSheet";
 import { LexiconSheet } from "./ui/LexiconSheet";
@@ -1671,6 +1672,7 @@ function OrganelleSheet({
                 {formatDuration(levelDuration(state, id, toLevel))}
               </span>
             </div>
+            <MissingHint state={state} cost={cost} lang={lang} />
             <button
               type="button"
               className="button"

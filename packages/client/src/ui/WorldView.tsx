@@ -37,7 +37,15 @@ import {
   translate,
 } from "../game/text";
 import type { Lang } from "../game/text";
-import { labelSpot, panCamera, project, SPAN, TOUCH_SPAN, zoomCamera } from "../game/worldView";
+import {
+  labelSpot,
+  NAME_SPAN,
+  panCamera,
+  project,
+  SPAN,
+  TOUCH_SPAN,
+  zoomCamera,
+} from "../game/worldView";
 import type { WorldCamera } from "../game/worldView";
 import { EventSheet, EventsSheet } from "./EventsSheet";
 import { EnergyIcon, ResourceIcon } from "./icons";
@@ -233,6 +241,8 @@ export function WorldView(props: Props) {
   };
 
   const touchable = camera.span <= TOUCH_SPAN;
+  // De près, chaque rival et chaque prédateur porte son nom ; de loin, ce serait illisible.
+  const named = camera.span <= NAME_SPAN;
   const seen = (x: number, y: number): { x: number; y: number } | null => {
     const point = project(camera, x, y, aspect);
     return point.x < 0.04 || point.x > 0.96 || point.y < 0.04 || point.y > 0.96 ? null : point;
@@ -372,6 +382,11 @@ export function WorldView(props: Props) {
                     if (!dragged.current) setSelected(predator.id);
                   }}
                 >
+                  {named && (
+                    <span className="organism-name is-predator" aria-hidden="true">
+                      {t(`predator.${String(predator.level)}.name` as TextKey)}
+                    </span>
+                  )}
                   {target !== null && (
                     <span className="slot-timer">
                       {formatDuration(target.returnsAt - state.now)}
@@ -399,6 +414,11 @@ export function WorldView(props: Props) {
                     if (!dragged.current) setSelected(rival.id);
                   }}
                 >
+                  {named && (
+                    <span className="organism-name" aria-hidden="true">
+                      {rival.name}
+                    </span>
+                  )}
                   {target !== null && (
                     <span className="slot-timer">
                       {formatDuration(target.returnsAt - state.now)}

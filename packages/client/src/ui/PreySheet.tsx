@@ -1,6 +1,6 @@
 import { foePower, partyOf, partySize, strikeChance, unattendedChance, winChance } from "@o27/core";
 import type { PlayerState, PreyOffer } from "@o27/core";
-import { STRONG_AGAINST, TROOP_IDS } from "@o27/data";
+import { BALANCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { Order, PreyKind, TextKey, TroopId } from "@o27/data";
 import { useState } from "react";
 import { formatAmount, formatDuration, translate } from "../game/text";
@@ -30,6 +30,9 @@ interface Props {
   readonly onClose: () => void;
   readonly onOrder: (order: Order) => void;
 }
+
+/** Le temps pendant lequel le joueur peut toucher la proie, à l'arrivée du groupe. */
+const WINDOW_MS = BALANCE.hunt.strikeWindowSeconds * 1000;
 
 /** Fiche d'une chasse : le point faible, le groupe à envoyer, les chances, un bouton. */
 export function PreySheet(props: Props) {
@@ -148,10 +151,22 @@ export function PreySheet(props: Props) {
                   </div>
                 ))}
               </div>
-              <p className="chance" data-testid="prey-chance">
-                {t("label.chance")} : <strong>{unattendedChance(chance)} %</strong>
-                {sure && <span className="chance-sure"> · {t("label.sureIfStruck")}</span>}
-              </p>
+              <div className="chance" data-testid="prey-chance">
+                <p>
+                  {t("label.chance")} : <strong>{unattendedChance(chance)} %</strong>
+                </p>
+                <p data-testid="prey-chance-there">
+                  {t("label.chanceThere")} :{" "}
+                  <strong className={sure ? "chance-word" : undefined}>
+                    {sure ? t("label.sureIfStruck") : `${String(strikeChance(chance))} %`}
+                  </strong>
+                </p>
+                <small className="chance-sure">
+                  {t("label.chanceWhen")
+                    .replace("{t}", formatDuration((offer.durationMs - WINDOW_MS) / 2))
+                    .replace("{s}", String(BALANCE.hunt.strikeWindowSeconds))}
+                </small>
+              </div>
             </>
           )}
           {blocked !== null && (

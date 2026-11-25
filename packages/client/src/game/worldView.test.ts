@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { labelSpot, panCamera, project, SPAN, TOUCH_SPAN, zoomCamera } from "./worldView";
+import {
+  labelSpot,
+  NAME_SPAN,
+  panCamera,
+  project,
+  SPAN,
+  TOUCH_SPAN,
+  zoomCamera,
+} from "./worldView";
 import type { WorldCamera } from "./worldView";
 
 describe("le cadrage de la grande carte", () => {
@@ -23,6 +31,11 @@ describe("le cadrage de la grande carte", () => {
 
   it("à l'ouverture, les organismes sont assez gros pour être touchés", () => {
     expect(SPAN.start).toBeLessThanOrEqual(TOUCH_SPAN);
+  });
+
+  it("à l'ouverture, rivaux et prédateurs portent leur nom, et seulement là où on peut les toucher", () => {
+    expect(SPAN.start).toBeLessThanOrEqual(NAME_SPAN);
+    expect(NAME_SPAN).toBeLessThanOrEqual(TOUCH_SPAN);
   });
 
   it("faire glisser déplace la vue du même écart, sans sortir de la goutte", () => {

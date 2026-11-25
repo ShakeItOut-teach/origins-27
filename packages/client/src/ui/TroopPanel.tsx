@@ -14,6 +14,7 @@ import { BALANCE, DRILL_IDS, RESOURCE_IDS, STRONG_AGAINST, TROOP_IDS } from "@o2
 import type { Order, TextKey } from "@o27/data";
 import { formatAmount, formatDuration, formatRate, translate } from "../game/text";
 import type { Lang } from "../game/text";
+import { MissingHint } from "./MissingHint";
 import { StorageHint } from "./StorageHint";
 import { PreyIcon, ResourceIcon, TroopIcon } from "./icons";
 
@@ -154,6 +155,9 @@ export function TroopPanel({ state, lang, onOrder, onOpenStore }: Props) {
                     lang={lang}
                     onOpenStore={onOpenStore}
                   />
+                )}
+                {offer.blocked === null && (
+                  <MissingHint state={state} cost={offer.cost} lang={lang} />
                 )}
                 {offer.blocked === null && (
                   <div className="tech-act">

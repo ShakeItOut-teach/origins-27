@@ -382,10 +382,15 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
                   ))}
                 </div>
                 {spied ? (
-                  <p className="chance" data-testid="rival-chance">
-                    {t("label.raidChance")} : <strong>{raidChance(chance, false)} %</strong>
-                    <span className="chance-sure"> · {t("label.strikeBonus")}</span>
-                  </p>
+                  <div className="chance" data-testid="rival-chance">
+                    <p>
+                      {t("label.raidChance")} : <strong>{raidChance(chance, false)} %</strong>
+                    </p>
+                    <p data-testid="rival-chance-there">
+                      {t("label.raidChanceThere")} : <strong>{raidChance(chance, true)} %</strong>
+                    </p>
+                    <small className="chance-sure">{t("label.strikeBonus")}</small>
+                  </div>
                 ) : (
                   <p className="sheet-building" data-testid="rival-blind">
                     {t("label.blind")}

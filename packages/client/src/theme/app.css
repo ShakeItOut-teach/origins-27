@@ -1173,17 +1173,51 @@ p {
 }
 
 .chance {
+  display: grid;
+  gap: 2px;
+  margin: var(--space-2) 0;
   font-size: 17px;
+}
+
+.chance p {
+  margin: 0;
 }
 
 .chance strong {
   font-family: var(--font-number);
-  font-size: 22px;
+  font-size: 20px;
+}
+
+.chance .chance-word {
+  color: var(--algae);
+  font-family: var(--font-text);
+  font-size: 17px;
 }
 
 .chance-sure {
-  color: var(--algae);
+  color: var(--ink-soft);
   font-size: 14px;
+}
+
+/* Sous un prix qu'on ne peut pas encore payer : ce qui manque, et comment l'avoir. */
+.missing-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  font-size: 14px;
+}
+
+.missing-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.missing-hint small {
+  color: var(--ink-soft);
+  font-size: 13px;
 }
 
 .button-strike {
@@ -1848,6 +1882,33 @@ p {
 
 .lens-world .organism.is-target {
   border-color: var(--iodine);
+}
+
+/* Le nom d'un rival ou d'un prédateur, au-dessus de lui sur la carte. */
+.organism-name {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--lens-edge) 70%, transparent);
+  color: var(--on-dark);
+  font-family: var(--font-text);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.organism-name.is-predator {
+  color: var(--iodine);
+  font-weight: 600;
+}
+
+.organism.is-closed .organism-name {
+  opacity: 0.6;
 }
 
 .isobath {

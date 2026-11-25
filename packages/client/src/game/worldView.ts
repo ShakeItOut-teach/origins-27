@@ -15,6 +15,8 @@ export interface WorldCamera {
 export const SPAN = { min: 12, start: 30, max: 264 } as const;
 /** Au-delà de ce recul, organismes et gisements sont trop serrés pour être touchés du doigt. */
 export const TOUCH_SPAN = 50;
+/** En deçà de ce recul, rivaux et prédateurs portent leur nom ; au-delà, les noms se chevauchent. */
+export const NAME_SPAN = 36;
 /** L'océan tient dans ce rayon, en cases : on ne peut pas se perdre plus loin. */
 const EDGE = 126;
 
