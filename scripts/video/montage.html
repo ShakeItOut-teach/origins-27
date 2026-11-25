@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Montage de la vidéo</title>
+    <style>
+      @font-face {
+        font-family: "Bodoni Moda";
+        src: url("/__fonts/bodoni.woff2") format("woff2");
+        font-weight: 400 900;
+      }
+      @font-face {
+        font-family: "Spectral";
+        src: url("/__fonts/spectral-400.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Spectral";
+        src: url("/__fonts/spectral-400-italic.woff2") format("woff2");
+        font-style: italic;
+      }
+      @font-face {
+        font-family: "IBM Plex Mono";
+        src: url("/__fonts/plex-500.woff2") format("woff2");
+        font-weight: 500;
+      }
+      body {
+        margin: 0;
+        background: #14110e;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="film" width="720" height="1280"></canvas>
+    <script>
+      // Le montage de la vidéo de présentation, dans le style « Atlas » (docs/identite/charte.md).
+      // Cette page est ouverte par scripts/make-video.cjs : elle dessine chaque image sur un canevas
+      // de 720 × 1280 et l'enregistre. Rien ici ne tourne dans le jeu.
+      const W = 720;
+      const H = 1280;
+      const INK = "#1e1b18";
+      const INK_SOFT = "#5a5148";
+      const PAPER = "#ede6d6";
+      const PLATE = "#14110e";
+      const FADE = 320;
+
+      const canvas = document.getElementById("film");
+      const ctx = canvas.getContext("2d");
+
+      const load = (src) =>
+        new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error("image introuvable : " + src));
+          image.src = src;
+        });
+
+      const title = (size) => `700 ${size}px "Bodoni Moda", serif`;
+      const text = (size, italic = false) =>
+        `${italic ? "italic " : ""}${size}px "Spectral", serif`;
+      const number = (size) => `500 ${size}px "IBM Plex Mono", monospace`;
+
+      /** Écrit en capitales espacées (le canevas n'a pas d'interlettrage partout : on le fait à la main). */
+      function spaced(words, x, y, spacing, align = "center") {
+        const letters = [...words.toUpperCase()];
+        const widths = letters.map((letter) => ctx.measureText(letter).width + spacing);
+        const total = widths.reduce((sum, width) => sum + width, 0) - spacing;
+        let at = align === "center" ? x - total / 2 : align === "right" ? x - total : x;
+        ctx.textAlign = "left";
+        letters.forEach((letter, index) => {
+          ctx.fillText(letter, at, y);
+          at += widths[index];
+        });
+        return total;
+      }
+
+      /** Coupe un texte en lignes qui tiennent dans une largeur. */
+      function wrap(words, width, measure) {
+        const lines = [];
+        let line = "";
+        for (const word of words.split(" ")) {
+          const next = line === "" ? word : line + " " + word;
+          if (measure(next) > width && line !== "") {
+            lines.push(line);
+            line = word;
+          } else {
+            line = next;
+          }
+        }
+        if (line !== "") lines.push(line);
+        return lines;
+      }
+
+      /** Le double filet : un trait, un intervalle de papier, un trait. */
+      function doubleRule(x, y, w, h) {
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - 7, y - 7, w + 14, h + 14);
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - 2, y - 2, w + 4, h + 4);
+      }
+
+      /** La page d'atlas : le papier, l'en-tête, le pied. */
+      function sheet(index, total) {
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = PAPER;
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = INK;
+        ctx.font = text(19);
+        ctx.textBaseline = "alphabetic";
+        spaced("Origins · XXVII", 44, 62, 3.4, "left");
+        ctx.font = title(22);
+        ctx.textAlign = "right";
+        ctx.fillText("Pl. " + roman(index + 1), W - 44, 62);
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(44, 78);
+        ctx.lineTo(W - 44, 78);
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(44, 83);
+        ctx.lineTo(W - 44, 83);
+        ctx.moveTo(44, H - 70);
+        ctx.lineTo(W - 44, H - 70);
+        ctx.stroke();
+        ctx.font = text(17);
+        spaced(`${String(index + 1)} / ${String(total)}`, W - 44, H - 42, 2.4, "right");
+      }
+
+      function roman(value) {
+        const table = [
+          [10, "X"],
+          [9, "IX"],
+          [5, "V"],
+          [4, "IV"],
+          [1, "I"],
+        ];
+        let out = "";
+        let rest = value;
+        for (const [amount, sign] of table) {
+          while (rest >= amount) {
+            out += sign;
+            rest -= amount;
+          }
+        }
+        return out;
+      }
+
+      /** Le titre d'un plan : des capitales de Bodoni, sur une ou deux lignes. */
+      function caption(words, y) {
+        ctx.fillStyle = INK;
+        let size = 46;
+        ctx.font = title(size);
+        const measure = (value) => ctx.measureText(value.toUpperCase()).width + value.length * 2.6;
+        let lines = wrap(words, W - 110, measure);
+        if (lines.length > 2) {
+          size = 38;
+          ctx.font = title(size);
+          lines = wrap(words, W - 110, measure);
+        }
+        lines.forEach((line, index) => {
+          spaced(line, W / 2, y + index * size * 1.14, 2.6);
+        });
+        return y + lines.length * size * 1.14;
+      }
+
+      async function main() {
+        const montage = await (await fetch("/__montage.json")).json();
+        await Promise.all([
+          document.fonts.load(title(40)),
+          document.fonts.load(text(20)),
+          document.fonts.load(text(20, true)),
+          document.fonts.load(number(20)),
+        ]);
+        const cell = await load("/planches/cellule.svg");
+        const figures = {};
+        for (const plan of montage.plans) {
+          if (plan.kind !== "plates") continue;
+          for (const id of plan.ids) figures[id] = await load(`/planches/${id}.svg`);
+        }
+
+        // Les captures du jeu sont lourdes : on ne garde en mémoire que celles qui vont servir.
+        const frames = new Map();
+        function frame(planIndex, plan, local) {
+          let current = 0;
+          while (current + 1 < plan.frames.length && plan.frames[current + 1] <= local) current++;
+          for (let ahead = current; ahead < Math.min(plan.frames.length, current + 5); ahead++) {
+            const key = `${String(planIndex)}/${String(ahead)}`;
+            if (!frames.has(key)) {
+              const image = new Image();
+              image.src = `/__frames/${key}.jpg`;
+              frames.set(key, image);
+            }
+          }
+          for (const key of frames.keys()) {
+            const [p, i] = key.split("/").map(Number);
+            if (p < planIndex || (p === planIndex && i < current - 1)) frames.delete(key);
+          }
+          for (let back = current; back >= Math.max(0, current - 1); back--) {
+            const image = frames.get(`${String(planIndex)}/${String(back)}`);
+            if (image && image.complete && image.naturalWidth > 0) return image;
+          }
+          return null;
+        }
+
+        const starts = [];
+        let total = 0;
+        for (const plan of montage.plans) {
+          starts.push(total);
+          total += plan.ms;
+        }
+        const last = { image: null };
+
+        function draw(time) {
+          let index = montage.plans.length - 1;
+          while (index > 0 && starts[index] > time) index--;
+          const plan = montage.plans[index];
+          const local = time - starts[index];
+          sheet(index, montage.plans.length);
+
+          if (plan.kind === "title") {
+            // La planche noire, le titre, une phrase.
+            const size = 400;
+            const x = (W - size) / 2;
+            const y = 190;
+            ctx.drawImage(cell, x, y, size, size);
+            ctx.strokeStyle = INK;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(W / 2, y + size / 2, size / 2 + 8, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = INK;
+            ctx.font = title(104);
+            spaced(plan.title[0], W / 2, 790, 9);
+            ctx.font = title(76);
+            spaced(plan.title[1], W / 2, 880, 12);
+            ctx.strokeStyle = INK;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(W / 2 - 90, 922);
+            ctx.lineTo(W / 2 + 90, 922);
+            ctx.stroke();
+            ctx.font = text(30, true);
+            ctx.textAlign = "center";
+            const lines = wrap(plan.text, W - 150, (value) => ctx.measureText(value).width);
+            lines.forEach((line, i) => ctx.fillText(line, W / 2, 986 + i * 42));
+          }
+
+          if (plan.kind === "game") {
+            caption(plan.caption, 158);
+            // La capture du jeu, dans son cadre à double filet.
+            const h = 880;
+            const w = Math.round((h * plan.width) / plan.height);
+            const x = Math.round((W - w) / 2);
+            const y = 262;
+            const image = frame(index, plan, local) ?? last.image;
+            ctx.fillStyle = PAPER;
+            ctx.fillRect(x, y, w, h);
+            if (image) {
+              ctx.drawImage(image, x, y, w, h);
+              last.image = image;
+            }
+            doubleRule(x, y, w, h);
+            ctx.fillStyle = INK_SOFT;
+            ctx.font = text(24, true);
+            ctx.textAlign = "center";
+            ctx.fillText(plan.legend, W / 2, y + h + 46);
+          } else {
+            last.image = null;
+          }
+
+          if (plan.kind === "plates") {
+            const bottom = caption(plan.caption, 170);
+            const each = plan.ms / plan.ids.length;
+            const which = Math.min(plan.ids.length - 1, Math.floor(local / each));
+            const id = plan.ids[which];
+            const inside = local - which * each;
+            const info = montage.plates[id];
+            const w = 632;
+            const h = Math.round((w * 760) / 1200);
+            const x = (W - w) / 2;
+            const y = bottom + 60;
+            ctx.globalAlpha = Math.min(1, inside / 220);
+            ctx.drawImage(figures[id], x, y, w, h);
+            doubleRule(x, y, w, h);
+            ctx.fillStyle = INK;
+            ctx.font = title(50);
+            spaced(info.name, W / 2, y + h + 96, 4);
+            ctx.font = text(28, true);
+            ctx.textAlign = "center";
+            ctx.fillText(info.latin, W / 2, y + h + 144);
+            ctx.font = number(21);
+            ctx.fillStyle = INK_SOFT;
+            ctx.fillText(`${info.era} · ${info.ago} · ${info.size}`, W / 2, y + h + 196);
+            ctx.font = title(26);
+            ctx.fillStyle = INK;
+            ctx.fillText("Pl. " + info.plate, W / 2, y + h + 258);
+            ctx.globalAlpha = 1;
+          }
+
+          // Chaque plan s'ouvre et se ferme par un fondu vers le papier.
+          const edge = Math.min(local, plan.ms - local);
+          if (edge < FADE) {
+            ctx.globalAlpha = 1 - edge / FADE;
+            ctx.fillStyle = PAPER;
+            ctx.fillRect(0, 90, W, H - 164);
+            ctx.globalAlpha = 1;
+          }
+        }
+
+        let chunks = [];
+        window.total = total;
+        /** Une image fixe du film, pour l'affiche. */
+        window.poster = (time) => {
+          draw(time);
+          return canvas.toDataURL("image/jpeg", 0.86).split(",")[1];
+        };
+        /** Joue le film en temps réel et l'enregistre. Rend le nombre de morceaux à récupérer. */
+        window.record = () =>
+          new Promise((resolve, reject) => {
+            draw(0);
+            const type = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+              ? "video/webm;codecs=vp9"
+              : "video/webm";
+            const recorder = new MediaRecorder(canvas.captureStream(30), {
+              mimeType: type,
+              videoBitsPerSecond: 1100000,
+            });
+            const parts = [];
+            recorder.ondataavailable = (event) => {
+              if (event.data.size > 0) parts.push(event.data);
+            };
+            recorder.onerror = () => reject(new Error("l'enregistrement a échoué"));
+            recorder.onstop = async () => {
+              const bytes = new Uint8Array(await new Blob(parts, { type }).arrayBuffer());
+              chunks = [];
+              const size = 512 * 1024;
+              for (let at = 0; at < bytes.length; at += size) {
+                let binary = "";
+                const slice = bytes.subarray(at, at + size);
+                for (let i = 0; i < slice.length; i += 0x8000) {
+                  binary += String.fromCharCode.apply(null, slice.subarray(i, i + 0x8000));
+                }
+                chunks.push(btoa(binary));
+              }
+              resolve(chunks.length);
+            };
+            recorder.start(1000);
+            const began = performance.now();
+            const step = () => {
+              const time = performance.now() - began;
+              if (time >= total) {
+                draw(total - 1);
+                recorder.stop();
+                return;
+              }
+              draw(time);
+              requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+          });
+        window.chunk = (index) => chunks[index];
+        window.ready = true;
+      }
+
+      main().catch((error) => {
+        window.failed = String(error);
+      });
+      void PLATE;
+    </script>
+  </body>
+</html>

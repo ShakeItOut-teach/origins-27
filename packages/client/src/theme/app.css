@@ -2343,6 +2343,15 @@ a.button {
   font-size: 14px;
 }
 
+/* La figure gravée d'une lignée d'APEX : sur le papier, encadrée d'un filet. */
+.fossil-figure {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1200 / 760;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+}
+
 .fossil small {
   color: var(--ink-soft);
   font-family: var(--font-number);

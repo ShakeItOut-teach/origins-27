@@ -53,6 +53,8 @@ export function ApexSheet(
       <p className="sheet-role">{t("apex.text").replace("{n}", String(RULES.nucleusLevel))}</p>
       <aside className="fossil" data-testid="apex-lineage" data-lineage={lineage}>
         <p className="gazette-kicker">{t("apex.lineage")}</p>
+        {/* La figure gravée de la lignée (scripts/make-plates.cjs). Le nom la décrit déjà. */}
+        <img className="fossil-figure" src={`/planches/${lineage}.svg`} alt="" loading="lazy" />
         <p>
           <strong>{t(`lineage.${lineage}.name`)}</strong>
         </p>
@@ -189,6 +191,14 @@ export function MuseumSheet({ state, lang, onClose, loadPlates }: MuseumProps) {
     .sort((one, other) => other.season - one.season);
   const show = (plate: MuseumPlate, key: string) => (
     <aside key={key} className="fossil" data-testid="museum-plate">
+      {plate.lineage !== "" && (
+        <img
+          className="fossil-figure"
+          src={`/planches/${plate.lineage}.svg`}
+          alt=""
+          loading="lazy"
+        />
+      )}
       <p className="species-name">{plate.name}</p>
       <p>
         {t("species.rank").replace("{n}", String(plate.rank)).replace("{total}", String(plate.of))}{" "}

@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ede6d6">
+<title>Origins 27 — from bacterium to APEX in 27 days</title>
+<meta name="description" content="A free strategy game in your browser. You are born a bacterium; in 27 days you stand up to 500 organisms and walk out of the water.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Origins 27 — from bacterium to APEX in 27 days">
+<meta property="og:description" content="A free strategy game in your browser. You are born a bacterium; in 27 days you stand up to 500 organisms and walk out of the water.">
+<meta property="og:image" content="/decouvrir/affiche.jpg">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="fr" href="/decouvrir/">
+<link rel="preload" href="/decouvrir/polices/bodoni.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Bodoni Moda";src:url("/decouvrir/polices/bodoni.woff2") format("woff2");font-weight:400 900;font-display:swap}
+@font-face{font-family:"Spectral";src:url("/decouvrir/polices/spectral-400.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Spectral";src:url("/decouvrir/polices/spectral-400-italique.woff2") format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Spectral";src:url("/decouvrir/polices/spectral-600.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("/decouvrir/polices/plex-500.woff2") format("woff2");font-weight:500;font-display:swap}
+:root{
+  --ink:#1e1b18;--ink-soft:#5a5148;--paper:#ede6d6;--paper-deep:#e0d7c3;
+  --prussian:#1d4f73;--madder:#a63d60;--gamboge:#d9a520;--verdigris:#356b5e;--plate:#14110e;--bone:#f1ebdd;
+  --font-title:"Bodoni Moda","Didot","Bodoni MT",Georgia,serif;
+  --font-text:"Spectral",Georgia,"Times New Roman",serif;
+  --font-number:"IBM Plex Mono",ui-monospace,monospace;
+  --double:0 0 0 2px var(--paper),0 0 0 3px var(--ink);
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-text);font-size:18px;line-height:1.45}
+img,video{display:block;max-width:100%;height:auto}
+a{color:var(--prussian)}
+a:focus-visible,video:focus-visible{outline:3px solid var(--gamboge);outline-offset:3px}
+.page{max-width:1080px;margin:0 auto;padding:0 20px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:18px 0 10px;border-bottom:3px double var(--ink);font-size:14px;letter-spacing:.2em;text-transform:uppercase}
+.top a{color:var(--ink);letter-spacing:.12em;min-height:44px;display:inline-flex;align-items:center}
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:32px 48px;align-items:center;padding:40px 0 48px}
+.kicker{margin:0 0 16px;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+h1,h2,h3{margin:0;font-family:var(--font-title);font-weight:700;text-transform:uppercase;text-wrap:balance}
+h1{font-size:clamp(40px,8.6vw,76px);line-height:1;letter-spacing:.03em}
+h1 span{display:block}
+h2{font-size:clamp(28px,5vw,40px);line-height:1.08;letter-spacing:.06em}
+h3{font-size:23px;line-height:1.15;letter-spacing:.06em}
+.lead{margin:22px 0 28px;font-size:21px;line-height:1.4;max-width:34em}
+.play{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 32px;border:1.5px solid var(--ink);border-radius:2px;background:var(--prussian);color:var(--paper);box-shadow:var(--double);font-weight:600;font-size:20px;text-decoration:none}
+.play:active{box-shadow:0 0 0 1px var(--ink);transform:scale(.98)}
+.note{margin:16px 0 0;font-style:italic;color:var(--ink-soft);font-size:17px}
+figure{margin:0}
+figcaption,.legend{margin-top:12px;font-style:italic;font-size:16px;color:var(--ink-soft);text-align:center}
+.cell{width:min(100%,420px);margin:0 auto;border-radius:50%;box-shadow:0 0 0 3px var(--paper),0 0 0 4.5px var(--ink)}
+section{padding:44px 0;border-top:1px solid var(--ink)}
+.head{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;max-width:40em}
+.head p{margin:0;font-size:19px}
+.film{max-width:360px;margin:0 auto}
+.film video{width:100%;border:1.5px solid var(--ink);box-shadow:var(--double);background:var(--paper)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:36px 28px}
+.step{display:flex;flex-direction:column;gap:12px}
+.step .n{font-family:var(--font-title);font-weight:600;font-size:19px;letter-spacing:.1em}
+.step img{width:100%;border:1.5px solid var(--ink);box-shadow:var(--double)}
+.step p{margin:0;font-size:17px}
+.plates{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:28px}
+.plate{display:flex;flex-direction:column;gap:8px;padding:5px;border:2px solid var(--ink)}
+.plate>div{display:flex;flex-direction:column;gap:8px;flex-grow:1;padding:14px 16px 16px;border:1px solid var(--ink)}
+.plate .pl{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.plate .pl b{font-family:var(--font-title);font-weight:600;font-size:18px;letter-spacing:.04em}
+.plate h3{text-align:center}
+.plate .latin{text-align:center;font-style:italic}
+.plate p{margin:0;font-size:16px;line-height:1.35}
+.plate .data{margin-top:auto;padding-top:8px;border-top:1px solid var(--ink);font-family:var(--font-number);font-weight:500;font-size:13px;color:var(--ink-soft)}
+.lines{max-width:640px;margin:0;padding:0;list-style:none}
+.lines li{display:flex;align-items:baseline;gap:8px;min-height:48px;border-top:1px solid var(--ink)}
+.lines li:last-child{border-bottom:1px solid var(--ink)}
+.lines .dots{flex:1 1 24px;min-width:24px;border-bottom:1px dotted var(--ink)}
+.lines span:last-child{text-align:right}
+.lines .num{font-family:var(--font-number);font-weight:500;font-size:17px}
+.closing{display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center}
+footer{padding:20px 0 40px;border-top:3px double var(--ink);font-size:15px;color:var(--ink-soft);text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="top"><span>Origins · XXVII</span><a href="/decouvrir/" lang="fr">Français</a></header>
+<main>
+<div class="hero">
+  <div>
+    <p class="kicker">Strategy game · free · in your browser</p>
+    <h1><span>From bacterium</span><span>to APEX,</span><span>in 27 days</span></h1>
+    <p class="lead">You are born a bacterium in a primeval ocean. You grow, you evolve, you stand up to five hundred organisms. At the end of the road: walking out of the water.</p>
+    <a class="play" data-play href="/?s=presentation">Play for free</a>
+    <p class="note">Nothing to install. A few minutes a day.</p>
+  </div>
+  <figure>
+    <img class="cell" src="/planches/cellule.svg" width="640" height="640" alt="">
+    <figcaption>Fig. 1. — You start here: one cell.</figcaption>
+  </figure>
+</div>
+<section>
+  <div class="head"><h2>The film</h2></div>
+  <figure class="film">
+    <video controls playsinline preload="none" poster="/decouvrir/affiche.jpg" width="720" height="1280">
+      <source src="/decouvrir/origins27.webm" type="video/webm">
+      Your browser cannot play this video.
+    </video>
+    <figcaption>Thirty-eight seconds, shot in the real game (captions in French).</figcaption>
+  </figure>
+</section>
+<section>
+  <div class="head"><h2>A season</h2><p>Twenty-seven days, from the first beat of a cilium to dry land.</p></div>
+  <div class="steps">
+    <div class="step">
+      <span class="n">I</span>
+      <h3>Grow</h3>
+      <img src="/decouvrir/capture-cellule.jpg" width="562" height="1218" loading="lazy" alt="The game on a phone (in French) : Grow">
+      <p>A cell that produces and builds itself, organelle by organelle: mitochondrion, vacuole, nucleus.</p>
+    </div>
+    <div class="step">
+      <span class="n">II</span>
+      <h3>Explore</h3>
+      <img src="/decouvrir/capture-goutte.jpg" width="562" height="1218" loading="lazy" alt="The game on a phone (in French) : Explore">
+      <p>A drop of ocean to roam: harvest, hunt, scout.</p>
+    </div>
+    <div class="step">
+      <span class="n">III</span>
+      <h3>Fight</h3>
+      <img src="/decouvrir/capture-rivaux.jpg" width="562" height="1218" loading="lazy" alt="The game on a phone (in French) : Fight">
+      <p>Troops, raids, defences. And protections: nobody is punished for sleeping.</p>
+    </div>
+    <div class="step">
+      <span class="n">IV</span>
+      <h3>Evolve</h3>
+      <img src="/decouvrir/capture-recherche.jpg" width="562" height="1218" loading="lazy" alt="The game on a phone (in French) : Evolve">
+      <p>Genes to express, mutations to choose: no two games are alike.</p>
+    </div>
+  </div>
+</section>
+<section>
+  <div class="head"><h2>The nine APEX lineages</h2><p>The best walk out of the water. Each lineage has its plate, engraved after a very real fossil cousin.</p></div>
+  <div class="plates">
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. I</b></div>
+      <img src="/planches/tyrannosaur.svg" width="1200" height="760" loading="lazy" alt="Tyrannosaurus, engraved in ink">
+      <h3>Tyrannosaurus</h3>
+      <div class="latin">Tyrannosaurus rex</div>
+      <p>The great predator: jaws that can crush bone.</p>
+      <div class="data">Late Cretaceous · 68–66 Ma · ≈ 12 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. II</b></div>
+      <img src="/planches/dromaeosaur.svg" width="1200" height="760" loading="lazy" alt="Dromaeosaur, engraved in ink">
+      <h3>Dromaeosaur</h3>
+      <div class="latin">Deinonychus antirrhopus</div>
+      <p>The pack hunter: feathers, sickle claw, speed.</p>
+      <div class="data">Early Cretaceous · 115–108 Ma · ≈ 3.4 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. III</b></div>
+      <img src="/planches/brachiosaur.svg" width="1200" height="760" loading="lazy" alt="Brachiosaurus, engraved in ink">
+      <h3>Brachiosaurus</h3>
+      <div class="latin">Brachiosaurus altithorax</div>
+      <p>The giant: browsing treetops out of everyone else’s reach.</p>
+      <div class="data">Late Jurassic · 154–150 Ma · ≈ 22 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. IV</b></div>
+      <img src="/planches/triceratops.svg" width="1200" height="760" loading="lazy" alt="Triceratops, engraved in ink">
+      <h3>Triceratops</h3>
+      <div class="latin">Triceratops horridus</div>
+      <p>The horned one: three horns and a frill facing predators.</p>
+      <div class="data">Late Cretaceous · 68–66 Ma · ≈ 9 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. V</b></div>
+      <img src="/planches/ankylosaur.svg" width="1200" height="760" loading="lazy" alt="Ankylosaurus, engraved in ink">
+      <h3>Ankylosaurus</h3>
+      <div class="latin">Ankylosaurus magniventris</div>
+      <p>The armoured one: bone armour and a club at the end of its tail.</p>
+      <div class="data">Late Cretaceous · 68–66 Ma · ≈ 8 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. VI</b></div>
+      <img src="/planches/stegosaur.svg" width="1200" height="760" loading="lazy" alt="Stegosaurus, engraved in ink">
+      <h3>Stegosaurus</h3>
+      <div class="latin">Stegosaurus stenops</div>
+      <p>Plates and spikes: impress, then strike.</p>
+      <div class="data">Late Jurassic · 155–150 Ma · ≈ 7 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. VII</b></div>
+      <img src="/planches/parasaurolophus.svg" width="1200" height="760" loading="lazy" alt="Parasaurolophus, engraved in ink">
+      <h3>Parasaurolophus</h3>
+      <div class="latin">Parasaurolophus walkeri</div>
+      <p>The herd: a hollow crest that resonates to warn its own.</p>
+      <div class="data">Late Cretaceous · 76–73 Ma · ≈ 9.5 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. VIII</b></div>
+      <img src="/planches/pterosaur.svg" width="1200" height="760" loading="lazy" alt="Pterosaur, engraved in ink">
+      <h3>Pterosaur</h3>
+      <div class="latin">Pteranodon longiceps</div>
+      <p>Master of the sky: skin wings stretched over a giant finger.</p>
+      <div class="data">Late Cretaceous · 86–84 Ma · wingspan ≈ 6.5 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. IX</b></div>
+      <img src="/planches/earlyBird.svg" width="1200" height="760" loading="lazy" alt="Early bird, engraved in ink">
+      <h3>Early bird</h3>
+      <div class="latin">Archaeopteryx lithographica</div>
+      <p>The dinosaur that learned to fly: the lineage that will survive.</p>
+      <div class="data">Late Jurassic · ≈ 150 Ma · ≈ 50 cm</div>
+    </div></article>
+  </div>
+</section>
+<section>
+  <div class="head"><h2>Good to know</h2></div>
+  <ul class="lines">
+    <li><span>Price</span><span class="dots"></span><span>Free. No advantage can be bought.</span></li>
+    <li><span>A season</span><span class="dots"></span><span class="num">27 days</span></li>
+    <li><span>A world</span><span class="dots"></span><span class="num">500 organisms</span></li>
+    <li><span>A visit</span><span class="dots"></span><span class="num">2 to 5 minutes</span></li>
+    <li><span>Where</span><span class="dots"></span><span>In your browser, phone first</span></li>
+    <li><span>At the end</span><span class="dots"></span><span>Your species enters the Museum</span></li>
+  </ul>
+</section>
+<section class="closing">
+  <h2>The season has begun.</h2>
+  <a class="play" data-play href="/?s=presentation">Play for free</a>
+</section>
+</main>
+<footer>Origins XXVII — a natural history atlas whose plates are alive.</footer>
+</div>
+<script>
+// Le lien vers le jeu dit d'où vient le visiteur (?s=mot), pour les statistiques d'audience.
+(function () {
+  var source = new URLSearchParams(location.search).get("s") || "presentation";
+  var links = document.querySelectorAll("a[data-play]");
+  for (var i = 0; i < links.length; i++) links[i].href = "/?s=" + encodeURIComponent(source);
+})();
+</script>
+</body>
+</html>

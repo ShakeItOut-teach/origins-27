@@ -174,15 +174,40 @@ une ressource peut-être payante.
 
 ## 11. Où sont les choses
 
-| Quoi                               | Où                                                                        |
-| ---------------------------------- | ------------------------------------------------------------------------- |
-| Jetons (couleurs, polices, filets) | `packages/client/src/theme/tokens.css`                                    |
-| Les mêmes, pour les outils         | `docs/identite/jetons.json`                                               |
-| Styles des écrans                  | `packages/client/src/theme/app.css`                                       |
-| Dessin de la cellule dans le jeu   | `packages/client/src/cell/draw.ts`                                        |
-| Pictogrammes                       | `packages/client/src/ui/icons.tsx`                                        |
-| Outils de gravure                  | `scripts/identite/`                                                       |
-| Figures des lignées d'APEX         | `packages/client/public/planches/` (faites par `scripts/make-plates.cjs`) |
-| Icônes                             | `packages/client/public/icons/` (faites par `scripts/make-icons.cjs`)     |
-| Pourquoi cette direction           | `docs/adr/0014-identite-atlas.md`                                         |
-| Les trois directions comparées     | <https://claude.ai/artifact/WMAvYRoCHWkF6YzwC67mUr>                       |
+| Quoi                               | Où                                                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Jetons (couleurs, polices, filets) | `packages/client/src/theme/tokens.css`                                                           |
+| Les mêmes, pour les outils         | `docs/identite/jetons.json`                                                                      |
+| Styles des écrans                  | `packages/client/src/theme/app.css`                                                              |
+| Dessin de la cellule dans le jeu   | `packages/client/src/cell/draw.ts`                                                               |
+| Pictogrammes                       | `packages/client/src/ui/icons.tsx`                                                               |
+| Outils de gravure                  | `scripts/identite/`                                                                              |
+| Figures des lignées d'APEX         | `packages/client/public/planches/` (faites par `scripts/make-plates.cjs`)                        |
+| Icônes                             | `packages/client/public/icons/` (faites par `scripts/make-icons.cjs`)                            |
+| Page de présentation               | `packages/client/public/decouvrir/` et `/discover/` (faites par `scripts/make-presentation.cjs`) |
+| Vidéo de présentation              | `packages/client/public/decouvrir/origins27.webm` (faite par `scripts/make-video.cjs`)           |
+| Pourquoi cette direction           | `docs/adr/0014-identite-atlas.md`                                                                |
+| Les trois directions comparées     | <https://claude.ai/artifact/WMAvYRoCHWkF6YzwC67mUr>                                              |
+
+## 12. Présenter le jeu
+
+Tout ce qui sert à montrer le jeu est fabriqué par des scripts, jamais retouché à la main :
+
+| Quoi                     | Commande                                        | Ce qu'on change pour le modifier                         |
+| ------------------------ | ----------------------------------------------- | -------------------------------------------------------- |
+| Les neuf planches d'APEX | `node scripts/make-plates.cjs`                  | Les points de l'animal, dans `scripts/identite/lignees/` |
+| L'icône                  | `node scripts/make-icons.cjs`                   | Les mesures en tête du script                            |
+| La vidéo et les captures | `pnpm build` puis `node scripts/make-video.cjs` | Le scénario, dans `scripts/video/scenario.cjs`           |
+| La page de présentation  | `node scripts/make-presentation.cjs`            | Les textes en tête du script                             |
+
+L'ordre compte : les planches, puis la vidéo (elle montre les planches et capture le vrai jeu), puis
+la page (elle montre la vidéo et les captures).
+
+- **La vidéo est tournée dans le vrai jeu** : un navigateur sans fenêtre ouvre le jeu construit, à
+  la taille d'un téléphone, et joue le scénario. Aucune image n'est truquée. Elle dure moins de
+  quarante secondes, sans son, au format d'un téléphone (720 × 1280).
+- **La page de présentation** est à l'adresse `/decouvrir/` (en anglais : `/discover/`). Son
+  bouton mène au jeu avec `?s=presentation` ; un lien partagé peut porter sa propre source
+  (`/decouvrir/?s=discord`), qui est transmise au jeu pour les statistiques d'audience.
+- Une image pour un réseau social se compose avec les mêmes pièces : le papier, une planche ou la
+  cellule, un titre en capitales de Bodoni, une légende en italique.

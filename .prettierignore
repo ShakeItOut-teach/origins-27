@@ -3,3 +3,7 @@ dist
 coverage
 CHANGELOG.md
 supabase/functions/_shared/server.js
+# Fichiers fabriqués par les scripts (make-plates, make-video, make-presentation)
+packages/client/public/planches
+packages/client/public/decouvrir
+packages/client/public/discover

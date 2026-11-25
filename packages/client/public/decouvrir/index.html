@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ede6d6">
+<title>Origins 27 — de la bactérie à l'APEX en 27 jours</title>
+<meta name="description" content="Un jeu de stratégie gratuit, dans le navigateur. Vous naissez bactérie ; en 27 jours, vous tenez tête à 500 organismes et vous sortez de l'eau.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Origins 27 — de la bactérie à l'APEX en 27 jours">
+<meta property="og:description" content="Un jeu de stratégie gratuit, dans le navigateur. Vous naissez bactérie ; en 27 jours, vous tenez tête à 500 organismes et vous sortez de l'eau.">
+<meta property="og:image" content="/decouvrir/affiche.jpg">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="en" href="/discover/">
+<link rel="preload" href="/decouvrir/polices/bodoni.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Bodoni Moda";src:url("/decouvrir/polices/bodoni.woff2") format("woff2");font-weight:400 900;font-display:swap}
+@font-face{font-family:"Spectral";src:url("/decouvrir/polices/spectral-400.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Spectral";src:url("/decouvrir/polices/spectral-400-italique.woff2") format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Spectral";src:url("/decouvrir/polices/spectral-600.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("/decouvrir/polices/plex-500.woff2") format("woff2");font-weight:500;font-display:swap}
+:root{
+  --ink:#1e1b18;--ink-soft:#5a5148;--paper:#ede6d6;--paper-deep:#e0d7c3;
+  --prussian:#1d4f73;--madder:#a63d60;--gamboge:#d9a520;--verdigris:#356b5e;--plate:#14110e;--bone:#f1ebdd;
+  --font-title:"Bodoni Moda","Didot","Bodoni MT",Georgia,serif;
+  --font-text:"Spectral",Georgia,"Times New Roman",serif;
+  --font-number:"IBM Plex Mono",ui-monospace,monospace;
+  --double:0 0 0 2px var(--paper),0 0 0 3px var(--ink);
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-text);font-size:18px;line-height:1.45}
+img,video{display:block;max-width:100%;height:auto}
+a{color:var(--prussian)}
+a:focus-visible,video:focus-visible{outline:3px solid var(--gamboge);outline-offset:3px}
+.page{max-width:1080px;margin:0 auto;padding:0 20px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:18px 0 10px;border-bottom:3px double var(--ink);font-size:14px;letter-spacing:.2em;text-transform:uppercase}
+.top a{color:var(--ink);letter-spacing:.12em;min-height:44px;display:inline-flex;align-items:center}
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:32px 48px;align-items:center;padding:40px 0 48px}
+.kicker{margin:0 0 16px;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+h1,h2,h3{margin:0;font-family:var(--font-title);font-weight:700;text-transform:uppercase;text-wrap:balance}
+h1{font-size:clamp(40px,8.6vw,76px);line-height:1;letter-spacing:.03em}
+h1 span{display:block}
+h2{font-size:clamp(28px,5vw,40px);line-height:1.08;letter-spacing:.06em}
+h3{font-size:23px;line-height:1.15;letter-spacing:.06em}
+.lead{margin:22px 0 28px;font-size:21px;line-height:1.4;max-width:34em}
+.play{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 32px;border:1.5px solid var(--ink);border-radius:2px;background:var(--prussian);color:var(--paper);box-shadow:var(--double);font-weight:600;font-size:20px;text-decoration:none}
+.play:active{box-shadow:0 0 0 1px var(--ink);transform:scale(.98)}
+.note{margin:16px 0 0;font-style:italic;color:var(--ink-soft);font-size:17px}
+figure{margin:0}
+figcaption,.legend{margin-top:12px;font-style:italic;font-size:16px;color:var(--ink-soft);text-align:center}
+.cell{width:min(100%,420px);margin:0 auto;border-radius:50%;box-shadow:0 0 0 3px var(--paper),0 0 0 4.5px var(--ink)}
+section{padding:44px 0;border-top:1px solid var(--ink)}
+.head{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;max-width:40em}
+.head p{margin:0;font-size:19px}
+.film{max-width:360px;margin:0 auto}
+.film video{width:100%;border:1.5px solid var(--ink);box-shadow:var(--double);background:var(--paper)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:36px 28px}
+.step{display:flex;flex-direction:column;gap:12px}
+.step .n{font-family:var(--font-title);font-weight:600;font-size:19px;letter-spacing:.1em}
+.step img{width:100%;border:1.5px solid var(--ink);box-shadow:var(--double)}
+.step p{margin:0;font-size:17px}
+.plates{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:28px}
+.plate{display:flex;flex-direction:column;gap:8px;padding:5px;border:2px solid var(--ink)}
+.plate>div{display:flex;flex-direction:column;gap:8px;flex-grow:1;padding:14px 16px 16px;border:1px solid var(--ink)}
+.plate .pl{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.plate .pl b{font-family:var(--font-title);font-weight:600;font-size:18px;letter-spacing:.04em}
+.plate h3{text-align:center}
+.plate .latin{text-align:center;font-style:italic}
+.plate p{margin:0;font-size:16px;line-height:1.35}
+.plate .data{margin-top:auto;padding-top:8px;border-top:1px solid var(--ink);font-family:var(--font-number);font-weight:500;font-size:13px;color:var(--ink-soft)}
+.lines{max-width:640px;margin:0;padding:0;list-style:none}
+.lines li{display:flex;align-items:baseline;gap:8px;min-height:48px;border-top:1px solid var(--ink)}
+.lines li:last-child{border-bottom:1px solid var(--ink)}
+.lines .dots{flex:1 1 24px;min-width:24px;border-bottom:1px dotted var(--ink)}
+.lines span:last-child{text-align:right}
+.lines .num{font-family:var(--font-number);font-weight:500;font-size:17px}
+.closing{display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center}
+footer{padding:20px 0 40px;border-top:3px double var(--ink);font-size:15px;color:var(--ink-soft);text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="top"><span>Origins · XXVII</span><a href="/discover/" lang="en">English</a></header>
+<main>
+<div class="hero">
+  <div>
+    <p class="kicker">Jeu de stratégie · gratuit · dans le navigateur</p>
+    <h1><span>De la bactérie</span><span>à l'APEX,</span><span>en 27 jours</span></h1>
+    <p class="lead">Vous naissez bactérie dans un océan primitif. Vous grandissez, vous évoluez, vous tenez tête à cinq cents organismes. Au bout du chemin : sortir de l'eau.</p>
+    <a class="play" data-play href="/?s=presentation">Jouer gratuitement</a>
+    <p class="note">Rien à installer. Quelques minutes par jour.</p>
+  </div>
+  <figure>
+    <img class="cell" src="/planches/cellule.svg" width="640" height="640" alt="">
+    <figcaption>Fig. 1. — Vous commencez ici : une cellule.</figcaption>
+  </figure>
+</div>
+<section>
+  <div class="head"><h2>Le film</h2></div>
+  <figure class="film">
+    <video controls playsinline preload="none" poster="/decouvrir/affiche.jpg" width="720" height="1280">
+      <source src="/decouvrir/origins27.webm" type="video/webm">
+      Votre navigateur ne lit pas cette vidéo.
+    </video>
+    <figcaption>Trente-huit secondes, tournées dans le vrai jeu.</figcaption>
+  </figure>
+</section>
+<section>
+  <div class="head"><h2>Une saison</h2><p>Vingt-sept jours, du premier battement de cil à la terre ferme.</p></div>
+  <div class="steps">
+    <div class="step">
+      <span class="n">I</span>
+      <h3>Grandir</h3>
+      <img src="/decouvrir/capture-cellule.jpg" width="562" height="1218" loading="lazy" alt="Capture du jeu sur téléphone : Grandir">
+      <p>Une cellule qui produit et se construit, organite par organite : mitochondrie, vacuole, noyau.</p>
+    </div>
+    <div class="step">
+      <span class="n">II</span>
+      <h3>Explorer</h3>
+      <img src="/decouvrir/capture-goutte.jpg" width="562" height="1218" loading="lazy" alt="Capture du jeu sur téléphone : Explorer">
+      <p>Une goutte d'océan à parcourir : récolter, chasser, repérer.</p>
+    </div>
+    <div class="step">
+      <span class="n">III</span>
+      <h3>S'affronter</h3>
+      <img src="/decouvrir/capture-rivaux.jpg" width="562" height="1218" loading="lazy" alt="Capture du jeu sur téléphone : S'affronter">
+      <p>Des troupes, des pillages, des défenses. Et des protections : personne n'est puni de dormir.</p>
+    </div>
+    <div class="step">
+      <span class="n">IV</span>
+      <h3>Évoluer</h3>
+      <img src="/decouvrir/capture-recherche.jpg" width="562" height="1218" loading="lazy" alt="Capture du jeu sur téléphone : Évoluer">
+      <p>Des gènes à exprimer, des mutations à choisir : aucune partie ne ressemble à une autre.</p>
+    </div>
+  </div>
+</section>
+<section>
+  <div class="head"><h2>Les neuf lignées d'APEX</h2><p>Les meilleurs sortent de l'eau. Chaque lignée a sa planche, gravée d'après un cousin fossile bien réel.</p></div>
+  <div class="plates">
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. I</b></div>
+      <img src="/planches/tyrannosaur.svg" width="1200" height="760" loading="lazy" alt="Tyrannosaure, gravé à l'encre">
+      <h3>Tyrannosaure</h3>
+      <div class="latin">Tyrannosaurus rex</div>
+      <p>Le grand prédateur : une mâchoire capable de broyer l’os.</p>
+      <div class="data">Crétacé supérieur · 68 à 66 Ma · ≈ 12 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. II</b></div>
+      <img src="/planches/dromaeosaur.svg" width="1200" height="760" loading="lazy" alt="Dromaéosaure, gravé à l'encre">
+      <h3>Dromaéosaure</h3>
+      <div class="latin">Deinonychus antirrhopus</div>
+      <p>Le chasseur en meute : plumes, griffe en faucille, vitesse.</p>
+      <div class="data">Crétacé inférieur · 115 à 108 Ma · ≈ 3,4 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. III</b></div>
+      <img src="/planches/brachiosaur.svg" width="1200" height="760" loading="lazy" alt="Brachiosaure, gravé à l'encre">
+      <h3>Brachiosaure</h3>
+      <div class="latin">Brachiosaurus altithorax</div>
+      <p>Le géant : brouter la cime des arbres, inaccessible aux autres.</p>
+      <div class="data">Jurassique supérieur · 154 à 150 Ma · ≈ 22 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. IV</b></div>
+      <img src="/planches/triceratops.svg" width="1200" height="760" loading="lazy" alt="Tricératops, gravé à l'encre">
+      <h3>Tricératops</h3>
+      <div class="latin">Triceratops horridus</div>
+      <p>Le cornu : trois cornes et une collerette face aux prédateurs.</p>
+      <div class="data">Crétacé supérieur · 68 à 66 Ma · ≈ 9 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. V</b></div>
+      <img src="/planches/ankylosaur.svg" width="1200" height="760" loading="lazy" alt="Ankylosaure, gravé à l'encre">
+      <h3>Ankylosaure</h3>
+      <div class="latin">Ankylosaurus magniventris</div>
+      <p>Le blindé : une armure d’os et une massue au bout de la queue.</p>
+      <div class="data">Crétacé supérieur · 68 à 66 Ma · ≈ 8 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. VI</b></div>
+      <img src="/planches/stegosaur.svg" width="1200" height="760" loading="lazy" alt="Stégosaure, gravé à l'encre">
+      <h3>Stégosaure</h3>
+      <div class="latin">Stegosaurus stenops</div>
+      <p>Les plaques et les piques : impressionner, puis frapper.</p>
+      <div class="data">Jurassique supérieur · 155 à 150 Ma · ≈ 7 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. VII</b></div>
+      <img src="/planches/parasaurolophus.svg" width="1200" height="760" loading="lazy" alt="Parasaurolophe, gravé à l'encre">
+      <h3>Parasaurolophe</h3>
+      <div class="latin">Parasaurolophus walkeri</div>
+      <p>Le troupeau : une crête creuse qui résonne pour alerter les siens.</p>
+      <div class="data">Crétacé supérieur · 76 à 73 Ma · ≈ 9,5 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. VIII</b></div>
+      <img src="/planches/pterosaur.svg" width="1200" height="760" loading="lazy" alt="Ptérosaure, gravé à l'encre">
+      <h3>Ptérosaure</h3>
+      <div class="latin">Pteranodon longiceps</div>
+      <p>Le maître du ciel : des ailes de peau tendues sur un doigt géant.</p>
+      <div class="data">Crétacé supérieur · 86 à 84 Ma · envergure ≈ 6,5 m</div>
+    </div></article>
+    <article class="plate"><div>
+      <div class="pl"><span>APEX</span><b>Pl. IX</b></div>
+      <img src="/planches/earlyBird.svg" width="1200" height="760" loading="lazy" alt="Oiseau primitif, gravé à l'encre">
+      <h3>Oiseau primitif</h3>
+      <div class="latin">Archaeopteryx lithographica</div>
+      <p>Le dinosaure qui a appris à voler : la lignée qui survivra.</p>
+      <div class="data">Jurassique supérieur · ≈ 150 Ma · ≈ 50 cm</div>
+    </div></article>
+  </div>
+</section>
+<section>
+  <div class="head"><h2>Ce qu'il faut savoir</h2></div>
+  <ul class="lines">
+    <li><span>Prix</span><span class="dots"></span><span>Gratuit. Aucun avantage ne s'achète.</span></li>
+    <li><span>Une saison</span><span class="dots"></span><span class="num">27 jours</span></li>
+    <li><span>Un monde</span><span class="dots"></span><span class="num">500 organismes</span></li>
+    <li><span>Une visite</span><span class="dots"></span><span class="num">2 à 5 minutes</span></li>
+    <li><span>Où</span><span class="dots"></span><span>Dans le navigateur, téléphone d'abord</span></li>
+    <li><span>À la fin</span><span class="dots"></span><span>Votre espèce entre au Muséum</span></li>
+  </ul>
+</section>
+<section class="closing">
+  <h2>La saison a commencé.</h2>
+  <a class="play" data-play href="/?s=presentation">Jouer gratuitement</a>
+</section>
+</main>
+<footer>Origins XXVII — un atlas d'histoire naturelle dont les planches sont vivantes.</footer>
+</div>
+<script>
+// Le lien vers le jeu dit d'où vient le visiteur (?s=mot), pour les statistiques d'audience.
+(function () {
+  var source = new URLSearchParams(location.search).get("s") || "presentation";
+  var links = document.querySelectorAll("a[data-play]");
+  for (var i = 0; i < links.length; i++) links[i].href = "/?s=" + encodeURIComponent(source);
+})();
+</script>
+</body>
+</html>
