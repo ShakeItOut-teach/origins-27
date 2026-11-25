@@ -1,0 +1,20 @@
+[
+  {
+    "id": "tyrannosaur",
+    "plate": "I",
+    "latin": "Tyrannosaurus rex",
+    "scaleMetres": 2,
+    "facts": {
+      "fr": {
+        "era": "Crétacé supérieur",
+        "ago": "68 à 66 Ma",
+        "size": "≈ 12 m"
+      },
+      "en": {
+        "era": "Late Cretaceous",
+        "ago": "68–66 Ma",
+        "size": "≈ 12 m"
+      }
+    }
+  }
+]
