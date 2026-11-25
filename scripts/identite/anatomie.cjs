@@ -161,4 +161,76 @@ function groundShadow(cx, y, half, rows = 9) {
   return lines(d, 1.1, 0.75);
 }
 
-module.exports = { form, lines, solid, toe, hook, eye, groundShadow };
+/** Les réglages de hachures les plus courants. */
+const SHADE = {
+  // Un corps : les traits descendent du flanc vers le ventre, croisés tout en bas.
+  body: [
+    { angle: 0.18, gap: 6, bow: 6, from: (i) => (i % 2 ? 0.5 : 0.66) },
+    { angle: -0.5, gap: 7, from: () => 0.84 },
+  ],
+  // Un membre au premier plan.
+  limb: [
+    { angle: 0.3, gap: 5.4, bow: 4, from: (i) => (i % 2 ? 0.4 : 0.6) },
+    { angle: -0.7, gap: 7, from: () => 0.76 },
+  ],
+  // Un membre du fond : entièrement hachuré, croisé.
+  far: [
+    { angle: 0.5, gap: 4.5 },
+    { angle: -0.6, gap: 6 },
+  ],
+  // Une petite pièce (tête, main, corne).
+  light: [{ angle: 0.3, gap: 5, from: () => 0.55 }],
+};
+
+/** Un membre du fond : hachuré en entier, lavé de vert-de-gris, trait plus fin. */
+const far = (points, options = {}) =>
+  form(points, { wash: COLORS.verdigris, shade: SHADE.far, width: 1.8, ...options }).svg;
+
+/** La peau : des écailles sur le flanc, du pointillé sur le dos. `depth` règle la hauteur du dos. */
+function skin(poly, rand, { scaleCount = 300, dots = 300, size = 2.5, depth = 70 } = {}) {
+  const flank = (x, y) => (G.inside(poly, x, y - depth * 1.5) ? 0 : 0.9);
+  const back = (x, y) => (G.inside(poly, x, y - depth) ? 0 : 1);
+  return (
+    lines(G.scales(poly, scaleCount, rand, flank, size), 0.9, 0.9) +
+    `<g fill="${COLORS.ink}">${G.stipple(poly, dots, rand, back)}</g>`
+  );
+}
+
+/** Le sol : l'ombre de l'animal, la ligne de terre, quelques cailloux. */
+function ground(rand, cx, half, y) {
+  let pebbles = "";
+  for (let i = 0; i < 26; i++) {
+    const x = 90 + rand() * 1040;
+    const py = y + 10 + rand() * 34;
+    const w = 4 + rand() * 9;
+    pebbles += `M${f(x)} ${f(py)}q${f(w / 2)} ${f(-w * 0.6)} ${f(w)} 0`;
+  }
+  return (
+    groundShadow(cx, y + 6, half, 10) + lines(`M70 ${y + 3}H1150`, 1.5) + lines(pebbles, 1, 0.8)
+  );
+}
+
+/** Un pied en colonne (grands herbivores) : de petits ongles au bas d'une patte. */
+function nails(x, y, width, count = 3) {
+  let d = "";
+  for (let i = 0; i < count; i++) {
+    const nx = x + (i / count) * width;
+    d += `M${f(nx)} ${f(y)}q${f(width / count / 2)} ${f(-13)} ${f(width / count)} 0`;
+  }
+  return lines(d, 1.6);
+}
+
+module.exports = {
+  form,
+  lines,
+  solid,
+  toe,
+  hook,
+  eye,
+  groundShadow,
+  SHADE,
+  far,
+  skin,
+  ground,
+  nails,
+};

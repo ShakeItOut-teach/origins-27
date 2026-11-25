@@ -25,7 +25,7 @@ const LINEAGES = [
 /** La barre d'échelle : sa longueur en mètres est choisie pour rester lisible. */
 function scaleBar(lineage) {
   const perMetre = (lineage.span[1] - lineage.span[0]) / lineage.metres;
-  const metres = [5, 2, 1, 0.5, 0.2].find((m) => m * perMetre <= 260) ?? 0.2;
+  const metres = [5, 2, 1, 0.5, 0.2, 0.1].find((m) => m * perMetre <= 260) ?? 0.1;
   const w = metres * perMetre;
   const y = BOX[1] - 22;
   return {

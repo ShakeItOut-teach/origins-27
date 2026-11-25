@@ -16,5 +16,149 @@
         "size": "≈ 12 m"
       }
     }
+  },
+  {
+    "id": "dromaeosaur",
+    "plate": "II",
+    "latin": "Deinonychus antirrhopus",
+    "scaleMetres": 0.5,
+    "facts": {
+      "fr": {
+        "era": "Crétacé inférieur",
+        "ago": "115 à 108 Ma",
+        "size": "≈ 3,4 m"
+      },
+      "en": {
+        "era": "Early Cretaceous",
+        "ago": "115–108 Ma",
+        "size": "≈ 3.4 m"
+      }
+    }
+  },
+  {
+    "id": "brachiosaur",
+    "plate": "III",
+    "latin": "Brachiosaurus altithorax",
+    "scaleMetres": 5,
+    "facts": {
+      "fr": {
+        "era": "Jurassique supérieur",
+        "ago": "154 à 150 Ma",
+        "size": "≈ 22 m"
+      },
+      "en": {
+        "era": "Late Jurassic",
+        "ago": "154–150 Ma",
+        "size": "≈ 22 m"
+      }
+    }
+  },
+  {
+    "id": "triceratops",
+    "plate": "IV",
+    "latin": "Triceratops horridus",
+    "scaleMetres": 2,
+    "facts": {
+      "fr": {
+        "era": "Crétacé supérieur",
+        "ago": "68 à 66 Ma",
+        "size": "≈ 9 m"
+      },
+      "en": {
+        "era": "Late Cretaceous",
+        "ago": "68–66 Ma",
+        "size": "≈ 9 m"
+      }
+    }
+  },
+  {
+    "id": "ankylosaur",
+    "plate": "V",
+    "latin": "Ankylosaurus magniventris",
+    "scaleMetres": 2,
+    "facts": {
+      "fr": {
+        "era": "Crétacé supérieur",
+        "ago": "68 à 66 Ma",
+        "size": "≈ 8 m"
+      },
+      "en": {
+        "era": "Late Cretaceous",
+        "ago": "68–66 Ma",
+        "size": "≈ 8 m"
+      }
+    }
+  },
+  {
+    "id": "stegosaur",
+    "plate": "VI",
+    "latin": "Stegosaurus stenops",
+    "scaleMetres": 1,
+    "facts": {
+      "fr": {
+        "era": "Jurassique supérieur",
+        "ago": "155 à 150 Ma",
+        "size": "≈ 7 m"
+      },
+      "en": {
+        "era": "Late Jurassic",
+        "ago": "155–150 Ma",
+        "size": "≈ 7 m"
+      }
+    }
+  },
+  {
+    "id": "parasaurolophus",
+    "plate": "VII",
+    "latin": "Parasaurolophus walkeri",
+    "scaleMetres": 2,
+    "facts": {
+      "fr": {
+        "era": "Crétacé supérieur",
+        "ago": "76 à 73 Ma",
+        "size": "≈ 9,5 m"
+      },
+      "en": {
+        "era": "Late Cretaceous",
+        "ago": "76–73 Ma",
+        "size": "≈ 9.5 m"
+      }
+    }
+  },
+  {
+    "id": "pterosaur",
+    "plate": "VIII",
+    "latin": "Pteranodon longiceps",
+    "scaleMetres": 1,
+    "facts": {
+      "fr": {
+        "era": "Crétacé supérieur",
+        "ago": "86 à 84 Ma",
+        "size": "envergure ≈ 6,5 m"
+      },
+      "en": {
+        "era": "Late Cretaceous",
+        "ago": "86–84 Ma",
+        "size": "wingspan ≈ 6.5 m"
+      }
+    }
+  },
+  {
+    "id": "earlyBird",
+    "plate": "IX",
+    "latin": "Archaeopteryx lithographica",
+    "scaleMetres": 0.1,
+    "facts": {
+      "fr": {
+        "era": "Jurassique supérieur",
+        "ago": "≈ 150 Ma",
+        "size": "≈ 50 cm"
+      },
+      "en": {
+        "era": "Late Jurassic",
+        "ago": "≈ 150 Ma",
+        "size": "≈ 50 cm"
+      }
+    }
   }
 ]
