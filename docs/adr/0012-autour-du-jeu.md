@@ -51,6 +51,9 @@ et respecter leurs droits. Le propriétaire a demandé « le plus de statistique
 
 - `packages/server/src/community.ts` porte la logique (testée sans Supabase) ;
   `supabase/migrations/20261125000001_autour_du_jeu.sql` porte les tables et les fonctions.
+- `supabase/functions/jeu/index.ts`, qui tourne sous Deno, n'était couvert par aucun test
+  (ADR 0011). `pnpm server:try` le fait tourner sous Node avec une fausse base et de vraies
+  requêtes, sur toutes les routes ; la CI le lance après l'assemblage du serveur.
 - La rétention se lit jour par jour : J1, J3, J7, J14 et J27 (qui finit la saison).
 - Le Muséum de l'appareil reste lu, pour les planches d'avant et pour l'essai accéléré.
 

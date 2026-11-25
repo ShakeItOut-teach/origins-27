@@ -38,6 +38,8 @@ jobs:
         run: pnpm build
       - name: Assemblage du serveur
         run: pnpm server:bundle
+      - name: Essai de la fonction du serveur
+        run: pnpm server:try
       - uses: actions/upload-artifact@v4
         with:
           name: site

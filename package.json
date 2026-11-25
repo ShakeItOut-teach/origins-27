@@ -18,7 +18,8 @@
     "test": "vitest run",
     "check": "pnpm format && pnpm lint && pnpm typecheck && pnpm boundaries && pnpm test",
     "hooks": "lefthook install",
-    "server:bundle": "node scripts/bundle-server.cjs"
+    "server:bundle": "node scripts/bundle-server.cjs",
+    "server:try": "node scripts/try-function.cjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
