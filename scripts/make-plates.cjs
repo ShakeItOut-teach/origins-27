@@ -67,4 +67,7 @@ for (const id of LINEAGES) {
   });
   process.stdout.write(`${id}.svg (${String(Math.round(svg.length / 1024))} Ko)\n`);
 }
+// La cellule de référence, pour la page de présentation et la charte.
+fs.writeFileSync(path.join(OUT, "cellule.svg"), require("./identite/cellule.cjs").svg());
+process.stdout.write("cellule.svg\n");
 fs.writeFileSync(path.join(OUT, "planches.json"), JSON.stringify(index, null, 2) + "\n");

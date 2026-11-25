@@ -1,0 +1,211 @@
+{
+  "name": "Origins 27 — Atlas",
+  "version": 1,
+  "color": {
+    "themes": [{ "id": "atlas", "name": "Atlas" }],
+    "tokens": [
+      {
+        "name": "paper",
+        "value": "#ede6d6",
+        "usage": "Le fond de toutes les pages. Texte à l'encre (13,8)."
+      },
+      {
+        "name": "paper-deep",
+        "value": "#e0d7c3",
+        "usage": "Un bouton éteint, une zone en retrait. Texte à l'encre ou à l'encre pâle seulement."
+      },
+      {
+        "name": "ink",
+        "value": "#1e1b18",
+        "usage": "Texte, traits, filets. Sur le papier : 13,8."
+      },
+      {
+        "name": "ink-soft",
+        "value": "#5a5148",
+        "usage": "Légendes, texte secondaire. Sur le papier : 6,2."
+      },
+      {
+        "name": "prussian",
+        "value": "#1d4f73",
+        "usage": "Agir : le bouton principal, ce qui est choisi. Texte papier dessus (7,0). Jamais en décor."
+      },
+      {
+        "name": "madder",
+        "value": "#a63d60",
+        "usage": "Alerter : ce qui manque, ce qui menace. Sur le papier : 4,9. Pas sur le papier foncé."
+      },
+      {
+        "name": "verdigris",
+        "value": "#356b5e",
+        "usage": "Gagner : production, vie, ce qui pousse. Sur le papier : 4,9. Pas sur le papier foncé."
+      },
+      {
+        "name": "gamboge",
+        "value": "#d9a520",
+        "usage": "Récompenser : coffres, niveaux. En fond seulement, texte à l'encre dessus (7,6). Jamais en texte sur le papier (1,8)."
+      },
+      {
+        "name": "plate",
+        "value": "#14110e",
+        "usage": "La planche noire : le fond des vues vivantes (cellule, carte)."
+      },
+      {
+        "name": "bone",
+        "value": "#f1ebdd",
+        "usage": "Le trait et le texte sur la planche noire (15,8)."
+      }
+    ]
+  },
+  "type": {
+    "fonts": [],
+    "families": {
+      "title": "\"Bodoni Moda\", \"Didot\", \"Bodoni MT\", Georgia, serif",
+      "text": "\"Spectral\", Georgia, \"Times New Roman\", serif",
+      "number": "\"IBM Plex Mono\", ui-monospace, monospace"
+    },
+    "groups": [
+      {
+        "name": "Titres",
+        "family": "title",
+        "styles": [
+          {
+            "name": "titre-planche",
+            "fontSize": "34px",
+            "lineHeight": 1.05,
+            "fontWeight": 700,
+            "letterSpacing": "0.06em",
+            "sample": "TYRANNOSAURE",
+            "usage": "Le nom sur une planche, le titre d'une page. Toujours en capitales."
+          },
+          {
+            "name": "titre",
+            "fontSize": "23px",
+            "lineHeight": 1.15,
+            "fontWeight": 700,
+            "letterSpacing": "0.06em",
+            "sample": "LA CRISE APPROCHE",
+            "usage": "Le titre d'une fiche ou d'une section. Toujours en capitales."
+          },
+          {
+            "name": "sous-titre",
+            "fontSize": "19px",
+            "lineHeight": 1.2,
+            "fontWeight": 600,
+            "sample": "Pl. I",
+            "usage": "Numéros de planche, noms propres courts. Le Bodoni ne descend pas sous 17 px."
+          }
+        ]
+      },
+      {
+        "name": "Texte",
+        "family": "text",
+        "styles": [
+          {
+            "name": "texte",
+            "fontSize": "17px",
+            "lineHeight": 1.35,
+            "fontWeight": 400,
+            "sample": "Une mâchoire capable de broyer l'os.",
+            "usage": "Tout le texte courant."
+          },
+          {
+            "name": "bouton",
+            "fontSize": "18px",
+            "lineHeight": 1.2,
+            "fontWeight": 600,
+            "sample": "Construire",
+            "usage": "Le mot d'un bouton : un verbe."
+          },
+          {
+            "name": "legende",
+            "fontSize": "15px",
+            "lineHeight": 1.3,
+            "fontWeight": 400,
+            "fontStyle": "italic",
+            "sample": "Fig. 1. — Votre cellule au seizième jour.",
+            "usage": "Légendes de figure, noms latins. Encre pâle."
+          },
+          {
+            "name": "etiquette",
+            "fontSize": "13px",
+            "lineHeight": 1.2,
+            "fontWeight": 400,
+            "letterSpacing": "0.12em",
+            "sample": "PROTÉINES",
+            "usage": "Petites étiquettes en capitales, au-dessus d'un chiffre ou d'une section."
+          }
+        ]
+      },
+      {
+        "name": "Chiffres",
+        "family": "number",
+        "styles": [
+          {
+            "name": "grand-chiffre",
+            "fontSize": "40px",
+            "lineHeight": 1,
+            "fontWeight": 500,
+            "sample": "9 693",
+            "usage": "Le compteur principal."
+          },
+          {
+            "name": "chiffre",
+            "fontSize": "17px",
+            "lineHeight": 1.2,
+            "fontWeight": 500,
+            "sample": "+6,5/s",
+            "usage": "Toute quantité : prix, gain, durée, niveau."
+          }
+        ]
+      }
+    ]
+  },
+  "spacing": {
+    "tokens": [
+      { "name": "space-1", "value": "4px", "usage": "Entre un pictogramme et son chiffre." },
+      { "name": "space-2", "value": "8px", "usage": "Entre deux éléments d'un même groupe." },
+      { "name": "space-3", "value": "12px", "usage": "Marge intérieure d'une ligne." },
+      { "name": "space-4", "value": "16px", "usage": "Marge de la page sur téléphone." },
+      {
+        "name": "space-5",
+        "value": "24px",
+        "usage": "Entre deux groupes ; marge intérieure d'une fiche."
+      },
+      { "name": "space-6", "value": "32px", "usage": "Entre deux sections." },
+      {
+        "name": "touch",
+        "value": "48px",
+        "usage": "Hauteur d'une zone tactile. Jamais moins de 44 px."
+      }
+    ]
+  },
+  "radius": {
+    "tokens": [
+      {
+        "name": "radius",
+        "value": "2px",
+        "usage": "Boutons, fiches, étiquettes : presque carrés."
+      },
+      {
+        "name": "radius-round",
+        "value": "50%",
+        "usage": "Médaillons seulement : boutons ronds des organites, planche noire."
+      }
+    ]
+  },
+  "shadow": {
+    "note": "Pas d'ombre dans Atlas : ces valeurs dessinent un double filet (un trait, un intervalle de papier, un trait).",
+    "tokens": [
+      {
+        "name": "double-filet",
+        "value": "0 0 0 2px #ede6d6, 0 0 0 3px #1e1b18",
+        "usage": "Autour de ce qui se touche : bouton principal, rangée d'onglets."
+      },
+      {
+        "name": "double-filet-large",
+        "value": "0 0 0 3px #ede6d6, 0 0 0 4.5px #1e1b18",
+        "usage": "Autour de ce qui compte le plus : la planche noire, une note."
+      }
+    ]
+  }
+}

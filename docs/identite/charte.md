@@ -1,0 +1,188 @@
+# Charte d'Origins 27 — l'identité « Atlas »
+
+Choisie par le propriétaire le 25 novembre 2026, parmi trois directions (voir l'ADR 0014).
+**Tout ce qui se voit dans le jeu et autour du jeu suit cette charte** : écrans, icône, planches
+d'APEX, page de présentation, vidéo, images pour les réseaux.
+
+La même charte existe en artefact « Design System » (avec les aperçus des composants) :
+<https://claude.ai/artifact/XwvgaSx7AFVYga3nwQ9E9s>. En cas d'écart, **ce fichier fait foi**
+et l'artefact est corrigé.
+
+## 1. L'idée, en une phrase
+
+> Origins 27 est un atlas d'histoire naturelle gravé au XIXᵉ siècle, dont les planches sont vivantes.
+
+Trois mots : **gravé, savant, patiné.**
+
+Ce qu'on doit reconnaître au premier coup d'œil :
+
+1. **La planche noire.** Tout ce qui vit (la cellule, la carte) est gravé en clair sur un disque
+   noir, cerclé d'un double filet et d'un cercle gradué.
+2. **Le trait de gravure.** De l'encre, des hachures pour l'ombre, du pointillé pour la matière.
+   La couleur n'est qu'un lavis d'aquarelle, posé un peu à côté du trait.
+3. **La page d'atlas.** Capitales de Bodoni, numéros de planche en chiffres romains, légendes
+   « Fig. 1. — », lignes de sommaire à points de conduite.
+
+## 2. Ce qu'on ne fait plus
+
+L'ancienne apparence (carnet de laboratoire) a été jugée générique. Ne reviennent pas :
+
+- le papier quadrillé ;
+- les ombres dures décalées sous les boutons et les cartes ;
+- l'italique à empattements partout, le fond crème avec un accent rouille ;
+- les boutons en pilule, les coins très arrondis ;
+- les dégradés de couleur, les halos lumineux, les émojis ;
+- une forme pleine et colorée sans trait d'encre autour.
+
+## 3. Couleurs
+
+Les valeurs vivent dans `packages/client/src/theme/tokens.css` (et dans `jetons.json`, à côté
+de ce fichier, pour les outils). Aucune couleur n'est écrite ailleurs.
+
+| Jeton          | Valeur    | Nom            | Rôle                                                               | Contraste sur le papier |
+| -------------- | --------- | -------------- | ------------------------------------------------------------------ | ----------------------- |
+| `--paper`      | `#EDE6D6` | Papier         | Le fond de toutes les pages.                                       | —                       |
+| `--paper-deep` | `#E0D7C3` | Papier foncé   | Un bouton éteint, une zone en retrait. Texte à l'encre seulement.  | —                       |
+| `--ink`        | `#1E1B18` | Encre          | Texte, traits, filets.                                             | 13,8                    |
+| `--ink-soft`   | `#5A5148` | Encre pâle     | Légendes, texte secondaire.                                        | 6,2                     |
+| `--prussian`   | `#1D4F73` | Bleu de Prusse | **Agir** : le bouton principal, ce qui est choisi.                 | 7,0                     |
+| `--madder`     | `#A63D60` | Garance        | **Alerter** : ce qui manque, ce qui menace.                        | 4,9                     |
+| `--verdigris`  | `#356B5E` | Vert-de-gris   | **Gagner** : production, vie, ce qui pousse.                       | 4,9                     |
+| `--gamboge`    | `#D9A520` | Gomme-gutte    | **Récompenser** : coffres, niveaux. Jamais en texte sur le papier. | 1,8 (fond seulement)    |
+| `--plate`      | `#14110E` | Planche noire  | Le fond des vues vivantes.                                         | —                       |
+| `--bone`       | `#F1EBDD` | Os             | Le trait et le texte sur la planche noire.                         | 15,8 sur la planche     |
+
+Règles :
+
+- **Une teinte, un rôle.** Le bleu de Prusse ne sert pas à décorer ; la garance ne sert pas à un bouton.
+- Sur la gomme-gutte, le texte est à l'encre (contraste 7,6). Sur le bleu de Prusse et la
+  garance, il est couleur papier (7,0 et 4,9).
+- Sur le papier foncé, la garance et le vert-de-gris ne passent plus (4,2 et 4,3) : texte à l'encre.
+- Deux états qu'on doit distinguer diffèrent aussi par la forme ou par un mot, pas seulement
+  par la teinte.
+- Les anciens noms (`--eosin`, `--algae`, `--iodine`, `--slide`, `--lens-*`, `--on-dark`,
+  `--grid`) restent des renvois vers les nouveaux, pour le code déjà écrit. Le code neuf
+  emploie les nouveaux noms.
+
+## 4. Typographie
+
+| Usage              | Police                              | Réglage                                                    |
+| ------------------ | ----------------------------------- | ---------------------------------------------------------- |
+| Titres             | **Bodoni Moda** (`--font-title`)    | Capitales, graisse 700, interlettrage 0,06 em.             |
+| Texte, boutons     | **Spectral** (`--font-text`)        | 17 px, interligne 1,35 ; 600 pour les boutons.             |
+| Légendes de figure | Spectral italique                   | 14 à 15 px, encre pâle. « Fig. 1. — Votre cellule. »       |
+| Chiffres           | **IBM Plex Mono** (`--font-number`) | Graisse 500, chiffres alignés. Toujours pour une quantité. |
+| Étiquettes         | Spectral, capitales                 | 11 à 13 px, interlettrage 0,12 em.                         |
+
+Échelle des tailles : 11 · 13 · 15 · 17 · 19 · 23 · 34 · 40 px. Pas de taille entre deux.
+
+- Le Bodoni ne descend pas sous 17 px : ses déliés deviennent trop fins sur un téléphone.
+- Jamais de Bodoni en italique pour une phrase entière ; l'italique est le rôle de Spectral.
+- Les polices sont embarquées dans le jeu (`@fontsource`), jamais chargées depuis un autre site.
+
+## 5. Espacements, filets, formes
+
+- Espacements : 4 · 8 · 12 · 16 · 24 · 32 px (`--space-1` à `--space-6`).
+- **Le filet** (`--line`) : un trait d'encre de 1,5 px. Il sépare, il encadre.
+- **Le double filet** (`--shadow`, `--shadow-big`) : un filet, un mince intervalle de papier,
+  un second filet. Il remplace toute ombre. Il entoure ce qu'on peut toucher ou ce qui compte.
+- **Le filet double horizontal** (`border-top: 3px double`) : en tête et en pied de page, comme
+  dans un livre.
+- **Les points de conduite** : entre un mot et son chiffre, une ligne pointillée, comme dans
+  un sommaire.
+- Coins : 2 px (`--radius`). Seuls les médaillons (boutons ronds des organites, planche noire) sont ronds.
+- Zone tactile : 48 px (`--touch`), jamais moins de 44.
+
+## 6. Composants
+
+Les aperçus sont dans l'artefact « Design System ». Les règles :
+
+| Composant            | Règle                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Bouton principal     | Fond bleu de Prusse, texte papier, double filet. Un seul par écran. Enfoncé : le double filet se resserre. |
+| Bouton discret       | Fond papier, texte encre, filet simple.                                                                    |
+| Bouton éteint        | Fond papier foncé, texte encre pâle, sans double filet. Il dit toujours ce qui manque.                     |
+| Onglets              | Une rangée encadrée ; l'onglet ouvert est à l'encre, texte papier ; un filet entre deux onglets.           |
+| Compteur             | Le chiffre en Plex Mono, son nom dessous en légende ; le gain en vert-de-gris, le manque en garance.       |
+| Ligne de sommaire    | Mot, points de conduite, chiffre. Toute la ligne se touche (48 px de haut).                                |
+| Étiquette            | Petit rectangle de papier cerclé d'un filet, chiffres en Plex Mono (« Niv. 2 »).                           |
+| Fiche                | Feuille de papier qui monte du bas, filet en haut, titre en capitales de Bodoni.                           |
+| Planche noire        | Disque noir, double filet, cercle gradué ; trait couleur d'os ; échelle « 10 µm ».                         |
+| Médaillon d'organite | Rond de 48 px sur la planche, filet couleur d'os, pictogramme au trait.                                    |
+
+## 7. Illustration
+
+**Tout dessin est une gravure.** Les règles, dans l'ordre où on dessine :
+
+1. **Le trait d'ombre** : la forme en encre, décalée de 2 px vers le bas à droite.
+2. **Le papier** : la forme remplie couleur papier, qui cache ce qui est derrière.
+3. **Le lavis** : une seule teinte, floue, décalée de 3 à 4 px, opacité 0,4 à 0,6. Il déborde
+   un peu, comme sur une gravure coloriée à la main.
+4. **Les hachures** : des traits parallèles de 0,9 px, espacés de 5 à 7 px, plus serrés vers
+   le bas de la forme ; croisés dans l'ombre la plus forte.
+5. **Le pointillé et les écailles** : pour la matière (peau, cytoplasme), plus serrés vers le bord.
+6. **Le contour** : 2,2 à 2,6 px pour le premier plan, 1,7 à 1,9 px pour l'arrière-plan.
+
+Les parties à l'arrière-plan (membres du fond) sont entièrement hachurées et lavées de vert-de-gris.
+
+Sur la planche noire, on inverse : trait couleur d'os, pas de hachures pleines, du pointillé,
+et un lavis très léger par organite (gomme-gutte pour la mitochondrie, bleu de Prusse pour la
+vacuole, garance pour le noyau, vert-de-gris pour le réticulum).
+
+**Une planche d'APEX** porte toujours : un numéro (« Pl. I »), le nom en capitales de Bodoni, le
+nom latin en italique, la figure principale, une barre d'échelle en mètres, et les faits réels
+(époque, âge, longueur). L'animal est montré de profil, tête à gauche, **dans une posture qui
+dit son rôle** : le prédateur attaque, le cuirassé fait front, le géant domine.
+
+**Comment produire un dessin :**
+
+- Les outils sont dans `scripts/identite/` : `gravure.cjs` (courbes, hachures, pointillé,
+  écailles, crêtes) et `anatomie.cjs` (forme gravée, doigt griffu, œil, ombre au sol).
+- Une lignée d'APEX = un fichier dans `scripts/identite/lignees/`, qui décrit l'animal par des points.
+- `node scripts/make-plates.cjs` écrit les figures dans `packages/client/public/planches/`.
+- `node scripts/make-icons.cjs` écrit les icônes dans `packages/client/public/icons/`.
+- Dans le jeu, la cellule est dessinée par `packages/client/src/cell/draw.ts`, avec les mêmes règles.
+
+Si un jour une image peinte est voulue (ce que le code ne sait pas faire), on écrit d'abord un
+cahier des charges à partir de cette section, et on demande l'accord du propriétaire : c'est
+une ressource peut-être payante.
+
+## 8. Mouvement
+
+- La cellule respire, les cils ondulent, le cytoplasme tourne lentement : c'est une planche **vivante**.
+- Une apparition dure 0,2 à 0,35 s. Rien ne rebondit, rien ne clignote.
+- « Réduire les animations » coupe tout mouvement de l'interface ; la cellule reste dessinée, immobile.
+
+## 9. Ton des textes
+
+- **Science réelle, mots simples.** Les vrais termes (ATP, mitochondrie), expliqués un par un ;
+  le joueur peut choisir les mots simples.
+- On vouvoie le joueur. Phrases courtes. Un verbe sur chaque bouton, qui dit ce qui va se passer.
+- La voix est celle d'un naturaliste : elle décrit, elle ne s'exclame pas. Pas de point
+  d'exclamation, pas de majuscules pour crier.
+- Les conventions de l'atlas : « Pl. I », « Fig. 1. — », noms latins en italique, chiffres
+  romains pour ce qui se numérote (planches, onglets), unités réelles (µm, m, Ma).
+- Un refus dit toujours ce qui manque et où le trouver.
+- Tous les textes du jeu sont dans `@o27/data`, en français et en anglais.
+
+## 10. Accessibilité
+
+- Texte : contraste de 4,5 au moins (3 à partir de 24 px). Le tableau des couleurs donne les valeurs.
+- Zones tactiles de 44 px au moins. Un contour visible quand on navigue au clavier.
+- Jamais une information par la couleur seule.
+- « Réduire les animations » est respecté partout.
+
+## 11. Où sont les choses
+
+| Quoi                               | Où                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------- |
+| Jetons (couleurs, polices, filets) | `packages/client/src/theme/tokens.css`                                    |
+| Les mêmes, pour les outils         | `docs/identite/jetons.json`                                               |
+| Styles des écrans                  | `packages/client/src/theme/app.css`                                       |
+| Dessin de la cellule dans le jeu   | `packages/client/src/cell/draw.ts`                                        |
+| Pictogrammes                       | `packages/client/src/ui/icons.tsx`                                        |
+| Outils de gravure                  | `scripts/identite/`                                                       |
+| Figures des lignées d'APEX         | `packages/client/public/planches/` (faites par `scripts/make-plates.cjs`) |
+| Icônes                             | `packages/client/public/icons/` (faites par `scripts/make-icons.cjs`)     |
+| Pourquoi cette direction           | `docs/adr/0014-identite-atlas.md`                                         |
+| Les trois directions comparées     | <https://claude.ai/artifact/WMAvYRoCHWkF6YzwC67mUr>                       |

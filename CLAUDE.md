@@ -10,6 +10,8 @@ développeur : il valide en jouant et lit des explications en français simple.
 2. `docs/specs/` — la conception validée. `docs/plans/` — le plan en cours : prends une tâche, pas plus.
 3. `docs/adr/` — les décisions d'architecture. On ne les contourne pas ; on en propose une nouvelle.
 4. Le `CLAUDE.md` du paquet où tu travailles.
+5. `docs/identite/charte.md` — l'identité « Atlas » : couleurs, polices, composants, règles de
+   dessin, ton des textes. À lire avant tout ce qui se voit (écran, image, page, vidéo).
 
 ## La règle n° 1 : complexité progressive
 
