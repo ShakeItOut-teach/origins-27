@@ -76,7 +76,7 @@ p {
 
 .counter-label {
   grid-column: 1 / -1;
-  font-family: var(--font-title);
+  font-family: var(--font-text);
   font-style: italic;
   font-size: 18px;
   color: var(--ink-soft);
@@ -385,7 +385,7 @@ p {
 .family-genes li {
   padding: 2px 8px;
   border: 1px dashed var(--ink-soft);
-  border-radius: 999px;
+  border-radius: var(--radius);
   color: var(--ink-soft);
 }
 
@@ -520,7 +520,7 @@ p {
   right: 0;
   bottom: 14%;
   text-align: center;
-  font-family: var(--font-title);
+  font-family: var(--font-text);
   font-style: italic;
   font-size: 22px;
   color: var(--on-dark);
@@ -572,11 +572,10 @@ p {
 .slot.is-building {
   opacity: 1;
   border-style: solid;
-  /* Un repère de verre posé sur la lame, pas une pastille. */
-  background: color-mix(in srgb, var(--lens-edge) 72%, transparent);
-  color: var(--on-dark);
-  border-color: color-mix(in srgb, var(--on-dark) 65%, transparent);
-  backdrop-filter: blur(2px);
+  /* Un médaillon gravé sur la planche : fond noir, filet couleur d'os. */
+  background: var(--plate);
+  color: var(--bone);
+  border-color: var(--bone);
 }
 
 .slot.is-building {
@@ -590,7 +589,7 @@ p {
   margin-top: 4px;
   padding: 1px 6px;
   white-space: nowrap;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-number);
@@ -657,7 +656,6 @@ p {
   box-shadow: var(--shadow-big);
   text-align: center;
   justify-items: center;
-  transform: rotate(-1deg);
   animation: drop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
 }
 
@@ -1108,7 +1106,7 @@ p {
 }
 
 .troops-head {
-  font-family: var(--font-title);
+  font-family: var(--font-text);
   font-style: italic;
   font-size: 18px;
 }
@@ -1311,7 +1309,7 @@ p {
 
 .badge {
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--iodine);
   color: var(--ink);
   font-size: 12px;
@@ -1380,7 +1378,7 @@ p {
 
 .quest-opened {
   grid-column: 1 / -1;
-  font-family: var(--font-title);
+  font-family: var(--font-text);
   font-style: italic;
   color: var(--algae);
 }
@@ -1749,7 +1747,7 @@ p {
   bottom: 12%;
   margin: 0;
   text-align: center;
-  font-family: var(--font-title);
+  font-family: var(--font-text);
   font-style: italic;
   font-size: 18px;
   color: var(--on-dark);
@@ -1763,7 +1761,7 @@ p {
   min-height: 44px;
   padding: 0 var(--space-3);
   border: var(--line);
-  border-radius: 22px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
   background: var(--paper);
   color: var(--ink);
@@ -1875,7 +1873,7 @@ p {
 }
 
 .organism-deposit {
-  border-radius: 8px;
+  border-radius: var(--radius);
   border-color: color-mix(in srgb, var(--iodine) 70%, transparent);
 }
 
@@ -1943,7 +1941,7 @@ p {
   margin: 0;
   padding: 4px 10px;
   border: var(--line);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-number);
@@ -2564,7 +2562,7 @@ p.season-next {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-number);
@@ -2708,7 +2706,7 @@ p.season-next {
 
 .species-name {
   margin: 0;
-  font-family: var(--font-title);
+  font-family: var(--font-text);
   font-style: italic;
   font-size: 30px;
   line-height: 1.1;
@@ -2845,7 +2843,7 @@ body.trial {
   right: -6px;
   min-width: 20px;
   padding: 0 5px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--iodine);
   color: var(--on-dark);
   font-family: var(--font-number);
@@ -2899,7 +2897,7 @@ body.trial {
   margin-top: 4px;
   padding: 1px 8px;
   white-space: nowrap;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--iodine);
   color: var(--ink);
   font-family: var(--font-number);
