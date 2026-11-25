@@ -788,6 +788,10 @@ export const fr = {
   "museum.none": "Aucune saison terminée sur cet appareil.",
   "museum.survivor": "Survivant : {name}",
   "museum.aquatic": "restée dans l’eau",
+  "sheet.tooBig": "Ce prix dépasse ce que peut contenir votre {o} : améliorez-la d’abord.",
+  "sheet.maxedUntil":
+    "Niveau le plus haut pour l’instant. Les rangs supérieurs l’élèveront au jour {d}.",
+  "sheet.maxed": "Niveau le plus haut atteint.",
   "speed.title": "Essai ×{n}",
   "speed.note":
     "Le temps passe {n} fois plus vite. Cette partie d’essai reste sur cet appareil : votre vraie partie n’est pas touchée.",

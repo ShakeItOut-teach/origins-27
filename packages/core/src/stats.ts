@@ -119,17 +119,17 @@ export function capacity(state: PlayerState, resource: ResourceId): number {
   let units = BALANCE.baseStorage[resource];
   let higher = 0;
   for (const id of ORGANELLE_IDS) {
-    const effect = BALANCE.organelles[id].effect;
+    const data = BALANCE.organelles[id];
+    const effect = data.effect;
     if (effect.kind === "storage") {
       const level = state.organelles[id];
-      units += effect.addPerLevel * level;
-      // Au-delà du niveau maximum d'origine, chaque niveau agrandit toute la réserve.
-      higher += Math.max(0, level - BALANCE.organelles[id].maxLevel);
+      units += effect.addPerLevel * Math.min(level, data.maxLevel);
+      // Au-delà du niveau maximum d'origine, chaque niveau agrandit toute la réserve au même
+      // rythme que grandissent les prix : ce qui s'achète tient toujours dans la réserve.
+      higher += Math.max(0, level - data.maxLevel);
     }
   }
-  const grown = Math.floor(
-    (units * (100 + higher * BALANCE.higherRanks.storagePercentPerLevel)) / 100,
-  );
+  const grown = grow(units, BALANCE.higherRanks.costGrowthPercent, higher);
   return applyPercent(grown * MICRO, modifierPercent(state, "storage"));
 }
 

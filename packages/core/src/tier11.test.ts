@@ -13,6 +13,7 @@ import {
   createPlayer,
   defensePower,
   deserializeState,
+  drillMaxLevel,
   drillOffer,
   foePower,
   maxLevelOf,
@@ -58,7 +59,7 @@ function player(day: number, patch: Partial<PlayerState> = {}, tier = 9): Player
 }
 
 describe("la recherche militaire", () => {
-  it("s'ouvre au jour 5 ; chaque niveau coûte le double du précédent", () => {
+  it("s'ouvre au jour 5 ; chaque niveau coûte le double du précédent ; les plus hauts attendent les rangs supérieurs", () => {
     const early = { ...player(4), tier: 7 };
     expect(applyOrder(early, { type: "drill", power: "fury" }, early.now)).toEqual({
       ok: false,
@@ -78,15 +79,19 @@ describe("la recherche militaire", () => {
       level: 1,
     });
     expect(drillOffer(step.state, "fury").cost.sugar).toBe(2 * first.cost.sugar);
-    const top = { ...state, drills: { ...state.drills, fury: BALANCE.drills.maxLevel - 1 } };
+    const top = { ...state, drills: { ...state.drills, fury: drillMaxLevel(state) - 1 } };
     expect(drillOffer(top, "fury").cost.sugar).toBe(
-      first.cost.sugar * 2 ** (BALANCE.drills.maxLevel - 1),
+      first.cost.sugar * 2 ** (drillMaxLevel(state) - 1),
     );
-    const maxed = { ...state, drills: { ...state.drills, fury: BALANCE.drills.maxLevel } };
+    const maxed = { ...state, drills: { ...state.drills, fury: drillMaxLevel(state) } };
     expect(applyOrder(maxed, { type: "drill", power: "fury" }, state.now)).toEqual({
       ok: false,
       error: "maxLevel",
     });
+    // Les niveaux les plus chers attendent une réserve assez grande pour les payer.
+    expect(drillMaxLevel(state)).toBe(3);
+    expect(drillMaxLevel({ ...state, tier: 10 })).toBe(5);
+    expect(drillMaxLevel({ ...state, tier: 12 })).toBe(8);
     const poor = { ...state, resources: { sugar: 0, bricks: 0, proteins: 0 } };
     expect(applyOrder(poor, { type: "drill", power: "fury" }, state.now)).toEqual({
       ok: false,

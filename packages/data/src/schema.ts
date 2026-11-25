@@ -545,8 +545,6 @@ export const BalanceSchema = z.strictObject({
     timeGrowthPercent: z.number().int().min(100),
     /** Un niveau supérieur dure au moins cela, multiplié par son rang au-dessus du maximum d'origine. */
     minMinutesPerLevel: positiveInt,
-    /** Ce que chaque niveau supérieur d'un organite de réserve ajoute au stockage, en pourcentage. */
-    storagePercentPerLevel: positiveInt,
   }),
   /** La course à l'APEX : sortir des eaux depuis la dernière zone, et arriver avant les autres. */
   apex: z.strictObject({
@@ -576,7 +574,8 @@ export const BalanceSchema = z.strictObject({
    */
   drills: z.strictObject({
     tier: positiveInt,
-    maxLevel: positiveInt,
+    /** Le niveau le plus haut permis, palier après palier : chaque niveau doit tenir dans la réserve. */
+    levels: z.array(z.strictObject({ tier: positiveInt, maxLevel: positiveInt })).min(1),
     cost: z.strictObject({ sugar: positiveInt, bricks: positiveInt, proteins: positiveInt }),
     costGrowthPercent: z.number().int().min(100),
     powers: z.record(

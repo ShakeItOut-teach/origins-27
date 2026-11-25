@@ -1,5 +1,6 @@
 import {
   MICRO,
+  drillMaxLevel,
   drillOffer,
   genesMissing,
   productionRate,
@@ -136,7 +137,7 @@ export function TroopPanel({ state, lang, onOrder }: Props) {
                 <div className="tech-head">
                   <strong>{t(`drill.${id}.name`)}</strong>
                   <span className="tech-level">
-                    {t("label.level")} {level} / {BALANCE.drills.maxLevel}
+                    {t("label.level")} {level} / {drillMaxLevel(state)}
                   </span>
                 </div>
                 <p className="tech-effect">

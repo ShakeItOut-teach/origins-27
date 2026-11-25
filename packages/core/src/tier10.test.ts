@@ -88,7 +88,7 @@ describe("palier 10 : les rangs supérieurs", () => {
     expect(levelDuration(state, "mitochondrion", 2)).toBeLessThan(60_000);
   });
 
-  it("on monte jusqu'au niveau 10 : la production suit, la réserve grandit bien plus vite", () => {
+  it("on monte jusqu'au niveau 10 : la production suit, la réserve grandit aussi vite que les prix", () => {
     let state = player(13);
     const rate = productionRate(state, "sugar");
     const store = capacity(state, "sugar");
@@ -105,7 +105,7 @@ describe("palier 10 : les rangs supérieurs", () => {
       error: "maxLevel",
     });
     const big = { ...state, organelles: { ...state.organelles, vacuole: 10 } };
-    expect(capacity(big, "sugar")).toBeGreaterThan(store * 6);
+    expect(capacity(big, "sugar")).toBeGreaterThan(store * 3);
     // De quoi payer le plus cher des niveaux 10.
     for (const id of ORGANELLE_IDS) {
       expect(levelCost(big, id, 10).sugar).toBeLessThanOrEqual(capacity(big, "sugar"));

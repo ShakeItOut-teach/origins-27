@@ -414,3 +414,28 @@ ramener à une part du temps restant.
 Effet à surveiller : les récompenses de ligue et du Léviathan dépassent désormais la réserve
 quand on ouvre le coffre. C'est voulu (« un coffre est un cadeau »), mais cela donne aux
 joueurs un moyen de stocker au-delà du plafond.
+
+## 2026-11-25 — Tout ce qui s'achète tient dans la réserve
+
+Bug signalé par un testeur au jour 1 : Vacuole au niveau 5 (le plus haut permis), réserve
+pleine à 680 ATP, Réticulum 5 à 786 ATP. Le joueur ne pouvait plus rien faire. Le même défaut
+touchait presque tout : organites des paliers 5 à 9 (Noyau 5 : 1 311), rangs supérieurs
+(Noyau 20 : 67 091 contre 24 800 de réserve) et recherche militaire (niveau 8 : 38 400).
+
+| Réglage                                  | Avant                       | Après                                                 |
+| ---------------------------------------- | --------------------------- | ----------------------------------------------------- |
+| Vacuole, réserve par niveau              | +120                        | +260 (niveau 5 : 1 380 ATP, 1 400 lipides)            |
+| Vacuole au-delà du niveau 5              | +60 % de la base par niveau | ×1,3 par niveau, comme les prix                       |
+| Recherche militaire, niveau le plus haut | 8 dès le jour 5             | 3 au jour 5, 5 au jour 13, 6 au jour 17, 8 au jour 21 |
+| Accélérateurs                            | utilisables au jour 9       | utilisables au jour 4 (le concours en donne)          |
+
+Un test vérifie désormais, à chaque palier, que chaque achat (organites, évolutions, pouvoirs,
+remontées, mutations, dons, cellules filles, partage de gènes, sortie des eaux) tient dans la
+plus grande réserve possible à ce palier.
+
+Mesure, cinq saisons simulées (3 à 20 connexions par jour) : connexions « trop pauvre pour
+rien lancer » 67 → 0 (dix connexions par jour), 187 → 3 (vingt par jour). Le « creux du
+jour 9 » n'existait qu'à cause de ce défaut. À la place, les joueurs les plus actifs ont tout
+au niveau le plus haut aux jours 1 à 3 et 8 à 12 : la fiche le dit désormais (« les rangs
+supérieurs l'élèveront au jour 13 »). Il reste de quoi faire (chasses, attaques, cellules
+filles), mais plus rien à construire ces jours-là.

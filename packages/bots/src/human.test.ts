@@ -1,10 +1,22 @@
+import { OrderSchema } from "@o27/data";
 import { describe, expect, it, vi } from "vitest";
 import { HUMAN_TEN_A_DAY, simulateHuman } from "./human";
 
 vi.setConfig({ testTimeout: 60_000 });
 
 describe("une saison au rythme humain (dix connexions par jour)", () => {
-  const report = simulateHuman({ ...HUMAN_TEN_A_DAY, seed: 7, worldSeed: 27, slot: 4 });
+  const refusedBySchema: string[] = [];
+  const report = simulateHuman({
+    ...HUMAN_TEN_A_DAY,
+    seed: 7,
+    worldSeed: 27,
+    slot: 4,
+    observe: {
+      order(order) {
+        if (!OrderSchema.safeParse(order).success) refusedBySchema.push(JSON.stringify(order));
+      },
+    },
+  });
   const at = (day: number) => {
     const found = report.days.find((entry) => entry.day === day);
     if (found === undefined) throw new Error("jour attendu");
@@ -23,6 +35,14 @@ describe("une saison au rythme humain (dix connexions par jour)", () => {
     expect(at(5).tier).toBeGreaterThanOrEqual(8);
     expect(at(9).tier).toBeGreaterThanOrEqual(9);
     expect(report.milestones["zone éclairée atteinte"]).toBeLessThanOrEqual(19);
+  });
+
+  it("le serveur accepterait chacun de ses ordres", () => {
+    expect(refusedBySchema).toEqual([]);
+  });
+
+  it("il n'est jamais bloqué par un prix plus grand que sa réserve", () => {
+    for (const day of report.days) expect(day.sessionsTooPoor).toBe(0);
   });
 
   it("il ne meurt pas de faim et garde une armée", () => {

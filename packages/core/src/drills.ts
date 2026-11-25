@@ -1,7 +1,7 @@
 /**
  * La recherche militaire : de petits pouvoirs pour les cellules filles. Chaque niveau coûte
  * le double du précédent : les premiers sont à portée de tous, les derniers demandent une
- * réserve immense.
+ * réserve immense, et ne s'ouvrent qu'avec les rangs supérieurs, quand la réserve les contient.
  */
 import { BALANCE, DRILL_IDS } from "@o27/data";
 import type { DrillId, ResourceId, StatId } from "@o27/data";
@@ -27,6 +27,13 @@ export interface DrillOffer {
   readonly blocked: "locked" | "maxLevel" | null;
 }
 
+/** Le niveau le plus haut qu'un pouvoir peut atteindre à ce palier. */
+export function drillMaxLevel(state: PlayerState): number {
+  let max = 0;
+  for (const step of RULES.levels) if (state.tier >= step.tier) max = Math.max(max, step.maxLevel);
+  return max;
+}
+
 /** Ce que coûte le niveau suivant d'un pouvoir. */
 export function drillOffer(state: PlayerState, id: DrillId): DrillOffer {
   const level = state.drills[id];
@@ -41,6 +48,6 @@ export function drillOffer(state: PlayerState, id: DrillId): DrillOffer {
       bricks: RULES.cost.bricks * factor,
       proteins: RULES.cost.proteins * factor,
     },
-    blocked: state.tier < RULES.tier ? "locked" : level >= RULES.maxLevel ? "maxLevel" : null,
+    blocked: state.tier < RULES.tier ? "locked" : level >= drillMaxLevel(state) ? "maxLevel" : null,
   };
 }

@@ -24,7 +24,8 @@ export const BALANCE: Balance = BalanceSchema.parse({
       buildSeconds: 45,
       upgradeBricks: 30,
       maxLevel: 5,
-      effect: { kind: "storage", addPerLevel: 120 },
+      // Au niveau 5, la réserve doit contenir le prix du plus cher des organites (Noyau 5 : 1 311).
+      effect: { kind: "storage", addPerLevel: 260 },
     },
     cilia: {
       tier: 1,
@@ -675,7 +676,6 @@ export const BALANCE: Balance = BalanceSchema.parse({
     costGrowthPercent: 130,
     timeGrowthPercent: 170,
     minMinutesPerLevel: 30,
-    storagePercentPerLevel: 60,
   },
   apex: {
     tier: 12,
@@ -694,7 +694,12 @@ export const BALANCE: Balance = BalanceSchema.parse({
   },
   drills: {
     tier: 8,
-    maxLevel: 8,
+    levels: [
+      { tier: 8, maxLevel: 3 },
+      { tier: 10, maxLevel: 5 },
+      { tier: 11, maxLevel: 6 },
+      { tier: 12, maxLevel: 8 },
+    ],
     cost: { sugar: 300, bricks: 200, proteins: 40 },
     costGrowthPercent: 200,
     powers: {

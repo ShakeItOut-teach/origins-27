@@ -154,7 +154,8 @@ describe("l'accélérateur", () => {
     const again = ok({ ...done, resources: rich }, { type: "upgrade", organelle: "ribosome" });
     expect(again.construction).not.toBeNull();
     expect(refusal(again, { type: "useBoost", target: "construction" })).toBe("noBoost");
-    const early = { ...player({ boosts: 1 }, SEASON + 5 * DAY_MS), tier: 8 };
+    // Avant les classements et le concours, l'accélérateur n'existe pas encore.
+    const early = { ...player({ boosts: 1 }, SEASON + 2 * DAY_MS), tier: 6 };
     expect(refusal(early, { type: "useBoost", target: "construction" })).toBe("locked");
   });
 });

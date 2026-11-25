@@ -164,7 +164,7 @@ describe("palier 1 : construire", () => {
 
   it("la réserve agrandit le stockage ; rien n'augmente le toucher, qui vaut un dixième", () => {
     const state = atTier2();
-    expect(capacity(state, "sugar")).toBe((BALANCE.baseStorage.sugar + 120) * MICRO);
+    expect(capacity(state, "sugar")).toBe((BALANCE.baseStorage.sugar + 260) * MICRO);
     expect(tapYield()).toBe(MICRO / 10);
     expect(BALANCE.organelles.cilia.effect.kind).toBe("bonus");
   });

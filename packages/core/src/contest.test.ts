@@ -4,6 +4,7 @@ import {
   DAY_MS,
   MICRO,
   advance,
+  applyOrder,
   contestBoard,
   contestProgress,
   contestRewardFor,
@@ -175,5 +176,19 @@ describe("le concours de la semaine", () => {
     const back = deserializeState(JSON.stringify(old));
     expect(back.contest).toBeNull();
     expect(advance(back, state.now + 1000).state.contest?.week).toBe(1);
+  });
+
+  it("les accélérateurs gagnés au concours servent dès qu'on les reçoit, avant le jour 9", () => {
+    // Le premier concours finit au jour 8 : le joueur n'a pas encore les alliances.
+    const state = player(8, { boosts: 3 });
+    expect(state.tier).toBe(8);
+    const building = applyOrder(state, { type: "upgrade", organelle: "mitochondrion" }, state.now);
+    if (!building.ok) throw new Error("chantier refusé");
+    const boosted = applyOrder(
+      building.state,
+      { type: "useBoost", target: "construction" },
+      state.now,
+    );
+    expect(boosted.ok).toBe(true);
   });
 });

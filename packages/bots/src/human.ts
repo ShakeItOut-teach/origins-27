@@ -51,7 +51,7 @@ import {
   visiblePrey,
   winChance,
 } from "@o27/core";
-import type { GameEvent, PlayerState } from "@o27/core";
+import type { GameEvent, OrderResult, PlayerState } from "@o27/core";
 import {
   ALLIANCE_TECH_IDS,
   BALANCE,
@@ -78,6 +78,11 @@ export interface HumanOptions {
   readonly sessionMinutes: number;
   /** Attaques envoyées contre des rivaux, par jour au plus. */
   readonly raidsPerDay: number;
+  /** Pour les contrôles : chaque ordre tenté et sa réponse, et l'état à la fin de chaque jour. */
+  readonly observe?: {
+    readonly order?: (order: Order, result: OrderResult, before: PlayerState) => void;
+    readonly dayEnd?: (state: PlayerState, day: number) => void;
+  };
 }
 
 export interface DayReport {
@@ -197,6 +202,7 @@ export function simulateHuman(options: HumanOptions): HumanReport {
   };
   const send = (order: Order, now: number): boolean => {
     const result = applyOrder(state, order, now);
+    options.observe?.order?.(order, result, state);
     if (!result.ok) return false;
     state = result.state;
     absorb(result.events);
@@ -506,6 +512,7 @@ export function simulateHuman(options: HumanOptions): HumanReport {
       }
     }
     pass(seasonStart + day * DAY_MS - 60_000);
+    options.observe?.dayEnd?.(state, day);
 
     const open = ORGANELLE_IDS.filter((id) => BALANCE.organelles[id].tier <= state.tier);
     const maxed = open.filter((id) => state.organelles[id] >= maxLevelOf(state, id));

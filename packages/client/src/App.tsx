@@ -28,7 +28,14 @@ import {
   productionRate,
 } from "@o27/core";
 import type { AbsenceSummary, PlayerState } from "@o27/core";
-import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS, SEASON_DAYS } from "@o27/data";
+import {
+  BALANCE,
+  MAX_RELEASED_TIER,
+  ORGANELLE_IDS,
+  RESOURCE_IDS,
+  SEASON_DAYS,
+  UNLOCKS,
+} from "@o27/data";
 import type {
   BannerId,
   EvolutionId,
@@ -1465,6 +1472,13 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }
   const toLevel = level + 1;
   const cost = levelCost(state, id, toLevel);
   const affordable = canAfford(state, id, toLevel) && state.construction === null;
+  // Un prix plus grand que la réserve ne se paie jamais : on dit quoi faire.
+  const tooBig = RESOURCE_IDS.some((resource) => cost[resource] > capacity(state, resource));
+  // Au plus haut : on dit si et quand les rangs supérieurs l'élèveront.
+  const raisedOn = BALANCE.higherRanks.steps
+    .filter((step) => step.tier > state.tier && step.maxLevel > maxLevelOf(state, id))
+    .map((step) => UNLOCKS.find((entry) => entry.tier === step.tier)?.minDay ?? null)
+    .find((day) => day !== null);
 
   return (
     <div className="veil veil-bottom" onClick={onClose}>
@@ -1520,8 +1534,21 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }
           </button>
         )}
 
+        {level > 0 && canUpgrade && maxed && !building && (
+          <p className="sheet-note" data-testid="sheet-maxed">
+            {raisedOn === undefined || raisedOn > SEASON_DAYS
+              ? t("sheet.maxed")
+              : t("sheet.maxedUntil").replace("{d}", String(raisedOn))}
+          </p>
+        )}
+
         {offersAction && (
           <>
+            {tooBig && id !== "vacuole" && (
+              <p className="sheet-note" data-testid="sheet-too-big">
+                {t("sheet.tooBig").replace("{o}", t("organelle.vacuole.name").toLowerCase())}
+              </p>
+            )}
             <div className="costs">
               {RESOURCE_IDS.filter((resource) => cost[resource] > 0).map((resource) => (
                 <span

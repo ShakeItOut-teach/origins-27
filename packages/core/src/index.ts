@@ -124,7 +124,7 @@ export {
 } from "./alliance";
 export type { BannerRow } from "./alliance";
 export { HARVESTS_KEPT, REPORTS_KEPT } from "./reports";
-export { drillOffer, drillPercent } from "./drills";
+export { drillMaxLevel, drillOffer, drillPercent } from "./drills";
 export type { DrillOffer } from "./drills";
 export { crisisFamily, crisisKind, crisisOf, crisisPercent, crisisRate } from "./crisis";
 export type { Crisis, CrisisPhase } from "./crisis";

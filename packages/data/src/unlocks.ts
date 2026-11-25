@@ -66,7 +66,8 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
     condition: null,
     minDay: 4,
     ui: ["power", "ranking", "leagues", "contest", "predators", "evolutions"],
-    orders: ["huntPredator", "research"],
+    // Le concours donne ses premiers accélérateurs : on peut s'en servir aussitôt.
+    orders: ["huntPredator", "research", "useBoost"],
   },
   {
     tier: 8,
@@ -89,7 +90,6 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
       "askHelp",
       "claimGift",
       "buyAlliance",
-      "useBoost",
     ],
   },
   {

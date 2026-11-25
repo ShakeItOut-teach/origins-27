@@ -2720,3 +2720,14 @@ p.season-next {
   text-decoration: none;
   cursor: pointer;
 }
+
+/* Une explication courte dans la fiche d'un organite : prix trop grand, niveau le plus haut. */
+.sheet-note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.sheet-note[data-testid="sheet-too-big"] {
+  color: var(--eosin);
+}
