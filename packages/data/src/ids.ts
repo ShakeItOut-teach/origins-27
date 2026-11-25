@@ -264,6 +264,7 @@ export const ORDER_TYPES = [
   "drill",
   "setAutoHarvest",
   "leaveWater",
+  "unqueue",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
@@ -385,6 +386,7 @@ export const UI_ELEMENT_IDS = [
   "chests",
   "dailyQuests",
   "autoHarvest",
+  "buildQueue",
   "rivals",
   "spy",
   "raid",

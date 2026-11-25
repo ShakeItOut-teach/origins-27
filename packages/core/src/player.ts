@@ -27,6 +27,7 @@ import type {
   Companion,
   Research,
   Construction,
+  QueuedBuild,
   DailyQuests,
   Expedition,
   GameEvent,
@@ -61,6 +62,7 @@ export function createPlayer(
     boosts: 0,
     drills: fill(DRILL_IDS, 0),
     autoHarvest: false,
+    buildQueue: [],
     apex: null,
     reports: [],
     chests: [],
@@ -198,6 +200,11 @@ export function serializeState(state: PlayerState): string {
     boosts: state.boosts,
     drills: pick(DRILL_IDS, state.drills),
     autoHarvest: state.autoHarvest,
+    buildQueue: state.buildQueue.map((entry) => ({
+      organelle: entry.organelle,
+      toLevel: entry.toLevel,
+      paid: { sugar: entry.paid.sugar, bricks: entry.paid.bricks },
+    })),
     apex: state.apex === null ? null : { endsAt: state.apex.endsAt, place: state.apex.place },
     contest: state.contest === null ? null : { week: state.contest.week, base: state.contest.base },
     chests: state.chests.map((chest) => ({
@@ -440,6 +447,22 @@ function readConstruction(value: unknown): Construction | null {
   }
   // Une sauvegarde d'avant les alliances : personne n'était encore venu aider.
   return { organelle, toLevel, endsAt, helped: value.helped === true };
+}
+
+function readQueue(value: unknown): QueuedBuild[] {
+  if (!Array.isArray(value)) throw new TypeError("sauvegarde invalide : file de chantiers");
+  return value.map((entry: unknown) => {
+    if (!isRecord(entry) || !isRecord(entry.paid)) {
+      throw new TypeError("sauvegarde invalide : file de chantiers");
+    }
+    const organelle = ORGANELLE_IDS.find((id) => id === entry.organelle);
+    const { toLevel } = entry;
+    const { sugar, bricks } = entry.paid;
+    if (organelle === undefined || !isCount(toLevel) || !isCount(sugar) || !isCount(bricks)) {
+      throw new TypeError("sauvegarde invalide : file de chantiers");
+    }
+    return { organelle, toLevel, paid: { sugar, bricks } };
+  });
 }
 
 function readAlliance(value: unknown): Alliance | null {
@@ -763,6 +786,8 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     // Avant la recherche militaire et la récolte automatique : rien d'acquis, rien d'enclenché.
     drills: raw.drills === undefined ? fill(DRILL_IDS, 0) : readCounts(DRILL_IDS, raw.drills),
     autoHarvest: raw.autoHarvest === true,
+    // Avant la file de chantiers : rien n'attendait.
+    buildQueue: raw.buildQueue === undefined ? [] : readQueue(raw.buildQueue),
     apex:
       isRecord(raw.apex) && isCount(raw.apex.endsAt) && isCount(raw.apex.place)
         ? { endsAt: raw.apex.endsAt, place: raw.apex.place }

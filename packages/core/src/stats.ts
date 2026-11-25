@@ -66,6 +66,25 @@ export function maxLevelOf(_state: PlayerState, organelle: OrganelleId): number 
   return Math.max(BALANCE.organelles[organelle].maxLevel, BALANCE.higherRanks.maxLevel);
 }
 
+/**
+ * Le niveau qu'aura un organite une fois achevés le chantier en cours et la file : c'est à
+ * partir de lui que l'on prévoit le niveau suivant.
+ */
+export function plannedLevel(state: PlayerState, organelle: OrganelleId): number {
+  let level = state.organelles[organelle];
+  if (state.construction?.organelle === organelle)
+    level = Math.max(level, state.construction.toLevel);
+  for (const entry of state.buildQueue) {
+    if (entry.organelle === organelle) level = Math.max(level, entry.toLevel);
+  }
+  return level;
+}
+
+/** Vrai si un chantier de plus peut attendre dans la file. */
+export function queueHasRoom(state: PlayerState): boolean {
+  return state.tier >= BALANCE.buildQueue.tier && state.buildQueue.length < BALANCE.buildQueue.size;
+}
+
 /** Vrai au-delà du niveau d'origine : les rangs supérieurs, longs et chers, pour les plus assidus. */
 export function isHigherLevel(organelle: OrganelleId, level: number): boolean {
   return level > BALANCE.organelles[organelle].maxLevel;

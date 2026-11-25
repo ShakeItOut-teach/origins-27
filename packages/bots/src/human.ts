@@ -7,6 +7,8 @@
 import {
   advance,
   allianceToday,
+  plannedLevel,
+  queueHasRoom,
   apexOffer,
   allianceView,
   applyOrder,
@@ -214,36 +216,40 @@ export function simulateHuman(options: HumanOptions): HumanReport {
   let raidsToday = 0;
   let nightSet = false;
 
+  /** Faute de quoi payer : bloqué si rien ne se construit, sinon il attend seulement la suite. */
+  const waiting = (): "poor" | "busy" => (state.construction === null ? "poor" : "busy");
+
   /** Lance un chantier : ce qui manque d'abord, puis l'amélioration la plus utile. */
   const build = (now: number): "started" | "nothing" | "poor" | "busy" => {
-    if (state.construction !== null) return "busy";
+    // Un chantier en cours : on remplit la file, s'il y a de la place.
+    if (state.construction !== null && !queueHasRoom(state)) return "busy";
     // Comme un joueur avisé : on monte d'abord le moins avancé, l'ordre de préférence départage.
     const even = BUILD_ORDER.filter((id) => BALANCE.organelles[id].tier <= state.tier).sort(
-      (one, other) => state.organelles[one] - state.organelles[other],
+      (one, other) => plannedLevel(state, one) - plannedLevel(state, other),
     );
     // Pour sortir des eaux, il faut un Noyau évolué : à l'approche de la course, il passe devant.
     // Et une Vacuole assez grande pour en contenir le prix.
     const race = state.tier >= BALANCE.apex.tier - 2 && state.apex === null;
     const first: OrganelleId[] = [];
-    if (race && state.organelles.nucleus < BALANCE.apex.nucleusLevel) first.push("nucleus");
+    if (race && plannedLevel(state, "nucleus") < BALANCE.apex.nucleusLevel) first.push("nucleus");
     if (race && capacity(state, "sugar") < BALANCE.apex.cost.sugar * MICRO) first.push("vacuole");
     const open: readonly OrganelleId[] = [...first, ...even.filter((id) => !first.includes(id))];
     let wanted = false;
     for (const id of open) {
-      const level = state.organelles[id];
+      const level = plannedLevel(state, id);
       if (level >= maxLevelOf(state, id)) continue;
       wanted = true;
       const cost = levelCost(state, id, level + 1);
       // Trop cher pour la réserve : il faut d'abord agrandir la Vacuole.
       const tooBig =
         cost.sugar > capacity(state, "sugar") || cost.bricks > capacity(state, "bricks");
-      if (tooBig && id !== "vacuole" && state.organelles.vacuole > 0) {
+      if (tooBig && id !== "vacuole" && plannedLevel(state, "vacuole") > 0) {
         if (send({ type: "upgrade", organelle: "vacuole" }, now)) return "started";
         continue;
       }
       // Pendant la course, on économise pour ce qui compte plutôt que de bâtir le reste.
       if (!affordable(state, cost)) {
-        if (first.includes(id)) return "poor";
+        if (first.includes(id)) return waiting();
         continue;
       }
       if (
@@ -255,7 +261,7 @@ export function simulateHuman(options: HumanOptions): HumanReport {
         return "started";
       }
     }
-    return wanted ? "poor" : "nothing";
+    return wanted ? waiting() : "nothing";
   };
 
   /** Exprime une évolution : la favorisée de la saison d'abord, puis la moins avancée. */
@@ -432,6 +438,10 @@ export function simulateHuman(options: HumanOptions): HumanReport {
       apexOffer(state).blocked === null &&
       !send({ type: "leaveWater" }, now);
     const built = ready ? "poor" : build(now);
+    // La file se remplit d'un coup : un chantier de plus tant qu'il y a de la place.
+    for (let more = 0; built === "started" && more < BALANCE.buildQueue.size; more++) {
+      if (build(now) !== "started") break;
+    }
     const researched = ready ? "poor" : research(now);
     if (state.boosts > 0) {
       if (state.research !== null && state.research.endsAt - now > 20 * 60_000) {
@@ -520,7 +530,10 @@ export function simulateHuman(options: HumanOptions): HumanReport {
       const idle = (value: string): boolean => value === "nothing";
       if (!started) {
         if (idle(lastBuild) && idle(lastResearch)) nothing += 1;
-        else if (lastBuild === "poor" || lastResearch === "poor") poor += 1;
+        // Des chantiers tournent (en cours ou en file) : il n'est pas bloqué, il attend.
+        else if (lastBuild === "poor" || (lastResearch === "poor" && lastBuild !== "busy")) {
+          poor += 1;
+        }
       }
     }
     pass(seasonStart + day * DAY_MS - 60_000);

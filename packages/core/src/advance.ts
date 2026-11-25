@@ -13,7 +13,7 @@ import { leagueStep } from "./power";
 import { trackReports } from "./reports";
 import { BALANCE, PLACE_RESOURCE, RESOURCE_IDS, TROOP_IDS } from "@o27/data";
 import type { GeneFamily } from "@o27/data";
-import { capacity, modifierPercent, productionRate } from "./stats";
+import { capacity, levelDuration, modifierPercent, productionRate } from "./stats";
 import { partyOf, partySize, resolveHunt, trainMs, upkeepRate } from "./hunt";
 import { ensureQuests, renewQuests, trackQuests } from "./quests";
 import { ensureIncoming, raidBack, resolveIncoming, resolveRaid } from "./rivals";
@@ -83,6 +83,24 @@ function starve(state: PlayerState, at: number): Step {
   return {
     state: { ...state, troops },
     events: count > 0 ? [{ type: "troopsStarved", at, count }] : [],
+  };
+}
+
+/** Le chantier achevé, le suivant de la file démarre à l'instant même. */
+function startNext(state: PlayerState, at: number, done: GameEvent): Step {
+  const [next, ...rest] = state.buildQueue;
+  if (next === undefined) return { state, events: [done] };
+  const endsAt = at + levelDuration(state, next.organelle, next.toLevel);
+  return {
+    state: {
+      ...state,
+      buildQueue: rest,
+      construction: { organelle: next.organelle, toLevel: next.toLevel, endsAt, helped: false },
+    },
+    events: [
+      done,
+      { type: "constructionStarted", at, organelle: next.organelle, toLevel: next.toLevel, endsAt },
+    ],
   };
 }
 
@@ -300,17 +318,12 @@ export function advance(state: PlayerState, now: number): Step {
       const league = leagueStep(daily.state, at);
       step = { state: league.state, events: [...daily.events, ...league.events] };
     } else if (construction !== null && buildEnd === at) {
-      step = {
-        state: complete(ready, construction),
-        events: [
-          {
-            type: "constructionDone",
-            at,
-            organelle: construction.organelle,
-            level: construction.toLevel,
-          },
-        ],
-      };
+      step = startNext(complete(ready, construction), at, {
+        type: "constructionDone",
+        at,
+        organelle: construction.organelle,
+        level: construction.toLevel,
+      });
     } else if (research !== null && researchEnd === at) {
       step = {
         state: {

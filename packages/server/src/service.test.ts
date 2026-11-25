@@ -344,6 +344,28 @@ describe("océan et alliances", () => {
     // Sortir des eaux passe la validation ; trop tôt, le moteur le refuse.
     const apex = await handleOrder(deps, ALICE, { orderId: id(70), order: { type: "leaveWater" } });
     expect(apex).toMatchObject({ status: "done", outcome: { ok: false, error: "locked" } });
+    // La file de chantiers : un second chantier attend, puis on le retire, remboursé.
+    const first = await handleOrder(deps, ALICE, {
+      orderId: id(71),
+      order: { type: "upgrade", organelle: "mitochondrion" },
+    });
+    expect(first).toMatchObject({ status: "done", outcome: { ok: true } });
+    const queued = await handleOrder(deps, ALICE, {
+      orderId: id(72),
+      order: { type: "upgrade", organelle: "ribosome" },
+    });
+    expect(queued).toMatchObject({ status: "done", outcome: { ok: true } });
+    if (queued.status !== "done") return;
+    expect(queued.state.buildQueue).toHaveLength(1);
+    const removed = await handleOrder(deps, ALICE, { orderId: id(73), order: { type: "unqueue" } });
+    expect(removed).toMatchObject({ status: "done", outcome: { ok: true } });
+    if (removed.status !== "done") return;
+    expect(removed.state.buildQueue).toHaveLength(0);
+    expect(removed.state.resources.bricks).toBe(
+      first.status === "done" ? first.state.resources.bricks : 0,
+    );
+    const empty = await handleOrder(deps, ALICE, { orderId: id(74), order: { type: "unqueue" } });
+    expect(empty).toMatchObject({ status: "done", outcome: { ok: false, error: "queueEmpty" } });
     // Le journal a suivi le joueur côté serveur.
     expect(Array.isArray(boost.state.reports)).toBe(true);
     const wrong = await handleOrder(deps, ALICE, {

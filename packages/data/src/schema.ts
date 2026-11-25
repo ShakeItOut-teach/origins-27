@@ -635,6 +635,11 @@ export const BalanceSchema = z.strictObject({
   rewardChests: z.strictObject({ kept: positiveInt }),
   /** Un accélérateur retire ce temps-là au chantier ou à l'évolution en cours. */
   boost: z.strictObject({ minutes: positiveInt }),
+  /**
+   * La file de chantiers : derrière le chantier en cours, d'autres attendent, payés d'avance,
+   * et démarrent tout seuls l'un après l'autre.
+   */
+  buildQueue: z.strictObject({ tier: positiveInt, size: positiveInt }),
   /** Les alliances : six bannières, des technologies communes, de l'entraide. */
   alliance: z.strictObject({
     tier: positiveInt,
@@ -839,6 +844,8 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("leaveWater") }),
   /** Récolte automatique : au retour d'une récolte, les cellules repartent toutes seules. */
   z.strictObject({ type: z.literal("setAutoHarvest"), on: z.boolean() }),
+  /** Retirer le dernier chantier de la file : il est remboursé. */
+  z.strictObject({ type: z.literal("unqueue") }),
   /** Ouvrir un coffre de récompense en attente, désigné par sa place dans la liste. */
   z.strictObject({ type: z.literal("openReward"), index: z.number().int().min(0).max(99) }),
   /** Dépenser un accélérateur sur le chantier ou sur l'évolution en cours. */

@@ -25,6 +25,8 @@ if (params.has("vitesse")) {
   window.history.replaceState(null, "", window.location.pathname + window.location.hash);
 }
 const trial = speed !== 1;
+// Un peu de place en bas de page : le rappel de l'essai ne cache rien.
+if (trial) document.body.classList.add("trial");
 
 // Retour d'un lien reçu par e-mail : la session arrive dans l'adresse de la page.
 if (SERVER !== null && window.location.hash !== "") {

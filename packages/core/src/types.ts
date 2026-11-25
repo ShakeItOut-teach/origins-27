@@ -30,6 +30,14 @@ import type {
 export const MICRO = 1_000_000;
 export const DAY_MS = 86_400_000;
 
+/** Un chantier en file, payé d'avance : il démarre quand le précédent s'achève. */
+export interface QueuedBuild {
+  readonly organelle: OrganelleId;
+  readonly toLevel: number;
+  /** Ce qui a été payé, rendu si on le retire de la file. En millionièmes. */
+  readonly paid: { readonly sugar: number; readonly bricks: number };
+}
+
 export interface Construction {
   readonly organelle: OrganelleId;
   readonly toLevel: number;
@@ -220,6 +228,8 @@ export interface PlayerState {
   readonly drills: Readonly<Record<DrillId, number>>;
   /** Récolte automatique : au retour d'une récolte, les cellules repartent toutes seules. */
   readonly autoHarvest: boolean;
+  /** Les chantiers qui attendent derrière celui en cours, dans l'ordre. */
+  readonly buildQueue: readonly QueuedBuild[];
   /** Accélérateurs en réserve : chacun hâte un chantier ou une évolution. */
   readonly boosts: number;
   /** Le journal, du plus récent au plus ancien. */
@@ -299,6 +309,18 @@ export type GameEvent =
       readonly organelle: OrganelleId;
       readonly toLevel: number;
       readonly endsAt: number;
+    }
+  | {
+      readonly type: "constructionQueued";
+      readonly at: number;
+      readonly organelle: OrganelleId;
+      readonly toLevel: number;
+    }
+  | {
+      readonly type: "constructionUnqueued";
+      readonly at: number;
+      readonly organelle: OrganelleId;
+      readonly toLevel: number;
     }
   | {
       readonly type: "constructionDone";
@@ -566,7 +588,9 @@ export type OrderErrorCode =
   | "noChest"
   | "noBoost"
   /** Ni chantier ni évolution en cours : rien à hâter. */
-  | "nothingToBoost";
+  | "nothingToBoost"
+  /** La file de chantiers est vide : rien à retirer. */
+  | "queueEmpty";
 
 export type OrderResult =
   | { readonly ok: true; readonly state: PlayerState; readonly events: readonly GameEvent[] }

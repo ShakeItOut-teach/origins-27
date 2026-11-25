@@ -19,14 +19,16 @@ export function SpeedBadge({ speed, lang }: Props) {
         type="button"
         className="speed-pill"
         aria-expanded={open}
+        aria-label={n(translate(lang, "speed.title"), speed)}
         onClick={() => {
           setOpen(!open);
         }}
       >
-        {n(translate(lang, "speed.title"), speed)}
+        ×{speed}
       </button>
       {open && (
         <div className="speed-menu">
+          <strong>{n(translate(lang, "speed.title"), speed)}</strong>
           <p>{n(translate(lang, "speed.note"), speed)}</p>
           {SPEEDS.filter((other) => other !== speed).map((other) => (
             <a key={other} className="speed-action" href={`?vitesse=${String(other)}`}>

@@ -61,7 +61,8 @@ export const en = {
   "organelle.nursery.role":
     "Grows daughter cells, as many as you can feed. Each level speeds up births.",
   "unlock.4.title": "Your cell learns to divide",
-  "unlock.4.text": "Build the Nursery, then hunt the prey in the drop.",
+  "unlock.4.text":
+    "Build the Nursery, then hunt the prey in the drop. Your worksites can now wait in a queue: they start on their own, one after the other.",
   "troop.hunter.name": "Hunter",
   "troop.armored.name": "Armoured",
   "troop.swift.name": "Swift",
@@ -783,6 +784,11 @@ export const en = {
   "sheet.tooBig": "This price is more than your {o} can hold.",
   "sheet.openStore": "Upgrade the {o}",
   "sheet.buildStore": "Build the {o}",
+  "action.queue": "Queue it",
+  "queue.label": "Queued",
+  "queue.here": "Queued: level {n}.",
+  "queue.full": "The queue is full: {n} worksites are already waiting.",
+  "queue.remove": "Remove the last",
   "sheet.higher": "Higher rank: a long worksite, for the most dedicated.",
   "sheet.goFurther": "Go further",
   "advanced.title": "Go further",

@@ -23,7 +23,16 @@ import { leviathanBeaten, leviathanKind, leviathanOffer } from "./leviathan";
 import { shareOffer } from "./companion";
 import { researchOffer } from "./evolutions";
 import { troopUnlocked } from "./genes";
-import { capacity, foePower, levelCost, levelDuration, maxLevelOf, tapYield } from "./stats";
+import {
+  capacity,
+  foePower,
+  levelCost,
+  levelDuration,
+  maxLevelOf,
+  plannedLevel,
+  queueHasRoom,
+  tapYield,
+} from "./stats";
 import type { GameEvent, OrderErrorCode, OrderResult, PlayerState } from "./types";
 import { canTrain, partyOf, partySize, resolveHunt, trainMs } from "./hunt";
 import { openChest, trackQuests } from "./quests";
@@ -70,9 +79,27 @@ function harvest(state: PlayerState, taps: number): Outcome {
 }
 
 function startConstruction(state: PlayerState, organelle: OrganelleId, toLevel: number): Outcome {
-  if (state.construction !== null) return { error: "busy" };
+  if (state.construction !== null && !queueHasRoom(state)) return { error: "busy" };
   const cost = levelCost(state, organelle, toLevel);
   if (RESOURCE_IDS.some((id) => state.resources[id] < cost[id])) return { error: "insufficient" };
+  if (state.construction !== null) {
+    // Un chantier est en cours : celui-ci attend son tour dans la file, payé d'avance.
+    return {
+      state: {
+        ...state,
+        resources: {
+          ...state.resources,
+          sugar: state.resources.sugar - cost.sugar,
+          bricks: state.resources.bricks - cost.bricks,
+        },
+        buildQueue: [
+          ...state.buildQueue,
+          { organelle, toLevel, paid: { sugar: cost.sugar, bricks: cost.bricks } },
+        ],
+      },
+      events: [{ type: "constructionQueued", at: state.now, organelle, toLevel }],
+    };
+  }
   const endsAt = state.now + levelDuration(state, organelle, toLevel);
   return {
     state: {
@@ -90,15 +117,42 @@ function startConstruction(state: PlayerState, organelle: OrganelleId, toLevel: 
 
 function build(state: PlayerState, organelle: OrganelleId): Outcome {
   if (BALANCE.organelles[organelle].tier > state.tier) return { error: "locked" };
-  if (state.organelles[organelle] > 0) return { error: "alreadyBuilt" };
+  // Déjà bâti, en chantier ou en file : il ne reste qu'à l'améliorer.
+  if (plannedLevel(state, organelle) > 0) return { error: "alreadyBuilt" };
   return startConstruction(state, organelle, 1);
 }
 
 function upgrade(state: PlayerState, organelle: OrganelleId): Outcome {
-  const level = state.organelles[organelle];
+  // On améliore à partir du niveau prévu : chantier en cours et file compris.
+  const level = plannedLevel(state, organelle);
   if (level === 0) return { error: "notBuilt" };
   if (level >= maxLevelOf(state, organelle)) return { error: "maxLevel" };
   return startConstruction(state, organelle, level + 1);
+}
+
+/** Retirer le dernier chantier de la file : ce qu'il avait coûté est rendu. */
+function unqueue(state: PlayerState): Outcome {
+  const last = state.buildQueue.at(-1);
+  if (last === undefined) return { error: "queueEmpty" };
+  return {
+    state: {
+      ...state,
+      resources: {
+        ...state.resources,
+        sugar: state.resources.sugar + last.paid.sugar,
+        bricks: state.resources.bricks + last.paid.bricks,
+      },
+      buildQueue: state.buildQueue.slice(0, -1),
+    },
+    events: [
+      {
+        type: "constructionUnqueued",
+        at: state.now,
+        organelle: last.organelle,
+        toLevel: last.toLevel,
+      },
+    ],
+  };
 }
 
 function chooseMutation(state: PlayerState, mutation: MutationId): Outcome {
@@ -603,6 +657,8 @@ function execute(state: PlayerState, order: Order): Outcome {
       return build(state, order.organelle);
     case "upgrade":
       return upgrade(state, order.organelle);
+    case "unqueue":
+      return unqueue(state);
     case "chooseMutation":
       return chooseMutation(state, order.mutation);
     case "sendExpedition":

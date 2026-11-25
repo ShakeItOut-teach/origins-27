@@ -29,7 +29,8 @@ export const frScience = {
   "state.overflow": "Vacuole trop pleine : une partie du butin sera perdue. Améliorez la Vacuole.",
   "loss.text": "La vacuole était pleine. Améliorez la Vacuole pour tout garder.",
   "state.full": "Vacuole pleine",
-  "unlock.4.text": "Construisez le Centrosome, puis chassez les proies de la goutte.",
+  "unlock.4.text":
+    "Construisez le Centrosome, puis chassez les proies de la goutte. Vos chantiers peuvent désormais attendre en file : ils démarrent tout seuls l’un après l’autre.",
   "state.nurseryFull": "Centrosome saturé",
   "quest.tapSugar": "Récoltez {n} ATP en touchant la cellule",
   "quest.upgradeStore": "Améliorez la Vacuole",
@@ -89,7 +90,8 @@ export const enScience = {
   "state.overflow": "Vacuole too full: part of the loot will be lost. Upgrade the Vacuole.",
   "loss.text": "The vacuole was full. Upgrade the Vacuole to keep everything.",
   "state.full": "Vacuole full",
-  "unlock.4.text": "Build the Centrosome, then hunt the prey of the drop.",
+  "unlock.4.text":
+    "Build the Centrosome, then hunt the prey of the drop. Your worksites can now wait in a queue: they start on their own, one after the other.",
   "state.nurseryFull": "Centrosome saturated",
   "quest.tapSugar": "Gather {n} ATP by tapping the cell",
   "quest.upgradeStore": "Upgrade the Vacuole",

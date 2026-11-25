@@ -510,3 +510,28 @@ Mesure, cinq saisons simulées :
 À reprendre : le classement. Les joueurs à 10 et 20 connexions par jour sont premiers presque
 toute la saison, celui à 3 connexions entre le 200e et le 500e. Les 500 organismes simulés
 sont trop serrés (le 1er n'a que 40 % de plus que le 250e).
+
+## 2026-11-25 — La file de chantiers
+
+Demande du propriétaire : mettre plusieurs chantiers en file quand on a les ressources, pour
+aider les joueurs qui se connectent peu.
+
+| Réglage           | Valeur                                                           |
+| ----------------- | ---------------------------------------------------------------- |
+| Ouverture         | palier 4, avec la récolte automatique                            |
+| Taille de la file | 3 chantiers derrière celui en cours                              |
+| Paiement          | à la mise en file ; « Retirer le dernier » rembourse tout        |
+| Démarrage         | chacun à l'instant où le précédent s'achève, même appareil fermé |
+
+Mesure, cinq saisons simulées (somme des niveaux d'organites, avant → après) :
+
+| Saison | Connexions par jour | Jour 9   | Jour 27   | Puissance au jour 27 |
+| ------ | ------------------- | -------- | --------- | -------------------- |
+| s2     | 3                   | 49 → 78  | 97 → 136  | 12 822 → 27 465      |
+| s5     | 6                   | 73 → 82  | 117 → 137 | 9 017 → 29 140       |
+| s1     | 10                  | 94 → 103 | 150 → 159 | 22 605 → 26 262      |
+| s3     | 20                  | 90 → 95  | 150 → 156 | 27 840 → 28 807      |
+
+L'écart entre le joueur à 3 connexions et celui à 10 passe de 53 à 23 niveaux en fin de
+saison. Tous sortent des eaux au jour 22. Le classement simulé, déjà trop serré, l'est encore
+plus : presque tous les profils finissent premiers.

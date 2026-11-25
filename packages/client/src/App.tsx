@@ -5,6 +5,8 @@ import {
   speciesOf,
   maxLevelOf,
   isHigherLevel,
+  plannedLevel,
+  queueHasRoom,
   allianceToday,
   contestBoard,
   attackWarning,
@@ -674,6 +676,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           slots.map((id) => {
             const level = state.organelles[id];
             const building = state.construction?.organelle === id ? state.construction : null;
+            const queued = state.buildQueue.filter((entry) => entry.organelle === id).length;
             const ready =
               level === 0 && state.construction === null && canAfford(state, id, 1) && !building;
             return (
@@ -696,10 +699,37 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
                 {building && show("constructionTimer") && (
                   <span className="slot-timer">{formatDuration(building.endsAt - state.now)}</span>
                 )}
+                {queued > 0 && (
+                  <span className="slot-queue" data-testid={`slot-queue-${id}`}>
+                    +{queued}
+                  </span>
+                )}
               </button>
             );
           })}
       </section>
+
+      {!onMap && !onRivals && state.buildQueue.length > 0 && (
+        <div className="build-queue" data-testid="build-queue">
+          <span className="build-queue-label">{t("queue.label")}</span>
+          {state.buildQueue.map((entry, index) => (
+            <span key={index} className="build-queue-item">
+              <OrganelleIcon id={entry.organelle} />
+              {entry.toLevel}
+            </span>
+          ))}
+          <button
+            type="button"
+            className="link-button"
+            data-testid="unqueue"
+            onClick={() => {
+              store.send({ type: "unqueue" });
+            }}
+          >
+            {t("queue.remove")}
+          </button>
+        </div>
+      )}
 
       {show("map") && (
         <div className="views" role="tablist">
@@ -1522,11 +1552,16 @@ function OrganelleSheet({
   const t = (key: TextKey): string => translate(lang, key);
   const level = state.organelles[id];
   const building = state.construction?.organelle === id ? state.construction : null;
-  const maxed = level >= maxLevelOf(state, id);
-  const offersAction = !building && (level === 0 || (canUpgrade && !maxed));
-  const toLevel = level + 1;
+  // Le niveau une fois achevés le chantier en cours et la file : on prévoit à partir de lui.
+  const planned = plannedLevel(state, id);
+  const queuedHere = state.buildQueue.filter((entry) => entry.organelle === id);
+  const busy = state.construction !== null;
+  const queueOpen = state.tier >= BALANCE.buildQueue.tier;
+  const maxed = planned >= maxLevelOf(state, id);
+  const offersAction = (planned === 0 || (canUpgrade && !maxed)) && (!busy || queueHasRoom(state));
+  const toLevel = planned + 1;
   const cost = levelCost(state, id, toLevel);
-  const affordable = canAfford(state, id, toLevel) && state.construction === null;
+  const affordable = canAfford(state, id, toLevel);
   const openStore = (): void => {
     onOpen("vacuole");
   };
@@ -1585,7 +1620,20 @@ function OrganelleSheet({
           </button>
         )}
 
-        {level > 0 && canUpgrade && maxed && !building && (
+        {queuedHere.length > 0 && (
+          <p className="sheet-note" data-testid="sheet-queued">
+            {t("queue.here").replace(
+              "{n}",
+              queuedHere.map((entry) => String(entry.toLevel)).join(", "),
+            )}
+          </p>
+        )}
+        {queueOpen && busy && !queueHasRoom(state) && !maxed && (
+          <p className="sheet-note" data-testid="sheet-queue-full">
+            {t("queue.full").replace("{n}", String(BALANCE.buildQueue.size))}
+          </p>
+        )}
+        {level > 0 && canUpgrade && maxed && !building && queuedHere.length === 0 && (
           <p className="sheet-note" data-testid="sheet-maxed">
             {t("sheet.maxed")}
           </p>
@@ -1629,10 +1677,10 @@ function OrganelleSheet({
               disabled={!affordable}
               data-testid="sheet-action"
               onClick={() => {
-                onAct({ type: level === 0 ? "build" : "upgrade", organelle: id });
+                onAct({ type: planned === 0 ? "build" : "upgrade", organelle: id });
               }}
             >
-              {level === 0 ? t("action.build") : t("action.upgrade")}
+              {busy ? t("action.queue") : planned === 0 ? t("action.build") : t("action.upgrade")}
             </button>
           </>
         )}

@@ -732,6 +732,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
   },
   rewardChests: { kept: 30 },
   boost: { minutes: 60 },
+  buildQueue: { tier: 4, size: 3 },
   alliance: {
     tier: 9,
     memberBonusPercent: 5,

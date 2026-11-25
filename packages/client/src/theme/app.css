@@ -2679,9 +2679,15 @@ p.season-next {
   max-width: min(calc(100vw - 2 * var(--space-2)), 320px);
 }
 
+body.trial {
+  padding-bottom: calc(var(--touch) + var(--space-4));
+}
+
 .speed-pill {
+  min-width: var(--touch);
   min-height: var(--touch);
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2);
+  opacity: 0.85;
   border: var(--line);
   border-radius: var(--radius);
   background: var(--iodine);
@@ -2766,4 +2772,52 @@ p.season-next {
 
 .sheet-higher {
   color: var(--ink-soft);
+}
+
+/* File de chantiers : une marque sur l'emplacement, et une ligne sous la cellule. */
+.slot-queue {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--iodine);
+  color: var(--on-dark);
+  font-family: var(--font-number);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.build-queue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1) var(--space-2);
+  margin: 0 auto;
+  font-family: var(--font-number);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.build-queue-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--ink);
+}
+
+.build-queue-item svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Le jour et les boutons du haut restent fixes : un fond de papier, pour ne pas se mêler à ce qui défile dessous. */
+.season-day,
+.lang,
+.account-open {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius);
+  background: var(--paper);
 }

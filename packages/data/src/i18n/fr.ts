@@ -59,7 +59,8 @@ export const fr = {
   "organelle.nursery.role":
     "Fait naître des cellules filles, autant que vous pouvez en nourrir. Chaque niveau accélère les naissances.",
   "unlock.4.title": "Votre cellule apprend à se diviser",
-  "unlock.4.text": "Construisez la Pouponnière, puis chassez les proies de la goutte.",
+  "unlock.4.text":
+    "Construisez la Pouponnière, puis chassez les proies de la goutte. Vos chantiers peuvent désormais attendre en file : ils démarrent tout seuls l’un après l’autre.",
   "troop.hunter.name": "Chasseuse",
   "troop.armored.name": "Cuirassée",
   "troop.swift.name": "Rapide",
@@ -791,6 +792,11 @@ export const fr = {
   "sheet.tooBig": "Ce prix dépasse ce que peut contenir votre {o}.",
   "sheet.openStore": "Améliorer la {o}",
   "sheet.buildStore": "Construire la {o}",
+  "action.queue": "Mettre en file",
+  "queue.label": "En file",
+  "queue.here": "En file : niveau {n}.",
+  "queue.full": "La file est pleine : {n} chantiers attendent déjà.",
+  "queue.remove": "Retirer le dernier",
   "sheet.higher": "Rang supérieur : un long chantier, pour les plus assidus.",
   "sheet.goFurther": "Aller plus loin",
   "advanced.title": "Aller plus loin",

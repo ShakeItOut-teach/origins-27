@@ -175,6 +175,8 @@ export {
   levelDuration,
   maxLevelOf,
   isHigherLevel,
+  plannedLevel,
+  queueHasRoom,
   modifierPercent,
   productionRate,
   tapYield,
