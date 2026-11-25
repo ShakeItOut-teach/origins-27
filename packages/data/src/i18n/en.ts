@@ -780,4 +780,10 @@ export const en = {
   "museum.none": "No finished season on this device.",
   "museum.survivor": "Survivor: {name}",
   "museum.aquatic": "stayed in the water",
+  "speed.title": "Trial ×{n}",
+  "speed.note":
+    "Time runs {n} times faster. This trial game stays on this device: your real game is not touched.",
+  "speed.switch": "Switch to ×{n}",
+  "speed.restart": "Start a new season",
+  "speed.leave": "Back to normal time",
 } as const satisfies Record<TextKey, string>;

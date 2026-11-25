@@ -56,10 +56,12 @@ export interface StoreDeps {
   readonly newSeed: () => number;
   readonly remote?: Remote;
   readonly newId?: () => string;
+  /** Où ranger la partie ; l'essai accéléré a la sienne. */
+  readonly saveKey?: string;
 }
 
 function loadSaved(deps: StoreDeps): PlayerState | null {
-  const saved = deps.storage.getItem(SAVE_KEY);
+  const saved = deps.storage.getItem(deps.saveKey ?? SAVE_KEY);
   if (saved === null) return null;
   try {
     return deserializeState(saved);
@@ -107,7 +109,7 @@ export function createStore(deps: StoreDeps): GameStore {
   const save = (): void => {
     // Tant que le serveur n'a pas répondu, la cellule affichée n'est pas celle du joueur.
     if (!ready) return;
-    deps.storage.setItem(SAVE_KEY, serializeState(state));
+    deps.storage.setItem(deps.saveKey ?? SAVE_KEY, serializeState(state));
     lastSave = state.now;
   };
 

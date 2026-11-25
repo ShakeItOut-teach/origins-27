@@ -788,6 +788,12 @@ export const fr = {
   "museum.none": "Aucune saison terminée sur cet appareil.",
   "museum.survivor": "Survivant : {name}",
   "museum.aquatic": "restée dans l’eau",
+  "speed.title": "Essai ×{n}",
+  "speed.note":
+    "Le temps passe {n} fois plus vite. Cette partie d’essai reste sur cet appareil : votre vraie partie n’est pas touchée.",
+  "speed.switch": "Passer à ×{n}",
+  "speed.restart": "Recommencer une saison",
+  "speed.leave": "Revenir au temps normal",
 } as const;
 
 export type TextKey = keyof typeof fr;
