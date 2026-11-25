@@ -5,7 +5,9 @@
  */
 import { deserializeState } from "@o27/core";
 import type { AbsenceSummary, PlayerState } from "@o27/core";
-import type { Order } from "@o27/data";
+import type { Order, VisitInfo } from "@o27/data";
+import { createCommunity } from "./community";
+import type { Community } from "./community";
 import type { Remote } from "./store";
 
 const SESSION_KEY = "o27.session.v1";
@@ -19,6 +21,8 @@ export interface ApiDeps {
   readonly key: string;
   readonly fetch: typeof fetch;
   readonly storage: Pick<Storage, "getItem" | "setItem">;
+  /** Ce que l'appareil dit de lui à chaque visite, pour la mesure d'audience. */
+  readonly visitInfo?: () => VisitInfo;
 }
 
 /** Résultat d'une demande de lien : envoyé, adresse refusée, trop de demandes, ou panne. */
@@ -36,6 +40,8 @@ export interface Account {
 
 export interface Api extends Remote {
   readonly account: Account;
+  /** Avis, Muséum, statistiques, suppression du compte. */
+  readonly community: Community;
 }
 
 interface Session {
@@ -193,7 +199,10 @@ export function createApi(deps: ApiDeps): Api {
 
   const fetchState: Remote["fetchState"] = async () => {
     await bringPreviousGame();
-    const response = await call("etat", {});
+    const response = await call(
+      "etat",
+      deps.visitInfo === undefined ? {} : { info: deps.visitInfo() },
+    );
     if (!response.ok) throw new Error(`état : ${String(response.status)}`);
     const payload: unknown = await response.json();
     const state = readState(payload);
@@ -248,5 +257,12 @@ export function createApi(deps: ApiDeps): Api {
     },
   };
 
-  return { fetchState, sendOrder, account };
+  const community = createCommunity(call, () => {
+    // Le compte n'existe plus : la prochaine visite en recevra un neuf.
+    session = null;
+    deps.storage.setItem(SESSION_KEY, "");
+    deps.storage.setItem(PREVIOUS_KEY, "");
+  });
+
+  return { fetchState, sendOrder, account, community };
 }

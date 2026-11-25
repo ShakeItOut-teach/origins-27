@@ -916,3 +916,37 @@ export type Order = z.infer<typeof OrderSchema>;
 /** Ce que le client envoie pour passer un ordre. L'identifiant sert à ne jamais le compter deux fois. */
 export const OrderRequestSchema = z.strictObject({ orderId: z.uuid(), order: OrderSchema });
 export type OrderRequest = z.infer<typeof OrderRequestSchema>;
+
+/** Les sortes d'appareil que la mesure d'audience distingue. */
+export const DEVICE_KINDS = ["phone", "tablet", "desktop"] as const;
+export type DeviceKind = (typeof DEVICE_KINDS)[number];
+
+/**
+ * Ce que l'appareil dit de lui à chaque visite. Rien de personnel : la langue, la sorte
+ * d'appareil, si le jeu est installé, et le mot court du lien par lequel le joueur est arrivé.
+ */
+export const VisitInfoSchema = z.strictObject({
+  lang: z.enum(["fr", "en"]),
+  device: z.enum(DEVICE_KINDS),
+  installed: z.boolean(),
+  source: z
+    .string()
+    .regex(/^[a-z0-9-]{1,24}$/)
+    .nullable(),
+});
+export type VisitInfo = z.infer<typeof VisitInfoSchema>;
+
+/** Longueur maximale d'un avis. */
+export const FEEDBACK_MAX_LENGTH = 1000;
+/** Nombre d'avis qu'un joueur peut envoyer par jour. */
+export const FEEDBACK_PER_DAY = 5;
+
+/** Un avis de joueur : une note de 1 à 5, quelques mots, ou les deux. */
+export const FeedbackSchema = z
+  .strictObject({
+    rating: z.number().int().min(1).max(5).nullable(),
+    text: z.string().trim().max(FEEDBACK_MAX_LENGTH),
+    lang: z.enum(["fr", "en"]),
+  })
+  .refine((value) => value.rating !== null || value.text.length > 0);
+export type Feedback = z.infer<typeof FeedbackSchema>;

@@ -45,6 +45,8 @@ import type {
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
 import type { Account } from "./game/api";
+import type { Community } from "./game/community";
+import type { Installer } from "./game/visit";
 import type { GameStore } from "./game/store";
 import {
   formatAmount,
@@ -90,8 +92,12 @@ interface Props {
   readonly store: GameStore;
   readonly lang: Lang;
   readonly onSwitchLang: () => void;
-  /** Absent quand le jeu tourne sans serveur. */
+  /** Absents quand le jeu tourne sans serveur. */
   readonly account: Account | null;
+  readonly community: Community | null;
+  readonly installer: Installer;
+  /** Le compte vient d'être supprimé : l'appareil oublie tout et repart de zéro. */
+  readonly onAccountDeleted: () => void;
 }
 
 /** Ce que le joueur ouvre : un coffre en attente, le coffre d'une quête finie, le cadeau d'alliance. */
@@ -138,7 +144,15 @@ function canAfford(state: PlayerState, organelle: OrganelleId, toLevel: number):
   return RESOURCE_IDS.every((id) => state.resources[id] >= cost[id]);
 }
 
-export function App({ store, lang, onSwitchLang, account }: Props) {
+export function App({
+  store,
+  lang,
+  onSwitchLang,
+  account,
+  community,
+  installer,
+  onAccountDeleted,
+}: Props) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [view, setView] = useState<View>("cell");
   /** La rubrique de l'onglet Recherche que le joueur regarde. */
@@ -501,7 +515,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           }}
         />
       )}
-      {account !== null && (
+      {
         <button
           type="button"
           className="account-open"
@@ -516,11 +530,14 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
           </svg>
         </button>
-      )}
-      {account !== null && accountOpen && (
+      }
+      {accountOpen && (
         <AccountSheet
           account={account}
+          community={community}
+          installer={installer}
           lang={lang}
+          onDeleted={onAccountDeleted}
           onClose={() => {
             setAccountOpen(false);
           }}
@@ -1131,6 +1148,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
         <MuseumSheet
           state={state}
           lang={lang}
+          loadPlates={community?.plates ?? null}
           onClose={() => {
             setMuseumOpen(false);
           }}

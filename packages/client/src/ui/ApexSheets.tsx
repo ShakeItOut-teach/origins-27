@@ -1,17 +1,6 @@
-import {
-  MICRO,
-  apexArrivals,
-  apexLineage,
-  apexOffer,
-  crisisKind,
-  crisisOf,
-  leagueOf,
-  ranking,
-  seasonDay,
-  speciesOf,
-} from "@o27/core";
-import type { PlayerState } from "@o27/core";
-import { BALANCE, RESOURCE_IDS, SEASON_DAYS } from "@o27/data";
+import { MICRO, apexArrivals, apexLineage, apexOffer, museumPlate, seasonOver } from "@o27/core";
+import type { MuseumPlate, PlayerState } from "@o27/core";
+import { BALANCE, RESOURCE_IDS } from "@o27/data";
 import type { Order, TextKey } from "@o27/data";
 import { useEffect, useState } from "react";
 import { formatAmount, formatCountdown, translate } from "../game/text";
@@ -141,68 +130,64 @@ export function ApexSheet(
   );
 }
 
-/** Une planche du Muséum : ce qu'une espèce était à la fin d'une saison. */
-interface Plate {
-  readonly season: number;
-  readonly name: string;
-  readonly cousin: string;
-  readonly rank: number;
-  readonly of: number;
-  readonly league: number;
-  /** La lignée sortie des eaux, et sa place ; vide si l'espèce est restée dans l'eau. */
-  readonly lineage: string;
-  readonly place: number;
-  readonly crisis: string;
-}
-
 const MUSEUM_KEY = "o27.museum";
 
-function readPlates(): Plate[] {
+/** Les planches gardées sur l'appareil : celles d'avant le serveur, et celles de l'essai. */
+function localPlates(): MuseumPlate[] {
   try {
     const raw: unknown = JSON.parse(window.localStorage.getItem(MUSEUM_KEY) ?? "[]");
-    return Array.isArray(raw) ? (raw as Plate[]) : [];
+    return Array.isArray(raw) ? (raw as MuseumPlate[]) : [];
   } catch {
     return [];
   }
 }
 
-/** La planche de l'espèce du joueur, à l'instant de son état. */
-function plateOf(state: PlayerState): Plate {
-  const species = speciesOf(state);
-  const power = ranking(state, "power");
-  const crisis = crisisOf(state);
-  return {
-    season: state.seasonStart,
-    name: species.name,
-    cousin: species.cousin,
-    rank: power.mine.rank,
-    of: power.rows.length,
-    league: leagueOf(power.mine.rank, power.rows.length),
-    lineage: state.apex !== null && state.apex.place > 0 ? apexLineage(state) : "",
-    place: state.apex?.place ?? 0,
-    crisis: crisis !== null && crisis.phase === "done" ? crisisKind(state.worldSeed) : "",
-  };
+interface MuseumProps extends Props {
+  /** Lit les planches gardées par le serveur ; absent quand le jeu tourne sans serveur. */
+  readonly loadPlates: (() => Promise<MuseumPlate[]>) | null;
 }
 
 /**
  * Le Muséum : la planche de l'espèce telle qu'elle serait gardée aujourd'hui, et celles des
- * saisons finies sur cet appareil. La saison terminée, la planche y entre toute seule.
+ * saisons finies. Le serveur les garde avec la partie : on les retrouve sur tout appareil.
+ * Sans serveur, elles restent sur l'appareil.
  */
-export function MuseumSheet({ state, lang, onClose }: Props) {
+export function MuseumSheet({ state, lang, onClose, loadPlates }: MuseumProps) {
   const t = (key: TextKey): string => translate(lang, key);
-  const mine = plateOf(state);
-  const over = seasonDay(state, state.now) > SEASON_DAYS;
-  const [plates, setPlates] = useState<Plate[]>(readPlates);
+  const mine = museumPlate(state);
+  const over = seasonOver(state, state.now);
+  const [kept, setKept] = useState<MuseumPlate[]>(localPlates);
+  const [remote, setRemote] = useState<MuseumPlate[]>([]);
   useEffect(() => {
     if (!over) return;
-    const kept = readPlates();
-    if (kept.some((plate) => plate.season === mine.season)) return;
-    const next = [mine, ...kept].slice(0, 20);
+    const local = localPlates();
+    if (local.some((plate) => plate.season === mine.season)) return;
+    const next = [mine, ...local].slice(0, 20);
     window.localStorage.setItem(MUSEUM_KEY, JSON.stringify(next));
-    setPlates(next);
+    setKept(next);
     // La planche n'entre qu'une fois, à la fin : seul le passage de la fin de saison compte.
   }, [over]);
-  const show = (plate: Plate, key: string) => (
+  useEffect(() => {
+    if (loadPlates === null) return;
+    let alive = true;
+    loadPlates().then(
+      (found) => {
+        if (alive) setRemote(found);
+      },
+      () => {
+        // Pas de réponse : on montre ce que l'appareil a gardé.
+      },
+    );
+    return () => {
+      alive = false;
+    };
+  }, [loadPlates]);
+  // Le serveur fait foi ; l'appareil complète. La saison en cours n'est pas une saison passée.
+  const seasons = new Set(remote.map((plate) => plate.season));
+  const plates = [...remote, ...kept.filter((plate) => !seasons.has(plate.season))]
+    .filter((plate) => over || plate.season !== mine.season)
+    .sort((one, other) => other.season - one.season);
+  const show = (plate: MuseumPlate, key: string) => (
     <aside key={key} className="fossil" data-testid="museum-plate">
       <p className="species-name">{plate.name}</p>
       <p>

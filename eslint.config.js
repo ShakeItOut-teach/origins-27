@@ -14,6 +14,8 @@ export default tseslint.config(
       "*.config.js",
       "*.config.ts",
       "supabase/**",
+      // Fichiers servis tels quels (icônes, programme de mise en réserve) : ni TypeScript ni build.
+      "packages/client/public/**",
     ],
   },
   js.configs.recommended,

@@ -228,4 +228,202 @@ begin
 end;
 $$;
 
+-- 7. Autour du jeu : visites, ordres comptés, sauvegardes, avis, Muséum, statistiques.
+reset role;
+
+do $$
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+  bob constant uuid := '00000000-0000-4000-8000-00000000000b';
+  jour constant date := '2027-01-10';
+  saison constant bigint := 1800000000000;
+  stats jsonb;
+begin
+  -- Deux visites le même jour : une arrivée, une présence, une sauvegarde, une planche.
+  perform public.noter_visite(alice, jour, 10, 9, 3845, 'fr', 'phone', true, 'discord', saison, null);
+  perform public.noter_visite(
+    alice, jour, 10, 9, 3900, null, null, null, 'ailleurs', saison, '{"name":"Protomonas originis"}');
+  if (select count(*) from public.arrivees a where a.joueur = alice and a.source = 'discord') <> 1 then
+    raise exception 'ECHEC : l''arrivée n''est pas notée une seule fois, avec sa première source';
+  end if;
+  if (select p.visites from public.presences p where p.joueur = alice) <> 2 then
+    raise exception 'ECHEC : les visites du jour ne sont pas comptées';
+  end if;
+  if (select p.langue || '/' || p.puissance from public.presences p where p.joueur = alice) <> 'fr/3900' then
+    raise exception 'ECHEC : la présence ne garde pas la langue connue et la dernière puissance';
+  end if;
+  if (select count(*) from public.sauvegardes s where s.joueur = alice and s.jour = '2027-01-10') <> 1 then
+    raise exception 'ECHEC : la sauvegarde du jour n''est pas prise une seule fois';
+  end if;
+  if (select s.etat from public.sauvegardes s where s.joueur = alice)
+     <> (select e.etat from public.etats_joueur e where e.joueur = alice) then
+    raise exception 'ECHEC : la sauvegarde n''est pas la partie du joueur';
+  end if;
+  if jsonb_array_length(public.lire_planches(alice)) <> 1 then
+    raise exception 'ECHEC : la planche du Muséum n''est pas gardée';
+  end if;
+  if public.lire_planches(bob) <> '[]'::jsonb then
+    raise exception 'ECHEC : un joueur sans planche ne reçoit pas une liste vide';
+  end if;
+
+  -- Les ordres : comptés par type, acceptés ou refusés ; le joueur est présent ce jour-là.
+  perform public.noter_ordre(alice, jour, 10, 9, 'harvest', true);
+  perform public.noter_ordre(alice, jour, 10, 9, 'harvest', true);
+  perform public.noter_ordre(alice, jour, 10, 9, 'build', false);
+  perform public.noter_ordre(bob, jour + 1, 11, 4, 'harvest', true);
+  if (select u.acceptes from public.usage_ordres u where u.jour = '2027-01-10' and u.type = 'harvest') <> 2 then
+    raise exception 'ECHEC : les ordres acceptés ne sont pas comptés';
+  end if;
+  if (select u.refuses from public.usage_ordres u where u.jour = '2027-01-10' and u.type = 'build') <> 1 then
+    raise exception 'ECHEC : les ordres refusés ne sont pas comptés';
+  end if;
+  if (select p.ordres from public.presences p where p.joueur = alice) <> 3 then
+    raise exception 'ECHEC : les ordres du joueur ne sont pas comptés dans sa présence';
+  end if;
+  if (select p.visites from public.presences p where p.joueur = bob) <> 0 then
+    raise exception 'ECHEC : un ordre sans visite ne crée pas une présence sans visite';
+  end if;
+
+  -- Sauvegardes : sept jours gardés, les plus vieilles s'en vont.
+  insert into public.sauvegardes (joueur, jour, etat, version) values
+    (alice, jour - 8, '{}', 1),
+    (alice, jour - 6, '{}', 1);
+  perform public.noter_visite(alice, jour + 1, 11, 9, 4000, 'fr', 'phone', true, null, saison, null);
+  if exists (select 1 from public.sauvegardes s where s.joueur = alice and s.jour = '2027-01-02') then
+    raise exception 'ECHEC : une sauvegarde de plus de sept jours est restée';
+  end if;
+  if (select count(*) from public.sauvegardes s where s.joueur = alice) <> 3 then
+    raise exception 'ECHEC : les sauvegardes récentes ne sont pas toutes gardées';
+  end if;
+
+  -- Avis : gardés jusqu'à la limite du jour, pas au-delà.
+  if not public.donner_avis(alice, jour, 10, 9, 4::smallint, 'Bien', 'fr', 2) then
+    raise exception 'ECHEC : un premier avis est refusé';
+  end if;
+  if not public.donner_avis(alice, jour, 10, 9, null, 'Encore', 'fr', 2) then
+    raise exception 'ECHEC : un avis sans note est refusé';
+  end if;
+  if public.donner_avis(alice, jour, 10, 9, 5::smallint, '', 'fr', 2) then
+    raise exception 'ECHEC : un avis au-delà de la limite du jour est accepté';
+  end if;
+  if (select count(*) from public.avis) <> 2 then
+    raise exception 'ECHEC : le nombre d''avis gardés n''est pas le bon';
+  end if;
+
+  -- Statistiques : pour un gardien seulement, et sans aucun identifiant de joueur.
+  if public.statistiques(alice, jour + 1) is not null then
+    raise exception 'ECHEC : un compte qui n''est pas gardien lit les statistiques';
+  end if;
+  insert into public.gardiens (joueur) values (alice);
+  stats := public.statistiques(alice, jour + 1);
+  if (stats ->> 'joueurs')::integer <> 1 then
+    raise exception 'ECHEC : statistiques, nombre de joueurs arrivés : %', stats ->> 'joueurs';
+  end if;
+  if (stats ->> 'actifsAujourdhui')::integer <> 2 then
+    raise exception 'ECHEC : statistiques, joueurs actifs du jour : %', stats ->> 'actifsAujourdhui';
+  end if;
+  if jsonb_array_length(stats -> 'jours') <> 30 then
+    raise exception 'ECHEC : statistiques, il faut trente jours';
+  end if;
+  if (
+    select (r ->> 'arrives') || '/' || (r ->> 'revenus')
+    from jsonb_array_elements(stats -> 'retention') r
+    where (r ->> 'jour')::integer = 1
+  ) <> '1/1' then
+    raise exception 'ECHEC : statistiques, retour au lendemain : %', stats -> 'retention';
+  end if;
+  if (stats -> 'avis' ->> 'nombre')::integer <> 2 then
+    raise exception 'ECHEC : statistiques, nombre d''avis';
+  end if;
+  if stats::text like '%00000000-0000-4000-8000%' then
+    raise exception 'ECHEC : les statistiques laissent sortir un identifiant de joueur';
+  end if;
+end;
+$$;
+
+-- Le serveur peut tout noter.
+set local role service_role;
+do $$
+begin
+  perform public.noter_visite(
+    '00000000-0000-4000-8000-00000000000b', '2027-01-11', 11, 4, 10, 'en', 'desktop', false, null,
+    1800000000000, null);
+  perform public.noter_ordre('00000000-0000-4000-8000-00000000000b', '2027-01-11', 11, 4, 'harvest', true);
+  if (select count(*) from public.presences) < 3 then
+    raise exception 'ECHEC : le serveur ne lit pas les présences';
+  end if;
+end;
+$$;
+
+-- Un joueur connecté : il ne lit aucune de ces tables et n'appelle aucune de ces fonctions.
+set local role authenticated;
+do $$
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+  nom text;
+begin
+  foreach nom in array array[
+    'arrivees', 'presences', 'usage_ordres', 'avis', 'planches', 'sauvegardes', 'gardiens']
+  loop
+    begin
+      execute format('select count(*) from public.%I', nom);
+      raise exception 'ECHEC : un joueur lit la table %', nom;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+
+  begin
+    insert into public.gardiens (joueur) values (alice);
+    raise exception 'ECHEC : un joueur se nomme gardien';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.statistiques(alice, '2027-01-11');
+    raise exception 'ECHEC : un joueur appelle les statistiques';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.lire_planches(alice);
+    raise exception 'ECHEC : un joueur appelle la lecture des planches';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.donner_avis(alice, '2027-01-11', 11, 9, 5::smallint, '', 'fr', 5);
+    raise exception 'ECHEC : un joueur écrit un avis sans passer par le serveur';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.noter_visite(alice, '2027-01-11', 11, 9, 1, null, null, null, null, 1, null);
+    raise exception 'ECHEC : un joueur note lui-même une visite';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.noter_ordre(alice, '2027-01-11', 11, 9, 'harvest', true);
+    raise exception 'ECHEC : un joueur note lui-même un ordre';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
+-- 8. Suppression d'un compte : tout ce qui est au joueur s'en va ; son avis reste, sans lui.
+reset role;
+do $$
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+begin
+  delete from auth.users where id = alice;
+  if exists (select 1 from public.etats_joueur e where e.joueur = alice)
+    or exists (select 1 from public.presences p where p.joueur = alice)
+    or exists (select 1 from public.arrivees a where a.joueur = alice)
+    or exists (select 1 from public.planches p where p.joueur = alice)
+    or exists (select 1 from public.sauvegardes s where s.joueur = alice)
+    or exists (select 1 from public.gardiens g where g.joueur = alice) then
+    raise exception 'ECHEC : il reste des données du joueur après la suppression de son compte';
+  end if;
+  if (select count(*) from public.avis a where a.joueur is null) <> 2 then
+    raise exception 'ECHEC : les avis du joueur parti ne sont pas gardés sans lui';
+  end if;
+end;
+$$;
+
 rollback;
