@@ -29,6 +29,8 @@ interface Props {
   readonly showEvents: boolean;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
   readonly onOrder: (order: Order) => boolean;
+  /** Ouvre la fiche de la Vacuole, quand la réserve est trop petite pour un prix. */
+  readonly onOpenStore: () => void;
 }
 
 type Spot =
@@ -44,8 +46,18 @@ const AUTO_TIER = UNLOCKS.find((unlock) => unlock.orders.includes("setAutoHarves
 
 /** La goutte : la cellule au centre, les lieux et les proies autour. */
 export function MapView(props: Props) {
-  const { hidden, state, hue, lang, showPrey, showWorld, showPredators, showEvents, onOrder } =
-    props;
+  const {
+    hidden,
+    state,
+    hue,
+    lang,
+    showPrey,
+    showWorld,
+    showPredators,
+    showEvents,
+    onOrder,
+    onOpenStore,
+  } = props;
   const t = (key: TextKey): string => translate(lang, key);
   // Reculé, le joueur voit la goutte entière ; sinon, les alentours de sa cellule.
   const [far, setFar] = useState(false);
@@ -136,6 +148,7 @@ export function MapView(props: Props) {
             setFar(false);
           }}
           onOrder={onOrder}
+          onOpenStore={onOpenStore}
         />
       )}
       <section

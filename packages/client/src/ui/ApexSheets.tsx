@@ -18,6 +18,7 @@ import { formatAmount, formatCountdown, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { ResourceIcon } from "./icons";
 import { SheetFrame } from "./SheetFrame";
+import { StorageHint } from "./StorageHint";
 
 const RULES = BALANCE.apex;
 
@@ -28,8 +29,14 @@ interface Props {
 }
 
 /** La course à l'APEX : la lignée que les gènes dessinent, ce qu'il faut pour sortir des eaux, les récompenses. */
-export function ApexSheet(props: Props & { readonly onOrder: (order: Order) => boolean }) {
-  const { state, lang, onClose, onOrder } = props;
+export function ApexSheet(
+  props: Props & {
+    readonly onOrder: (order: Order) => boolean;
+    /** Ouvre la fiche de la Vacuole, quand la réserve est trop petite pour le prix. */
+    readonly onOpenStore: () => void;
+  },
+) {
+  const { state, lang, onClose, onOrder, onOpenStore } = props;
   const t = (key: TextKey): string => translate(lang, key);
   const offer = apexOffer(state);
   const lineage = apexLineage(state);
@@ -79,6 +86,7 @@ export function ApexSheet(props: Props & { readonly onOrder: (order: Order) => b
             ))}
             <span className="cost cost-time">{formatCountdown(offer.durationMs, lang)}</span>
           </div>
+          <StorageHint state={state} cost={offer.cost} lang={lang} onOpenStore={onOpenStore} />
           {blocked !== null && (
             <p className="sheet-building" data-testid="apex-status">
               {blocked}

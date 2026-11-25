@@ -77,6 +77,7 @@ import type { ChestLoot, ChestTone } from "./ui/ChestOverlay";
 import { CompanionSheet, companionName } from "./ui/CompanionSheet";
 import { ContestSheet } from "./ui/ContestSheet";
 import { EvolutionPanel } from "./ui/EvolutionPanel";
+import { StorageHint } from "./ui/StorageHint";
 import { GenomeSheet } from "./ui/GenomeSheet";
 import { LexiconSheet } from "./ui/LexiconSheet";
 import { QuestSheet } from "./ui/QuestSheet";
@@ -321,6 +322,12 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
     if (!result.ok && result.error === "storageFull") setFullFlash((n) => n + 1);
   };
 
+  /** Un prix dépasse la réserve : on referme ce qui est ouvert et on montre la Vacuole. */
+  const openStore = (): void => {
+    setApexOpen(false);
+    setView("cell");
+    setSelected("vacuole");
+  };
   const show = (element: Parameters<typeof isVisible>[0]): boolean =>
     isVisible(element, state.tier);
   const counters: ResourceId[] = ["sugar"];
@@ -432,7 +439,11 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
       </button>
       <p className="season-day" data-testid="season-day">
         {t("label.day").replace("{n}", String(Math.min(SEASON_DAYS, seasonDay(state, state.now))))}
-        <small> / {SEASON_DAYS}</small>
+        {/* Dans une boîte flexible, l'espace du début serait mangé : on le rend insécable. */}
+        <small>
+          {" / "}
+          {SEASON_DAYS}
+        </small>
       </p>
       <button
         type="button"
@@ -638,6 +649,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           showPredators={show("predators")}
           showEvents={show("zoneEvents")}
           onOrder={(order) => store.send(order).ok}
+          onOpenStore={openStore}
         />
       )}
 
@@ -1006,6 +1018,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
             setApexOpen(false);
           }}
           onOrder={(order) => store.send(order).ok}
+          onOpenStore={openStore}
         />
       )}
       {landed !== null && (
@@ -1350,6 +1363,7 @@ export function App({ store, lang, onSwitchLang, account }: Props) {
           onClose={() => {
             setSelected(null);
           }}
+          onOpen={setSelected}
           onAct={(order) => {
             if (store.send(order).ok) setSelected(null);
           }}
@@ -1458,12 +1472,23 @@ interface SheetProps {
   /** Un ordre qui laisse la fiche ouverte (faire naître une cellule fille). */
   readonly onOrder: (order: Order) => void;
   readonly onClose: () => void;
+  /** Ouvre la fiche d'un autre organite (la Vacuole, quand la réserve est trop petite). */
+  readonly onOpen: (id: OrganelleId) => void;
   readonly onAct: (
     order: { type: "build"; organelle: OrganelleId } | { type: "upgrade"; organelle: OrganelleId },
   ) => void;
 }
 
-function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }: SheetProps) {
+function OrganelleSheet({
+  state,
+  id,
+  lang,
+  canUpgrade,
+  onClose,
+  onOpen,
+  onAct,
+  onOrder,
+}: SheetProps) {
   const t = (key: TextKey): string => translate(lang, key);
   const level = state.organelles[id];
   const building = state.construction?.organelle === id ? state.construction : null;
@@ -1472,8 +1497,9 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }
   const toLevel = level + 1;
   const cost = levelCost(state, id, toLevel);
   const affordable = canAfford(state, id, toLevel) && state.construction === null;
-  // Un prix plus grand que la réserve ne se paie jamais : on dit quoi faire.
-  const tooBig = RESOURCE_IDS.some((resource) => cost[resource] > capacity(state, resource));
+  const openStore = (): void => {
+    onOpen("vacuole");
+  };
   // Au plus haut : on dit si et quand les rangs supérieurs l'élèveront.
   const raisedOn = BALANCE.higherRanks.steps
     .filter((step) => step.tier > state.tier && step.maxLevel > maxLevelOf(state, id))
@@ -1509,10 +1535,10 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }
         </div>
         <p className="sheet-role">{t(`organelle.${id}.role`)}</p>
         {id === "nursery" && level > 0 && (
-          <TroopPanel state={state} lang={lang} onOrder={onOrder} />
+          <TroopPanel state={state} lang={lang} onOrder={onOrder} onOpenStore={openStore} />
         )}
         {id === "nucleus" && level > 0 && (
-          <EvolutionPanel state={state} lang={lang} onOrder={onOrder} />
+          <EvolutionPanel state={state} lang={lang} onOrder={onOrder} onOpenStore={openStore} />
         )}
 
         {building && (
@@ -1544,10 +1570,8 @@ function OrganelleSheet({ state, id, lang, canUpgrade, onClose, onAct, onOrder }
 
         {offersAction && (
           <>
-            {tooBig && id !== "vacuole" && (
-              <p className="sheet-note" data-testid="sheet-too-big">
-                {t("sheet.tooBig").replace("{o}", t("organelle.vacuole.name").toLowerCase())}
-              </p>
+            {id !== "vacuole" && (
+              <StorageHint state={state} cost={cost} lang={lang} onOpenStore={openStore} />
             )}
             <div className="costs">
               {RESOURCE_IDS.filter((resource) => cost[resource] > 0).map((resource) => (

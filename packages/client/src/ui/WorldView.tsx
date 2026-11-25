@@ -44,6 +44,7 @@ import { EnergyIcon, ResourceIcon } from "./icons";
 import { SheetFrame } from "./SheetFrame";
 import { PreySheet } from "./PreySheet";
 import { RivalSheet } from "./RivalsView";
+import { StorageHint } from "./StorageHint";
 
 interface Props {
   readonly state: PlayerState;
@@ -57,6 +58,8 @@ interface Props {
   readonly onBack: () => void;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
   readonly onOrder: (order: Order) => boolean;
+  /** Ouvre la fiche de la Vacuole, quand la réserve est trop petite pour un prix. */
+  readonly onOpenStore: () => void;
 }
 
 const OCEAN = BALANCE.ocean;
@@ -68,7 +71,7 @@ function zoneName(lang: Lang, zone: number): string {
 
 /** L'océan entier : on le fait glisser, on recule, on touche un organisme ou un gisement. */
 export function WorldView(props: Props) {
-  const { state, hue, lang, showPredators, showEvents, onBack, onOrder } = props;
+  const { state, hue, lang, showPredators, showEvents, onBack, onOrder, onOpenStore } = props;
   const t = (key: TextKey): string => translate(lang, key);
   const home = useMemo(() => playerCell(state), [state.worldSeed, state.slot, state.zone]);
   const [camera, setCamera] = useState<WorldCamera>({ x: home.x, y: home.y, span: SPAN.start });
@@ -616,6 +619,7 @@ export function WorldView(props: Props) {
                   </span>
                 ))}
               </div>
+              <StorageHint state={state} cost={offer.cost} lang={lang} onOpenStore={onOpenStore} />
               {(() => {
                 let blocked: string | null = null;
                 if (!offer.open) {

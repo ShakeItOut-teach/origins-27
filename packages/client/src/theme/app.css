@@ -2728,6 +2728,26 @@ p.season-next {
   color: var(--ink-soft);
 }
 
-.sheet-note[data-testid="sheet-too-big"] {
+/* Prix plus grand que la réserve : on le dit, et on emmène le joueur à la Vacuole. */
+.storage-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  font-size: 14px;
   color: var(--eosin);
+}
+
+.link-button {
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }

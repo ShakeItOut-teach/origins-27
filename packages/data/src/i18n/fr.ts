@@ -788,7 +788,9 @@ export const fr = {
   "museum.none": "Aucune saison terminée sur cet appareil.",
   "museum.survivor": "Survivant : {name}",
   "museum.aquatic": "restée dans l’eau",
-  "sheet.tooBig": "Ce prix dépasse ce que peut contenir votre {o} : améliorez-la d’abord.",
+  "sheet.tooBig": "Ce prix dépasse ce que peut contenir votre {o}.",
+  "sheet.openStore": "Améliorer la {o}",
+  "sheet.buildStore": "Construire la {o}",
   "sheet.maxedUntil":
     "Niveau le plus haut pour l’instant. Les rangs supérieurs l’élèveront au jour {d}.",
   "sheet.maxed": "Niveau le plus haut atteint.",

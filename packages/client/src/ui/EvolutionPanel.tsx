@@ -4,12 +4,14 @@ import { BALANCE, EVOLUTION_BRANCHES, EVOLUTION_IDS, RESOURCE_IDS } from "@o27/d
 import type { Order, TextKey } from "@o27/data";
 import { formatAmount, formatAway, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
+import { StorageHint } from "./StorageHint";
 import { ResourceIcon } from "./icons";
 
 interface Props {
   readonly state: PlayerState;
   readonly lang: Lang;
   readonly onOrder: (order: Order) => void;
+  readonly onOpenStore: () => void;
 }
 
 /**
@@ -17,7 +19,7 @@ interface Props {
  * fois. Celles que la saison a endormies sont montrées, pour que le joueur sache ce qu'il
  * n'aura pas cette fois-ci.
  */
-export function EvolutionPanel({ state, lang, onOrder }: Props) {
+export function EvolutionPanel({ state, lang, onOrder, onOpenStore }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const draw = seasonDraw(state.worldSeed);
   const running = state.research;
@@ -83,6 +85,14 @@ export function EvolutionPanel({ state, lang, onOrder }: Props) {
                   {favoured && <span className="badge">{t("label.favoured")}</span>}
                 </p>
                 {blocked !== null && <p className="evolution-blocked">{blocked}</p>}
+                {offer.blocked === null && (
+                  <StorageHint
+                    state={state}
+                    cost={offer.cost}
+                    lang={lang}
+                    onOpenStore={onOpenStore}
+                  />
+                )}
                 {offer.blocked === null && (
                   <div className="evolution-act">
                     <span className="costs">

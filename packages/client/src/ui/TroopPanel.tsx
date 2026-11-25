@@ -14,12 +14,14 @@ import { BALANCE, DRILL_IDS, RESOURCE_IDS, STRONG_AGAINST, TROOP_IDS } from "@o2
 import type { Order, TextKey } from "@o27/data";
 import { formatAmount, formatDuration, formatRate, translate } from "../game/text";
 import type { Lang } from "../game/text";
+import { StorageHint } from "./StorageHint";
 import { PreyIcon, ResourceIcon, TroopIcon } from "./icons";
 
 interface Props {
   readonly state: PlayerState;
   readonly lang: Lang;
   readonly onOrder: (order: Order) => void;
+  readonly onOpenStore: () => void;
 }
 
 /** On fait naître les cellules filles une par une, ou par dix. */
@@ -30,7 +32,7 @@ const BATCHES = [1, 10] as const;
  * en faire naître. Leur nombre n'a pas de plafond : c'est l'entretien qui le limite.
  * Les cellules de rang 2 n'apparaissent qu'à leur palier ; chacune demande ses gènes.
  */
-export function TroopPanel({ state, lang, onOrder }: Props) {
+export function TroopPanel({ state, lang, onOrder, onOpenStore }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const owned = troopsOwned(state);
   const training = state.training;
@@ -145,6 +147,14 @@ export function TroopPanel({ state, lang, onOrder }: Props) {
                   {level > 0 && offer.blocked === null && " → "}
                   {offer.blocked === null && show(next)}
                 </p>
+                {offer.blocked === null && (
+                  <StorageHint
+                    state={state}
+                    cost={offer.cost}
+                    lang={lang}
+                    onOpenStore={onOpenStore}
+                  />
+                )}
                 {offer.blocked === null && (
                   <div className="tech-act">
                     <span className="costs">
