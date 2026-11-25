@@ -538,8 +538,11 @@ export const BalanceSchema = z.strictObject({
    * maximum d'origine. Ces niveaux-là coûtent et durent autrement, pour occuper la saison.
    */
   higherRanks: z.strictObject({
-    /** Le niveau maximum des organites, palier après palier. */
-    steps: z.array(z.strictObject({ tier: positiveInt, maxLevel: positiveInt })).min(1),
+    /**
+     * Le niveau maximum des organites, jour après jour : un ou deux niveaux de plus tous les
+     * deux jours, pour qu'un joueur assidu ait toujours un chantier à lancer.
+     */
+    steps: z.array(z.strictObject({ day: positiveInt, maxLevel: positiveInt })).min(1),
     /** Croissance du coût et de la durée d'un niveau au suivant, au-delà du maximum d'origine. */
     costGrowthPercent: z.number().int().min(100),
     timeGrowthPercent: z.number().int().min(100),

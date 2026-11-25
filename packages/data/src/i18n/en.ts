@@ -671,7 +671,7 @@ export const en = {
   "chest.kind.contest": "Contest chest",
   "unlock.10.title": "The higher ranks",
   "unlock.10.text":
-    "Your organelles can now go past level 5, up to level 10: these are long worksites, which boosters shorten. And three genes of the same family open its rank 3 daughter cell.",
+    "Three genes of the same family open its rank 3 daughter cell. Your organelles now go up to level 12: long worksites, which boosters shorten.",
   "troop.rotifer.name": "Devourer",
   "troop.rotifer.role": "Rank 3. Hits nine times harder than a rank 1 cell.",
   "troop.tardigrade.name": "Ironclad",
@@ -783,7 +783,7 @@ export const en = {
   "sheet.tooBig": "This price is more than your {o} can hold.",
   "sheet.openStore": "Upgrade the {o}",
   "sheet.buildStore": "Build the {o}",
-  "sheet.maxedUntil": "Highest level for now. Higher ranks will raise it on day {d}.",
+  "sheet.maxedUntil": "Highest level for now. Level {n} opens on day {d}.",
   "sheet.maxed": "Highest level reached.",
   "speed.title": "Trial ×{n}",
   "speed.note":

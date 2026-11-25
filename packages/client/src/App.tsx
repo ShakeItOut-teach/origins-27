@@ -4,6 +4,7 @@ import {
   crisisRate,
   speciesOf,
   maxLevelOf,
+  nextLevelStep,
   allianceToday,
   contestBoard,
   attackWarning,
@@ -28,14 +29,7 @@ import {
   productionRate,
 } from "@o27/core";
 import type { AbsenceSummary, PlayerState } from "@o27/core";
-import {
-  BALANCE,
-  MAX_RELEASED_TIER,
-  ORGANELLE_IDS,
-  RESOURCE_IDS,
-  SEASON_DAYS,
-  UNLOCKS,
-} from "@o27/data";
+import { BALANCE, MAX_RELEASED_TIER, ORGANELLE_IDS, RESOURCE_IDS, SEASON_DAYS } from "@o27/data";
 import type {
   BannerId,
   EvolutionId,
@@ -1500,11 +1494,8 @@ function OrganelleSheet({
   const openStore = (): void => {
     onOpen("vacuole");
   };
-  // Au plus haut : on dit si et quand les rangs supérieurs l'élèveront.
-  const raisedOn = BALANCE.higherRanks.steps
-    .filter((step) => step.tier > state.tier && step.maxLevel > maxLevelOf(state, id))
-    .map((step) => UNLOCKS.find((entry) => entry.tier === step.tier)?.minDay ?? null)
-    .find((day) => day !== null);
+  // Au plus haut : on dit quand s'ouvre le niveau suivant.
+  const next = nextLevelStep(state, id);
 
   return (
     <div className="veil veil-bottom" onClick={onClose}>
@@ -1562,9 +1553,11 @@ function OrganelleSheet({
 
         {level > 0 && canUpgrade && maxed && !building && (
           <p className="sheet-note" data-testid="sheet-maxed">
-            {raisedOn === undefined || raisedOn > SEASON_DAYS
+            {next === null
               ? t("sheet.maxed")
-              : t("sheet.maxedUntil").replace("{d}", String(raisedOn))}
+              : t("sheet.maxedUntil")
+                  .replace("{n}", String(next.maxLevel))
+                  .replace("{d}", String(next.day))}
           </p>
         )}
 

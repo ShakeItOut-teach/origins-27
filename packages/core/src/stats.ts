@@ -9,6 +9,7 @@ import { evolutionPercent } from "./evolutions";
 import { lineagePercent } from "./genes";
 import { MICRO } from "./types";
 import type { PlayerState } from "./types";
+import { seasonDay } from "./unlock";
 
 /** Les organites qui donnent un bonus par niveau : la liste ne change jamais. */
 const BONUS_ORGANELLES = ORGANELLE_IDS.filter(
@@ -62,10 +63,21 @@ export function travelMs(state: PlayerState, ms: number): number {
  */
 export function maxLevelOf(state: PlayerState, organelle: OrganelleId): number {
   let max = BALANCE.organelles[organelle].maxLevel;
+  const day = seasonDay(state, state.now);
   for (const step of BALANCE.higherRanks.steps) {
-    if (state.tier >= step.tier) max = Math.max(max, step.maxLevel);
+    if (day >= step.day) max = Math.max(max, step.maxLevel);
   }
   return max;
+}
+
+/** Le prochain niveau d'un organite à s'ouvrir, et son jour ; `null` s'il n'y en a plus. */
+export function nextLevelStep(
+  state: PlayerState,
+  organelle: OrganelleId,
+): { readonly day: number; readonly maxLevel: number } | null {
+  const now = maxLevelOf(state, organelle);
+  const day = seasonDay(state, state.now);
+  return BALANCE.higherRanks.steps.find((step) => step.day > day && step.maxLevel > now) ?? null;
 }
 
 /**

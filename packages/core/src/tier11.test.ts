@@ -173,11 +173,11 @@ describe("la récolte automatique", () => {
 describe("palier 11 : la crise de saison, l'espèce, le rang 4", () => {
   const rules = BALANCE.crisis;
 
-  it("s'ouvre au jour 17 : niveaux jusqu'à 15 et cellules filles de rang 4", () => {
+  it("au jour 17 : niveaux jusqu'à 15 et cellules filles de rang 4", () => {
     const predation: MutationId[] = ["voracity", "harpoon", "swarming"];
     const before = player(16, { mutations: predation });
     expect(before.tier).toBe(10);
-    expect(maxLevelOf(before, "nucleus")).toBe(10);
+    expect(maxLevelOf(before, "nucleus")).toBeLessThan(15);
     expect(troopUnlocked(before, "chaetognath")).toBe(false);
     const open = player(17, { mutations: predation });
     expect(open.tier).toBe(11);

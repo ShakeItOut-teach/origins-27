@@ -678,7 +678,7 @@ export const fr = {
   "chest.kind.contest": "Coffre du concours",
   "unlock.10.title": "Les rangs supérieurs",
   "unlock.10.text":
-    "Vos organites peuvent maintenant dépasser le niveau 5, jusqu’au niveau 10 : ce sont de longs chantiers, que les accélérateurs raccourcissent. Et trois gènes d’une même famille ouvrent sa cellule fille de rang 3.",
+    "Trois gènes d’une même famille ouvrent sa cellule fille de rang 3. Vos organites montent jusqu’au niveau 12 : de longs chantiers, que les accélérateurs raccourcissent.",
   "troop.rotifer.name": "Dévoreuse",
   "troop.rotifer.role": "Rang 3. Frappe neuf fois plus fort qu’une cellule de rang 1.",
   "troop.tardigrade.name": "Blindée",
@@ -791,8 +791,7 @@ export const fr = {
   "sheet.tooBig": "Ce prix dépasse ce que peut contenir votre {o}.",
   "sheet.openStore": "Améliorer la {o}",
   "sheet.buildStore": "Construire la {o}",
-  "sheet.maxedUntil":
-    "Niveau le plus haut pour l’instant. Les rangs supérieurs l’élèveront au jour {d}.",
+  "sheet.maxedUntil": "Niveau le plus haut pour l’instant. Le niveau {n} s’ouvre au jour {d}.",
   "sheet.maxed": "Niveau le plus haut atteint.",
   "speed.title": "Essai ×{n}",
   "speed.note":

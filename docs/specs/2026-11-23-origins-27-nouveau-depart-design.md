@@ -39,11 +39,15 @@ autorise, et la mise en scène du déblocage.
 | 7      | — (date seule)                                         | Jour 4        | Puissance, classements, ligues, prédateurs ; Noyau et évolutions            |
 | 8      | — (date seule)                                         | Jour 5        | Familles de gènes, lignées, cellules filles de rang 2                       |
 | 9      | — (date seule)                                         | Jour 9        | Événements de zone, alliances, Gazette                                      |
-| 10     | — (date seule)                                         | Jour 13       | Rangs supérieurs : niveaux 6 à 10, cellules filles de rang 3                |
-| 11     | — (date seule)                                         | Jour 17       | Crise de saison, fiche d'espèce, niveaux 11 à 15, rang 4                    |
-| 12     | — (date seule)                                         | Jour 21       | Course à l'APEX, lignées de la terre ferme, niveaux 16 à 20, rang 5, Muséum |
+| 10     | — (date seule)                                         | Jour 13       | Rangs supérieurs : cellules filles de rang 3 ; organites jusqu'au niveau 12 |
+| 11     | — (date seule)                                         | Jour 17       | Crise de saison, fiche d'espèce, organites jusqu'au niveau 15, rang 4       |
+| 12     | — (date seule)                                         | Jour 21       | Course à l'APEX, lignées de la terre ferme, niveau 20, rang 5, Muséum       |
 
 Règles :
+
+- Le niveau le plus haut des organites ne dépend pas du palier mais du jour : 5 au jour 1,
+  puis 6, 7, 8, 9, 10, 11, 12, 13, 15, 17 et 20 aux jours 2, 3, 5, 7, 9, 11, 13, 15, 17, 19
+  et 21 (décision du propriétaire, 2026-11-25 : qu'un joueur assidu ait toujours un chantier).
 
 - Jusqu'au palier 5, on avance par ce que l'on accomplit. À partir du palier 6, tout s'ouvre à
   date fixe, et le joueur voit le compte à rebours (décision du propriétaire, 2026-11-24).

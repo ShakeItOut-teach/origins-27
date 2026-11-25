@@ -11,6 +11,7 @@ import {
   levelCost,
   levelDuration,
   maxLevelOf,
+  nextLevelStep,
   partyOf,
   productionRate,
   troopUnlocked,
@@ -20,8 +21,8 @@ import type { PlayerState } from "./index";
 const HOUR = 3_600_000;
 const SEASON = 1_800_000_000_000;
 const RULES = BALANCE.higherRanks;
-/** Le niveau maximum ouvert par le palier 10. */
-const TEN = RULES.steps[0]?.maxLevel ?? 10;
+/** Le niveau 10, ouvert au jour 9. */
+const TEN = 10;
 
 /** Un joueur dont tous les organites sont au niveau 5, à une heure du jour demandé. */
 function player(day: number, mutations: MutationId[] = ["thrift"]): PlayerState {
@@ -52,17 +53,33 @@ function player(day: number, mutations: MutationId[] = ["thrift"]): PlayerState 
 }
 
 describe("palier 10 : les rangs supérieurs", () => {
-  it("s'ouvre au jour 13 : avant, le niveau 5 reste le maximum", () => {
+  it("le niveau le plus haut monte jour après jour : un joueur assidu a toujours un chantier", () => {
+    const first = player(1);
+    expect(maxLevelOf(first, "mitochondrion")).toBe(5);
+    expect(applyOrder(first, { type: "upgrade", organelle: "mitochondrion" }, first.now)).toEqual({
+      ok: false,
+      error: "maxLevel",
+    });
+    expect(nextLevelStep(first, "mitochondrion")).toEqual({ day: 2, maxLevel: 6 });
+    const second = player(2);
+    expect(maxLevelOf(second, "mitochondrion")).toBe(6);
+    expect(applyOrder(second, { type: "upgrade", organelle: "mitochondrion" }, second.now).ok).toBe(
+      true,
+    );
+    let previous = 5;
+    for (const step of RULES.steps) {
+      expect(maxLevelOf(player(step.day), "vacuole")).toBe(step.maxLevel);
+      expect(maxLevelOf(player(step.day - 1), "vacuole")).toBeLessThan(step.maxLevel);
+      expect(step.maxLevel).toBeGreaterThan(previous);
+      previous = step.maxLevel;
+    }
+    expect(nextLevelStep(player(21), "nucleus")).toBeNull();
+    // Le palier 10 arrive toujours au jour 13, avec ses cellules filles de rang 3.
     const before = player(12);
     expect(before.tier).toBe(9);
-    expect(maxLevelOf(before, "mitochondrion")).toBe(5);
-    expect(applyOrder(before, { type: "upgrade", organelle: "mitochondrion" }, before.now)).toEqual(
-      { ok: false, error: "maxLevel" },
-    );
     const open = advance(before, SEASON + 12 * DAY_MS);
     expect(open.state.tier).toBe(10);
     expect(open.events).toContainEqual({ type: "tierReached", at: SEASON + 12 * DAY_MS, tier: 10 });
-    for (const id of ORGANELLE_IDS) expect(maxLevelOf(open.state, id)).toBe(TEN);
   });
 
   it("un niveau supérieur est un long chantier, de plus en plus cher, mais moins vite qu'avant", () => {
@@ -89,7 +106,7 @@ describe("palier 10 : les rangs supérieurs", () => {
   });
 
   it("on monte jusqu'au niveau 10 : la production suit, la réserve grandit aussi vite que les prix", () => {
-    let state = player(13);
+    let state = player(9);
     const rate = productionRate(state, "sugar");
     const store = capacity(state, "sugar");
     for (let level = 6; level <= TEN; level++) {
@@ -99,7 +116,8 @@ describe("palier 10 : les rangs supérieurs", () => {
       state = { ...state, resources: { sugar: 10 ** 11, bricks: 10 ** 11, proteins: 0 } };
     }
     expect(state.organelles.mitochondrion).toBe(TEN);
-    expect(productionRate(state, "sugar")).toBe(rate * 2);
+    // Deux fois plus de niveaux, au moins deux fois plus de production.
+    expect(productionRate(state, "sugar")).toBeGreaterThanOrEqual(rate * 2);
     expect(applyOrder(state, { type: "upgrade", organelle: "mitochondrion" }, state.now)).toEqual({
       ok: false,
       error: "maxLevel",

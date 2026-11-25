@@ -439,3 +439,36 @@ jour 9 » n'existait qu'à cause de ce défaut. À la place, les joueurs les plu
 au niveau le plus haut aux jours 1 à 3 et 8 à 12 : la fiche le dit désormais (« les rangs
 supérieurs l'élèveront au jour 13 »). Il reste de quoi faire (chasses, attaques, cellules
 filles), mais plus rien à construire ces jours-là.
+
+## 2026-11-25 — Un chantier à lancer chaque jour
+
+Demande du propriétaire : combler les jours où un joueur assidu n'a plus rien à construire
+(jours 1 à 3 et 8 à 12, mesurés après la correction de la réserve).
+
+| Réglage                        | Avant                                       | Après                                                                                                |
+| ------------------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Niveau le plus haut            | 5, puis 10 / 15 / 20 aux jours 13 / 17 / 21 | 5 au jour 1 ; 6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 20 aux jours 2, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21 |
+| Durée d'un niveau au-delà du 5 | au moins 30 min par rang                    | au moins 90 min par rang (avant les bonus de vitesse)                                                |
+
+Pourquoi 90 minutes : les bonus de vitesse de construction se cumulent (mutation −20 %,
+évolution −25 à −37 %, alliance −15 %) jusqu'à −65 %. À 30 ou 45 minutes, un joueur à dix
+connexions par jour finissait les neuf organites d'un niveau dans la journée, puis attendait.
+
+Mesure, cinq saisons simulées, connexions sans aucun chantier ni évolution à lancer :
+
+| Saison | Connexions par jour | Avant | Après |
+| ------ | ------------------- | ----- | ----- |
+| s1     | 10                  | 67    | 16    |
+| s2     | 3                   | 0     | 0     |
+| s3     | 20                  | 209   | 43    |
+| s4     | 10                  | 72    | 5     |
+| s5     | 6                   | 16    | 1     |
+
+Ce qui reste : le premier jour (4 connexions pour les plus actifs, qui jouent trois fois plus
+longtemps ce jour-là) et quelques connexions la veille d'un nouveau niveau. Tous sortent
+encore des eaux entre les jours 22 et 25 (le joueur à trois connexions : 26 → 25).
+
+À surveiller : le joueur assidu est premier du classement du jour 4 au jour 18 (c'était déjà
+le cas avant pour les plus actifs), et souvent dernier les trois derniers jours, quand il perd
+beaucoup de cellules filles. Les 500 organismes simulés sont trop serrés (le 1er n'a que 40 %
+de plus que le 250e) : à reprendre.
