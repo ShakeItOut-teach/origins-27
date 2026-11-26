@@ -93,6 +93,35 @@ p {
   color: var(--eosin);
 }
 
+/* On touche la cellule : le chiffre vert s'épaissit, et ce que rapportent les touchers apparaît. */
+.counter-rate.is-tapping {
+  font-weight: 700;
+}
+
+.counter-tap {
+  display: inline-block;
+  margin-left: var(--space-1);
+  font-weight: 700;
+  animation: tap-pop 320ms ease-out;
+}
+
+@keyframes tap-pop {
+  from {
+    transform: translateY(3px) scale(1.25);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .counter-tap {
+    animation: none;
+  }
+}
+
 /* L'âge du serveur : le jour de la saison, toujours visible. */
 .season-day {
   position: fixed;

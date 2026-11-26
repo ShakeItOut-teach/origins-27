@@ -53,7 +53,7 @@ import {
   formatAway,
   formatCountdown,
   formatDuration,
-  formatRate,
+  formatPerMinute,
   saveScience,
   savedScience,
   setScience,
@@ -117,6 +117,11 @@ const ALARM_FLASH_MS = 6000;
 type View = "cell" | "map" | "rivals" | "research";
 
 /** Position de chaque emplacement sur la lame, en pourcentage : huit autour, le Noyau au centre. */
+/** Les touchers comptent dans la production affichée pendant une minute. */
+const TAP_WINDOW_MS = 60_000;
+/** Le chiffre reste en gras tant qu'on touche (un toucher de moins de deux secondes). */
+const TAP_BOLD_MS = 2_000;
+
 const SLOT_POSITION: Readonly<Record<OrganelleId, { left: string; top: string }>> = {
   // Neuf repères autour du Noyau, un tous les 40 degrés, dans le sens des aiguilles d'une montre.
   wall: { left: "50%", top: "9%" },
@@ -239,6 +244,7 @@ export function App({
   const [selected, setSelected] = useState<OrganelleId | null>(null);
   const [reveal, setReveal] = useState<number | null>(null);
   const [touched, setTouched] = useState(state.counters.harvests > 0);
+  const [taps, setTaps] = useState<readonly { readonly at: number; readonly gained: number }[]>([]);
   const [fullFlash, setFullFlash] = useState(0);
 
   const [absenceSeen, setAbsenceSeen] = useState(false);
@@ -343,6 +349,13 @@ export function App({
     setTouched(true);
     const result = store.send({ type: "harvest", taps: 1 });
     if (!result.ok && result.error === "storageFull") setFullFlash((n) => n + 1);
+    if (!result.ok) return;
+    let gained = 0;
+    for (const event of result.events) if (event.type === "harvested") gained += event.amount;
+    if (gained <= 0) return;
+    // Les touchers de la dernière minute s'ajoutent à la production affichée.
+    const at = Date.now();
+    setTaps((list) => [...list.filter((entry) => entry.at > at - TAP_WINDOW_MS), { at, gained }]);
   };
 
   /** Un prix dépasse la réserve : on referme ce qui est ouvert et on montre la Vacuole. */
@@ -547,6 +560,13 @@ export function App({
       )}
       <header className="counters">
         {counters.map((id) => {
+          // Ce que les touchers de la dernière minute ont rapporté, en plus de la production.
+          const wall = Date.now();
+          const recent =
+            id === "sugar" ? taps.filter((entry) => entry.at > wall - TAP_WINDOW_MS) : [];
+          const tapped = recent.reduce((sum, entry) => sum + entry.gained, 0);
+          const lastTap = recent.at(-1)?.at ?? 0;
+          const tapping = wall - lastTap < TAP_BOLD_MS;
           const full = state.resources[id] >= capacity(state, id);
           // Ce que la cellule gagne vraiment : sa production, moins ce que mangent les troupes.
           const rate =
@@ -560,11 +580,19 @@ export function App({
               <ResourceIcon id={id} />
               <span className="counter-value">{formatAmount(state.resources[id], lang)}</span>
               <span className="counter-label">{full ? t("state.full") : t(`resource.${id}`)}</span>
-              {show("productionRate") && rate !== 0 && (
-                <span className={`counter-rate${rate < 0 ? " is-negative" : ""}`}>
-                  {rate > 0 ? "+" : "−"}
-                  {formatRate(Math.abs(rate), lang)}
-                  {show("energy") ? "/s" : ` ${t("label.perSecond")}`}
+              {((show("productionRate") && rate !== 0) || tapped > 0) && (
+                <span
+                  className={`counter-rate${rate + tapped / 60_000 < 0 ? " is-negative" : ""}${tapping ? " is-tapping" : ""}`}
+                  data-testid={`rate-${id}`}
+                >
+                  {rate * 60_000 + tapped >= 0 ? "+" : "−"}
+                  {formatPerMinute(Math.abs(rate * 60_000 + tapped), lang)}
+                  {show("energy") ? "/min" : ` ${t("label.perMinute")}`}
+                  {tapped > 0 && (
+                    <strong key={lastTap} className="counter-tap" data-testid="rate-tap">
+                      +{formatPerMinute(tapped, lang)}
+                    </strong>
+                  )}
                 </span>
               )}
             </div>

@@ -425,6 +425,7 @@ export const fr = {
   "state.building": "En construction",
   "label.level": "Niveau",
   "label.perSecond": "par seconde",
+  "label.perMinute": "par minute",
   "label.cell": "Votre cellule",
 
   "absence.title": "Pendant votre absence",

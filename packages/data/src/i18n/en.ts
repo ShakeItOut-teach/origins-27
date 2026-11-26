@@ -420,6 +420,7 @@ export const en = {
   "state.building": "Building",
   "label.level": "Level",
   "label.perSecond": "per second",
+  "label.perMinute": "per minute",
   "label.cell": "Your cell",
 
   "absence.title": "While you were away",

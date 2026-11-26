@@ -51,6 +51,19 @@ export function formatRate(microPerMs: number, lang: Lang): string {
   });
 }
 
+/**
+ * Une quantité gagnée par minute, en millionièmes d'unité : entière dès 10, avec une décimale
+ * en dessous. Un petit chiffre qui bouge se voit mieux à la minute qu'à la seconde.
+ */
+export function formatPerMinute(microPerMinute: number, lang: Lang): string {
+  const perMinute = microPerMinute / MICRO;
+  const digits = perMinute >= 10 ? 0 : 1;
+  return perMinute.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+}
+
 /** Une durée courte : « 45 s », « 1 min 30 ». */
 /** Une profondeur en mètres, avec l'espace des milliers de la langue. */
 export function formatDepth(metres: number, lang: Lang): string {
