@@ -142,6 +142,17 @@ export const fr = {
   "label.raidLoses": "défaite",
   "label.forces": "{a} contre {b}",
   "action.spy": "Espionner",
+  "action.spyProbe": "Espionner · 1 sonde ({n} / {max})",
+  "spy.needReceptors": "Construisez les Récepteurs pour espionner : ils logent vos sondes.",
+  "spy.failed":
+    "Espionnage déjoué : ses Récepteurs sont plus hauts que les vôtres. La sonde est perdue.",
+  "spy.level": "Rapport d’espionnage · niveau {n}",
+  "spy.total": "Ressources : {n} en tout.",
+  "spy.troops": "Ses troupes (force d’attaque) : entre {a} et {b}.",
+  "spy.troopsExact": "Ses troupes (force d’attaque) : {n}.",
+  "spy.better": "Des Récepteurs plus hauts en apprendront davantage.",
+  "spy.needPower":
+    "Sa garde reste floue : il faut un espionnage de niveau {n} pour savoir si l’attaque gagne.",
   "action.raid": "Attaquer",
   "action.strikeRaid": "Attrapez la bulle !",
   "state.spied": "Espionné encore",
@@ -360,6 +371,10 @@ export const fr = {
     "Tout s’ouvre à date fixe, pour tous les organismes en même temps. Le compte à rebours est toujours affiché.",
   "lexicon.golgi": "L’organite qui trie, emballe et expédie ce que la cellule fabrique.",
   "lexicon.lysosome": "Un petit sac d’enzymes qui digère ce que la cellule avale.",
+  "organelle.receptor.name": "Récepteurs",
+  "organelle.receptor.role":
+    "Ils sentent les voisines et logent vos sondes. Plus ils sont hauts, plus un espionnage en apprend, et mieux ils déjouent les espions.",
+  "lexicon.receptor": "Des protéines plantées dans la membrane, qui captent les signaux du dehors.",
   "label.companion": "Compagnon",
   "action.tame": "Apprivoiser",
   "action.shareGene": "Partager",

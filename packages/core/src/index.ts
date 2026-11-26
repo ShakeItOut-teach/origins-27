@@ -223,3 +223,5 @@ export {
   visiblePrey,
 } from "./world";
 export type { Energy, Offer, Place, Point, Prey, PreyOffer } from "./world";
+export { receptorLevel, rivalReceptors, spiedLevel, spiesAt, spyCapacity, spyReveal } from "./spy";
+export type { SpyReveal } from "./spy";

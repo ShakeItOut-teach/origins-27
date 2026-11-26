@@ -139,6 +139,7 @@ const BUILD_ORDER: readonly OrganelleId[] = [
   "golgi",
   "lysosome",
   "cilia",
+  "receptor",
 ];
 
 function affordable(state: PlayerState, cost: Readonly<Record<string, number>>): boolean {

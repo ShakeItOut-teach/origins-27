@@ -320,6 +320,11 @@ export interface PlayerState {
   readonly raid: Raid | null;
   /** Rivaux espionnés : pour chacun, l'instant où le renseignement expire. */
   readonly spiedUntil: Readonly<Record<string, number>>;
+  /** Rivaux espionnés : pour chacun, le niveau des Récepteurs qui l'ont espionné. */
+  readonly spyLevels: Readonly<Record<string, number>>;
+  /** Sondes logées dans les Récepteurs, et instant à partir duquel la suivante se forme. */
+  readonly spies: number;
+  readonly spiesAt: number;
   /** Le joueur ne peut pas être attaqué avant cet instant. */
   readonly shieldUntil: number;
   /** Instant de la prochaine attaque subie ; `null` avant le palier des rivaux. */
@@ -431,7 +436,15 @@ export type GameEvent =
       /** Contenu, en unités entières. */
       readonly loot: Readonly<Partial<Record<ChestReward, number>>>;
     }
-  | { readonly type: "rivalSpied"; readonly at: number; readonly rival: string }
+  | {
+      readonly type: "rivalSpied";
+      readonly at: number;
+      readonly rival: string;
+      /** Le niveau du rapport : celui des Récepteurs. */
+      readonly level: number;
+    }
+  /** Les Récepteurs du rival étaient plus hauts : la sonde est perdue. */
+  | { readonly type: "rivalSpyFailed"; readonly at: number; readonly rival: string }
   | {
       readonly type: "raidSent";
       readonly at: number;
@@ -625,6 +638,8 @@ export type OrderErrorCode =
   | "unknownEvent"
   /** On n'espionne ni n'attaque un membre de sa propre alliance. */
   | "ally"
+  /** Plus aucune sonde dans les Récepteurs : il faut attendre qu'une se forme. */
+  | "noSpies"
   /** Un vrai joueur tient cette place : pas de combat entre humains pour l'instant. */
   | "human"
   | "noAlliance"

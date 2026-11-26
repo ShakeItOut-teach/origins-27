@@ -76,6 +76,9 @@ export function createPlayer(
     quests: null,
     raid: null,
     spiedUntil: {},
+    spyLevels: {},
+    spies: 0,
+    spiesAt: now,
     shieldUntil: 0,
     nextRaidAt: null,
     awayReadyAt: 0,
@@ -338,6 +341,13 @@ export function serializeState(state: PlayerState): string {
         .sort()
         .map((id) => [id, state.spiedUntil[id]]),
     ),
+    spyLevels: Object.fromEntries(
+      Object.keys(state.spyLevels)
+        .sort()
+        .map((id) => [id, state.spyLevels[id]]),
+    ),
+    spies: state.spies,
+    spiesAt: state.spiesAt,
     shieldUntil: state.shieldUntil,
     nextRaidAt: state.nextRaidAt,
     awayReadyAt: state.awayReadyAt,
@@ -812,6 +822,10 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     // Avant les rivaux : ni attaque en cours, ni espionnage, ni protection.
     raid: version < 5 ? null : readRaid(raw.raid),
     spiedUntil: version < 5 ? {} : readPlaceTimes(raw.spiedUntil),
+    // Avant les Récepteurs : aucune sonde, et chaque rapport passé vaut le premier niveau.
+    spyLevels: raw.spyLevels === undefined ? {} : readPlaceTimes(raw.spyLevels),
+    spies: isCount(raw.spies) ? raw.spies : 0,
+    spiesAt: isCount(raw.spiesAt) ? raw.spiesAt : now,
     shieldUntil: version < 5 || !isCount(raw.shieldUntil) ? 0 : raw.shieldUntil,
     nextRaidAt: version < 5 || !isCount(raw.nextRaidAt) ? null : raw.nextRaidAt,
     // Une sauvegarde d'avant le mode absent ne l'a jamais utilisé.
@@ -839,6 +853,8 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     organelles: readCounts<OrganelleId>(ORGANELLE_IDS, raw.organelles, [
       ...(beforeHunt ? (["nursery", "wall"] as const) : version < 5 ? (["wall"] as const) : []),
       ...(version < 9 ? (["golgi", "nucleus", "lysosome"] as const) : []),
+      // Les Récepteurs sont venus après la version 11 : une sauvegarde peut ne pas les avoir.
+      "receptor",
     ]),
     construction: readConstruction(raw.construction),
     mutations: readMutations(raw.mutations),

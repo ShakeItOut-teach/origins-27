@@ -118,16 +118,18 @@ type View = "cell" | "map" | "rivals" | "research";
 
 /** Position de chaque emplacement sur la lame, en pourcentage : huit autour, le Noyau au centre. */
 const SLOT_POSITION: Readonly<Record<OrganelleId, { left: string; top: string }>> = {
+  // Neuf repères autour du Noyau, un tous les 40 degrés, dans le sens des aiguilles d'une montre.
   wall: { left: "50%", top: "9%" },
-  vacuole: { left: "79%", top: "21%" },
-  golgi: { left: "91%", top: "50%" },
-  ribosome: { left: "79%", top: "79%" },
-  nursery: { left: "50%", top: "91%" },
-  lysosome: { left: "21%", top: "79%" },
-  cilia: { left: "9%", top: "50%" },
+  vacuole: { left: "76.4%", top: "18.6%" },
+  golgi: { left: "90.4%", top: "42.9%" },
+  ribosome: { left: "85.5%", top: "70.5%" },
+  nursery: { left: "64%", top: "88.5%" },
+  receptor: { left: "36%", top: "88.5%" },
+  lysosome: { left: "14.5%", top: "70.5%" },
+  cilia: { left: "9.6%", top: "42.9%" },
   // Le Noyau est au cœur de la cellule : son repère se pose sur lui.
   nucleus: { left: "50%", top: "50%" },
-  mitochondrion: { left: "21%", top: "21%" },
+  mitochondrion: { left: "23.6%", top: "18.6%" },
 };
 
 /** La teinte du compagnon : celle de la famille qui l'a façonné. */

@@ -139,7 +139,8 @@ describe("le même océan : un humain prend la place d'un organisme simulé", ()
   });
 
   it("dans l'océan : on voit son nom, et le serveur refuse de l'espionner ou de l'attaquer", () => {
-    const base = player(12, { tier: BALANCE.ocean.tier });
+    const plain = player(12, { tier: BALANCE.ocean.tier });
+    const base = { ...plain, organelles: { ...plain.organelles, receptor: 3 }, spies: 6 };
     const target = oceanRivals(base)[0];
     expect(target).toBeDefined();
     if (target === undefined) return;

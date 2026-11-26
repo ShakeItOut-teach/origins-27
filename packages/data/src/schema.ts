@@ -66,6 +66,8 @@ export const OrganelleEffectSchema = z.discriminatedUnion("kind", [
   }),
   /** Exprime les évolutions ; chaque niveau au-delà du premier accélère la recherche. */
   z.strictObject({ kind: z.literal("research"), percentPerLevel: positiveInt }),
+  /** Loge et forme les sondes d'espionnage ; son niveau fixe ce qu'un espionnage révèle. */
+  z.strictObject({ kind: z.literal("spy"), spiesPerLevel: positiveInt }),
 ]);
 
 export const OrganelleSchema = z.strictObject({
@@ -150,6 +152,7 @@ export const BalanceSchema = z.strictObject({
     golgi: OrganelleSchema,
     nucleus: OrganelleSchema,
     lysosome: OrganelleSchema,
+    receptor: OrganelleSchema,
   } satisfies Record<(typeof ORGANELLE_IDS)[number], unknown>),
   mutations: z.strictObject({
     swiftCilia: MutationSchema,
@@ -374,7 +377,26 @@ export const BalanceSchema = z.strictObject({
         maxLossPercent: z.number().int().min(1).max(100),
       })
       .refine((value) => value.minLossPercent <= value.maxLossPercent),
-    spy: z.strictObject({ energy: positiveInt, hours: positiveInt }),
+    spy: z.strictObject({
+      /** Combien de temps un espionnage réussi reste valable. */
+      hours: positiveInt,
+      /** Une sonde de plus toutes les tant d'heures, jusqu'à la capacité des Récepteurs. */
+      regenHours: positiveInt,
+      /** Un organisme simulé gagne un niveau de Récepteurs tous les tant de jours (tempérament 100). */
+      rivalDaysPerLevel: positiveInt,
+      /** Niveau de Récepteurs à partir duquel le rapport révèle chaque information. */
+      reveal: z.strictObject({
+        total: positiveInt,
+        available: positiveInt,
+        power: positiveInt,
+        troopsRough: positiveInt,
+        troopsClose: positiveInt,
+        everything: positiveInt,
+      }),
+      /** Marge d'erreur, en pourcentage, des deux estimations de troupes. */
+      roughPercent: positiveInt,
+      closePercent: positiveInt,
+    }),
     /** Les attaques que le joueur subit. */
     incoming: z.strictObject({
       /** Un nouveau joueur n'est pas attaqué avant ce palier, sauf s'il attaque lui-même. */

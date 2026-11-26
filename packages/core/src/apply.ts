@@ -47,7 +47,8 @@ import {
   setNight,
 } from "./rivals";
 import { MICRO } from "./types";
-import { drawMutationOffer, mutationPool, orderTier } from "./unlock";
+import { spyOn } from "./spy";
+import { drawMutationOffer, mutationPool, orderTier, seasonDay } from "./unlock";
 import { ZONE_COUNT, cellIn, migrateOffer, playerCell } from "./ocean";
 import type { PreyOffer } from "./world";
 import { findPredator, predatorOffer } from "./predators";
@@ -504,17 +505,7 @@ function spyRival(state: PlayerState, rivalId: string): Outcome {
   if (rival === undefined) return { error: "unknownRival" };
   if (isAlly(state, rival)) return { error: "ally" };
   if (rival.human) return { error: "human" };
-  if ((state.spiedUntil[rivalId] ?? 0) > state.now) return { error: "alreadySpied" };
-  const spy = BALANCE.rivals.spy;
-  if (state.energy < spy.energy) return { error: "noEnergy" };
-  return {
-    state: {
-      ...state,
-      energy: state.energy - spy.energy,
-      spiedUntil: { ...state.spiedUntil, [rivalId]: state.now + spy.hours * 3_600_000 },
-    },
-    events: [{ type: "rivalSpied", at: state.now, rival: rivalId }],
-  };
+  return spyOn(state, rival, seasonDay(state, state.now));
 }
 
 function sendRaid(

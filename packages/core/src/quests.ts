@@ -111,6 +111,7 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
       return 0;
     }
     case "migrated":
+    case "rivalSpyFailed":
     case "constructionQueued":
     case "constructionUnqueued":
     case "companionTamed":

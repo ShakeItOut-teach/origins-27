@@ -114,6 +114,7 @@ export const ORGANELLE_ANGLE: Readonly<Record<OrganelleId, number>> = {
   // Le noyau est au centre : cet angle ne sert pas.
   nucleus: 0,
   lysosome: (168 * Math.PI) / 180,
+  receptor: (118 * Math.PI) / 180,
 };
 
 const MEMBRANE_POINTS = 96;
@@ -688,6 +689,33 @@ export function drawScene(
           Math.max(0.7, lr * 0.14),
         ).fill({ color: acid, alpha: 0.75 });
       }
+    }
+  }
+
+  if (shown("receptor")) {
+    // Les Récepteurs : des protéines en Y plantées dans la membrane, tournées vers le dehors.
+    const { x, y } = place("receptor");
+    const k = growing("receptor");
+    const out = ORGANELLE_ANGLE.receptor;
+    const count = 2 + Math.min(4, Math.floor(scene.organelles.receptor / 2));
+    for (let index = 0; index < count; index++) {
+      const spread = (index - (count - 1) / 2) * 0.32;
+      const a = out + spread;
+      const sway = 0.08 * Math.sin(t * 1.4 + index);
+      const stem = base * 0.07 * k;
+      const fx = x + Math.cos(a + Math.PI / 2) * base * 0.05 * (index - (count - 1) / 2);
+      const fy = y + Math.sin(a + Math.PI / 2) * base * 0.05 * (index - (count - 1) / 2);
+      const tx = fx + Math.cos(a + sway) * stem;
+      const ty = fy + Math.sin(a + sway) * stem;
+      const arm = stem * 0.55;
+      g.moveTo(fx, fy)
+        .lineTo(tx, ty)
+        .moveTo(tx, ty)
+        .lineTo(tx + Math.cos(a + sway - 0.6) * arm, ty + Math.sin(a + sway - 0.6) * arm)
+        .moveTo(tx, ty)
+        .lineTo(tx + Math.cos(a + sway + 0.6) * arm, ty + Math.sin(a + sway + 0.6) * arm)
+        .stroke({ width: 1.4, color: BONE, alpha: 0.9 });
+      g.circle(fx, fy, Math.max(0.8, base * 0.008)).fill({ color: BONE, alpha: 0.9 });
     }
   }
 

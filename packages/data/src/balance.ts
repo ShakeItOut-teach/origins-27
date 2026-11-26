@@ -84,6 +84,14 @@ export const BALANCE: Balance = BalanceSchema.parse({
       maxLevel: 5,
       effect: { kind: "bonus", stat: "huntProteins", percentPerLevel: 10 },
     },
+    receptor: {
+      tier: 5,
+      buildCost: { sugar: 90, bricks: 40 },
+      buildSeconds: 90,
+      upgradeBricks: 60,
+      maxLevel: 5,
+      effect: { kind: "spy", spiesPerLevel: 2 },
+    },
   },
   mutations: {
     swiftCilia: { stat: "gather", percent: 15, trait: "longCilia", family: "mobility", tier: 2 },
@@ -548,7 +556,14 @@ export const BALANCE: Balance = BalanceSchema.parse({
       minLossPercent: 2,
       maxLossPercent: 90,
     },
-    spy: { energy: 1, hours: 2 },
+    spy: {
+      hours: 2,
+      regenHours: 2,
+      rivalDaysPerLevel: 4,
+      reveal: { total: 1, available: 3, power: 5, troopsRough: 7, troopsClose: 9, everything: 11 },
+      roughPercent: 50,
+      closePercent: 15,
+    },
     incoming: {
       newcomerUntilTier: 6,
       minHours: 5,

@@ -20,6 +20,7 @@ import { ensureIncoming, raidBack, resolveIncoming, resolveRaid } from "./rivals
 import type { Construction, Expedition, GameEvent, Hunt, PlayerState, Step } from "./types";
 import { DAY_MS } from "./types";
 import { evaluateTier, seasonDay } from "./unlock";
+import { spiesAt } from "./spy";
 import { energyAt } from "./world";
 
 /** Ce que la cellule produit vraiment : la production, une fois la crise de saison comptée. */
@@ -245,17 +246,32 @@ function sortieDue(
 /** Énergie remise à jour, lieux regarnis oubliés. */
 function settle(state: PlayerState, now: number): PlayerState {
   const energy = energyAt(state, now);
+  const spies = spiesAt(state, now);
   const resting = Object.entries(state.placeReadyAt).filter(([, readyAt]) => readyAt > now);
   const spied = Object.entries(state.spiedUntil).filter(([, until]) => until > now);
+  const levels = Object.entries(state.spyLevels).filter(
+    ([id]) => (state.spiedUntil[id] ?? 0) > now,
+  );
   const pruned =
     resting.length !== Object.keys(state.placeReadyAt).length ||
-    spied.length !== Object.keys(state.spiedUntil).length;
-  if (energy.energy === state.energy && energy.energyAt === state.energyAt && !pruned) return state;
+    spied.length !== Object.keys(state.spiedUntil).length ||
+    levels.length !== Object.keys(state.spyLevels).length;
+  if (
+    energy.energy === state.energy &&
+    energy.energyAt === state.energyAt &&
+    spies.spies === state.spies &&
+    spies.spiesAt === state.spiesAt &&
+    !pruned
+  ) {
+    return state;
+  }
   return {
     ...state,
     ...energy,
+    ...spies,
     placeReadyAt: Object.fromEntries(resting),
     spiedUntil: Object.fromEntries(spied),
+    spyLevels: Object.fromEntries(levels),
   };
 }
 

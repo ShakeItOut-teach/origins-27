@@ -38,6 +38,15 @@ export function OrganelleIcon({ id }: { readonly id: OrganelleId }) {
           <path d="M8 15h3.400v2.400H8zM12.600 15H16v2.400h-3.400z" {...full} />
         </svg>
       );
+    case "receptor":
+      // Les Récepteurs sentent les voisines : deux protéines en Y sur la membrane, et un signal.
+      return (
+        <svg {...common}>
+          <path d="M3 18h18" />
+          <path d="M8 18v-5M8 13l-2.500-3M8 13l2.500-3M16 18v-5M16 13l-2.500-3M16 13l2.500-3" />
+          <path d="M8.500 4.500c2-1.600 5-1.600 7 0M10.300 6.800c1-.700 2.400-.700 3.400 0" />
+        </svg>
+      );
     case "cilia":
       // Les Cils font nager plus vite : une cellule lancée, ses cils en arrière, son sillage.
       return (

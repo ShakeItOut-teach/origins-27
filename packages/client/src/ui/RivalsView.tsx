@@ -12,6 +12,13 @@ import {
   raidForce,
   raidOffer,
   raidWins,
+  receptorLevel,
+  rivalStats,
+  seasonDay,
+  spiedLevel,
+  spiesAt,
+  spyCapacity,
+  spyReveal,
 } from "@o27/core";
 import type { PlayerState, Rival } from "@o27/core";
 import { BALANCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
@@ -138,6 +145,7 @@ export function RivalsView({ state, lang, onOrder }: Props) {
         {rivals.map((rival) => {
           const offer = raidOffer(state, rival, state.now);
           const spiedFor = (state.spiedUntil[rival.id] ?? 0) - state.now;
+          const knowsGuard = spyReveal(spiedLevel(state, rival.id)).power;
           const closedFor = (state.placeReadyAt[rival.id] ?? 0) - state.now;
           const mine = raid !== null && raid.rival === rival.id ? raid : null;
           const range = guardRange(offer.guard);
@@ -167,7 +175,7 @@ export function RivalsView({ state, lang, onOrder }: Props) {
                 <span className="rival-guard">
                   {t("label.guard")}{" "}
                   <strong>
-                    {spiedFor > 0 ? offer.guard : `${String(range.low)}–${String(range.high)}`}
+                    {knowsGuard ? offer.guard : `${String(range.low)}–${String(range.high)}`}
                   </strong>
                 </span>
                 <span className="rival-state">
@@ -209,7 +217,14 @@ interface SheetProps extends Props {
 export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps) {
   const t = (key: TextKey): string => translate(lang, key);
   const offer = raidOffer(state, rival, state.now);
-  const spied = (state.spiedUntil[rival.id] ?? 0) > state.now;
+  // Ce que l'espionnage a appris dépend du niveau des Récepteurs qui l'ont mené.
+  const level = spiedLevel(state, rival.id);
+  const reveal = spyReveal(level);
+  const spied = reveal.power;
+  const myLevel = receptorLevel(state);
+  const spies = spiesAt(state, state.now).spies;
+  const full = rivalStats(rival, seasonDay(state, state.now));
+  const [tried, setTried] = useState(false);
   const closedFor = (state.placeReadyAt[rival.id] ?? 0) - state.now;
   const raid = state.raid;
   const mine = raid !== null && raid.rival === rival.id ? raid : null;
@@ -226,7 +241,7 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
     `${t(raidWins(force, foe) ? "label.raidWins" : "label.raidLoses")} (${t("label.forces")
       .replace("{a}", String(force))
       .replace("{b}", String(foe))})`;
-  const spy = BALANCE.rivals.spy;
+  const revealAt = BALANCE.rivals.spy.reveal;
 
   const ally = isAlly(state, rival);
   // Un allié ou une autre espèce humaine : on ne l'espionne pas et on ne l'attaque pas.
@@ -306,36 +321,80 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
           </p>
         )}
 
-        {peaceful ? null : spied ? (
-          <>
-            <p className="sheet-role weakness">
-              {t("label.weakness")} : <TroopIcon id={weakness} />
-              <strong>{t(`troop.${weakness}.name`)}</strong>
-            </p>
-            <p className="costs" data-testid="rival-loot">
-              <span className="cost">{t("label.loot")}</span>
-              {(["sugar", "bricks", "proteins"] as const).map((id) => (
-                <span key={id} className="cost cost-gain">
-                  <ResourceIcon id={id} />
-                  {formatAmount(offer[id] * MICRO, lang)}
-                </span>
-              ))}
-            </p>
-          </>
-        ) : (
-          <button
-            type="button"
-            className="button button-quiet"
-            disabled={state.energy < spy.energy}
-            data-testid="rival-spy"
-            onClick={() => {
-              onOrder({ type: "spyRival", rival: rival.id });
-            }}
-          >
-            {t("action.spy")} · <EnergyIcon />
-            {spy.energy}
-          </button>
+        {!peaceful && level > 0 && (
+          <div className="spy-report" data-testid="rival-report" data-level={level}>
+            <p className="sheet-kicker">{t("spy.level").replace("{n}", String(level))}</p>
+            {reveal.total && (
+              <p className="sheet-role" data-testid="rival-total">
+                {t("spy.total").replace(
+                  "{n}",
+                  formatAmount((full.sugar + full.bricks + full.proteins) * MICRO, lang),
+                )}
+              </p>
+            )}
+            {reveal.available && (
+              <p className="costs" data-testid="rival-loot">
+                <span className="cost">{t("label.loot")}</span>
+                {(["sugar", "bricks", "proteins"] as const).map((id) => (
+                  <span key={id} className="cost cost-gain">
+                    <ResourceIcon id={id} />
+                    {formatAmount(offer[id] * MICRO, lang)}
+                  </span>
+                ))}
+              </p>
+            )}
+            {reveal.troopsMargin !== null && (
+              <>
+                <p className="sheet-role" data-testid="rival-troops">
+                  {reveal.troopsMargin === 0
+                    ? t("spy.troopsExact").replace("{n}", String(full.attack))
+                    : t("spy.troops")
+                        .replace(
+                          "{a}",
+                          String(Math.floor((full.attack * (100 - reveal.troopsMargin)) / 100)),
+                        )
+                        .replace(
+                          "{b}",
+                          String(Math.ceil((full.attack * (100 + reveal.troopsMargin)) / 100)),
+                        )}
+                </p>
+                <p className="sheet-role weakness">
+                  {t("label.weakness")} : <TroopIcon id={weakness} />
+                  <strong>{t(`troop.${weakness}.name`)}</strong>
+                </p>
+              </>
+            )}
+            {level < revealAt.everything && <p className="account-note">{t("spy.better")}</p>}
+          </div>
         )}
+        {!peaceful && tried && level === 0 && myLevel > 0 && (
+          <p className="sheet-building is-warning" data-testid="rival-spy-failed">
+            {t("spy.failed")}
+          </p>
+        )}
+        {!peaceful &&
+          (myLevel === 0 ? (
+            <p className="sheet-role" data-testid="rival-spy-locked">
+              {t("spy.needReceptors")}
+            </p>
+          ) : (
+            level < myLevel && (
+              <button
+                type="button"
+                className="button button-quiet"
+                disabled={spies <= 0}
+                data-testid="rival-spy"
+                onClick={() => {
+                  setTried(true);
+                  onOrder({ type: "spyRival", rival: rival.id });
+                }}
+              >
+                {t("action.spyProbe")
+                  .replace("{n}", String(spies))
+                  .replace("{max}", String(spyCapacity(state)))}
+              </button>
+            )
+          ))}
 
         {mine !== null ? (
           <>
@@ -415,7 +474,7 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
                   </div>
                 ) : (
                   <p className="sheet-building" data-testid="rival-blind">
-                    {t("label.blind")}
+                    {t("spy.needPower").replace("{n}", String(revealAt.power))}
                   </p>
                 )}
               </>

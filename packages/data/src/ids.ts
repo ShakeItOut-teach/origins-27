@@ -16,6 +16,7 @@ export const ORGANELLE_IDS = [
   "golgi",
   "nucleus",
   "lysosome",
+  "receptor",
 ] as const;
 export type OrganelleId = (typeof ORGANELLE_IDS)[number];
 

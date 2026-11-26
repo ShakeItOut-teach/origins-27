@@ -16,6 +16,10 @@ import {
   MICRO,
   partySize,
   combatLossPercent,
+  rivalReceptors,
+  spiedLevel,
+  spyCapacity,
+  spyReveal,
   raidForce,
   raidWins,
   raidOffer,
@@ -26,6 +30,7 @@ import {
   visibleRivals,
   partyOf,
 } from "./index";
+import { spyOn } from "./spy";
 import type { GameEvent, OrderErrorCode, PlayerState, Rival } from "./index";
 
 const HOUR = 3_600_000;
@@ -66,7 +71,8 @@ function newcomer(troops: Partial<Record<TroopId, number>> = {}, seed = 7): Play
       huntsWon: 1,
     },
     mutations: ["thrift"],
-    organelles: { ...base.organelles, mitochondrion: 1, vacuole: 5, nursery: 3 },
+    organelles: { ...base.organelles, mitochondrion: 1, vacuole: 5, nursery: 3, receptor: 3 },
+    spies: 6,
     resources: { sugar: 400 * MICRO, bricks: 200 * MICRO, proteins: 10 * MICRO },
     troops: party(troops),
   };
@@ -206,25 +212,68 @@ describe("arriver au palier des rivaux", () => {
 });
 
 describe("espionner", () => {
-  it("coûte de l'énergie et renseigne pendant deux heures", () => {
+  const spy = BALANCE.rivals.spy;
+  /** Un joueur du palier 5 avec des Récepteurs de ce niveau, pleins de sondes. */
+  function withReceptors(level: number, spies = 2 * level): PlayerState {
+    const state = atTier5();
+    return { ...state, organelles: { ...state.organelles, receptor: level }, spies, spiesAt: T0 };
+  }
+
+  it("il faut des Récepteurs ; une sonde part, et le rapport vaut deux heures", () => {
     const target = rival();
-    const start = atTier5();
+    const blind = atTier5();
+    const noReceptors = { ...blind, organelles: { ...blind.organelles, receptor: 0 } };
+    expect(refusal(noReceptors, { type: "spyRival", rival: target.id }, T0)).toBe("notBuilt");
+    const start = withReceptors(3);
     const spied = ok(start, { type: "spyRival", rival: target.id }, T0);
-    const spy = BALANCE.rivals.spy;
-    expect(spied.energy).toBe(start.energy - spy.energy);
+    expect(spied.spies).toBe(start.spies - 1);
+    expect(spied.energy).toBe(start.energy);
     expect(spied.spiedUntil[target.id]).toBe(T0 + spy.hours * HOUR);
+    expect(spiedLevel(spied, target.id)).toBe(3);
     expect(refusal(spied, { type: "spyRival", rival: target.id }, T0 + HOUR)).toBe("alreadySpied");
     const later = advance(spied, T0 + spy.hours * HOUR).state;
     expect(later.spiedUntil).toEqual({});
-    expect(
-      refusal(later, { type: "spyRival", rival: target.id }, T0 + spy.hours * HOUR),
-    ).toBeNull();
+    expect(later.spyLevels).toEqual({});
   });
 
-  it("refuse un rival qui n'est pas un voisin, ou sans énergie", () => {
-    expect(refusal(atTier5(), { type: "spyRival", rival: "r:900:900" }, T0)).toBe("unknownRival");
-    const tired = { ...atTier5(), energy: 0 };
-    expect(refusal(tired, { type: "spyRival", rival: rival().id }, T0)).toBe("noEnergy");
+  it("sans sonde, on attend qu'une se forme dans les Récepteurs", () => {
+    const empty = withReceptors(2, 0);
+    expect(refusal(empty, { type: "spyRival", rival: rival().id }, T0)).toBe("noSpies");
+    const later = advance(empty, T0 + spy.regenHours * HOUR).state;
+    expect(later.spies).toBe(1);
+    expect(spyCapacity(later)).toBe(4);
+    expect(advance(empty, T0 + 30 * spy.regenHours * HOUR).state.spies).toBe(4);
+  });
+
+  it("des Récepteurs plus hauts que les siens déjouent l'espion : la sonde est perdue", () => {
+    const target = rival();
+    const start = withReceptors(1);
+    expect(rivalReceptors(target, 27)).toBeGreaterThan(1);
+    const step = spyOn(start, target, 27);
+    if ("error" in step) throw new Error(step.error);
+    expect(step.events).toEqual([{ type: "rivalSpyFailed", at: start.now, rival: target.id }]);
+    expect(step.state.spies).toBe(start.spies - 1);
+    expect(spiedLevel(step.state, target.id)).toBe(0);
+  });
+
+  it("le niveau dit ce que le rapport révèle, jusqu'à tout", () => {
+    expect(spyReveal(1)).toEqual({
+      total: true,
+      available: false,
+      power: false,
+      troopsMargin: null,
+      everything: false,
+    });
+    expect(spyReveal(5)).toMatchObject({ available: true, power: true, troopsMargin: null });
+    expect(spyReveal(7).troopsMargin).toBe(spy.roughPercent);
+    expect(spyReveal(9).troopsMargin).toBe(spy.closePercent);
+    expect(spyReveal(11)).toMatchObject({ troopsMargin: 0, everything: true });
+  });
+
+  it("refuse un rival qui n'est pas un voisin", () => {
+    expect(refusal(withReceptors(1), { type: "spyRival", rival: "r:900:900" }, T0)).toBe(
+      "unknownRival",
+    );
   });
 });
 
