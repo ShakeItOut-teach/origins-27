@@ -503,6 +503,7 @@ function spyRival(state: PlayerState, rivalId: string): Outcome {
   const rival = reachableRivals(state).find((entry) => entry.id === rivalId);
   if (rival === undefined) return { error: "unknownRival" };
   if (isAlly(state, rival)) return { error: "ally" };
+  if (rival.human) return { error: "human" };
   if ((state.spiedUntil[rivalId] ?? 0) > state.now) return { error: "alreadySpied" };
   const spy = BALANCE.rivals.spy;
   if (state.energy < spy.energy) return { error: "noEnergy" };
@@ -525,6 +526,7 @@ function sendRaid(
   const rival = reachableRivals(state).find((entry) => entry.id === rivalId);
   if (rival === undefined) return { error: "unknownRival" };
   if (isAlly(state, rival)) return { error: "ally" };
+  if (rival.human) return { error: "human" };
   if ((state.placeReadyAt[rivalId] ?? 0) > state.now) return { error: "rivalClosed" };
   if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {
     return { error: "noTroops" };

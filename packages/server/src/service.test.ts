@@ -410,3 +410,39 @@ describe("état", () => {
     expect(back.state.resources.sugar).toBe(80 * MICRO);
   });
 });
+
+describe("le même océan : le serveur calcule avec les autres humains", () => {
+  it("donne la foule au moteur, sans la sauvegarder dans la partie", async () => {
+    const repo = createMemoryRepository();
+    const { deps } = setup(repo);
+    const bobCard = {
+      slot: 11,
+      name: "Humanus bobensis",
+      hue: 30,
+      tier: 3,
+      zone: 0,
+      scores: { power: 999_999, cell: 999_999, troops: 0, loot: 0, defense: 0 },
+      week: 0,
+      contest: 0,
+      seenAt: START,
+    };
+    const shared: ServerDeps = { ...deps, crowd: () => Promise.resolve({ cards: [bobCard] }) };
+    const reply = await handleState(shared, ALICE);
+    expect(reply.status).toBe("done");
+    if (reply.status !== "done") return;
+    expect(reply.state.crowd?.cards).toEqual([bobCard]);
+    const stored = await repo.load(ALICE);
+    expect(stored?.state).not.toContain("bobensis");
+
+    const order = await handleOrder(shared, ALICE, harvest(1));
+    expect(order.status).toBe("done");
+    if (order.status !== "done") return;
+    expect(order.state.crowd?.cards).toHaveLength(1);
+  });
+
+  it("sans foule, rien ne change", async () => {
+    const { deps } = setup();
+    const reply = await handleState(deps, BOB);
+    expect(reply.status === "done" && reply.state.crowd === undefined).toBe(true);
+  });
+});

@@ -156,7 +156,14 @@ export function RivalsView({ state, lang, onOrder }: Props) {
                   style={{ background: `hsl(${String(rival.hue)} 50% 45%)` }}
                   aria-hidden="true"
                 />
-                <span className="rival-name">{rival.name}</span>
+                <span className="rival-name">
+                  {rival.name}
+                  {rival.human && (
+                    <span className="human-tag" data-testid="human-tag">
+                      {t("label.human")}
+                    </span>
+                  )}
+                </span>
                 <span className="rival-guard">
                   {t("label.guard")}{" "}
                   <strong>
@@ -215,8 +222,11 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
   const spy = BALANCE.rivals.spy;
 
   const ally = isAlly(state, rival);
+  // Un allié ou une autre espèce humaine : on ne l'espionne pas et on ne l'attaque pas.
+  const peaceful = ally || rival.human;
   let blocked: string | null = null;
-  if (ally) blocked = t("state.ally");
+  if (rival.human) blocked = t("state.human");
+  else if (ally) blocked = t("state.ally");
   else if ((raid !== null && mine === null) || state.hunt !== null) blocked = t("state.oneSortie");
   else if (closedFor > 0) blocked = `${t("state.rivalClosed")} ${formatAway(closedFor, lang)}`;
   else if (partySize(state.troops) === 0) blocked = t("state.noTroops");
@@ -250,7 +260,7 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
           </button>
         </div>
 
-        <div className="costs">
+        <div className="costs" hidden={rival.human}>
           <span className="cost">
             {t("label.guard")}{" "}
             {spied
@@ -278,13 +288,18 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
             <span className="badge">{t("label.ally")}</span>
           </p>
         )}
-        {offer.weakened && !ally && (
+        {rival.human && (
+          <p className="sheet-level" data-testid="rival-human">
+            <span className="human-tag">{t("label.human")}</span>
+          </p>
+        )}
+        {offer.weakened && !peaceful && (
           <p className="sheet-building is-warning" data-testid="rival-weakened">
             {t("state.weakened")}
           </p>
         )}
 
-        {ally ? null : spied ? (
+        {peaceful ? null : spied ? (
           <>
             <p className="sheet-role weakness">
               {t("label.weakness")} : <TroopIcon id={weakness} />

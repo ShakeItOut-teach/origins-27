@@ -7,6 +7,7 @@
 import { BALANCE, ORGANELLE_IDS, SEASON_DAYS, TROOP_IDS } from "@o27/data";
 import type { RankingId, ResourceId } from "@o27/data";
 import { earnChest } from "./chests";
+import { crowdStamp, humansBySlot } from "./crowd";
 import { evolutionLevels } from "./evolutions";
 import { organismZone, rankOf } from "./ocean";
 import { organismProfile } from "./rivals";
@@ -166,6 +167,8 @@ export interface RankRow {
   readonly score: number;
   /** Est-ce le joueur lui-même ? Son nom est alors vide. */
   readonly me: boolean;
+  /** Un vrai joueur (le joueur lui-même compris), et non un organisme simulé. */
+  readonly human: boolean;
 }
 
 export interface Ranking {
@@ -175,18 +178,35 @@ export interface Ranking {
 }
 
 let othersKey = "";
-let others: readonly { slot: number; name: string; hue: number; score: number }[] = [];
+interface Other {
+  readonly slot: number;
+  readonly name: string;
+  readonly hue: number;
+  readonly score: number;
+  readonly human: boolean;
+}
+
+let others: readonly Other[] = [];
 
 /** Le classement de l'océan dans une catégorie, à l'instant de l'état du joueur. */
 export function ranking(state: PlayerState, category: RankingId): Ranking {
   const day = seasonDay(state, state.now);
-  const key = [state.worldSeed, state.slot, day, category].join("/");
+  const key = [state.worldSeed, state.slot, day, category, crowdStamp(state)].join("/");
   if (key !== othersKey) {
-    const found: { slot: number; name: string; hue: number; score: number }[] = [];
+    const humans = humansBySlot(state);
+    const found: Other[] = [];
     for (let slot = 0; slot < BALANCE.world.organisms; slot++) {
       if (slot === state.slot) continue;
+      // Un vrai joueur prend la place de l'organisme simulé : son nom, son score.
+      const human = humans.get(slot);
+      if (human !== undefined) {
+        const { name, hue } = human;
+        found.push({ slot, name, hue, score: human.scores[category], human: true });
+        continue;
+      }
       const { name, hue } = organismProfile(state.worldSeed, slot);
-      found.push({ slot, name, hue, score: organismScore(state.worldSeed, slot, day, category) });
+      const score = organismScore(state.worldSeed, slot, day, category);
+      found.push({ slot, name, hue, score, human: false });
     }
     found.sort((one, other) => other.score - one.score || one.slot - other.slot);
     others = found;
@@ -197,16 +217,19 @@ export function ranking(state: PlayerState, category: RankingId): Ranking {
   const ahead = others.filter((entry) => entry.score > score).length;
   const rows: RankRow[] = [];
   others.forEach((entry, index) => {
-    if (index === ahead) rows.push({ rank: ahead + 1, name: "", hue: 0, score, me: true });
+    if (index === ahead) {
+      rows.push({ rank: ahead + 1, name: "", hue: 0, score, me: true, human: true });
+    }
     rows.push({
       rank: index < ahead ? index + 1 : index + 2,
       name: entry.name,
       hue: entry.hue,
       score: entry.score,
       me: false,
+      human: entry.human,
     });
   });
-  const mine: RankRow = { rank: ahead + 1, name: "", hue: 0, score, me: true };
+  const mine: RankRow = { rank: ahead + 1, name: "", hue: 0, score, me: true, human: true };
   if (ahead >= others.length) rows.push(mine);
   return { rows, mine };
 }

@@ -6,6 +6,7 @@
 import { BALANCE, ORGANELLE_IDS, PREY_KINDS, TROOP_IDS } from "@o27/data";
 import type { BannerId, PreyKind, TroopId } from "@o27/data";
 import { allianceTechLevel, bannerOf } from "./banners";
+import { crowdStamp, humansBySlot } from "./crowd";
 import { anoxiaAt } from "./events";
 import { lossesFor, partyOf, partySize, spared, winChance } from "./hunt";
 import { modifierPercent, travelMs } from "./stats";
@@ -42,6 +43,11 @@ export interface Rival {
   readonly y: number;
   /** Sa bannière ; `null` pour un voisin de la goutte, avant l'océan. */
   readonly banner: BannerId | null;
+  /**
+   * Un vrai joueur tient cette place : on voit son nom, mais on ne l'espionne pas et on ne
+   * l'attaque pas (pas de combat entre humains à l'étape 1 du monde partagé).
+   */
+  readonly human: boolean;
 }
 
 export interface RivalStats {
@@ -82,6 +88,7 @@ function rivalAt(worldSeed: number, column: number, row: number, steps: number):
     x: column,
     y: row,
     banner: null,
+    human: false,
   };
 }
 
@@ -131,6 +138,7 @@ function organismAt(
     y: organism.y,
     banner: bannerOf(worldSeed, organism.slot),
     distance,
+    human: false,
   };
 }
 
@@ -143,15 +151,22 @@ let lastOcean: readonly Rival[] = [];
  */
 export function oceanRivals(state: PlayerState): readonly Rival[] {
   const day = seasonDay(state, state.now);
-  const key = [state.worldSeed, state.slot, state.zone, day].join("/");
+  const key = [state.worldSeed, state.slot, state.zone, day, crowdStamp(state)].join("/");
   if (key === lastOceanKey) return lastOcean;
   const home = playerCell(state);
+  const humans = humansBySlot(state);
   const found: (Rival & { readonly distance: number })[] = [];
   for (const organism of oceanOrganisms(state.worldSeed, day)) {
     if (organism.slot === state.slot || organism.zone > state.zone) continue;
     // Un organisme simulé cède sa case au joueur qui s'y installe.
     if (organism.x === home.x && organism.y === home.y) continue;
-    found.push(organismAt(state.worldSeed, organism, home));
+    const simulated = organismAt(state.worldSeed, organism, home);
+    const human = humans.get(organism.slot);
+    found.push(
+      human === undefined
+        ? simulated
+        : { ...simulated, name: human.name, hue: human.hue, human: true },
+    );
   }
   found.sort((one, other) => one.distance - other.distance || (one.id < other.id ? -1 : 1));
   lastOceanKey = key;
@@ -189,6 +204,8 @@ export function rivalName(state: PlayerState, id: string): string {
   const ocean = /^o:(\d{1,4})$/.exec(id);
   if (ocean !== null) {
     const slot = Number(ocean[1]);
+    const human = humansBySlot(state).get(slot);
+    if (human !== undefined) return human.name;
     return organismAt(
       state.worldSeed,
       { slot, x: 0, y: 0, zone: 0, hue: organismHue(state.worldSeed, slot) },
@@ -542,8 +559,8 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
   const night = nightEnd(state, at);
   if (night > at)
     return { state: { ...state, nextRaidAt: night + nextDelay(state, at) }, events: [] };
-  // Les alliés n'attaquent pas : seuls les autres voisins viennent.
-  const rivals = nearRivals(state).filter((rival) => !isAlly(state, rival));
+  // Les alliés et les vrais joueurs n'attaquent pas : seuls les autres voisins viennent.
+  const rivals = nearRivals(state).filter((rival) => !isAlly(state, rival) && !rival.human);
   // Personne autour : on regardera de nouveau plus tard.
   if (rivals.length === 0) {
     return { state: { ...state, nextRaidAt: at + nextDelay(state, at) }, events: [] };

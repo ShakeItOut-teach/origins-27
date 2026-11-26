@@ -214,8 +214,40 @@ export interface DailyQuests {
   readonly items: readonly Quest[];
 }
 
+/**
+ * La vitrine d'un humain : ce que les autres joueurs de la saison voient de lui. Rien de plus :
+ * ni compte, ni ressources, ni troupes.
+ */
+export interface HumanCard {
+  /** Sa place dans l'océan. */
+  readonly slot: number;
+  /** Le nom de son espèce. */
+  readonly name: string;
+  readonly hue: number;
+  readonly tier: number;
+  readonly zone: number;
+  /** Ses scores dans les cinq classements, à sa dernière visite. */
+  readonly scores: Readonly<Record<RankingId, number>>;
+  /** Sa progression au concours de la semaine `week` (0 : il n'y participe pas). */
+  readonly week: number;
+  readonly contest: number;
+  /** L'instant de sa dernière visite. */
+  readonly seenAt: number;
+}
+
+/** Les autres humains de la saison, tels que le serveur les connaît. */
+export interface Crowd {
+  readonly cards: readonly HumanCard[];
+}
+
 export interface PlayerState {
   readonly version: 11;
+  /**
+   * Les autres humains de la saison. Donnée par le serveur avant chaque calcul et renvoyée à
+   * l'appareil ; jamais sauvegardée dans la partie. Absente : l'océan n'a que des organismes
+   * simulés.
+   */
+  readonly crowd?: Crowd;
   /** L'alliance du joueur ; `null` avant l'ouverture des alliances. */
   readonly alliance: Alliance | null;
   readonly daily: DailyRecord;
@@ -576,6 +608,8 @@ export type OrderErrorCode =
   | "unknownEvent"
   /** On n'espionne ni n'attaque un membre de sa propre alliance. */
   | "ally"
+  /** Un vrai joueur tient cette place : pas de combat entre humains pour l'instant. */
+  | "human"
   | "noAlliance"
   | "sameAlliance"
   | "donationsDone"

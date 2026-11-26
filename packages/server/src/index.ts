@@ -24,3 +24,5 @@ export type {
   OrderRecord,
   VisitRecord,
 } from "./community";
+// Le monde partagé : la vitrine d'un joueur, et la relecture des vitrines venues de la base.
+export { humanCard, readCrowd } from "@o27/core";

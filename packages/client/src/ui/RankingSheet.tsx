@@ -1,4 +1,4 @@
-import { leagueOf, leagueRewardFor, ranking } from "@o27/core";
+import { humanCount, leagueOf, leagueRewardFor, ranking } from "@o27/core";
 import type { PlayerState, RankRow } from "@o27/core";
 import { RANKING_IDS, RESOURCE_IDS } from "@o27/data";
 import type { RankingId, TextKey } from "@o27/data";
@@ -81,7 +81,14 @@ export function RankingSheet({ state, lang, onClose }: Props) {
             data-rank={row.rank}
           >
             <span className="rank-place">{row.rank}</span>
-            <span className="rank-name">{row.me ? t("label.you") : row.name}</span>
+            <span className="rank-name">
+              {row.me ? t("label.you") : row.name}
+              {row.human && !row.me && (
+                <span className="human-tag" data-testid="human-tag">
+                  {t("label.human")}
+                </span>
+              )}
+            </span>
             <span className="rank-score">{number(row.score)}</span>
           </li>
         ))}
@@ -89,6 +96,13 @@ export function RankingSheet({ state, lang, onClose }: Props) {
       <p className="sheet-role" data-testid="ranking-mine">
         {t("label.rank").replace("{n}", String(mine.rank)).replace("{total}", String(rows.length))}
       </p>
+      {state.crowd !== undefined && (
+        <p className="sheet-role" data-testid="ranking-humans">
+          {humanCount(state) > 1
+            ? t("ranking.humans").replace("{n}", String(humanCount(state)))
+            : t("ranking.humansAlone")}
+        </p>
+      )}
     </SheetFrame>
   );
 }

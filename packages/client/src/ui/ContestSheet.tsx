@@ -93,7 +93,14 @@ export function ContestSheet({ state, lang, onClose }: Props) {
             {board.rows.map((row) => (
               <li key={row.rank} className={`rank-row${row.me ? " is-me" : ""}`}>
                 <span>{row.rank}</span>
-                <span className="rank-name">{row.me ? t("gazette.you") : row.name}</span>
+                <span className="rank-name">
+                  {row.me ? t("gazette.you") : row.name}
+                  {row.human && !row.me && (
+                    <span className="human-tag" data-testid="human-tag">
+                      {t("label.human")}
+                    </span>
+                  )}
+                </span>
                 <span className="rank-score">+{score(row.score, lang)}</span>
               </li>
             ))}

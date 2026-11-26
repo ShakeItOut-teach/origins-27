@@ -6,7 +6,8 @@
 //   POST /jeu/musee     → les planches du Muséum du joueur
 //   POST /jeu/stats     → les statistiques du jeu, pour un gardien seulement
 //   POST /jeu/supprimer → supprime le compte du joueur et tout ce qui est à lui { confirm }
-// À chaque visite et à chaque ordre, le serveur note aussi de quoi mesurer l'audience.
+// À chaque visite et à chaque ordre, le serveur note aussi de quoi mesurer l'audience, et met à
+// jour la vitrine du joueur : ce que les autres humains de la saison voient de lui.
 // Toute la logique est dans packages/server, testée sans Supabase. Ce fichier ne fait que
 // trois choses : reconnaître le joueur, brancher la base, traduire la réponse en HTTP.
 // `../_shared/server.js` est fabriqué par `pnpm server:bundle` avant le déploiement.
@@ -18,6 +19,8 @@ import {
   handleFeedback,
   handleOrder,
   handleState,
+  humanCard,
+  readCrowd,
 } from "../_shared/server.js";
 
 const CORS = {
@@ -62,6 +65,39 @@ function env(name: string): string {
 const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
   auth: { persistSession: false },
 });
+
+/**
+ * Les vitrines de la saison, gardées une minute en mémoire : une seule lecture de la base par
+ * minute, quel que soit le nombre de joueurs. Si la lecture échoue, le jeu continue sans elles.
+ */
+const CROWD_MS = 60_000;
+let crowdCache: { season: number; at: number; cards: unknown } | null = null;
+
+async function seasonCrowd(season: number): Promise<ReturnType<typeof readCrowd>> {
+  const now = Date.now();
+  if (crowdCache !== null && crowdCache.season === season && now - crowdCache.at < CROWD_MS) {
+    return readCrowd(crowdCache.cards);
+  }
+  const { data, error } = await admin.rpc("lire_vitrines", { p_saison: season });
+  if (error !== null) {
+    console.error(error);
+    return readCrowd([]);
+  }
+  crowdCache = { season, at: now, cards: data };
+  return readCrowd(data);
+}
+
+/** Met à jour la vitrine du joueur, après la réponse. */
+function showCard(playerId: string, season: number, state: Parameters<typeof humanCard>[0]): void {
+  later(
+    admin.rpc("montrer_vitrine", {
+      p_joueur: playerId,
+      p_saison: season,
+      p_place: state.slot,
+      p_carte: humanCard(state),
+    }),
+  );
+}
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
@@ -149,6 +185,7 @@ Deno.serve(async (request) => {
     newSeed: () => crypto.getRandomValues(new Uint32Array(1))[0],
     seasonStart: Date.parse(season.debut),
     worldSeed: Number(season.graine),
+    crowd: () => seasonCrowd(Number(season.id)),
     repo: {
       async nextSlot() {
         const { data, error } = await admin.rpc("prendre_place", { p_saison: season.id });
@@ -199,6 +236,7 @@ Deno.serve(async (request) => {
       const body: unknown = await request.json().catch(() => null);
       const reply = await handleState(deps, playerId);
       if (reply.status === "done") {
+        showCard(playerId, Number(season.id), reply.state);
         const visit = describeVisit(playerId, reply.state, reply.state.now, body);
         later(
           admin.rpc("noter_visite", {
@@ -223,6 +261,7 @@ Deno.serve(async (request) => {
       const reply = await handleOrder(deps, playerId, body);
       const record =
         reply.status === "done" ? describeOrder(playerId, reply.state.now, body, reply) : null;
+      if (reply.status === "done") showCard(playerId, Number(season.id), reply.state);
       if (record !== null) {
         later(
           admin.rpc("noter_ordre", {

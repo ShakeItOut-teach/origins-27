@@ -9,6 +9,7 @@
 import { BALANCE, SEASON_DAYS } from "@o27/data";
 import type { RankingId } from "@o27/data";
 import { earnChest } from "./chests";
+import { crowdStamp, humansBySlot } from "./crowd";
 import { organismScore, playerScore } from "./power";
 import { organismProfile } from "./rivals";
 import { DAY_MS, MICRO } from "./types";
@@ -67,26 +68,38 @@ export function contestProgress(state: PlayerState): number {
 }
 
 let othersKey = "";
-let others: readonly { slot: number; name: string; hue: number; score: number }[] = [];
+interface Other {
+  readonly slot: number;
+  readonly name: string;
+  readonly hue: number;
+  readonly score: number;
+  readonly human: boolean;
+}
 
-/** La progression de chaque organisme simulé, de la plus grande à la plus petite. */
-function organismsProgress(
-  state: PlayerState,
-  week: number,
-  day: number,
-): readonly { slot: number; name: string; hue: number; score: number }[] {
-  const key = [state.worldSeed, state.slot, week, day].join("/");
+let others: readonly Other[] = [];
+
+/** La progression de chaque autre organisme, de la plus grande à la plus petite. */
+function organismsProgress(state: PlayerState, week: number, day: number): readonly Other[] {
+  const key = [state.worldSeed, state.slot, week, day, crowdStamp(state)].join("/");
   if (key === othersKey) return others;
   const theme = contestTheme(week);
   const from = firstDay(week);
-  const found: { slot: number; name: string; hue: number; score: number }[] = [];
+  const humans = humansBySlot(state);
+  const found: Other[] = [];
   for (let slot = 0; slot < BALANCE.world.organisms; slot++) {
     if (slot === state.slot) continue;
+    const human = humans.get(slot);
+    if (human !== undefined) {
+      // Un humain a la progression de sa dernière visite, s'il joue ce concours-là.
+      const score = human.week === week ? human.contest : 0;
+      found.push({ slot, name: human.name, hue: human.hue, score, human: true });
+      continue;
+    }
     const { name, hue } = organismProfile(state.worldSeed, slot);
     const score =
       organismScore(state.worldSeed, slot, day, theme) -
       organismScore(state.worldSeed, slot, from, theme);
-    found.push({ slot, name, hue, score: Math.max(0, score) });
+    found.push({ slot, name, hue, score: Math.max(0, score), human: false });
   }
   found.sort((one, other) => other.score - one.score || one.slot - other.slot);
   others = found;
@@ -101,6 +114,8 @@ export interface ContestRow {
   readonly hue: number;
   readonly score: number;
   readonly me: boolean;
+  /** Un vrai joueur (le joueur lui-même compris). */
+  readonly human: boolean;
 }
 
 export interface ContestBoard {
@@ -117,7 +132,7 @@ function board(state: PlayerState, week: number, day: number, score: number): Co
   const list = organismsProgress(state, week, day);
   // À progression égale, le joueur passe devant.
   const ahead = list.filter((entry) => entry.score > score).length;
-  const mine: ContestRow = { rank: ahead + 1, name: "", hue: 0, score, me: true };
+  const mine: ContestRow = { rank: ahead + 1, name: "", hue: 0, score, me: true, human: true };
   const rows: ContestRow[] = [];
   for (let index = 0; index < list.length && rows.length < RULES.top; index++) {
     if (index === ahead) rows.push(mine);
@@ -129,6 +144,7 @@ function board(state: PlayerState, week: number, day: number, score: number): Co
       hue: entry.hue,
       score: entry.score,
       me: false,
+      human: entry.human,
     });
   }
   return {

@@ -11,8 +11,9 @@ import {
   needsWorldPlace,
   serializeState,
   summarizeAbsence,
+  withCrowd,
 } from "@o27/core";
-import type { AbsenceSummary, GameEvent, OrderErrorCode, PlayerState } from "@o27/core";
+import type { AbsenceSummary, Crowd, GameEvent, OrderErrorCode, PlayerState } from "@o27/core";
 import { OrderRequestSchema } from "@o27/data";
 
 /** Ce qu'un ordre a donné. Enregistré tel quel : le rejouer renvoie la même chose. */
@@ -56,6 +57,11 @@ export interface ServerDeps {
   readonly seasonStart: number;
   /** Graine de la goutte : la même pour tous les joueurs de la saison. */
   readonly worldSeed: number;
+  /**
+   * Les vitrines des humains de la saison (monde partagé). Sans elle, l'océan n'a que des
+   * organismes simulés.
+   */
+  readonly crowd?: () => Promise<Crowd>;
 }
 
 export type OrderReply =
@@ -85,6 +91,13 @@ interface Loaded {
 }
 
 async function loadOrCreate(deps: ServerDeps, playerId: string, now: number): Promise<Loaded> {
+  const loaded = await loadOrCreateAlone(deps, playerId, now);
+  if (deps.crowd === undefined) return loaded;
+  // Le moteur calcule avec les autres humains : classements, concours, océan.
+  return { ...loaded, state: withCrowd(loaded.state, await deps.crowd()) };
+}
+
+async function loadOrCreateAlone(deps: ServerDeps, playerId: string, now: number): Promise<Loaded> {
   const stored = await deps.repo.load(playerId);
   if (stored !== null) {
     // Une partie d'avant la carte reçoit sa place dans la goutte à sa première relecture.

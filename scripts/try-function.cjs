@@ -25,7 +25,18 @@ async function main() {
   const out = path.join(os.tmpdir(), `o27-fonction-${String(process.pid)}.mjs`);
   fs.writeFileSync(out, js);
 
-  // La fausse base.
+  // La fausse base. Un autre humain, Bob, est déjà dans l'océan.
+  const BOB_CARD = {
+    slot: 41,
+    name: "Bobus maximus",
+    hue: 200,
+    tier: 4,
+    zone: 0,
+    scores: { power: 5000, cell: 4000, troops: 1000, loot: 0, defense: 0 },
+    week: 0,
+    contest: 0,
+    seenAt: Date.now() - 60_000,
+  };
   const calls = [];
   const states = new Map();
   const outcomes = new Map();
@@ -49,6 +60,8 @@ async function main() {
     donner_avis: () => true,
     lire_planches: () => [{ season: 1, name: "Protomonas originis" }],
     statistiques: () => (guardian ? { joueurs: 3 } : null),
+    lire_vitrines: () => [BOB_CARD],
+    montrer_vitrine: () => null,
   };
   const builder = (table) => {
     const filters = {};
@@ -164,6 +177,24 @@ async function main() {
     noted,
   );
 
+  check(
+    "etat : la foule des autres humains accompagne l'état",
+    visit.body.state?.crowd?.cards?.[0]?.name === "Bobus maximus",
+    visit.body.state?.crowd,
+  );
+  const shown = rpcCall("montrer_vitrine");
+  check(
+    "etat : la vitrine du joueur est mise à jour, sans son compte dedans",
+    shown?.p_joueur === "joueur-1" &&
+      shown.p_place === visit.body.state.slot &&
+      shown.p_carte?.slot === visit.body.state.slot &&
+      typeof shown.p_carte.name === "string" &&
+      shown.p_carte.scores?.power >= 0 &&
+      !JSON.stringify(shown.p_carte).includes("joueur-1"),
+    shown,
+  );
+  const reads = calls.filter(([n]) => n === "lire_vitrines").length;
+
   const plain = await post("etat", {});
   await Promise.all(waiting);
   check(
@@ -183,6 +214,12 @@ async function main() {
     "ordre : son type est compté",
     counted?.p_type === "harvest" && counted.p_accepte === true && counted.p_palier === 0,
     counted,
+  );
+
+  check(
+    "les vitrines ne sont lues qu'une fois par minute",
+    calls.filter(([n]) => n === "lire_vitrines").length === reads,
+    reads,
   );
 
   const bad = await post("ordre", { n: 1 });

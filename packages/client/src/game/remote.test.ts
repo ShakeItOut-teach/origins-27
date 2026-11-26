@@ -204,6 +204,25 @@ describe("dialogue avec le serveur", () => {
     expect(storage.getItem("o27.session.v1")).toContain('"refresh":"R"');
   });
 
+  it("garde les autres humains envoyés avec l'état, et ignore une vitrine abîmée", async () => {
+    const storage = memory({ "o27.session.v1": JSON.stringify({ access: "A", refresh: "R" }) });
+    const card = {
+      slot: 9,
+      name: "Humanus",
+      hue: 10,
+      tier: 3,
+      zone: 0,
+      scores: { power: 1, cell: 1, troops: 0, loot: 0, defense: 0 },
+      week: 0,
+      contest: 0,
+      seenAt: START,
+    };
+    const shared = { ...state, crowd: { cards: [card, { slot: "x" }] } };
+    const { fetchLike } = fakeFetch(() => [200, { state: shared, absence }]);
+    const api = createApi({ url: "https://serveur.test", key: "k", fetch: fetchLike, storage });
+    expect((await api.fetchState()).state.crowd?.cards).toEqual([card]);
+  });
+
   it("renouvelle un jeton périmé sans créer un nouveau compte", async () => {
     const storage = memory({ "o27.session.v1": JSON.stringify({ access: "vieux", refresh: "R" }) });
     const { fetchLike, calls } = fakeFetch((url, token) => {

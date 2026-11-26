@@ -5,6 +5,8 @@ export type {
   Alliance,
   Companion,
   Construction,
+  Crowd,
+  HumanCard,
   DailyRecord,
   Report,
   RewardChest,
@@ -21,6 +23,8 @@ export type {
   Step,
 } from "./types";
 export { advance } from "./advance";
+export { crowdStamp, humanCount, humansBySlot, readCrowd, withCrowd } from "./crowd";
+export { humanCard } from "./vitrine";
 export { applyOrder, nextMutationPrice } from "./apply";
 export {
   lossesFor,

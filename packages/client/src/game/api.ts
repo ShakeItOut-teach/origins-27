@@ -3,7 +3,7 @@
  * Le joueur ne remplit rien : à sa première visite il reçoit un compte anonyme, gardé sur
  * l'appareil. Aucune bibliothèque : trois appels HTTP suffisent.
  */
-import { deserializeState } from "@o27/core";
+import { deserializeState, readCrowd, withCrowd } from "@o27/core";
 import type { AbsenceSummary, PlayerState } from "@o27/core";
 import type { Order, VisitInfo } from "@o27/data";
 import { createCommunity } from "./community";
@@ -194,7 +194,10 @@ export function createApi(deps: ApiDeps): Api {
 
   const readState = (payload: unknown): PlayerState => {
     if (!isRecord(payload)) throw new Error("réponse illisible");
-    return deserializeState(JSON.stringify(payload.state));
+    const state = deserializeState(JSON.stringify(payload.state));
+    // Les autres humains de la saison : le serveur les envoie avec l'état, hors sauvegarde.
+    const crowd = isRecord(payload.state) ? payload.state.crowd : undefined;
+    return crowd === undefined ? state : withCrowd(state, readCrowd(crowd));
   };
 
   const fetchState: Remote["fetchState"] = async () => {

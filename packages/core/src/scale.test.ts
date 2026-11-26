@@ -12,6 +12,7 @@ function average(zone: number): Rival {
     kind: "soft",
     steps: 1,
     far: false,
+    human: false,
     temper: 100,
     zone,
     x: 0,

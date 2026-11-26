@@ -405,6 +405,70 @@ begin
 end;
 $$;
 
+-- 7 bis. Le même océan : les vitrines des joueurs, écrites et lues par le serveur seulement.
+reset role;
+do $
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+  bob constant uuid := '00000000-0000-4000-8000-00000000000b';
+  saison bigint;
+  toutes jsonb;
+begin
+  select id into strict saison from public.saisons order by debut desc limit 1;
+  perform public.montrer_vitrine(alice, saison, 3, '{"slot":3,"name":"Alicia prima"}');
+  perform public.montrer_vitrine(bob, saison, 5, '{"slot":5,"name":"Bobus"}');
+  -- Une nouvelle visite remplace la vitrine, sans la dédoubler.
+  perform public.montrer_vitrine(alice, saison, 3, '{"slot":3,"name":"Alicia secunda"}');
+  toutes := public.lire_vitrines(saison);
+  if jsonb_array_length(toutes) <> 2 then
+    raise exception 'ECHEC : % vitrines au lieu de 2', jsonb_array_length(toutes);
+  end if;
+  if toutes -> 0 ->> 'name' <> 'Alicia secunda' then
+    raise exception 'ECHEC : la vitrine n''a pas été remplacée';
+  end if;
+  if toutes::text like '%00000000-0000-4000-8000%' then
+    raise exception 'ECHEC : une vitrine dit à quel compte elle appartient';
+  end if;
+  if public.lire_vitrines(saison + 1000) <> '[]'::jsonb then
+    raise exception 'ECHEC : une autre saison voit ces vitrines';
+  end if;
+end;
+$;
+
+set local role authenticated;
+do $
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+begin
+  begin
+    perform 1 from public.vitrines;
+    raise exception 'ECHEC : un joueur lit les vitrines sans passer par le serveur';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.lire_vitrines(1);
+    raise exception 'ECHEC : un joueur appelle lire_vitrines';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.montrer_vitrine(alice, 1, 0, '{}');
+    raise exception 'ECHEC : un joueur écrit lui-même sa vitrine';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$;
+
+set local role anon;
+do $
+begin
+  begin
+    perform public.lire_vitrines(1);
+    raise exception 'ECHEC : un visiteur lit les vitrines';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$;
+
 -- 8. Suppression d'un compte : tout ce qui est au joueur s'en va ; son avis reste, sans lui.
 reset role;
 do $$
@@ -417,7 +481,8 @@ begin
     or exists (select 1 from public.arrivees a where a.joueur = alice)
     or exists (select 1 from public.planches p where p.joueur = alice)
     or exists (select 1 from public.sauvegardes s where s.joueur = alice)
-    or exists (select 1 from public.gardiens g where g.joueur = alice) then
+    or exists (select 1 from public.gardiens g where g.joueur = alice)
+    or exists (select 1 from public.vitrines v where v.joueur = alice) then
     raise exception 'ECHEC : il reste des données du joueur après la suppression de son compte';
   end if;
   if (select count(*) from public.avis a where a.joueur is null) <> 2 then

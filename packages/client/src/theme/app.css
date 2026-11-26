@@ -1852,6 +1852,21 @@ p {
   font-family: var(--font-text);
 }
 
+/* Une espèce humaine, parmi les organismes simulés : une petite étiquette d'encre. */
+.human-tag {
+  display: inline-block;
+  margin-left: var(--space-1);
+  padding: 0 4px;
+  border: 1px solid var(--ink);
+  font-family: var(--font-number);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
 .lexicon {
   display: flex;
   flex-direction: column;
