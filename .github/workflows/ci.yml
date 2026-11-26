@@ -55,7 +55,14 @@ jobs:
       - name: Base vide, migrations rejouées
         run: npx --yes supabase@2 db start
       - name: Règles d'accès et écritures
-        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/acces.sql
+        # En cas d'échec, l'erreur devient une annotation : lisible sans se connecter à GitHub.
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 \
+            -f supabase/tests/acces.sql 2> erreurs.txt || {
+            cat erreurs.txt
+            echo "::error title=Base de données::$(tr '\n' ' ' < erreurs.txt)"
+            exit 1
+          }
 
   deploy:
     name: Mise en ligne (préproduction)

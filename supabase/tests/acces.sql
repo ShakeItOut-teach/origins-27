@@ -407,7 +407,7 @@ $$;
 
 -- 7 bis. Le même océan : les vitrines des joueurs, écrites et lues par le serveur seulement.
 reset role;
-do $
+do $$
 declare
   alice constant uuid := '00000000-0000-4000-8000-00000000000a';
   bob constant uuid := '00000000-0000-4000-8000-00000000000b';
@@ -433,10 +433,10 @@ begin
     raise exception 'ECHEC : une autre saison voit ces vitrines';
   end if;
 end;
-$;
+$$;
 
 set local role authenticated;
-do $
+do $$
 declare
   alice constant uuid := '00000000-0000-4000-8000-00000000000a';
 begin
@@ -456,10 +456,10 @@ begin
   exception when insufficient_privilege then null;
   end;
 end;
-$;
+$$;
 
 set local role anon;
-do $
+do $$
 begin
   begin
     perform public.lire_vitrines(1);
@@ -467,7 +467,7 @@ begin
   exception when insufficient_privilege then null;
   end;
 end;
-$;
+$$;
 
 -- 8. Suppression d'un compte : tout ce qui est au joueur s'en va ; son avis reste, sans lui.
 reset role;
