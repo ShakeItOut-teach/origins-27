@@ -318,7 +318,11 @@ export const en = {
   "organelle.golgi.role": "Packs what your cells gather in the ocean: a tenth more per level.",
   "organelle.nucleus.name": "Nucleus",
   "organelle.nucleus.role":
-    "Expresses the cell’s evolutions. Each level lets you go one level further, and speeds up research.",
+    "The heart of the cell, which rules it: no organelle rises above it (except the store, which may be one level ahead). Each level adds a little to everything. It is costly. Later, it expresses evolutions: each level opens one more, and speeds up research.",
+  "nucleus.bonus":
+    "The Nucleus gives +{n}% to everything: production, storage, attack, defence… and takes as much off times and costs.",
+  "nucleus.needed": "The Nucleus rules the cell: raise it to level {n} first.",
+  "nucleus.open": "See the Nucleus",
   "organelle.lysosome.name": "Stomach",
   "organelle.lysosome.role": "Digests prey: a tenth more proteins per level, on every hunt.",
   "label.evolutions": "Evolutions",

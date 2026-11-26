@@ -53,12 +53,14 @@ function player(day: number, mutations: MutationId[] = ["thrift"]): PlayerState 
 
 describe("palier 10 : les rangs supérieurs", () => {
   it("aucun plafond daté : dès le jour 1, qui a de quoi payer dépasse le niveau 5", () => {
-    const first = player(1);
+    // Le seul garde-fou est le Noyau, qui s'achète : aucun n'est lié à la date.
+    const day1 = player(1);
+    const first = { ...day1, organelles: { ...day1.organelles, nucleus: RULES.maxLevel } };
     for (const id of ORGANELLE_IDS) expect(maxLevelOf(first, id)).toBe(RULES.maxLevel);
     const sent = applyOrder(first, { type: "upgrade", organelle: "mitochondrion" }, first.now);
     expect(sent.ok).toBe(true);
     // Mais c'est un long chantier : au moins une heure et demie, avant les bonus.
-    expect(levelDuration(first, "mitochondrion", 6)).toBeGreaterThanOrEqual(
+    expect(levelDuration(day1, "mitochondrion", 6)).toBeGreaterThanOrEqual(
       (RULES.minMinutesPerLevel * 60_000 * 80) / 100,
     );
     const top = { ...first, organelles: { ...first.organelles, mitochondrion: RULES.maxLevel } };
@@ -98,7 +100,9 @@ describe("palier 10 : les rangs supérieurs", () => {
   });
 
   it("on monte jusqu'au niveau 10 : la production suit, la réserve grandit aussi vite que les prix", () => {
-    let state = player(9);
+    // Le Noyau ouvre les niveaux : on le met au plus haut, pour ne mesurer que la Centrale.
+    const day9 = player(9);
+    let state = { ...day9, organelles: { ...day9.organelles, nucleus: RULES.maxLevel } };
     const rate = productionRate(state, "sugar");
     const store = capacity(state, "sugar");
     for (let level = 6; level <= TEN; level++) {

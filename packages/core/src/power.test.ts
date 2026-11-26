@@ -87,7 +87,8 @@ describe("la puissance", () => {
   it("additionne la cellule et les troupes, sorties comprises", () => {
     const state = player(7, 5);
     const data = BALANCE.power;
-    expect(cellPower(state)).toBe(10 * data.perOrganelleLevel + data.perMutation);
+    // Dix niveaux d'organites, plus le Noyau (niveau 1 dès le départ).
+    expect(cellPower(state)).toBe(11 * data.perOrganelleLevel + data.perMutation);
     expect(troopPower(state)).toBe(20 * data.perTroop);
     expect(totalPower(state)).toBe(cellPower(state) + troopPower(state));
     expect(cellPower({ ...state, zone: 2 })).toBe(cellPower(state) + 2 * data.perZone);

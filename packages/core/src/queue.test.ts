@@ -23,7 +23,7 @@ function player(tier: number): PlayerState {
     ...base,
     tier,
     counters: { ...base.counters, harvests: 10, organellesBuilt: 3, mutationsChosen: 1 },
-    organelles: { ...base.organelles, mitochondrion: 2, vacuole: 2, ribosome: 1 },
+    organelles: { ...base.organelles, mitochondrion: 2, vacuole: 2, ribosome: 1, nucleus: 4 },
     resources: { sugar: 1000 * MICRO, bricks: 1000 * MICRO, proteins: 0 },
     shieldUntil: now + 40 * DAY_MS,
     nextRaidAt: now + 40 * DAY_MS,

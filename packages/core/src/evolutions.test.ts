@@ -204,7 +204,8 @@ describe("exprimer une évolution", () => {
     expect(back.version).toBe(11);
     expect(back.research).toBeNull();
     expect(EVOLUTION_IDS.every((id) => back.evolutions[id] === 0)).toBe(true);
-    expect(back.organelles.nucleus).toBe(0);
+    // Le Noyau, lui, est là dès le départ : une vieille partie le reçoit au niveau 1.
+    expect(back.organelles.nucleus).toBe(1);
   });
 });
 

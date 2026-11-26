@@ -99,7 +99,8 @@ export function createPlayer(
     seasonStart,
     now,
     resources: fill(RESOURCE_IDS, 0),
-    organelles: fill(ORGANELLE_IDS, 0),
+    // Le Noyau est là dès le départ : c'est lui qui commande la cellule.
+    organelles: { ...fill(ORGANELLE_IDS, 0), nucleus: 1 },
     construction: null,
     mutations: [],
     mutationOffer: null,
@@ -473,6 +474,13 @@ function readQueue(value: unknown): QueuedBuild[] {
     }
     return { organelle, toLevel, paid: { sugar, bricks } };
   });
+}
+
+/** Une partie d'avant le Noyau « hôtel de ville » reçoit son Noyau, au niveau 1. */
+function withNucleus(
+  organelles: Readonly<Record<OrganelleId, number>>,
+): Readonly<Record<OrganelleId, number>> {
+  return organelles.nucleus >= 1 ? organelles : { ...organelles, nucleus: 1 };
 }
 
 function readAlliance(value: unknown): Alliance | null {
@@ -850,12 +858,14 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     seasonStart,
     now,
     resources: readCounts<ResourceId>(RESOURCE_IDS, raw.resources, beforeHunt ? ["proteins"] : []),
-    organelles: readCounts<OrganelleId>(ORGANELLE_IDS, raw.organelles, [
-      ...(beforeHunt ? (["nursery", "wall"] as const) : version < 5 ? (["wall"] as const) : []),
-      ...(version < 9 ? (["golgi", "nucleus", "lysosome"] as const) : []),
-      // Les Récepteurs sont venus après la version 11 : une sauvegarde peut ne pas les avoir.
-      "receptor",
-    ]),
+    organelles: withNucleus(
+      readCounts<OrganelleId>(ORGANELLE_IDS, raw.organelles, [
+        ...(beforeHunt ? (["nursery", "wall"] as const) : version < 5 ? (["wall"] as const) : []),
+        ...(version < 9 ? (["golgi", "nucleus", "lysosome"] as const) : []),
+        // Les Récepteurs sont venus après la version 11 : une sauvegarde peut ne pas les avoir.
+        "receptor",
+      ]),
+    ),
     construction: readConstruction(raw.construction),
     mutations: readMutations(raw.mutations),
     mutationOffer: raw.mutationOffer === null ? null : readMutations(raw.mutationOffer),

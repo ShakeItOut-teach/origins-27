@@ -226,3 +226,4 @@ export {
 export type { Energy, Offer, Place, Point, Prey, PreyOffer } from "./world";
 export { receptorLevel, rivalReceptors, spiedLevel, spiesAt, spyCapacity, spyReveal } from "./spy";
 export type { SpyReveal } from "./spy";
+export { nucleusCap, nucleusPercent } from "./stats";

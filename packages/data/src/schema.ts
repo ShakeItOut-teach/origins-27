@@ -616,6 +616,10 @@ export const BalanceSchema = z.strictObject({
    * Les rangs supérieurs : passé leur palier, les organites montent au-delà de leur niveau
    * maximum d'origine. Ces niveaux-là coûtent et durent autrement, pour occuper la saison.
    */
+  nucleusRule: z.strictObject({
+    statPercentPerLevel: z.number().int().min(0).max(20),
+    storageAhead: z.number().int().min(0).max(5),
+  }),
   higherRanks: z.strictObject({
     /**
      * Le niveau le plus haut des organites, ouvert dès le premier jour : on ne bloque jamais un

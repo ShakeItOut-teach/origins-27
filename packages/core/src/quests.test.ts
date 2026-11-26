@@ -38,7 +38,7 @@ function atTier4(seed = 7, overrides: Partial<PlayerState> = {}): PlayerState {
       mapHarvests: 5,
     },
     mutations: ["thrift"],
-    organelles: { ...base.organelles, mitochondrion: 1, vacuole: 2, nursery: 1 },
+    organelles: { ...base.organelles, mitochondrion: 1, vacuole: 2, nursery: 1, nucleus: 3 },
     resources: { sugar: 300 * MICRO, bricks: 200 * MICRO, proteins: 0 },
     troops: partyOf({ hunter: 4, armored: 4, swift: 2 }),
     ...overrides,

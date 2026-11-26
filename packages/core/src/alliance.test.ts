@@ -68,6 +68,7 @@ function player(patch: Partial<PlayerState> = {}, now = NOW, slot = 4): PlayerSt
         vacuole: 5,
         nursery: 1,
         receptor: 3,
+        nucleus: 6,
       },
       spies: 6,
       resources: { sugar: 100_000 * MICRO, bricks: 100_000 * MICRO, proteins: 100 * MICRO },

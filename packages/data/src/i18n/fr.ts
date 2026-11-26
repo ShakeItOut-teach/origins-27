@@ -322,7 +322,11 @@ export const fr = {
     "Emballe ce que vos cellules récoltent dans l’océan : un dixième de plus par niveau.",
   "organelle.nucleus.name": "Noyau",
   "organelle.nucleus.role":
-    "Exprime les évolutions de la cellule. Chaque niveau permet d’aller un niveau plus loin, et accélère la recherche.",
+    "Le cœur de la cellule, qui la commande : aucun organite ne monte plus haut que lui (sauf la réserve, qui peut avoir un niveau d’avance). Chaque niveau ajoute un peu à tout. Il coûte cher. Plus tard, il exprime les évolutions : chaque niveau en ouvre un de plus, et accélère la recherche.",
+  "nucleus.bonus":
+    "Le Noyau donne +{n} % à tout : production, réserve, attaque, défense… et retire autant aux durées et aux coûts.",
+  "nucleus.needed": "Le Noyau commande la cellule : montez-le d’abord au niveau {n}.",
+  "nucleus.open": "Voir le Noyau",
   "organelle.lysosome.name": "Estomac",
   "organelle.lysosome.role":
     "Digère les proies : un dixième de protéines en plus par niveau, à chaque chasse.",

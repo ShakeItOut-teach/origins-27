@@ -29,6 +29,7 @@ import {
   levelCost,
   levelDuration,
   maxLevelOf,
+  nucleusCap,
   plannedLevel,
   queueHasRoom,
   tapYield,
@@ -128,6 +129,8 @@ function upgrade(state: PlayerState, organelle: OrganelleId): Outcome {
   const level = plannedLevel(state, organelle);
   if (level === 0) return { error: "notBuilt" };
   if (level >= maxLevelOf(state, organelle)) return { error: "maxLevel" };
+  // Le Noyau commande la cellule : on ne monte un organite qu'à son niveau.
+  if (level + 1 > nucleusCap(state, organelle)) return { error: "needsNucleus" };
   return startConstruction(state, organelle, level + 1);
 }
 

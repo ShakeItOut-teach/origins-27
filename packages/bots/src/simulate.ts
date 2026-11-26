@@ -274,7 +274,14 @@ export function simulate(
       // Au palier 4, il garde d'abord de quoi construire la Pouponnière.
       const savingForNursery = state.tier >= 4 && state.organelles.nursery === 0;
       if (state.tier >= 3 && state.construction === null && !savingForNursery) {
-        for (const organelle of ["vacuole", "mitochondrion", "ribosome", "cilia"] as const) {
+        // Le Noyau vient juste après la réserve : c'est lui qui ouvre les niveaux des autres.
+        for (const organelle of [
+          "vacuole",
+          "nucleus",
+          "mitochondrion",
+          "ribosome",
+          "cilia",
+        ] as const) {
           if (state.organelles[organelle] === 0) continue;
           if (send({ type: "upgrade", organelle }, now)) {
             acted = true;

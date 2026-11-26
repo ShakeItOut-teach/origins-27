@@ -15,12 +15,41 @@ const BONUS_ORGANELLES = ORGANELLE_IDS.filter(
   (id) => BALANCE.organelles[id].effect.kind === "bonus",
 );
 
+/** Les statistiques où moins, c'est mieux : durées, coûts, entretien, pertes. */
+const LOWER_IS_BETTER: ReadonlySet<StatId> = new Set<StatId>([
+  "buildTime",
+  "buildCost",
+  "upkeep",
+  "travelTime",
+  "trainTime",
+  "losses",
+]);
+
+/** Ce que le Noyau ajoute à une statistique : un peu, à toutes, à chaque niveau au-delà du premier. */
+export function nucleusPercent(state: PlayerState, stat: StatId): number {
+  const levels = Math.max(0, state.organelles.nucleus - 1);
+  const percent = levels * BALANCE.nucleusRule.statPercentPerLevel;
+  return LOWER_IS_BETTER.has(stat) ? -percent : percent;
+}
+
+/**
+ * Le niveau qu'un organite ne peut pas dépasser à cause du Noyau : celui du Noyau (prévu,
+ * chantiers compris), un de plus pour la réserve. Le Noyau lui-même n'a pas cette limite.
+ */
+export function nucleusCap(state: PlayerState, organelle: OrganelleId): number {
+  if (organelle === "nucleus") return Number.POSITIVE_INFINITY;
+  const nucleus = plannedLevel(state, "nucleus");
+  const storage = BALANCE.organelles[organelle].effect.kind === "storage";
+  return nucleus + (storage ? BALANCE.nucleusRule.storageAhead : 0);
+}
+
 /**
  * Somme des pourcentages apportés à une statistique : mutations, lignées, évolutions
- * exprimées, et organites qui donnent un bonus par niveau.
+ * exprimées, le Noyau, et organites qui donnent un bonus par niveau.
  */
 export function modifierPercent(state: PlayerState, stat: StatId): number {
   let total =
+    nucleusPercent(state, stat) +
     lineagePercent(state, stat) +
     evolutionPercent(state, stat) +
     companionPercent(state, stat) +

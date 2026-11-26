@@ -349,14 +349,15 @@ describe("océan et alliances", () => {
     const apex = await handleOrder(deps, ALICE, { orderId: id(70), order: { type: "leaveWater" } });
     expect(apex).toMatchObject({ status: "done", outcome: { ok: false, error: "locked" } });
     // La file de chantiers : un second chantier attend, puis on le retire, remboursé.
+    // Le Noyau d'abord : c'est lui qui ouvre le niveau suivant des autres organites.
     const first = await handleOrder(deps, ALICE, {
       orderId: id(71),
-      order: { type: "upgrade", organelle: "mitochondrion" },
+      order: { type: "upgrade", organelle: "nucleus" },
     });
     expect(first).toMatchObject({ status: "done", outcome: { ok: true } });
     const queued = await handleOrder(deps, ALICE, {
       orderId: id(72),
-      order: { type: "upgrade", organelle: "ribosome" },
+      order: { type: "upgrade", organelle: "nucleus" },
     });
     expect(queued).toMatchObject({ status: "done", outcome: { ok: true } });
     if (queued.status !== "done") return;

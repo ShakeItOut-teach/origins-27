@@ -52,7 +52,7 @@ function player(patch: Partial<PlayerState> = {}, now = NOW, slot = 4): PlayerSt
         ribosome: 3,
         vacuole: 5,
         nursery: 1,
-        nucleus: 1,
+        nucleus: 6,
       },
       resources: { sugar: 600 * MICRO, bricks: 600 * MICRO, proteins: 300 * MICRO },
       troops: partyOf({ hunter: 20 }),

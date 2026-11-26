@@ -69,7 +69,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
       effect: { kind: "bonus", stat: "gather", percentPerLevel: 10 },
     },
     nucleus: {
-      tier: 7,
+      tier: 0,
       buildCost: { sugar: 200, bricks: 120 },
       buildSeconds: 180,
       upgradeBricks: 150,
@@ -739,6 +739,12 @@ export const BALANCE: Balance = BalanceSchema.parse({
     },
     anoxia: { weight: 20, hours: 16, radius: 9, productionPercent: -30, guardPercent: -30 },
   },
+  /**
+   * Le Noyau, « hôtel de ville » de la cellule : chaque niveau au-delà du premier ajoute un peu
+   * à toutes les statistiques ; aucun organite ne le dépasse, sauf la Vacuole d'un niveau (il
+   * faut bien qu'elle contienne le prix du Noyau suivant).
+   */
+  nucleusRule: { statPercentPerLevel: 2, storageAhead: 1 },
   higherRanks: {
     maxLevel: 20,
     costGrowthPercent: 130,

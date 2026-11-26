@@ -72,11 +72,12 @@ function atTier2(seed = 7): PlayerState {
 }
 
 describe("palier 0 : une cellule, un geste", () => {
-  it("un nouveau joueur n'a rien d'autre qu'une cellule vide", () => {
+  it("un nouveau joueur n'a rien d'autre qu'une cellule vide, et son Noyau", () => {
     const state = fresh();
     expect(state.tier).toBe(0);
     expect(state.resources).toEqual({ sugar: 0, bricks: 0, proteins: 0 });
-    expect(ORGANELLE_IDS.every((id) => state.organelles[id] === 0)).toBe(true);
+    expect(state.organelles.nucleus).toBe(1);
+    expect(ORGANELLE_IDS.every((id) => id === "nucleus" || state.organelles[id] === 0)).toBe(true);
   });
 
   it("seul l'ordre de récolte est accepté", () => {
@@ -205,7 +206,8 @@ describe("palier 2 : muter", () => {
   });
 
   it("ouvre la fabrique et l'amélioration", () => {
-    const state = give(atTier2(), 1000, 1000);
+    const tier2 = atTier2();
+    const state = give({ ...tier2, organelles: { ...tier2.organelles, nucleus: 2 } }, 1000, 1000);
     const now = state.now;
     expect(refusal(state, { type: "build", organelle: "ribosome" }, now)).toBeNull();
     expect(refusal(state, { type: "upgrade", organelle: "ribosome" }, now)).toBe("notBuilt");

@@ -4,6 +4,8 @@ import {
   crisisRate,
   speciesOf,
   maxLevelOf,
+  nucleusCap,
+  nucleusPercent,
   isHigherLevel,
   plannedLevel,
   queueHasRoom,
@@ -1607,6 +1609,8 @@ function OrganelleSheet({
   const toLevel = planned + 1;
   const cost = levelCost(state, id, toLevel);
   const affordable = canAfford(state, id, toLevel);
+  // Le Noyau commande : un organite ne monte pas plus haut que lui.
+  const capped = planned > 0 && toLevel > nucleusCap(state, id);
   const openStore = (): void => {
     onOpen("vacuole");
   };
@@ -1652,7 +1656,12 @@ function OrganelleSheet({
             }}
           />
         )}
-        {id === "nucleus" && level > 0 && (
+        {id === "nucleus" && canUpgrade && level > 1 && (
+          <p className="sheet-level" data-testid="nucleus-bonus">
+            {t("nucleus.bonus").replace("{n}", String(nucleusPercent(state, "sugarProduction")))}
+          </p>
+        )}
+        {id === "nucleus" && isVisible("evolutions", state.tier) && (
           <button
             type="button"
             className="button button-quiet"
@@ -1702,7 +1711,7 @@ function OrganelleSheet({
             {t("sheet.maxed")}
           </p>
         )}
-        {offersAction && level > 0 && isHigherLevel(id, toLevel) && (
+        {offersAction && !capped && level > 0 && isHigherLevel(id, toLevel) && (
           <p className="storage-hint sheet-higher" data-testid="sheet-higher">
             <span>{t("sheet.higher")}</span>
             <button
@@ -1716,7 +1725,27 @@ function OrganelleSheet({
           </p>
         )}
 
-        {offersAction && (
+        {offersAction && capped && (
+          <p className="storage-hint" data-testid="sheet-needs-nucleus">
+            <span>
+              {t("nucleus.needed").replace(
+                "{n}",
+                String(toLevel - (id === "vacuole" ? BALANCE.nucleusRule.storageAhead : 0)),
+              )}
+            </span>
+            <button
+              type="button"
+              className="link-button"
+              data-testid="sheet-open-nucleus"
+              onClick={() => {
+                onOpen("nucleus");
+              }}
+            >
+              {t("nucleus.open")} →
+            </button>
+          </p>
+        )}
+        {offersAction && !capped && (
           <>
             {id !== "vacuole" && (
               <StorageHint state={state} cost={cost} lang={lang} onOpenStore={openStore} />

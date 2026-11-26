@@ -103,7 +103,8 @@ describe("équilibrage", () => {
   it("les organites du palier 1 ne coûtent pas de briques (elles arrivent au palier 2)", () => {
     for (const id of ORGANELLE_IDS) {
       const o = BALANCE.organelles[id];
-      if (o.tier < 2) expect(o.buildCost.bricks).toBe(0);
+      // Le Noyau est là dès le départ : on ne le construit jamais.
+      if (o.tier < 2 && id !== "nucleus") expect(o.buildCost.bricks).toBe(0);
     }
   });
 

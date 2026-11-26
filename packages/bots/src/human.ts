@@ -24,6 +24,7 @@ import {
   leagueOf,
   levelCost,
   maxLevelOf,
+  nucleusCap,
   leviathanKind,
   leviathanOffer,
   leviathanThreat,
@@ -240,6 +241,11 @@ export function simulateHuman(options: HumanOptions): HumanReport {
       const level = plannedLevel(state, id);
       if (level >= maxLevelOf(state, id)) continue;
       wanted = true;
+      // Le Noyau commande : s'il bloque cet organite, c'est lui qu'on monte d'abord.
+      if (level > 0 && level + 1 > nucleusCap(state, id)) {
+        if (send({ type: "upgrade", organelle: "nucleus" }, now)) return "started";
+        continue;
+      }
       const cost = levelCost(state, id, level + 1);
       // Trop cher pour la réserve : il faut d'abord agrandir la Vacuole.
       const tooBig =
