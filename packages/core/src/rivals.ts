@@ -8,7 +8,7 @@ import type { BannerId, PreyKind, TroopId } from "@o27/data";
 import { allianceTechLevel, bannerOf } from "./banners";
 import { crowdStamp, humansBySlot } from "./crowd";
 import { anoxiaAt } from "./events";
-import { lossesFor, partyOf, partySize, spared, winChance } from "./hunt";
+import { combatLossPercent, partyOf, partyPower, partySize, spared, takeLosses } from "./hunt";
 import { modifierPercent, travelMs } from "./stats";
 import { createRng } from "./rng";
 import type { Rng } from "./rng";
@@ -312,9 +312,24 @@ export function raidOffer(state: PlayerState, rival: Rival, at: number): RaidOff
   };
 }
 
-/** Chances d'une attaque selon que le joueur touche ou non pendant le combat. */
-export function raidChance(base: number, struck: boolean): number {
-  return struck ? Math.min(99, base + BALANCE.rivals.raid.strikeBonusPercent) : base;
+/**
+ * La force d'une attaque : celle du groupe face au tempérament de la cible, et davantage si le
+ * joueur attrape la bulle pendant le combat. Aucun hasard : la plus forte des deux gagne.
+ */
+export function raidForce(
+  party: Readonly<Record<TroopId, number>>,
+  kind: PreyKind,
+  struck: boolean,
+): number {
+  const power = partyPower(party, kind);
+  return struck
+    ? Math.floor((power * (100 + BALANCE.rivals.raid.strikeAttackPercent)) / 100)
+    : power;
+}
+
+/** L'attaque l'emporte-t-elle ? Il faut être plus fort que la garde ; à égalité, la garde tient. */
+export function raidWins(force: number, guard: number): boolean {
+  return force > guard;
 }
 
 /** Défense du joueur : ses cellules à la maison, plus sa Paroi. Jamais nulle. */
@@ -329,14 +344,17 @@ export function defensePower(state: PlayerState): number {
   return Math.floor((total * (100 + modifierPercent(state, "defense"))) / 100);
 }
 
-/** Le combat de l'attaque en cours a lieu : le joueur vient de toucher, ou la fenêtre est passée. */
+/**
+ * Le combat de l'attaque en cours a lieu : le joueur vient de toucher, ou la fenêtre est passée.
+ * Pas de hasard : la force décide. L'attaquant perd d'autant moins qu'il était fort.
+ */
 export function resolveRaid(state: PlayerState, raid: Raid, at: number, struck: boolean): Step {
-  const base = winChance(raid.party, raid.kind, raid.power);
-  const rng = createRng(state.rngState);
-  const won = rng.int(100) < raidChance(base, struck);
-  const losses = spared(state, lossesFor(raid.party, base, won));
+  const force = raidForce(raid.party, raid.kind, struck);
+  const won = raidWins(force, raid.power);
+  const percent = combatLossPercent(BALANCE.rivals.combat.attackerLossPercent, force, raid.power);
+  const losses = spared(state, takeLosses(raid.party, percent, true));
   return {
-    state: { ...state, rngState: rng.state, raid: { ...raid, outcome: { won, struck, losses } } },
+    state: { ...state, raid: { ...raid, outcome: { won, struck, losses } } },
     events: [{ type: "raidResolved", at, won, struck, losses }],
   };
 }
@@ -573,17 +591,30 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
   if (attacker === undefined) return { state: { ...state, nextRaidAt: null }, events: [] };
   const attack = rivalStats(attacker, seasonDay(state, at)).attack;
   const defense = defensePower(state) + reinforcements(state, at);
-  const chance = Math.max(5, Math.min(95, Math.round((100 * defense) / (defense + attack))));
   const counters = { ...state.counters, rivalFights: state.counters.rivalFights + 1 };
+  // La défense perd aussi des cellules, d'autant moins qu'elle était forte.
+  const defenders = spared(
+    state,
+    takeLosses(
+      state.troops,
+      combatLossPercent(BALANCE.rivals.combat.defenderLossPercent, defense, attack),
+      false,
+    ),
+  );
+  const troops: Record<TroopId, number> = { ...state.troops };
+  for (const id of TROOP_IDS) troops[id] -= defenders[id];
+  const troopsLost = partySize(defenders);
 
-  if (rng.int(100) < chance) {
+  // Pas de hasard : une défense au moins aussi forte que l'attaque la repousse.
+  if (defense >= attack) {
     return {
       state: {
         ...state,
+        troops,
         counters: { ...counters, attacksRepelled: counters.attacksRepelled + 1 },
         nextRaidAt: at + nextDelay(state, at),
       },
-      events: [{ type: "attackRepelled", at, rival: attacker.id }],
+      events: [{ type: "attackRepelled", at, rival: attacker.id, troopsLost }],
     };
   }
 
@@ -595,15 +626,6 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
     bricks: state.resources.bricks,
     proteins: Math.floor((state.resources.proteins * raid.proteinSharePercent) / 100),
   });
-  const troops: Record<TroopId, number> = { ...state.troops };
-  let toLose = Math.floor((partySize(troops) * incoming.troopLossPercent) / 100);
-  const troopsLost = toLose;
-  while (toLose > 0) {
-    let biggest: TroopId = "hunter";
-    for (const id of TROOP_IDS) if (troops[id] > troops[biggest]) biggest = id;
-    troops[biggest] -= 1;
-    toLose -= 1;
-  }
   const shieldUntil = at + incoming.shieldHours * HOUR_MS;
   const event: GameEvent = {
     type: "attackSuffered",

@@ -37,7 +37,9 @@ export {
 export { humanCard, humanFamilies, topFamily } from "./vitrine";
 export { applyOrder, nextMutationPrice } from "./apply";
 export {
+  combatLossPercent,
   lossesFor,
+  takeLosses,
   partyPower,
   partySize,
   strikeChance,
@@ -61,7 +63,8 @@ export {
   loadLoot,
   nightEnd,
   protectedUntil,
-  raidChance,
+  raidForce,
+  raidWins,
   raidOffer,
   nearRivals,
   oceanRivals,

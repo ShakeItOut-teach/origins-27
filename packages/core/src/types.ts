@@ -557,7 +557,13 @@ export type GameEvent =
       readonly target: BoostTarget;
       readonly savedMs: number;
     }
-  | { readonly type: "attackRepelled"; readonly at: number; readonly rival: string }
+  | {
+      readonly type: "attackRepelled";
+      readonly at: number;
+      readonly rival: string;
+      /** Cellules filles perdues en défendant. */
+      readonly troopsLost: number;
+    }
   /** Un rival a attaqué le joueur et a pris une part de ses réserves. */
   | {
       readonly type: "attackSuffered";

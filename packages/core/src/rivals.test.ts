@@ -15,14 +15,15 @@ import {
   protectedUntil,
   MICRO,
   partySize,
-  raidChance,
+  combatLossPercent,
+  raidForce,
+  raidWins,
   raidOffer,
   rivalStats,
   serializeState,
   troopsOwned,
   visiblePrey,
   visibleRivals,
-  winChance,
   partyOf,
 } from "./index";
 import type { GameEvent, OrderErrorCode, PlayerState, Rival } from "./index";
@@ -267,25 +268,51 @@ describe("attaquer un rival", () => {
     );
   });
 
-  it("toucher aide sans garantir : plus de victoires qu'en laissant faire, mais pas toutes", () => {
-    const group = party({ [strong]: 6 });
-    const base = winChance(group, target.kind, rivalStats(target, 2).guard);
-    expect(raidChance(base, true)).toBe(
-      Math.min(99, base + BALANCE.rivals.raid.strikeBonusPercent),
-    );
-    expect(raidChance(base, false)).toBe(base);
-    let struckWins = 0;
-    let idleWins = 0;
-    const games = 300;
-    for (let seed = 1; seed <= games; seed++) {
-      const sent = ok(atTier5({ [strong]: 6 }, seed), raid(target, group), T0);
-      const at = sent.raid?.arrivesAt ?? T0;
-      if (ok(sent, { type: "strikeRaid" }, at).raid?.outcome?.won === true) struckWins += 1;
-      if (advance(sent, sent.raid?.resolveAt ?? T0).state.raid?.outcome?.won === true)
-        idleWins += 1;
+  it("aucun hasard : la plus forte gagne, et attraper la bulle peut renverser le combat", () => {
+    const outcome = (count: number, seed: number, struck: boolean): boolean | undefined => {
+      const sent = ok(
+        atTier5({ [strong]: count }, seed),
+        raid(target, party({ [strong]: count })),
+        T0,
+      );
+      const done = struck
+        ? ok(sent, { type: "strikeRaid" }, sent.raid?.arrivesAt ?? T0)
+        : advance(sent, sent.raid?.resolveAt ?? T0).state;
+      return done.raid?.outcome?.won;
+    };
+    let turned = 0;
+    for (let count = 1; count <= 40; count++) {
+      const idle = outcome(count, 1, false);
+      const there = outcome(count, 1, true);
+      // La même attaque a toujours la même issue, quelle que soit la graine du joueur.
+      for (const seed of [2, 3, 4]) {
+        expect(outcome(count, seed, false)).toBe(idle);
+        expect(outcome(count, seed, true)).toBe(there);
+      }
+      // Être là n'est jamais pire.
+      if (idle === true) expect(there).toBe(true);
+      if (idle === false && there === true) turned += 1;
     }
-    expect(struckWins).toBeGreaterThan(idleWins);
-    expect(struckWins).toBeLessThan(games);
+    expect(turned).toBeGreaterThan(0);
+    const group = party({ [strong]: 6 });
+    expect(raidForce(group, target.kind, true)).toBe(
+      Math.floor(
+        (raidForce(group, target.kind, false) * (100 + BALANCE.rivals.raid.strikeAttackPercent)) /
+          100,
+      ),
+    );
+    expect(raidWins(10, 10)).toBe(false);
+    expect(raidWins(11, 10)).toBe(true);
+  });
+
+  it("les pertes : 30 % pour l'attaque et 15 % pour la défense à force égale, moins quand on domine", () => {
+    const combat = BALANCE.rivals.combat;
+    expect(combatLossPercent(combat.attackerLossPercent, 100, 100)).toBe(30);
+    expect(combatLossPercent(combat.defenderLossPercent, 100, 100)).toBe(15);
+    expect(combatLossPercent(combat.attackerLossPercent, 200, 100)).toBe(15);
+    expect(combatLossPercent(combat.defenderLossPercent, 50, 100)).toBe(30);
+    expect(combatLossPercent(combat.attackerLossPercent, 1000, 1)).toBe(combat.minLossPercent);
+    expect(combatLossPercent(combat.attackerLossPercent, 1, 1000)).toBe(combat.maxLossPercent);
   });
 
   it("on ne touche qu'une fois, pendant le combat ; on ne rappelle qu'avant", () => {
@@ -437,7 +464,6 @@ describe("être attaqué", () => {
       expect(step.state.resources.bricks).toBe(before.resources.bricks - event.bricks);
       expect(step.state.resources.proteins).toBe(before.resources.proteins - event.proteins);
       expect(partySize(step.state.troops)).toBe(5 - event.troopsLost);
-      expect(event.troopsLost).toBe(Math.floor((5 * INCOMING.troopLossPercent) / 100));
       expect(step.state.shieldUntil).toBe(due + INCOMING.shieldHours * HOUR);
       expect(INCOMING.shieldHours).toBe(1);
       expect(step.state.nextRaidAt).toBeGreaterThanOrEqual(

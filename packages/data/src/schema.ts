@@ -355,7 +355,7 @@ export const BalanceSchema = z.strictObject({
       /** Durée de l'aller-retour par pas de distance (un voisin direct est à un pas). */
       stepSeconds: positiveInt,
       /** Points de chance ajoutés si le joueur touche pendant le combat. Pas de victoire certaine. */
-      strikeBonusPercent: z.number().int().min(0).max(50),
+      strikeAttackPercent: z.number().int().min(0).max(100),
       /** Charge que chaque survivante rapporte, en unités de sucre (une brique en vaut deux). */
       carryPerCell: positiveInt,
       /** Après un pillage, le rival se referme ce nombre d'heures. */
@@ -365,6 +365,15 @@ export const BalanceSchema = z.strictObject({
       /** Part des protéines d'un organisme qu'un pillage peut prendre, au plus. */
       proteinSharePercent: z.number().int().min(0).max(100),
     }),
+    /** Les pertes d'un combat contre un organisme (humain ou simulé). */
+    combat: z
+      .strictObject({
+        attackerLossPercent: z.number().int().min(1).max(100),
+        defenderLossPercent: z.number().int().min(1).max(100),
+        minLossPercent: z.number().int().min(0).max(100),
+        maxLossPercent: z.number().int().min(1).max(100),
+      })
+      .refine((value) => value.minLossPercent <= value.maxLossPercent),
     spy: z.strictObject({ energy: positiveInt, hours: positiveInt }),
     /** Les attaques que le joueur subit. */
     incoming: z.strictObject({
@@ -377,7 +386,6 @@ export const BalanceSchema = z.strictObject({
       shieldHours: positiveInt,
       /** Le joueur est prévenu ce temps-là avant qu'une attaque n'arrive. */
       warningMinutes: positiveInt,
-      troopLossPercent: z.number().int().min(0).max(90),
     }),
     /** Mode absent : une longue protection, puis un délai avant de pouvoir la reprendre. */
     away: z.strictObject({ hours: positiveInt, restHours: positiveInt }),

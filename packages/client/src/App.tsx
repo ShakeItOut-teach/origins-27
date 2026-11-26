@@ -290,7 +290,7 @@ export function App({
               sugar: 0,
               bricks: 0,
               proteins: 0,
-              troopsLost: 0,
+              troopsLost: event.troopsLost,
             });
           }
           if (event.type === "attackSuffered") {

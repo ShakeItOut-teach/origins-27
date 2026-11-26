@@ -56,7 +56,14 @@ function reportOf(event: GameEvent): Report | null {
     };
   }
   if (event.type === "attackRepelled") {
-    return { ...EMPTY, at: event.at, kind: "defense", won: true, who: event.rival };
+    return {
+      ...EMPTY,
+      at: event.at,
+      kind: "defense",
+      won: true,
+      who: event.rival,
+      troops: event.troopsLost,
+    };
   }
   if (event.type === "attackSuffered") {
     return {

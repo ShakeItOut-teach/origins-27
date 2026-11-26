@@ -9,9 +9,9 @@ import {
   isNewcomer,
   protectedUntil,
   partySize,
-  raidChance,
+  raidForce,
   raidOffer,
-  winChance,
+  raidWins,
 } from "@o27/core";
 import type { PlayerState, Rival } from "@o27/core";
 import { BALANCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
@@ -218,7 +218,14 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
   const [kept, setKept] = useState<Record<TroopId, number>>(() => partyOf());
   const party = partyOf();
   for (const id of TROOP_IDS) party[id] = Math.max(0, state.troops[id] - kept[id]);
-  const chance = winChance(party, rival.kind, foePower(state, offer.guard));
+  // Pas de hasard : la plus forte gagne. Attraper la bulle renforce l'attaque.
+  const foe = foePower(state, offer.guard);
+  const away = raidForce(party, rival.kind, false);
+  const there = raidForce(party, rival.kind, true);
+  const verdict = (force: number): string =>
+    `${t(raidWins(force, foe) ? "label.raidWins" : "label.raidLoses")} (${t("label.forces")
+      .replace("{a}", String(force))
+      .replace("{b}", String(foe))})`;
   const spy = BALANCE.rivals.spy;
 
   const ally = isAlly(state, rival);
@@ -399,10 +406,10 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
                 {spied ? (
                   <div className="chance" data-testid="rival-chance">
                     <p>
-                      {t("label.raidChance")} : <strong>{raidChance(chance, false)} %</strong>
+                      {t("label.raidChance")} : <strong>{verdict(away)}</strong>
                     </p>
                     <p data-testid="rival-chance-there">
-                      {t("label.raidChanceThere")} : <strong>{raidChance(chance, true)} %</strong>
+                      {t("label.raidChanceThere")} : <strong>{verdict(there)}</strong>
                     </p>
                     <small className="chance-sure">{t("label.strikeBonus")}</small>
                   </div>

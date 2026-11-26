@@ -531,11 +531,22 @@ export const BALANCE: Balance = BalanceSchema.parse({
     raid: {
       energy: 2,
       stepSeconds: 240,
-      strikeBonusPercent: 15,
+      /** Attraper la bulle pendant le combat : l'attaque frappe d'autant plus fort. */
+      strikeAttackPercent: 25,
       carryPerCell: 50,
       restHours: 2,
       proteinWeight: 4,
       proteinSharePercent: 20,
+    },
+    /**
+     * Pertes d'un combat contre un organisme : à force égale, l'attaquant perd 30 % et le
+     * défenseur 15 % ; plus un camp est fort par rapport à l'autre, moins il perd.
+     */
+    combat: {
+      attackerLossPercent: 30,
+      defenderLossPercent: 15,
+      minLossPercent: 2,
+      maxLossPercent: 90,
     },
     spy: { energy: 1, hours: 2 },
     incoming: {
@@ -544,7 +555,6 @@ export const BALANCE: Balance = BalanceSchema.parse({
       maxHours: 11,
       shieldHours: 1,
       warningMinutes: 10,
-      troopLossPercent: 20,
     },
     away: { hours: 72, restHours: 24 },
     night: { hours: 8, changeHours: 24 },

@@ -228,7 +228,12 @@ describe("le journal des rapports", () => {
   it("raconte les attaques subies, repoussées ou non, de la plus récente à la plus ancienne", () => {
     const strong = player({ nextRaidAt: NOW + HOUR, troops: partyOf({ guardian: 400 }) });
     const held = advance(strong, NOW + 2 * HOUR).state;
-    expect(held.reports[0]).toMatchObject({ kind: "defense", won: true, troops: 0, sugar: 0 });
+    expect(held.reports[0]).toMatchObject({ kind: "defense", won: true, sugar: 0 });
+    // Même victorieuse, la défense perd des cellules : peu, parce qu'elle dominait.
+    expect(held.reports[0]?.troops).toBeGreaterThan(0);
+    expect(held.reports[0]?.troops).toBeLessThanOrEqual(
+      Math.floor((400 * BALANCE.rivals.combat.minLossPercent) / 100),
+    );
     const weak = player({ nextRaidAt: NOW + HOUR, troops: partyOf({ hunter: 10 }), zone: 1 });
     const days = advance({ ...weak, alliance: null }, NOW + 12 * DAY_MS).state;
     const defenses = days.reports.filter((entry) => entry.kind === "defense");
@@ -297,7 +302,7 @@ describe("le journal des rapports", () => {
     expect(state.reports).toContainEqual(fight);
     for (let index = 1; index <= 60; index++) {
       state = trackReports(state, [
-        { type: "attackRepelled", at: NOW + HOUR + index * MINUTE, rival: "o:7" },
+        { type: "attackRepelled", at: NOW + HOUR + index * MINUTE, rival: "o:7", troopsLost: 0 },
       ]);
     }
     expect(state.reports).toHaveLength(REPORTS_KEPT);

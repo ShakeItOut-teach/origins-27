@@ -75,11 +75,35 @@ export function strikeChance(chance: number): number {
  * la moitié, mais jamais toutes : il reste toujours une survivante pour rentrer.
  */
 export function lossesFor(party: Party, chance: number, won: boolean): Record<TroopId, number> {
-  const size = partySize(party);
   const percent = won
     ? Math.floor((100 - chance) / 2)
     : Math.min(90, 50 + Math.floor((100 - chance) / 4));
-  let toLose = Math.min(Math.max(0, size - 1), Math.floor((size * percent) / 100));
+  return takeLosses(party, percent, true);
+}
+
+/**
+ * La part qu'un camp perd dans un combat contre un organisme : `base` % à force égale, moins
+ * quand il est plus fort que l'autre, davantage quand il est plus faible. Bornée.
+ */
+export function combatLossPercent(base: number, own: number, foe: number): number {
+  const rules = BALANCE.rivals.combat;
+  if (own <= 0) return rules.maxLossPercent;
+  const percent = Math.round((base * Math.max(0, foe)) / own);
+  return Math.max(rules.minLossPercent, Math.min(rules.maxLossPercent, percent));
+}
+
+/**
+ * Retire `percent` % d'un groupe, réparti sur les sortes les plus nombreuses. Avec `keepOne`,
+ * il reste toujours une survivante (pour rentrer à la maison).
+ */
+export function takeLosses(
+  party: Party,
+  percent: number,
+  keepOne: boolean,
+): Record<TroopId, number> {
+  const size = partySize(party);
+  const most = keepOne ? Math.max(0, size - 1) : size;
+  let toLose = Math.min(most, Math.floor((size * percent) / 100));
   const left: Record<TroopId, number> = { ...party };
   const lost = partyOf();
   while (toLose > 0) {
