@@ -292,6 +292,9 @@ export const en = {
   "label.rank2": "Rank 2",
   "label.opensTroop": "Two genes unlock",
   "state.geneMissing": "{n} gene(s) missing: {family}",
+  "state.geneHow":
+    "A gene comes from a mutation. In Research, Genes section: buy a mutation with proteins (earned by hunting), then pick one from the {family} family.",
+  "research.seeGenes": "See the genes",
   "lexicon.toxic": "A cell that kills with its toxins.",
   "lexicon.guardian": "A large cell that swallows intruders.",
   "lexicon.scout": "A fast parasite, driven by a flagellum.",

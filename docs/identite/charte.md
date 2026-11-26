@@ -101,18 +101,18 @@ Règles :
 
 Les aperçus sont dans l'artefact « Design System ». Les règles :
 
-| Composant            | Règle                                                                                                      |
-| -------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Bouton principal     | Fond bleu de Prusse, texte papier, double filet. Un seul par écran. Enfoncé : le double filet se resserre. |
-| Bouton discret       | Fond papier, texte encre, filet simple.                                                                    |
-| Bouton éteint        | Fond papier foncé, texte encre pâle, sans double filet. Il dit toujours ce qui manque.                     |
-| Onglets              | Une rangée encadrée ; l'onglet ouvert est à l'encre, texte papier ; un filet entre deux onglets.           |
-| Compteur             | Le chiffre en Plex Mono, son nom dessous en légende ; le gain en vert-de-gris, le manque en garance.       |
-| Ligne de sommaire    | Mot, points de conduite, chiffre. Toute la ligne se touche (48 px de haut).                                |
-| Étiquette            | Petit rectangle de papier cerclé d'un filet, chiffres en Plex Mono (« Niv. 2 »).                           |
-| Fiche                | Feuille de papier qui monte du bas, filet en haut, titre en capitales de Bodoni.                           |
-| Planche noire        | Disque noir, double filet, cercle gradué ; trait couleur d'os ; échelle « 10 µm ».                         |
-| Médaillon d'organite | Rond de 48 px sur la planche, filet couleur d'os, pictogramme au trait.                                    |
+| Composant            | Règle                                                                                                                                                                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bouton principal     | Fond bleu de Prusse, texte papier, double filet. Un seul par écran. Enfoncé : le double filet se resserre.                                                                                                                                                 |
+| Bouton discret       | Fond papier, texte encre, filet simple.                                                                                                                                                                                                                    |
+| Bouton éteint        | Fond papier foncé, texte encre pâle, sans double filet. Il dit toujours ce qui manque.                                                                                                                                                                     |
+| Onglets              | Une rangée encadrée ; l'onglet ouvert est à l'encre, texte papier ; un filet entre deux onglets.                                                                                                                                                           |
+| Compteur             | Le chiffre en Plex Mono, son nom dessous en légende ; le gain en vert-de-gris, le manque en garance.                                                                                                                                                       |
+| Ligne de sommaire    | Mot, points de conduite, chiffre. Toute la ligne se touche (48 px de haut).                                                                                                                                                                                |
+| Étiquette            | Petit rectangle de papier cerclé d'un filet, chiffres en Plex Mono (« Niv. 2 »).                                                                                                                                                                           |
+| Fiche                | Feuille de papier qui monte du bas, filet en haut, titre en capitales de Bodoni.                                                                                                                                                                           |
+| Planche noire        | Disque noir, double filet, cercle gradué ; trait couleur d'os ; échelle « 10 µm ».                                                                                                                                                                         |
+| Médaillon d'organite | Rond de 48 px sur la planche, filet couleur d'os, pictogramme au trait. **Son niveau se lit d'un coup d'œil** : une petite étiquette de papier accrochée en bas. Le Noyau, au centre, est un double cercle transparent : on voit le noyau gravé à travers. |
 
 ## 7. Illustration
 
@@ -133,14 +133,37 @@ Sur la planche noire, on inverse : trait couleur d'os, pas de hachures pleines, 
 et un lavis très léger par organite (gomme-gutte pour la mitochondrie, bleu de Prusse pour la
 vacuole, garance pour le noyau, vert-de-gris pour le réticulum).
 
+**Un pictogramme dit ce que fait la chose**, pour qu'on le retienne (demande du propriétaire,
+26/11/2026). Il ne montre pas l'organite tel qu'il est, mais son rôle :
+
+| Organite    | Ce qu'il fait                   | Son pictogramme                                      |
+| ----------- | ------------------------------- | ---------------------------------------------------- |
+| Centrale    | fabrique du sucre               | une mitochondrie, l'hexagone du sucre au milieu      |
+| Réserve     | garde le sucre et les briques   | un bocal, son niveau, deux briques au fond           |
+| Cils        | font nager plus vite            | une cellule lancée, ses cils en arrière, son sillage |
+| Fabrique    | fabrique des briques            | un atelier au toit en dents de scie, ses briques     |
+| Pouponnière | fait naître des cellules filles | une cellule, et sa fille qui s'en détache            |
+| Paroi       | défend                          | un bouclier                                          |
+| Emballeur   | emballe ce qu'on récolte        | un colis ficelé                                      |
+| Noyau       | exprime les évolutions          | la double hélice                                     |
+| Estomac     | digère les proies en protéines  | une cellule qui avale une proie, trois grains dedans |
+
+Règles : un trait de 1,6 à l'encre du texte ; les petits signes des ressources (hexagone,
+briques, grains) sont pleins et sont **les mêmes** que ceux des compteurs ; jamais plus de
+deux idées dans un pictogramme (`packages/client/src/ui/icons.tsx`).
+
 **Les cartes** (la goutte, l'océan) sont des planches noires comme les autres :
 
 - Rien ne brille : pas de halo autour d'un lieu ou d'un être vivant. Un lieu est un médaillon
   au trait (un cercle, des graduations, un lavis, du pointillé).
 - L'eau est noire au large et se lave de bleu de Prusse **par paliers** vers le rivage, comme
   les teintes de profondeur d'une carte marine. Jamais un dégradé lisse.
-- **La terre ferme est en papier**, cernée d'encre, avec ses courbes de niveau et les hachures
-  du rivage : sortir de l'eau, c'est atteindre le papier.
+- **La terre ferme est en papier**, cernée d'encre, avec les hachures du rivage : sortir de
+  l'eau, c'est atteindre le papier. Elle porte une **forêt originelle** qui donne envie d'y
+  arriver : conifères, fougères arborescentes et feuillus au trait, un lavis vert qui suit la
+  côte, un lac et sa rivière en bleu de Prusse, des prairies plus tendres, quelques collines
+  hachurées, une plage en pointillé. De loin, les arbres sont des points verts
+  (`packages/client/src/cell/land.ts`).
 - Le danger est en garance (prédateurs, Léviathan), la chaleur en gomme-gutte (sources,
   éruptions), la vie qui pousse en vert-de-gris (plancton).
 

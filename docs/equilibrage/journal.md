@@ -572,3 +572,46 @@ loin, sauf la dernière semaine où sa puissance grimpe.
 L'économie ne bouge pas : aucune connexion sans rien à lancer, la même somme de niveaux, et
 tous sortent des eaux au jour 22. Les récompenses de ligue baissent pour les profils qui
 étaient premiers sans le mériter (×3 avant, ×2 ou ×1,5 maintenant).
+
+## 2026-11-26 — Un océan un peu plus grand
+
+**Intention :** le propriétaire trouve le centre de la carte à l'étroit : « agrandir un peu la
+map pour donner plus de place aux gens d'aller vers le centre ». Il veut aussi une terre ferme
+qu'on a envie d'atteindre (elle est redessinée : forêt, lac, prairies).
+
+**Changement :** dans `packages/data/src/balance.ts`, tous les rayons de l'océan grandissent
+d'environ un huitième. **Le nombre de places par zone ne change pas** (500, 450, 380, 300) :
+la rareté près de la surface est une règle voulue de la conception du palier 6.
+
+| Rayon (en cases)        | Avant | Après |
+| ----------------------- | ----- | ----- |
+| Bord du monde (abysses) | 124   | 140   |
+| Zone de minuit          | 98    | 110   |
+| Zone crépusculaire      | 74    | 84    |
+| Zone éclairée           | 50    | 58    |
+| Terre ferme             | 20    | 24    |
+
+**Mesure avant / après** (cases où l'on peut s'installer, calculées d'après la formule de
+`ringCells` : l'anneau moins deux cases de marge de chaque côté, divisé par le pas au carré) :
+
+| Zone          | Places voulues | Cases avant | Cases après |
+| ------------- | -------------- | ----------- | ----------- |
+| Abysses       | 500            | ≈ 614       | ≈ 817       |
+| Minuit        | 450            | ≈ 675       | ≈ 838       |
+| Crépusculaire | 380            | ≈ 487       | ≈ 613       |
+| Éclairée      | 300            | ≈ 357       | ≈ 483       |
+
+Dans la zone éclairée, il restait 57 cases libres pour 300 organismes ; il y en a maintenant 183. On y est moins serré.
+
+**Effets de bord, mesurés par les tests :**
+
+- Les trajets sont plus longs d'environ un huitième, puisque les distances le sont. Les cibles
+  des robots joueurs (`packages/bots`) passent toujours sans retouche.
+- Il y a plus de quartiers, donc plus d'événements de zone à la fois (la même proportion de
+  l'océan). Le test qui comptait « moins de 70 événements » compte maintenant en part de
+  l'océan (cinq quartiers sur six au plus) : la même sévérité, à toute taille.
+- Un test du Léviathan suivait par hasard une cellule menacée par un seul Léviathan ; il la
+  choisit maintenant exprès.
+
+**À décider par le propriétaire :** s'il voulait aussi que _plus d'organismes_ puissent monter
+(plus de places par zone), c'est un autre réglage (`entrants`), qui change la compétition.

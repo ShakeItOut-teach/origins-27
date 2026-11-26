@@ -43,7 +43,8 @@ Rise of Kingdoms et The Ants tiennent leurs joueurs des mois avec les mêmes res
 
 ## Règles
 
-- **Le monde** : un disque de 124 cases de rayon. Du bord au centre : abysses (6 000 à
+- **Le monde** : un disque de 140 cases de rayon (124 jusqu'au 26/11/2026 : agrandi d'un
+  huitième, voir le journal d'équilibrage). Du bord au centre : abysses (6 000 à
   4 000 m), zone de minuit (4 000 à 1 000 m), zone crépusculaire (1 000 à 200 m), zone
   éclairée (200 m à la surface), terre ferme. Ce sont les vraies zones de l'océan.
 - **Ouverture** : zone de minuit au jour 6, crépusculaire au jour 12, éclairée au jour 18.

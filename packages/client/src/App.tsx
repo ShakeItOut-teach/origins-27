@@ -756,9 +756,13 @@ export function App({
                 {building && show("constructionTimer") && (
                   <span className="slot-timer">{formatDuration(building.endsAt - state.now)}</span>
                 )}
-                {id === "nucleus" && level > 0 && !building && (
-                  <span className="slot-level" data-testid="nucleus-level">
-                    {t("label.levelShort")} {level}
+                {/* Le niveau se lit d'un coup d'œil, sur chaque organite. */}
+                {level > 0 && !building && (
+                  <span
+                    className="slot-level"
+                    data-testid={id === "nucleus" ? "nucleus-level" : `slot-level-${id}`}
+                  >
+                    {id === "nucleus" ? `${t("label.levelShort")} ${String(level)}` : level}
                   </span>
                 )}
                 {queued > 0 && (
@@ -1606,6 +1610,9 @@ function OrganelleSheet({
             onOrder={onOrder}
             onResearch={() => {
               onResearch("troops");
+            }}
+            onGenes={() => {
+              onResearch("genes");
             }}
           />
         )}

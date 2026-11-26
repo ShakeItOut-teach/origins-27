@@ -20,6 +20,8 @@ interface Props {
   readonly onOrder: (order: Order) => void;
   /** Ouvre l’onglet Recherche, à la rubrique des troupes. */
   readonly onResearch: () => void;
+  /** Ouvre l’onglet Recherche, à la rubrique des gènes : là où l'on débloque une cellule fille. */
+  readonly onGenes: () => void;
 }
 
 /** On fait naître les cellules filles une par une, ou par dix. */
@@ -30,13 +32,17 @@ const BATCHES = [1, 10] as const;
  * en faire naître. Leur nombre n'a pas de plafond : c'est l'entretien qui le limite.
  * Les cellules de rang 2 n'apparaissent qu'à leur palier ; chacune demande ses gènes.
  * Leurs pouvoirs se cherchent dans l'onglet Recherche : un lien y mène.
+ * Une cellule fille pas encore ouverte dit ce qui manque, comment l'obtenir, et y mène.
  */
-export function TroopPanel({ state, lang, onOrder, onResearch }: Props) {
+export function TroopPanel({ state, lang, onOrder, onResearch, onGenes }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const owned = troopsOwned(state);
   const training = state.training;
   const upkeep = upkeepRate(state);
   const starving = upkeep > productionRate(state, "sugar");
+  const shown = TROOP_IDS.filter((id) => BALANCE.troops[id].tier <= state.tier);
+  // La première cellule fille encore fermée porte l'explication du chemin à suivre.
+  const firstLocked = shown.find((id) => !troopUnlocked(state, id));
 
   return (
     <div className="troops" data-testid="troops">
@@ -48,7 +54,7 @@ export function TroopPanel({ state, lang, onOrder, onResearch }: Props) {
         <strong>−{formatRate(upkeep, lang)}/s</strong>
         <small>{starving ? t("state.starving") : t("label.upkeepText")}</small>
       </p>
-      {TROOP_IDS.filter((id) => BALANCE.troops[id].tier <= state.tier).map((id) => {
+      {shown.map((id) => {
         const data = BALANCE.troops[id];
         const strong = STRONG_AGAINST[id];
         const missing = genesMissing(state, id);
@@ -79,6 +85,24 @@ export function TroopPanel({ state, lang, onOrder, onResearch }: Props) {
                         .replace("{family}", t(`family.${data.family}.name`))
                     : t(`troop.${id}.role` as TextKey)}
                 </small>
+              )}
+              {data.family !== null && locked && (
+                <>
+                  {/* L'explication entière une seule fois ; le lien, sous chaque cellule fille. */}
+                  {id === firstLocked && (
+                    <small className="troop-how" data-testid="troop-how">
+                      {t("state.geneHow").replace("{family}", t(`family.${data.family}.name`))}
+                    </small>
+                  )}
+                  <button
+                    type="button"
+                    className="link-button"
+                    data-testid={`troop-genes-${id}`}
+                    onClick={onGenes}
+                  >
+                    {t("research.seeGenes")} →
+                  </button>
+                </>
               )}
             </span>
             <span className="troop-count" data-testid={`troop-${id}`}>

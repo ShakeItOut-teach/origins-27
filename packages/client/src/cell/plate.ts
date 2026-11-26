@@ -18,6 +18,11 @@ export const PLATE = {
   verdigris: 0x8dbfaf,
   madder: 0xd98ba6,
   moss: 0xb9c48a,
+  // Sur la terre ferme, qui est en papier, on retrouve les teintes du papier.
+  /** La forêt : le vert-de-gris (`--verdigris`). */
+  forest: 0x356b5e,
+  /** L'eau douce, lac et rivière : le bleu de Prusse (`--prussian`). */
+  water: 0x1d4f73,
 } as const;
 
 /** Mélange deux couleurs : `part` vaut 0 pour la première, 1 pour la seconde. */

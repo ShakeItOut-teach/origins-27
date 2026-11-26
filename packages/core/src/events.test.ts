@@ -22,6 +22,7 @@ import {
   leviathanPower,
   leviathanThreat,
   oceanEvents,
+  oceanRadius,
   oceanRivals,
   partyOf,
   playerAnoxia,
@@ -107,10 +108,19 @@ function seen(seed: number, kind: ZoneEventKind): ZoneEvent[] {
 /** Une place des abysses dont la cellule sera touchée par un événement de cette sorte, après le jour 9. */
 function troubled(kind: "anoxia" | "leviathan"): { slot: number; event: ZoneEvent } {
   for (let slot = 0; slot < BALANCE.world.organisms; slot++) {
-    const event = cellTroubles(27, cellIn(27, slot, 0), SEASON).find(
-      (entry) => entry.kind === kind && entry.startsAt > OPEN + DAY_MS,
+    const troubles = cellTroubles(27, cellIn(27, slot, 0), SEASON);
+    const event = troubles.find((entry) => entry.kind === kind && entry.startsAt > OPEN + DAY_MS);
+    if (event === undefined) continue;
+    // Un seul trouble de cette sorte à la fois sur cette cellule : le test suit celui-là, sans
+    // qu'un voisin vienne s'y mêler. (Vrai quelle que soit la taille de l'océan.)
+    const alone = troubles.every(
+      (other) =>
+        other === event ||
+        other.kind !== kind ||
+        other.startsAt > event.endsAt + HOUR ||
+        other.endsAt < event.startsAt,
     );
-    if (event !== undefined) return { slot, event };
+    if (alone) return { slot, event };
   }
   throw new Error(`aucune cellule touchée par : ${kind}`);
 }
@@ -139,10 +149,13 @@ describe("les événements de zone", () => {
 
   it("une saison voit passer les quatre sortes, sans que l'océan en soit couvert", () => {
     for (const kind of ZONE_EVENT_KINDS) expect(seen(27, kind).length).toBeGreaterThan(5);
+    // « Couvert » se mesure à la taille de l'océan : jamais plus de cinq quartiers sur six
+    // touchés à la fois (c'était 70 événements pour 84 quartiers, avant l'agrandissement).
+    const districts = (Math.PI * oceanRadius() ** 2) / DATA.district ** 2;
     for (let at = OPEN; at < SEASON + 27 * DAY_MS; at += 2 * DAY_MS + HOUR) {
       const count = oceanEvents(27, at).length;
       expect(count).toBeGreaterThan(2);
-      expect(count).toBeLessThan(70);
+      expect(count).toBeLessThan((districts * 5) / 6);
     }
   });
 

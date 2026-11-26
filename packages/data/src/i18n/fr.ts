@@ -293,6 +293,9 @@ export const fr = {
   "label.rank2": "Rang 2",
   "label.opensTroop": "Deux gènes ouvrent",
   "state.geneMissing": "Il manque {n} gène(s) : {family}",
+  "state.geneHow":
+    "Un gène vient d’une mutation. Dans Recherche, rubrique Gènes : achetez une mutation avec des protéines (on les gagne à la chasse), puis choisissez-en une de la famille {family}.",
+  "research.seeGenes": "Voir les gènes",
   "lexicon.toxic": "Une cellule qui tue par ses toxines.",
   "lexicon.guardian": "Une grosse cellule qui avale les intrus.",
   "lexicon.scout": "Un parasite rapide, propulsé par un flagelle.",

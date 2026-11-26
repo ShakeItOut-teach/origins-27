@@ -1,6 +1,11 @@
 import type { OrganelleId, PreyKind, ResourceId, TroopId } from "@o27/data";
 
-/** Petits dessins à l'encre, dans la couleur du texte qui les entoure. */
+/**
+ * Les pictogrammes des organites. Chacun dit **ce que fait** l'organite, pour qu'on le retienne :
+ * on y retrouve le signe de la ressource qu'il produit (l'hexagone du sucre, les briques, les
+ * trois grains des protéines) ou le geste qu'il fait (garder, nager, défendre, emballer).
+ * Un trait à l'encre, dans la couleur du texte qui l'entoure ; les petits signes sont pleins.
+ */
 export function OrganelleIcon({ id }: { readonly id: OrganelleId }) {
   const common = {
     width: 26,
@@ -8,82 +13,93 @@ export function OrganelleIcon({ id }: { readonly id: OrganelleId }) {
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 1.8,
+    strokeWidth: 1.6,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
     "aria-hidden": true,
   };
+  const full = { fill: "currentColor", stroke: "none" };
   switch (id) {
     case "mitochondrion":
+      // La Centrale fabrique du sucre : une mitochondrie, et l'hexagone du sucre qui en sort.
       return (
         <svg {...common}>
-          <ellipse cx="12" cy="12" rx="9" ry="5.5" />
-          <path d="M6 12l3-2.5 3 5 3-5 3 2.5" />
+          <ellipse cx="12" cy="12" rx="10" ry="6.6" />
+          <path d="M12 8l3.4 2v4L12 16l-3.4-2v-4z" {...full} />
+          <path d="M4.4 10.4l1.8 1.6-1.8 1.6M19.6 10.4l-1.8 1.6 1.8 1.6" />
         </svg>
       );
     case "vacuole":
+      // La Réserve garde le sucre et les briques : un bocal, et son niveau.
       return (
         <svg {...common}>
-          <circle cx="12" cy="12" r="8" />
-          <path d="M8.5 9.5a4 4 0 0 1 3-2" />
+          <path d="M7.5 3.5h9M8.5 3.5v3C6.3 7.7 5 9.900 5 12.500V17a3.500 3.500 0 0 0 3.500 3.500h7A3.500 3.500 0 0 0 19 17v-4.500c0-2.600-1.300-4.800-3.500-6v-3" />
+          <path d="M5 12.500h14" />
+          <path d="M8 15h3.400v2.400H8zM12.600 15H16v2.400h-3.400z" {...full} />
         </svg>
       );
     case "cilia":
+      // Les Cils font nager plus vite : une cellule lancée, ses cils en arrière, son sillage.
       return (
         <svg {...common}>
-          <path d="M4 19c4-3 12-3 16 0" />
-          <path d="M6 16l-1-6M10 15l-.5-8M14 15l.5-8M18 16l1-6" />
+          <ellipse cx="15" cy="12" rx="6" ry="4.200" />
+          <path d="M9.200 10.200c-1.800-1.600-3.200-1.800-4.800-.6M9 12c-2-.900-3.600-.600-5 .800M9.200 13.800c-1.800 1.600-3.200 1.800-4.800.6" />
+          <path d="M1.500 8h2M1 16h2.500" />
         </svg>
       );
     case "ribosome":
+      // La Fabrique fabrique des briques : un atelier au toit en dents de scie, et ses briques.
       return (
         <svg {...common}>
-          <circle cx="12" cy="8" r="2.4" />
-          <circle cx="7.5" cy="14.5" r="2.4" />
-          <circle cx="16.5" cy="14.5" r="2.4" />
+          <path d="M3 20.500V9l4.500 3V9l4.500 3V9l4.500 3V5.500H21v15z" />
+          <path d="M6 15.200h5v2.600H6zM12.500 15.200h5v2.600h-5z" {...full} />
         </svg>
       );
     case "golgi":
-      // Des saccules empilés, une vésicule qui s'en détache.
+      // L'Emballeur emballe ce qu'on récolte : un colis ficelé.
       return (
         <svg {...common}>
-          <path d="M5 8c4-2 10-2 14 0M4 12c5-2 11-2 16 0M5 16c4-2 10-2 14 0" />
-          <circle cx="19" cy="19" r="1.6" />
+          <path d="M4 8l8-3.500L20 8v8.500L12 20l-8-3.500z" />
+          <path d="M4 8l8 3.500L20 8M12 11.500V20" />
+          <path d="M8 6.300l8 3.500v3" />
         </svg>
       );
     case "nucleus":
-      // Le noyau : son enveloppe, son nucléole.
+      // Le Noyau exprime les évolutions : la double hélice.
       return (
         <svg {...common}>
-          <circle cx="12" cy="12" r="8.5" strokeDasharray="4 2" />
-          <circle cx="13.5" cy="10.5" r="3" />
+          <path d="M7.500 2.500c0 5.500 9 5 9 9.500s-9 4-9 9.500M16.500 2.500c0 5.500-9 5-9 9.500s9 4 9 9.500" />
+          <path d="M8.800 5.500h6.400M9.600 8.800h4.800M9.600 15.200h4.800M8.800 18.500h6.400" />
         </svg>
       );
     case "lysosome":
-      // Un petit sac rempli de grains.
+      // L'Estomac digère les proies : une cellule qui en avale une, et les protéines qu'elle en tire.
       return (
         <svg {...common}>
-          <circle cx="12" cy="12" r="8" />
-          <circle cx="9.5" cy="10.5" r="0.9" fill="currentColor" />
-          <circle cx="14" cy="9.5" r="0.9" fill="currentColor" />
-          <circle cx="13" cy="14.5" r="0.9" fill="currentColor" />
-          <circle cx="9.5" cy="14.5" r="0.9" fill="currentColor" />
+          <path d="M17.800 6.200A8.500 8.500 0 1 0 17.800 17.800" />
+          <path d="M17.800 6.200c-1.600 1.400-2.400 3.400-2.400 5.800s.800 4.400 2.400 5.800" />
+          <circle cx="19.600" cy="12" r="2.300" {...full} />
+          <circle cx="8" cy="9.500" r="1.300" {...full} />
+          <circle cx="11.500" cy="13" r="1.300" {...full} />
+          <circle cx="7.500" cy="14.500" r="1.300" {...full} />
         </svg>
       );
     case "wall":
-      // Une membrane épaisse, doublée.
+      // La Paroi défend la cellule : un bouclier.
       return (
         <svg {...common}>
-          <circle cx="12" cy="12" r="9" />
-          <circle cx="12" cy="12" r="5.5" strokeDasharray="3 2.5" />
+          <path d="M12 2.800l7.500 2.700v5.700c0 4.600-3 8.100-7.500 10-4.500-1.900-7.500-5.400-7.500-10V5.500z" />
+          <path d="M12 6.300v11.500M8 8.200v5M16 8.200v5" />
         </svg>
       );
     case "nursery":
-      // Une cellule en train de se diviser.
+      // La Pouponnière fait naître des cellules filles : une cellule, et sa fille qui s'en détache.
       return (
         <svg {...common}>
-          <circle cx="8.5" cy="12" r="5" />
-          <circle cx="15.5" cy="12" r="5" />
+          <circle cx="9.500" cy="13.500" r="6.500" />
+          <circle cx="18" cy="7" r="3.500" />
+          <circle cx="9.500" cy="13.500" r="1.700" {...full} />
+          <circle cx="18" cy="7" r="1" {...full} />
         </svg>
       );
   }

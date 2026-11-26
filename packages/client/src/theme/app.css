@@ -482,8 +482,9 @@ p {
 
 .scale-bar {
   position: absolute;
-  right: 17%;
-  bottom: 9%;
+  /* Sous la Fabrique, à côté de la Pouponnière : elle ne recouvre aucun médaillon. */
+  right: 26%;
+  bottom: 4.5%;
   width: 46px;
   padding-bottom: 2px;
   border-bottom: 1.5px solid color-mix(in srgb, var(--on-dark) 80%, transparent);
@@ -2903,17 +2904,46 @@ body.trial {
   margin: -30px 0 0 -30px;
 }
 
+/* Le niveau d'un organite : une petite étiquette de papier, accrochée au bas du médaillon. */
 .slot-level {
   position: absolute;
   top: 100%;
-  margin-top: 4px;
-  padding: 1px 8px;
+  left: 50%;
+  min-width: 22px;
+  margin-top: -9px;
+  padding: 0 5px;
+  transform: translateX(-50%);
   white-space: nowrap;
+  border: 1px solid var(--ink);
   border-radius: var(--radius);
-  background: var(--iodine);
+  background: var(--paper);
   color: var(--ink);
   font-family: var(--font-number);
+  font-weight: 500;
   font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+/*
+ * Le Noyau est transparent : on voit le noyau gravé de la cellule à travers. Un double cercle
+ * dit qu'on peut le toucher ; son pictogramme ne sert que pendant un chantier.
+ */
+.slot.is-core.is-built:not(.is-building) {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--bone) 85%, transparent);
+  box-shadow:
+    0 0 0 3px transparent,
+    0 0 0 4px color-mix(in srgb, var(--bone) 45%, transparent);
+}
+
+.slot.is-core.is-built:not(.is-building) svg {
+  display: none;
+}
+
+.slot.is-core .slot-level {
+  margin-top: 6px;
+  background: var(--gamboge);
 }
 
 /* L'onglet Recherche : tout ce qui fait évoluer l'organisme, une rubrique à la fois. */
@@ -3248,4 +3278,13 @@ body.trial {
 
 .place .icon-sugar {
   color: var(--plate-gamboge);
+}
+
+/* Le chemin pour ouvrir une cellule fille : sous son nom, en clair, avec le lien qui y mène. */
+.troop-how {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.3;
 }

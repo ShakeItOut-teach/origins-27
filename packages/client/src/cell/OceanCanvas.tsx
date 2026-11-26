@@ -13,6 +13,7 @@ import {
   drawPredator,
   drawVent,
 } from "./oceanLife";
+import { drawLand } from "./land";
 import { PLATE, blend } from "./plate";
 
 export interface OceanScene {
@@ -193,14 +194,12 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
               .lineTo(offshore[index] ?? 0, offshore[index + 1] ?? 0);
           }
           graphics.stroke({ color: light, alpha: 0.5, width: 1 });
-          // La terre : du papier, cerné d'encre, avec ses courbes de niveau.
+          // La terre : du papier cerné d'encre, qui porte la forêt originelle, son lac, ses prairies.
           graphics
             .poly(coast(0.97))
             .fill({ color: PLATE.paper })
             .stroke({ color: PLATE.ink, width: 1.6 });
-          for (const scale of [0.74, 0.5, 0.27]) {
-            graphics.poly(coast(scale)).stroke({ color: PLATE.ink, alpha: 0.45, width: 1 });
-          }
+          drawLand(graphics, centre, land * cell * 0.97, coast(0.86));
 
           // Les lignes de la carte : rayons, courbes de niveau, frontières des zones.
           const edge = (current.zones[0]?.outer ?? 0) * cell;

@@ -551,11 +551,11 @@ export const BALANCE: Balance = BalanceSchema.parse({
   },
   ocean: {
     tier: 6,
-    landRadius: 20,
+    landRadius: 24,
     shoreDepth: 0,
     zones: [
       {
-        outer: 124,
+        outer: 140,
         depth: 6000,
         pitch: 5,
         openDay: 1,
@@ -564,7 +564,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
         entrants: 500,
       },
       {
-        outer: 98,
+        outer: 110,
         depth: 4000,
         pitch: 4,
         openDay: 6,
@@ -573,7 +573,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
         entrants: 450,
       },
       {
-        outer: 74,
+        outer: 84,
         depth: 1000,
         pitch: 4,
         openDay: 12,
@@ -582,7 +582,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
         entrants: 380,
       },
       {
-        outer: 50,
+        outer: 58,
         depth: 200,
         pitch: 4,
         openDay: 18,
