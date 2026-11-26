@@ -184,6 +184,7 @@ export const fr = {
   "action.migrate": "Remonter",
   "label.world": "L’océan",
   "label.you": "Votre cellule",
+  "label.backToCell": "Votre cellule : y retourner",
   "label.worldHint": "Agrandissez pour toucher un organisme ou un gisement.",
   "label.day": "Jour {n}",
   "label.depth": "{n} m",

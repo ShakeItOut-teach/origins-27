@@ -727,6 +727,9 @@ export function App({
           showEvents={show("zoneEvents")}
           onOrder={(order) => store.send(order).ok}
           onOpenStore={openStore}
+          onHome={() => {
+            setView("cell");
+          }}
         />
       )}
 

@@ -31,6 +31,8 @@ interface Props {
   readonly onOrder: (order: Order) => boolean;
   /** Ouvre la fiche de la Vacuole, quand la réserve est trop petite pour un prix. */
   readonly onOpenStore: () => void;
+  /** Toucher sa propre cellule, au centre de la goutte, ramène dans la cellule. */
+  readonly onHome: () => void;
 }
 
 type Spot =
@@ -158,6 +160,14 @@ export function MapView(props: Props) {
         hidden={hidden || world}
       >
         <MapCanvas scene={scene} />
+        <button
+          type="button"
+          className="organism organism-home"
+          style={{ left: "50%", top: "50%" }}
+          aria-label={t("label.backToCell")}
+          data-testid="map-home"
+          onClick={props.onHome}
+        />
         {placed.map(({ item, x, y }) => {
           const id = idOf(item);
           const restingFor = (state.placeReadyAt[id] ?? 0) - state.now;

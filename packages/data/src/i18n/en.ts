@@ -182,6 +182,7 @@ export const en = {
   "action.migrate": "Rise",
   "label.world": "The ocean",
   "label.you": "Your cell",
+  "label.backToCell": "Your cell: go back to it",
   "label.worldHint": "Zoom in to tap an organism or a deposit.",
   "label.day": "Day {n}",
   "label.depth": "{n} m",
