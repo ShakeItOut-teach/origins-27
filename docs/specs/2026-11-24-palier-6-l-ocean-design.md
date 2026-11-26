@@ -48,8 +48,9 @@ Rise of Kingdoms et The Ants tiennent leurs joueurs des mois avec les mêmes res
   4 000 m), zone de minuit (4 000 à 1 000 m), zone crépusculaire (1 000 à 200 m), zone
   éclairée (200 m à la surface), terre ferme. Ce sont les vraies zones de l'océan.
 - **Ouverture** : zone de minuit au jour 6, crépusculaire au jour 12, éclairée au jour 18.
-- **Places** : 500 dans les abysses, 450 dans la zone de minuit, 380 dans la zone
-  crépusculaire, 300 dans la zone éclairée. Près de la surface, il n'y a pas de place pour
+- **Places** : 500 dans les abysses, 475 dans la zone de minuit, 430 dans la zone
+  crépusculaire, 370 dans la zone éclairée (450, 380 et 300 jusqu'au 26/11/2026 : le
+  propriétaire a voulu plus de places). Près de la surface, il n'y a toujours pas de place pour
   tout le monde.
 - **Organismes simulés** : ils remontent dans les jours qui suivent chaque ouverture, les
   plus ambitieux d'abord. Quelques-uns restent dans chaque zone.

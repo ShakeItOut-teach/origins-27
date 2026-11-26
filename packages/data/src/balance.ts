@@ -570,7 +570,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
         openDay: 6,
         richPercent: 140,
         guardPercent: 130,
-        entrants: 450,
+        entrants: 475,
       },
       {
         outer: 84,
@@ -579,7 +579,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
         openDay: 12,
         richPercent: 190,
         guardPercent: 170,
-        entrants: 380,
+        entrants: 430,
       },
       {
         outer: 58,
@@ -588,7 +588,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
         openDay: 18,
         richPercent: 250,
         guardPercent: 220,
-        entrants: 300,
+        entrants: 370,
       },
     ],
     riseSpreadDays: 5,

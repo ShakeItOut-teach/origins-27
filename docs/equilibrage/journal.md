@@ -615,3 +615,27 @@ Dans la zone éclairée, il restait 57 cases libres pour 300 organismes ; il y e
 
 **À décider par le propriétaire :** s'il voulait aussi que _plus d'organismes_ puissent monter
 (plus de places par zone), c'est un autre réglage (`entrants`), qui change la compétition.
+
+## 2026-11-26 (suite) — Plus de places vers le centre
+
+**Intention :** le propriétaire, à qui la question était posée, a répondu : « Oui, plus de
+places ». Plus d'organismes doivent pouvoir monter vers le centre.
+
+**Changement :** `entrants` dans `packages/data/src/balance.ts`.
+
+| Zone          | Places avant | Places après | Cases pour s'installer |
+| ------------- | ------------ | ------------ | ---------------------- |
+| Abysses       | 500          | 500          | ≈ 817                  |
+| Minuit        | 450          | 475          | ≈ 838                  |
+| Crépusculaire | 380          | 430          | ≈ 613                  |
+| Éclairée      | 300          | 370          | ≈ 483                  |
+
+Il reste une sélection à chaque frontière (25, 45 puis 60 organismes restent en dessous), mais
+elle est moins dure : 74 % du monde atteint la zone éclairée, au lieu de 60 %.
+
+**Ce qui ne change pas :** les sorties de l'eau des organismes simulés restent au rythme de 40
+par jour à partir du jour 22, soit 240 avant la fin de la saison. Les 130 derniers admis dans la
+zone éclairée n'ont donc pas le temps d'atteindre la terre ferme (ils étaient 60 avant). Si l'on
+veut que plus d'organismes deviennent APEX, c'est ce rythme (`apex.perDay`) qu'il faut régler.
+
+**Mesure :** les 493 tests passent sans retouche, dont les cibles des robots joueurs.
