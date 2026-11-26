@@ -577,8 +577,8 @@ p {
   background: var(--plate);
   color: var(--bone);
   border-color: var(--bone);
-  /* Essai de relief : le médaillon est posé sur la planche et y porte son ombre. */
-  box-shadow: 3px 5px 7px rgba(0, 0, 0, 0.7);
+  /* Le relief : posé sur la planche, le médaillon y porte son ombre. */
+  box-shadow: var(--relief);
 }
 
 .slot.is-building {
@@ -954,6 +954,8 @@ p {
   background: var(--plate);
   color: var(--plate-gamboge);
   cursor: pointer;
+  /* Le relief : posé sur la planche, le médaillon y porte son ombre. */
+  box-shadow: var(--relief);
   animation: appear 0.5s ease-out;
 }
 

@@ -119,7 +119,7 @@ export const ORGANELLE_ANGLE: Readonly<Record<OrganelleId, number>> = {
 const MEMBRANE_POINTS = 96;
 
 /**
- * Le relief (essai du 26/11/2026). La lumière vient d'en haut à gauche : chaque corps porte une
+ * Le relief (gardé par le propriétaire le 26/11/2026). La lumière vient d'en haut à gauche : chaque corps porte une
  * ombre vers le bas à droite, un reflet du côté de la lumière, et des hachures du côté de
  * l'ombre. On reste dans la gravure : l'ombre se dit par un noir posé dessous et par des traits.
  */

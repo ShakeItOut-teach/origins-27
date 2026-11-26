@@ -56,6 +56,9 @@
   --line: 1.5px solid var(--ink);
   --shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--ink);
   --shadow-big: 0 0 0 3px var(--paper), 0 0 0 4.5px var(--ink);
+  /* Le relief : l'ombre portée d'un objet posé sur la planche noire. La lumière vient d'en
+     haut à gauche. Jamais sur le papier, où le double filet suffit. */
+  --relief: 3px 5px 7px rgba(0, 0, 0, 0.7);
   --radius: 2px;
   --touch: 48px;
 }

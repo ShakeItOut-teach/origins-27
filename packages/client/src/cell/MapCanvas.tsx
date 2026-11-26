@@ -112,10 +112,19 @@ export function MapCanvas({ scene }: { readonly scene: MapScene }) {
             const px = place.x * size;
             const py = place.y * size;
             const r = size * 0.074 * breath;
+            // Le relief : le lieu porte son ombre, à l'opposé de la lumière.
+            graphics
+              .circle(px + r * 0.14, py + r * 0.18, r * 1.03)
+              .fill({ color: 0x000000, alpha: 0.5 * strength });
             graphics
               .circle(px, py, r)
-              .fill({ color, alpha: 0.16 * strength })
+              .fill({ color, alpha: 0.2 * strength })
               .stroke({ color: light, alpha: 0.7 * strength, width: 1.2 });
+            // Le reflet, du côté de la lumière.
+            graphics
+              .moveTo(px + Math.cos(-2.9) * r * 0.86, py + Math.sin(-2.9) * r * 0.86)
+              .arc(px, py, r * 0.86, -2.9, -1.8)
+              .stroke({ color: light, alpha: 0.5 * strength, width: 2.2, cap: "round" });
             for (let index = 0; index < 16; index++) {
               const angle = (index * Math.PI) / 8 + place.x * 7;
               graphics

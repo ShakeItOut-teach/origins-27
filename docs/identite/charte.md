@@ -28,7 +28,8 @@ Ce qu'on doit reconnaître au premier coup d'œil :
 L'ancienne apparence (carnet de laboratoire) a été jugée générique. Ne reviennent pas :
 
 - le papier quadrillé ;
-- les ombres dures décalées sous les boutons et les cartes ;
+- les ombres dures décalées sous les boutons et les cartes (sur le papier, jamais d'ombre ;
+  sur la planche noire, voir « Le relief ») ;
 - l'italique à empattements partout, le fond crème avec un accent rouille ;
 - les boutons en pilule, les coins très arrondis ;
 - les dégradés de couleur, les halos lumineux, les émojis ;
@@ -133,6 +134,21 @@ Sur la planche noire, on inverse : trait couleur d'os, pas de hachures pleines, 
 et un lavis très léger par organite (gomme-gutte pour la mitochondrie, bleu de Prusse pour la
 vacuole, garance pour le noyau, vert-de-gris pour le réticulum).
 
+**Le relief** (gardé par le propriétaire le 26/11/2026 : « c'est mieux »). Sur la planche
+noire, tout a du volume, comme une gravure éclairée de côté :
+
+- **La lumière vient d'en haut à gauche**, partout et toujours.
+- **Une ombre portée** : la même forme, en noir, décalée vers le bas à droite, sous chaque
+  corps (la cellule, un organite, un organisme, un lieu, un médaillon). Jeton `--relief`
+  pour les éléments de l'interface.
+- **Un reflet** du côté de la lumière : un trait clair et épais, couleur d'os.
+- **Des hachures** du côté de l'ombre, plus longues au plus sombre. Jamais de dégradé.
+- **Un premier plan** : deux ou trois grandes taches très pâles qui passent devant, pour la
+  profondeur.
+
+Le relief ne vaut que sur la planche noire. Sur le papier (boutons, fiches, pages), il n'y a
+pas d'ombre : le double filet suffit.
+
 **Un pictogramme dit ce que fait la chose**, pour qu'on le retienne (demande du propriétaire,
 26/11/2026). Il ne montre pas l'organite tel qu'il est, mais son rôle :
 
@@ -154,7 +170,8 @@ deux idées dans un pictogramme (`packages/client/src/ui/icons.tsx`).
 
 **Les cartes** (la goutte, l'océan) sont des planches noires comme les autres :
 
-- Rien ne brille : pas de halo autour d'un lieu ou d'un être vivant. Un lieu est un médaillon
+- Rien ne brille : pas de halo autour d'un lieu ou d'un être vivant. Chacun porte son ombre
+  (voir « Le relief »). Un lieu est un médaillon
   au trait (un cercle, des graduations, un lavis, du pointillé).
 - L'eau est noire au large et se lave de bleu de Prusse **par paliers** vers le rivage, comme
   les teintes de profondeur d'une carte marine. Jamais un dégradé lisse.

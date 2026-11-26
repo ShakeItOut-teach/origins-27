@@ -69,6 +69,12 @@ export function drawOrganism(
   const r = radius * breath;
   const line = Math.max(1, radius * 0.09);
   const fine = { color: glow, alpha: alpha * 0.55, width: Math.max(0.8, line * 0.6) };
+  // Le relief : l'ombre portée, à l'opposé de la lumière (en haut à gauche), puis un fond
+  // sombre qui détache le corps de ce qui passe dessous.
+  g.circle(spot.x + r * 0.16, spot.y + r * 0.2, r * 1.02).fill({
+    color: 0x000000,
+    alpha: alpha * 0.5,
+  });
 
   if (form === 0) {
     // Diatomée centrique : un disque de verre, des stries qui rayonnent.
