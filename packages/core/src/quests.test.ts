@@ -451,7 +451,9 @@ describe("garanties du moteur avec les quêtes", () => {
         },
       ),
     );
-  });
+    // Cent parties rejouées sur plusieurs jours : plus long que les 5 s par défaut quand toute la
+    // suite tourne en même temps. On garde toutes les parties ; on attend plus longtemps.
+  }, 20_000);
 
   it("sauvegarder puis relire rend les mêmes quêtes", () => {
     const state = ok(atTier4(), { type: "harvest", taps: 5 }, T0 + 5000);

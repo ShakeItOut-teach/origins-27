@@ -731,7 +731,9 @@ describe("garanties du moteur avec les rivaux", () => {
         },
       ),
     );
-  });
+    // Cent parties rejouées sur des dizaines d'heures : plus long que les 5 s par défaut quand
+    // toute la suite tourne en même temps. On garde toutes les parties ; on attend plus longtemps.
+  }, 20_000);
 
   it("sauvegarder puis relire rend le même état : espionnage, attaque en route, attaque jouée", () => {
     const target = rival();
