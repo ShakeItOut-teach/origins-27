@@ -118,6 +118,38 @@ export const ORGANELLE_ANGLE: Readonly<Record<OrganelleId, number>> = {
 
 const MEMBRANE_POINTS = 96;
 
+/**
+ * Le relief (essai du 26/11/2026). La lumière vient d'en haut à gauche : chaque corps porte une
+ * ombre vers le bas à droite, un reflet du côté de la lumière, et des hachures du côté de
+ * l'ombre. On reste dans la gravure : l'ombre se dit par un noir posé dessous et par des traits.
+ */
+const LIGHT = (-135 * Math.PI) / 180;
+const SHADOW = { x: 0.07, y: 0.09 };
+
+/** L'ombre portée d'un corps rond : le même rond, noir, décalé à l'opposé de la lumière. */
+function castShadow(g: Graphics, x: number, y: number, r: number, strength = 0.5): void {
+  g.circle(x + r * SHADOW.x * 2.2, y + r * SHADOW.y * 2.2, r * 1.03).fill({
+    color: 0x000000,
+    alpha: strength,
+  });
+}
+
+/** Le volume d'un corps rond : un reflet du côté de la lumière, des hachures du côté de l'ombre. */
+function roundVolume(g: Graphics, x: number, y: number, r: number, alpha = 1): void {
+  for (let line = 0; line < 7; line++) {
+    const angle = LIGHT + Math.PI - 0.75 + line * 0.25;
+    const deep = 0.3 * Math.cos((line - 3) * 0.3);
+    g.moveTo(x + Math.cos(angle) * r * 0.94, y + Math.sin(angle) * r * 0.94).lineTo(
+      x + Math.cos(angle) * r * (0.94 - deep),
+      y + Math.sin(angle) * r * (0.94 - deep),
+    );
+  }
+  g.stroke({ width: 0.9, color: BONE, alpha: alpha * 0.45 });
+  g.moveTo(x + Math.cos(LIGHT - 0.55) * r * 0.8, y + Math.sin(LIGHT - 0.55) * r * 0.8)
+    .arc(x, y, r * 0.8, LIGHT - 0.55, LIGHT + 0.55)
+    .stroke({ width: Math.max(1.4, r * 0.09), color: BONE, alpha: alpha * 0.7, cap: "round" });
+}
+
 /** Le trait de la gravure sur la planche noire, et les teintes de lavis. */
 const BONE = PLATE.bone;
 const WASH = PLATE;
@@ -165,9 +197,18 @@ function mitochondrion(
 ): void {
   const amber = WASH.gamboge;
   const wide = long * 0.46;
+  g.poly(ellipse(x + long * SHADOW.x * 2, y + long * SHADOW.y * 2, long, wide, angle)).fill({
+    color: 0x000000,
+    alpha: alpha * 0.5,
+  });
   g.poly(ellipse(x, y, long, wide, angle))
-    .fill({ color: amber, alpha: alpha * 0.16 })
+    .fill({ color: PLATE.ground, alpha: alpha * 0.6 })
     .stroke({ width: 1.4, color: BONE, alpha });
+  g.poly(ellipse(x, y, long, wide, angle)).fill({ color: amber, alpha: alpha * 0.3 });
+  g.poly(ellipse(x - long * 0.1, y - wide * 0.38, long * 0.55, wide * 0.16, angle)).fill({
+    color: BONE,
+    alpha: alpha * 0.35,
+  });
   // Les crêtes : des replis qui partent d'un bord, puis de l'autre.
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -347,11 +388,43 @@ export function drawScene(
     }
   }
 
+  // L'ombre de la cellule sur la planche : elle la décolle du fond.
+  const lifted = ring(1.02).map(
+    (value, index) => value + base * (index % 2 === 0 ? SHADOW.x : SHADOW.y) * 1.6,
+  );
+  g.poly(lifted, true).fill({ color: 0x000000, alpha: 0.55 });
+
   // Le corps : un lavis de la couleur de la créature, une membrane en double feuillet, et
   // de petits traits entre les deux feuillets, comme sur une gravure.
   g.poly(ring(1), true)
-    .fill({ color: hsl(hue, 0.4, 0.42), alpha: 0.2 })
+    .fill({ color: PLATE.ground, alpha: 0.5 })
     .stroke({ width: 2, color: glowColor, alpha: 0.95 });
+  g.poly(ring(1), true).fill({ color: hsl(hue, 0.4, 0.42), alpha: 0.26 });
+  // Le volume : des hachures du côté de l'ombre, plus longues au plus sombre.
+  for (let i = 0; i < MEMBRANE_POINTS; i++) {
+    const angle = (i / MEMBRANE_POINTS) * Math.PI * 2;
+    const facing = Math.cos(angle - (LIGHT + Math.PI));
+    if (facing < 0.25) continue;
+    const r = membraneRadius(base, angle, t, pulse);
+    g.moveTo(cx + Math.cos(angle) * r * 0.94, cy + Math.sin(angle) * r * 0.94).lineTo(
+      cx + Math.cos(angle) * r * (0.94 - 0.2 * facing * facing),
+      cy + Math.sin(angle) * r * (0.94 - 0.2 * facing * facing),
+    );
+  }
+  g.stroke({ width: 0.9, color: glowColor, alpha: 0.4 });
+  // Le reflet : un trait clair et épais, là où la lumière touche la membrane.
+  const lit: number[] = [];
+  for (let i = 0; i < MEMBRANE_POINTS; i++) {
+    const angle = (i / MEMBRANE_POINTS) * Math.PI * 2;
+    if (Math.cos(angle - LIGHT) < 0.72) continue;
+    const r = membraneRadius(base, angle, t, pulse) * 0.9;
+    lit.push(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+  }
+  if (lit.length >= 4) {
+    g.moveTo(lit[0] ?? cx, lit[1] ?? cy);
+    for (let i = 2; i < lit.length; i += 2) g.lineTo(lit[i] ?? cx, lit[i + 1] ?? cy);
+    g.stroke({ width: 3.2, color: BONE, alpha: 0.5, cap: "round", join: "round" });
+  }
   g.poly(ring(0.955), true).stroke({ width: 1, color: glowColor, alpha: 0.7 });
   for (let i = 0; i < MEMBRANE_POINTS; i += 2) {
     const angle = (i / MEMBRANE_POINTS) * Math.PI * 2;
@@ -483,9 +556,12 @@ export function drawScene(
     const k = growing("vacuole");
     const r = base * (0.15 + 0.008 * scene.organelles.vacuole) * k;
     const cool = BONE;
+    castShadow(g, x, y, r);
     g.circle(x, y, r)
-      .fill({ color: WASH.prussian, alpha: 0.22 })
+      .fill({ color: PLATE.ground, alpha: 0.55 })
       .stroke({ width: 1.3, color: cool, alpha: 0.9 });
+    g.circle(x, y, r).fill({ color: WASH.prussian, alpha: 0.32 });
+    roundVolume(g, x, y, r, 0.8);
     // Un reflet sur la paroi, et quelques réserves qui flottent dedans.
     g.moveTo(x + Math.cos(Math.PI * 1.05) * r * 0.72, y + Math.sin(Math.PI * 1.05) * r * 0.72)
       .arc(x, y, r * 0.72, Math.PI * 1.05, Math.PI * 1.5)
@@ -620,10 +696,12 @@ export function drawScene(
   const ny = cy + base * 0.04 * Math.cos(t * 0.4);
   const nr = base * 0.25;
   const nucleus = BONE;
+  castShadow(g, nx, ny, nr, 0.6);
   g.circle(nx, ny, nr)
-    .fill({ color: PLATE.ground, alpha: 0.55 })
+    .fill({ color: PLATE.ground, alpha: 0.7 })
     .stroke({ width: 1.6, color: nucleus, alpha: 0.95 });
-  g.circle(nx, ny, nr).fill({ color: WASH.madder, alpha: 0.2 });
+  g.circle(nx, ny, nr).fill({ color: WASH.madder, alpha: 0.3 });
+  roundVolume(g, nx, ny, nr);
   g.circle(nx, ny, nr * 0.9).stroke({ width: 1, color: nucleus, alpha: 0.4 });
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2 + t * 0.05;
@@ -655,6 +733,17 @@ export function drawScene(
   g.circle(nx + nr * 0.25, ny - nr * 0.2, nr * (0.27 + expressing * 0.3)).fill({
     color: nucleus,
     alpha: 0.55 + expressing,
+  });
+
+  // Le premier plan : de grandes taches floues qui passent devant la cellule, tout près de
+  // l'objectif. Elles donnent la profondeur.
+  decor.motes.slice(0, 3).forEach((mote, index) => {
+    const x = ((mote.x + t * mote.speed * 0.6 + index * 0.31) % 1) * width;
+    const y = (((mote.y + index * 0.37) % 1) + 0.03 * Math.sin(t * 0.25 + mote.phase)) * height;
+    const size = unit * (0.07 + index * 0.025);
+    for (let step = 0; step < 6; step++) {
+      g.circle(x, y, size * (1 - step * 0.13)).fill({ color: BONE, alpha: 0.012 });
+    }
   });
 
   // Ondes de toucher : un cercle fin qui s'élargit, comme sur l'eau.
