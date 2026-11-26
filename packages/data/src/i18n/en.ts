@@ -84,6 +84,7 @@ export const en = {
   "missing.idle": "nothing makes it for now",
   "hunt.strikeHint": "Your group has reached the prey",
   "action.train": "Grow",
+  "action.trainMax": "Max · {n}",
   "action.hunt": "Hunt",
   "action.strike": "Tap the prey!",
   "action.mutate": "Mutate",

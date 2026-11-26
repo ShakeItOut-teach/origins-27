@@ -1,6 +1,7 @@
 import {
   MICRO,
   genesMissing,
+  maxTrainable,
   productionRate,
   trainMs,
   troopUnlocked,
@@ -24,7 +25,7 @@ interface Props {
   readonly onGenes: () => void;
 }
 
-/** On fait naître les cellules filles une par une, ou par dix. */
+/** On fait naître les cellules filles une par une, par dix, ou autant que possible. */
 const BATCHES = [1, 10] as const;
 
 /**
@@ -125,19 +126,27 @@ export function TroopPanel({ state, lang, onOrder, onResearch, onGenes }: Props)
               )}
             </span>
             <span className="train-buttons">
-              {BATCHES.map((count) => (
+              {[...BATCHES, maxTrainable(state, id)].map((count, index) => (
                 <button
-                  key={count}
+                  key={index}
                   type="button"
                   className="step"
                   aria-label={`${t("action.train")} : ${String(count)} × ${t(`troop.${id}.name`)}`}
-                  disabled={locked || poor(count) || training !== null}
-                  data-testid={count === 1 ? `train-${id}` : `train-${id}-${String(count)}`}
+                  disabled={locked || count < 1 || poor(count) || training !== null}
+                  data-testid={
+                    index === BATCHES.length
+                      ? `train-${id}-max`
+                      : count === 1
+                        ? `train-${id}`
+                        : `train-${id}-${String(count)}`
+                  }
                   onClick={() => {
                     onOrder({ type: "trainTroop", troop: id, count });
                   }}
                 >
-                  +{count}
+                  {index === BATCHES.length
+                    ? t("action.trainMax").replace("{n}", String(count))
+                    : `+${String(count)}`}
                 </button>
               ))}
             </span>

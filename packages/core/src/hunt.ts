@@ -6,6 +6,7 @@ import { BALANCE, ORGANELLE_IDS, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { PreyKind, TroopId } from "@o27/data";
 import { createRng } from "./rng";
 import { modifierPercent } from "./stats";
+import { MICRO } from "./types";
 import type { GameEvent, Hunt, PlayerState, Step } from "./types";
 
 export type Party = Readonly<Record<TroopId, number>>;
@@ -133,6 +134,26 @@ function trainingBonus(state: PlayerState): number | null {
 /** Le joueur peut-il faire naître des cellules filles ? Leur nombre n'a pas de plafond. */
 export function canTrain(state: PlayerState): boolean {
   return trainingBonus(state) !== null;
+}
+
+/**
+ * Combien de cellules d'une sorte le bouton « Max » fait naître : autant que le permettent
+ * 90 % de chaque ressource. Aucun autre plafond : c'est l'entretien qui limite une armée.
+ */
+export function maxTrainable(state: PlayerState, troop: TroopId): number {
+  const data = BALANCE.troops[troop];
+  const percent = BALANCE.training.maxSpendPercent;
+  const prices: readonly (readonly [number, number])[] = [
+    [state.resources.sugar, data.cost.sugar],
+    [state.resources.bricks, data.cost.bricks],
+    [state.resources.proteins, data.proteins],
+  ];
+  let count = Number.POSITIVE_INFINITY;
+  for (const [stock, price] of prices) {
+    if (price <= 0) continue;
+    count = Math.min(count, Math.floor((stock * percent) / (100 * price * MICRO)));
+  }
+  return Number.isFinite(count) ? Math.max(0, count) : 0;
 }
 
 /** Durée d'une naissance, en millisecondes : plus courte quand l'organite monte de niveau. */

@@ -10,6 +10,7 @@ import {
   deserializeState,
   lossesFor,
   MICRO,
+  maxTrainable,
   nextMutationPrice,
   partyPower,
   partySize,
@@ -184,6 +185,29 @@ describe("la Pouponnière", () => {
     expect(done.state.troops.swift).toBe(3);
     expect(done.state.training).toBeNull();
     expect(done.events.filter((event) => event.type === "troopBorn")).toHaveLength(3);
+  });
+
+  it("aucun plafond de nombre ; « Max » dépense jusqu'à 90 % des ressources", () => {
+    const rich = {
+      ...atTier4(),
+      resources: {
+        sugar: 1_000_000 * MICRO,
+        bricks: 1_000_000 * MICRO,
+        proteins: 1_000_000 * MICRO,
+      },
+    };
+    const cost = BALANCE.troops.swift.cost;
+    const most = maxTrainable(rich, "swift");
+    const bySugar = Math.floor((1_000_000 * 90) / (100 * cost.sugar));
+    const byBricks = cost.bricks > 0 ? Math.floor((1_000_000 * 90) / (100 * cost.bricks)) : bySugar;
+    expect(most).toBe(Math.min(bySugar, byBricks));
+    expect(most).toBeGreaterThan(20);
+    const ordered = ok(rich, { type: "trainTroop", troop: "swift", count: most }, T0);
+    expect(ordered.training?.remaining).toBe(most);
+    expect(ordered.resources.sugar).toBeGreaterThanOrEqual(rich.resources.sugar / 10);
+    expect(
+      maxTrainable({ ...rich, resources: { sugar: 0, bricks: 0, proteins: 0 } }, "swift"),
+    ).toBe(0);
   });
 
   it("refuse : sans Pouponnière, pendant une naissance, sans ressources", () => {

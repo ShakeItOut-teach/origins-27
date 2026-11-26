@@ -82,6 +82,7 @@ export const fr = {
   "missing.idle": "rien n’en produit pour l’instant",
   "hunt.strikeHint": "Votre groupe est sur la proie",
   "action.train": "Faire naître",
+  "action.trainMax": "Max · {n}",
   "action.hunt": "Chasser",
   "action.strike": "Touchez la proie !",
   "action.mutate": "Muter",

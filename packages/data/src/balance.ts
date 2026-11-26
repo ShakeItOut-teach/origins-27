@@ -484,6 +484,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
       upkeep: 8,
     },
   },
+  training: { maxSpendPercent: 90 },
   troopUpkeep: { milliPerSecond: 15, famineSeconds: 60, faminePercent: 10 },
   hunt: {
     strongMultiplier: 2,

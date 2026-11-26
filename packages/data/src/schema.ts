@@ -273,6 +273,8 @@ export const BalanceSchema = z.strictObject({
    * L'entretien : chaque cellule fille vivante consomme du sucre, en millièmes d'unité par
    * seconde. C'est ce qui limite la taille d'une armée, et non plus un plafond.
    */
+  /** Le bouton « Max » des naissances dépense au plus ce pourcentage de chaque ressource. */
+  training: z.strictObject({ maxSpendPercent: z.number().int().min(1).max(100) }),
   troopUpkeep: z.strictObject({
     milliPerSecond: positiveInt,
     /**
@@ -855,7 +857,8 @@ export const OrderSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("trainTroop"),
     troop: z.enum(TROOP_IDS),
-    count: z.number().int().min(1).max(20),
+    // Aucun plafond de jeu : la borne ne sert qu'à refuser un nombre absurde.
+    count: z.number().int().min(1).max(1_000_000),
   }),
   /** Une proie est désignée par sa case, précédée de « h: ». */
   z.strictObject({

@@ -39,6 +39,7 @@ export { applyOrder, nextMutationPrice } from "./apply";
 export {
   combatLossPercent,
   lossesFor,
+  maxTrainable,
   takeLosses,
   partyPower,
   partySize,
