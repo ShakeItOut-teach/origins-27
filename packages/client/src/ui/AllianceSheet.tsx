@@ -3,6 +3,8 @@ import {
   allianceToday,
   allianceView,
   bannerList,
+  benchOf,
+  benchPoints,
   donationCost,
   donationPoints,
   helpRequests,
@@ -184,6 +186,37 @@ export function AllianceSheet({ state, lang, onClose, onOrder }: Props) {
           )}
         </div>
 
+        {state.crowd !== undefined && (
+          <section data-testid="alliance-bench">
+            <h3 className="sheet-title">{t("bench.title")}</h3>
+            {benchOf(state, alliance.banner).length === 0 ? (
+              <p className="sheet-role">{t("bench.alone")}</p>
+            ) : (
+              <>
+                <p className="sheet-role">
+                  {t("bench.text")
+                    .replace("{n}", String(benchOf(state, alliance.banner).length))
+                    .replace("{points}", String(benchPoints(state, alliance.banner)))}
+                </p>
+                <ol className="rank-list" data-testid="bench-list">
+                  {benchOf(state, alliance.banner).map((mate) => (
+                    <li key={mate.slot} className="rank-row">
+                      <span>{t("label.tierShort").replace("{n}", String(mate.tier))}</span>
+                      <span className="rank-name">
+                        {mate.name}
+                        <span className="human-tag">{t("label.human")}</span>
+                      </span>
+                      <span className="rank-score">
+                        {t("bench.given").replace("{n}", String(mate.given))}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+          </section>
+        )}
+
         <h3 className="sheet-title">{t("label.techs")}</h3>
         <p className="sheet-role" data-testid="alliance-donations">
           {t("alliance.techText")
@@ -319,6 +352,7 @@ export function AllianceSheet({ state, lang, onClose, onOrder }: Props) {
                 <small>
                   {t("label.level")} {row.level} · {row.members} {t("label.members")} · {row.near}{" "}
                   {t("label.nearYou")}
+                  {row.humans > 0 && ` · ${t("bench.humans").replace("{n}", String(row.humans))}`}
                 </small>
               </span>
               {row.mine ? (

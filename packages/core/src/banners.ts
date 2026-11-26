@@ -11,6 +11,7 @@
  */
 import { ALLIANCE_TECH_IDS, BALANCE, BANNER_IDS, UNLOCKS } from "@o27/data";
 import type { AllianceTechId, BannerId, StatId } from "@o27/data";
+import { benchPoints } from "./crowd";
 import { cellIn } from "./ocean";
 import { createRng } from "./rng";
 import { DAY_MS } from "./types";
@@ -216,21 +217,38 @@ function pendingPoints(state: PlayerState, alliance: Alliance): number {
   return Math.floor((elapsed * bannerRate(state.worldSeed, alliance.banner)) / DAY_MS);
 }
 
-const views = new WeakMap<Alliance, { readonly points: number; readonly view: TechView }>();
+const views = new WeakMap<
+  Alliance,
+  { readonly points: number; readonly others: number; readonly view: TechView }
+>();
 
-/** Les technologies de l'alliance du joueur, à l'instant de son état ; `null` sans alliance. */
+/**
+ * Les technologies de l'alliance telles que la partie les garde : ce que le joueur et les
+ * membres simulés ont versé. C'est ce qu'on sauvegarde.
+ */
+function ownView(state: PlayerState, alliance: Alliance): TechView {
+  return pour(
+    { tech: alliance.tech, recommended: alliance.recommended },
+    techOrder(state.worldSeed, alliance.banner),
+    pendingPoints(state, alliance),
+  );
+}
+
+/**
+ * Les technologies de l'alliance du joueur, à l'instant de son état ; `null` sans alliance.
+ * Les points versés par les autres humains du banc s'y ajoutent, comme ceux des membres
+ * simulés, sans jamais entrer dans la sauvegarde.
+ */
 export function allianceView(state: PlayerState): TechView | null {
   const alliance = state.alliance;
   if (alliance === null) return null;
   const points = pendingPoints(state, alliance);
+  const others = benchPoints(state, alliance.banner);
   const known = views.get(alliance);
-  if (known?.points === points) return known.view;
-  const view = pour(
-    { tech: alliance.tech, recommended: alliance.recommended },
-    techOrder(state.worldSeed, alliance.banner),
-    points,
-  );
-  views.set(alliance, { points, view });
+  if (known?.points === points && known.others === others) return known.view;
+  const own = ownView(state, alliance);
+  const view = others > 0 ? pour(own, techOrder(state.worldSeed, alliance.banner), others) : own;
+  views.set(alliance, { points, others, view });
   return view;
 }
 
@@ -283,7 +301,7 @@ export function allianceDue(state: PlayerState): number {
 /** L'alliance du joueur mise au net à l'instant de son état : les points en attente sont versés. */
 export function settledAlliance(state: PlayerState): Alliance | null {
   const alliance = state.alliance;
-  const view = allianceView(state);
-  if (alliance === null || view === null) return null;
+  if (alliance === null) return null;
+  const view = ownView(state, alliance);
   return { ...alliance, tech: view.tech, recommended: view.recommended, syncedAt: state.now };
 }

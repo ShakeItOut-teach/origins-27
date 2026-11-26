@@ -235,6 +235,10 @@ export interface HumanCard {
   readonly seenAt: number;
   /** Sa famille de gènes la plus travaillée ; `null` tant qu'il n'a aucun gène. */
   readonly family: GeneFamily | null;
+  /** Sa bannière ; `null` avant l'ouverture des alliances. */
+  readonly banner: BannerId | null;
+  /** Ce qu'il a versé à son alliance (ses points d'alliance). */
+  readonly given: number;
 }
 
 /** Les autres humains de la saison, tels que le serveur les connaît. */

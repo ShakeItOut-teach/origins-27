@@ -163,6 +163,20 @@ export function StatsPanel({ stats, lang }: Props) {
               </li>
             ))}
           </ul>
+          {stats.ocean.benches.length > 0 && (
+            <>
+              <h3 className="sheet-title">{t("stats.benches.title")}</h3>
+              <ul className="stat-list" data-testid="stats-benches">
+                {stats.ocean.benches.map((bench) => (
+                  <li key={bench.banner}>
+                    <span>[{bench.banner.toUpperCase()}]</span>
+                    <strong>{bench.players}</strong>
+                    <small>{t("bench.given").replace("{n}", String(bench.given))}</small>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
           {stats.ocean.refusals.length > 0 && (
             <>
               <h3 className="sheet-title">{t("stats.refusals.title")}</h3>

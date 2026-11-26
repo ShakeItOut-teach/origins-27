@@ -715,6 +715,7 @@ export const BalanceSchema = z.strictObject({
     }),
     /** Contribution à partir de laquelle on choisit la technologie recommandée. */
     officerPoints: positiveInt,
+    benchHumans: positiveInt,
     help: z.strictObject({
       /** Demandes d'aide des autres membres : combien par jour, combien dès minuit, puis une toutes les N minutes. */
       perDay: positiveInt,

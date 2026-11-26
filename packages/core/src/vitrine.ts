@@ -40,6 +40,8 @@ export function humanCard(state: PlayerState): HumanCard {
     contest: contestProgress(state),
     seenAt: state.now,
     family: topFamily(state),
+    banner: state.alliance?.banner ?? null,
+    given: state.alliance?.points ?? 0,
   };
 }
 

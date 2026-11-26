@@ -76,6 +76,12 @@ export interface OceanStats {
   readonly families: readonly Share[];
   /** Ce que les humains ont pris dans les gisements, en millionièmes d'unité. */
   readonly taken: number;
+  /** Les bancs : humains par bannière, et les points qu'ils ont versés. */
+  readonly benches: readonly {
+    readonly banner: string;
+    readonly players: number;
+    readonly given: number;
+  }[];
   /** Pourquoi les ordres sont refusés, sur sept jours. */
   readonly refusals: readonly { readonly code: string; readonly count: number }[];
 }
@@ -89,6 +95,11 @@ function readOcean(value: unknown): OceanStats | null {
     topPower: num(value.puissanceMax),
     families: shares(value.familles),
     taken: num(value.prises),
+    benches: rows(value.bancs).map((row) => ({
+      banner: text(row.nom),
+      players: num(row.joueurs),
+      given: num(row.verse),
+    })),
     refusals: rows(value.refus).map((row) => ({ code: text(row.code), count: num(row.nombre) })),
   };
 }

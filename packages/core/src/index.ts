@@ -23,7 +23,17 @@ export type {
   Step,
 } from "./types";
 export { advance } from "./advance";
-export { crowdStamp, humanCount, humansBySlot, othersTaken, readCrowd, withCrowd } from "./crowd";
+export {
+  benchOf,
+  benchPoints,
+  crowdStamp,
+  humanCount,
+  humansBySlot,
+  humansPerBanner,
+  othersTaken,
+  readCrowd,
+  withCrowd,
+} from "./crowd";
 export { humanCard, humanFamilies, topFamily } from "./vitrine";
 export { applyOrder, nextMutationPrice } from "./apply";
 export {
@@ -119,6 +129,7 @@ export type { TechPool, TechView } from "./banners";
 export {
   allianceToday,
   bannerList,
+  benchBanner,
   donationCost,
   donationPoints,
   giftFor,

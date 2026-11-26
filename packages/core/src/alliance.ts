@@ -16,6 +16,7 @@ import {
   techOrder,
   techThreshold,
 } from "./banners";
+import { humansPerBanner } from "./crowd";
 import { cellDistance, oceanOrganisms, playerCell } from "./ocean";
 import { organismScore, totalPower } from "./power";
 import { raiseShield } from "./rivals";
@@ -64,6 +65,20 @@ function nearMembers(state: PlayerState, radius: number): Record<BannerId, numbe
   return counts;
 }
 
+/**
+ * Le banc qui accueille le joueur : la bannière qui compte déjà le plus d'humains, tant qu'elle
+ * en a moins que la taille d'un banc. `null` s'il n'y a encore aucun humain à rejoindre.
+ */
+export function benchBanner(state: PlayerState): BannerId | null {
+  const humans = humansPerBanner(state);
+  let best: BannerId | null = null;
+  for (const banner of BANNER_IDS) {
+    if (humans[banner] === 0 || humans[banner] >= RULES.benchHumans) continue;
+    if (best === null || humans[banner] > humans[best]) best = banner;
+  }
+  return best;
+}
+
 /** La bannière la plus présente autour du joueur : c'est elle qui le recrute d'office. */
 export function nearestBanner(state: PlayerState): BannerId {
   const counts = nearMembers(state, RULES.nearCells);
@@ -84,6 +99,8 @@ export interface BannerRow {
   /** Puissance cumulée de ses membres. */
   readonly power: number;
   readonly mine: boolean;
+  /** Autres espèces humaines sous cette bannière. */
+  readonly humans: number;
 }
 
 let powerKey = "";
@@ -108,6 +125,7 @@ export function bannerList(state: PlayerState): readonly BannerRow[] {
   const near = nearMembers(state, RULES.reinforcements.cells);
   const base = bannerPowers(state);
   const own = allianceView(state);
+  const humans = humansPerBanner(state);
   const rows = BANNER_IDS.map((banner): BannerRow => {
     const mine = state.alliance?.banner === banner;
     const view =
@@ -121,6 +139,7 @@ export function bannerList(state: PlayerState): readonly BannerRow[] {
       level: allianceLevel(view),
       power: base[banner] + (mine ? totalPower(state) : 0),
       mine,
+      humans: humans[banner],
     };
   });
   return rows.sort(
@@ -149,10 +168,13 @@ function enlist(state: PlayerState, banner: BannerId, previous: Alliance | null)
   };
 }
 
-/** À l'ouverture des alliances, la bannière la plus présente autour du joueur le recrute. */
+/**
+ * À l'ouverture des alliances, le joueur est recruté d'office : par le banc des autres humains
+ * s'il y en a un qui a de la place, sinon par la bannière la plus présente autour de lui.
+ */
 export function ensureAlliance(state: PlayerState, at: number): Step {
   if (state.tier < RULES.tier || state.alliance !== null) return { state, events: [] };
-  const banner = nearestBanner(state);
+  const banner = benchBanner(state) ?? nearestBanner(state);
   return {
     state: { ...state, alliance: enlist(state, banner, null) },
     events: [{ type: "allianceJoined", at, banner, auto: true }],
@@ -190,7 +212,11 @@ function donate(state: PlayerState, tech: AllianceTechId): Outcome {
   const alliance = current(state);
   if (alliance === null) return { error: "noAlliance" };
   if (alliance.donations >= RULES.donation.perDay) return { error: "donationsDone" };
-  if (techLevel(alliance.tech[tech]) >= RULES.tech.maxLevel) return { error: "maxLevel" };
+  // Avec les dons des autres humains, la technologie est peut-être déjà au maximum.
+  const shared = allianceView(state)?.tech[tech] ?? alliance.tech[tech];
+  if (techLevel(Math.max(shared, alliance.tech[tech])) >= RULES.tech.maxLevel) {
+    return { error: "maxLevel" };
+  }
   const cost = donationCost();
   if (RESOURCE_IDS.some((id) => state.resources[id] < cost[id])) return { error: "insufficient" };
   const points = donationPoints(state, tech);

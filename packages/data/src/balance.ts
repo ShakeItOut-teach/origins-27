@@ -799,6 +799,8 @@ export const BALANCE: Balance = BalanceSchema.parse({
     },
     donation: { cost: { sugar: 100, bricks: 60 }, points: 40, recommendedPercent: 150, perDay: 20 },
     officerPoints: 600,
+    /** Un banc : les espèces humaines d'une même bannière, pas plus de tant. */
+    benchHumans: 20,
     help: { perDay: 30, start: 5, minutes: 30, credits: 10, points: 2, buildPercent: 20 },
     reinforcements: { cells: 25, percent: 15 },
     gift: {

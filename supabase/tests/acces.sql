@@ -503,6 +503,7 @@ begin
   if public.statistiques_ocean(bob, saison, '2027-01-11') is not null then
     raise exception 'ECHEC : un joueur ordinaire lit les statistiques du monde partagé';
   end if;
+  perform public.montrer_vitrine(bob, saison, 5, '{"slot":5,"name":"Bobus","banner":"tox","given":120}');
   insert into public.gardiens (joueur) values (bob) on conflict do nothing;
   stats := public.statistiques_ocean(bob, saison, '2027-01-11');
   if (stats ->> 'humains')::integer <> 2 or (stats ->> 'prises')::bigint <> 1500020 then
@@ -510,6 +511,9 @@ begin
   end if;
   if stats -> 'refus' -> 0 ->> 'code' <> 'human' or (stats -> 'refus' -> 0 ->> 'nombre')::integer <> 2 then
     raise exception 'ECHEC : les refus ne sont pas comptés par motif : %', stats;
+  end if;
+  if stats -> 'bancs' -> 0 ->> 'nom' <> 'tox' or (stats -> 'bancs' -> 0 ->> 'verse')::integer <> 120 then
+    raise exception 'ECHEC : les bancs ne sont pas comptés : %', stats;
   end if;
   if stats::text like '%00000000-0000-4000-8000%' then
     raise exception 'ECHEC : les statistiques contiennent un identifiant de joueur';

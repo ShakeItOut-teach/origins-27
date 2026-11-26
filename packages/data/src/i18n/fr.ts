@@ -518,6 +518,14 @@ export const fr = {
   "label.yours": "La vôtre",
   "label.ally": "Allié",
   "label.human": "humain",
+  "bench.title": "Votre banc",
+  "bench.alone":
+    "Aucune autre espèce humaine sous votre bannière pour l’instant. Les prochaines vous rejoindront ici.",
+  "bench.text":
+    "Autres espèces humaines sous votre bannière : {n}. Leurs dons comptent pour tous ({points} points versés).",
+  "bench.given": "{n} pts",
+  "bench.humans": "humains : {n}",
+  "label.tierShort": "P. {n}",
   "state.human": "Une espèce humaine, comme la vôtre : pas d’attaque entre joueurs pour l’instant.",
   "ranking.humans": "{n} espèces humaines dans l’océan cette saison, la vôtre comprise.",
   "ranking.humansAlone": "Pour l’instant, votre espèce est la seule humaine de l’océan.",
@@ -928,6 +936,7 @@ export const fr = {
   "stats.tier": "Palier {n}",
   "stats.orders.title": "Ce qui est joué (7 jours)",
   "stats.refused": "refusés",
+  "stats.benches.title": "Les bancs : humains par bannière, points versés",
   "stats.ocean.title": "Le monde partagé, cette saison",
   "stats.ocean.humans": "Espèces humaines",
   "stats.ocean.active": "{n} sur 24 h",

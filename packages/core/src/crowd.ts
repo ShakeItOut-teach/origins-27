@@ -3,8 +3,8 @@
  * l'organisme simulé qui occupait la sienne (monde partagé, étape 1).
  * La foule est une entrée du calcul, donnée par le serveur : le moteur reste pur.
  */
-import { GENE_FAMILIES, RANKING_IDS } from "@o27/data";
-import type { RankingId } from "@o27/data";
+import { BANNER_IDS, GENE_FAMILIES, RANKING_IDS } from "@o27/data";
+import type { BannerId, RankingId } from "@o27/data";
 import type { Crowd, HumanCard, PlayerState } from "./types";
 
 /** Au-delà, la foule reçue est tronquée : l'océan n'a que 500 places. */
@@ -66,6 +66,9 @@ function readCard(raw: unknown): HumanCard | null {
   const { slot, name, hue, tier, zone, scores, week, contest, seenAt } = raw;
   // Une vitrine d'avant les familles n'en a pas : elle compte comme sans gène.
   const family = GENE_FAMILIES.find((entry) => entry === raw.family) ?? null;
+  // Une vitrine d'avant les bancs n'a ni bannière ni contribution.
+  const banner = BANNER_IDS.find((entry) => entry === raw.banner) ?? null;
+  const given = isCount(raw.given) ? raw.given : 0;
   if (
     !isCount(slot) ||
     typeof name !== "string" ||
@@ -99,6 +102,8 @@ function readCard(raw: unknown): HumanCard | null {
     contest,
     seenAt,
     family,
+    banner,
+    given,
   };
 }
 
@@ -148,4 +153,26 @@ export function othersTaken(state: PlayerState, depositId: string): number {
 /** Le même état, avec cette foule. */
 export function withCrowd(state: PlayerState, crowd: Crowd): PlayerState {
   return { ...state, crowd };
+}
+
+/** Les autres espèces humaines d'une bannière : son banc, le joueur mis à part. */
+export function benchOf(state: PlayerState, banner: BannerId): readonly HumanCard[] {
+  return [...humansBySlot(state).values()]
+    .filter((card) => card.banner === banner)
+    .sort((one, other) => other.given - one.given || one.slot - other.slot);
+}
+
+/** Les points versés par les autres humains d'une bannière. */
+export function benchPoints(state: PlayerState, banner: BannerId): number {
+  let total = 0;
+  for (const card of humansBySlot(state).values()) if (card.banner === banner) total += card.given;
+  return total;
+}
+
+/** Combien d'autres humains sous chaque bannière. */
+export function humansPerBanner(state: PlayerState): Readonly<Record<BannerId, number>> {
+  const counts: Record<BannerId, number> = { aby: 0, krk: 0, mer: 0, tox: 0, lum: 0, nox: 0 };
+  for (const card of humansBySlot(state).values())
+    if (card.banner !== null) counts[card.banner] += 1;
+  return counts;
 }

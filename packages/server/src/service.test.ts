@@ -430,6 +430,8 @@ describe("le même océan : le serveur calcule avec les autres humains", () => {
       contest: 0,
       seenAt: START,
       family: null,
+      banner: null,
+      given: 0,
     };
     const shared: ServerDeps = { ...deps, crowd: () => Promise.resolve({ cards: [bobCard] }) };
     const reply = await handleState(shared, ALICE);

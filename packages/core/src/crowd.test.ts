@@ -46,6 +46,8 @@ function card(slot: number, power: number, patch: Partial<HumanCard> = {}): Huma
     contest: 0,
     seenAt: SEASON,
     family: null,
+    banner: null,
+    given: 0,
     ...patch,
   };
 }
@@ -59,8 +61,10 @@ describe("la vitrine : ce que les autres humains voient d'un joueur", () => {
     expect(shown.scores.power).toBe(ranking(state, "power").mine.score);
     expect(Object.keys(shown).sort()).toEqual(
       [
+        "banner",
         "contest",
         "family",
+        "given",
         "hue",
         "name",
         "scores",
