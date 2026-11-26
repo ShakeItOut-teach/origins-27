@@ -429,22 +429,29 @@ describe("la chasse", () => {
     );
   });
 
-  it("défaite : pas de protéines, des pertes, mais toujours une survivante", () => {
+  it("défaite : pas de protéines, et dix fois moins de pertes qu'à la guerre", () => {
     const far = prey(2);
     const farOffer = preyOffer(far);
     const weak = TROOP_IDS.find((id) => STRONG_AGAINST[id] !== far.kind) ?? "hunter";
     let defeats = 0;
+    const size = 40;
     for (let seed = 1; seed <= 30; seed++) {
-      const sent = ok(atTier4({ [weak]: 4 }, seed), hunt(far, party({ [weak]: 4 })), T0);
+      const sent = ok(atTier4({ [weak]: size }, seed), hunt(far, party({ [weak]: 4 })), T0);
       const home = advance(sent, T0 + farOffer.durationMs).state;
       if (home.counters.huntsWon === 1) continue;
       defeats += 1;
       expect(home.resources.proteins).toBe(0);
-      expect(home.troops[weak]).toBeGreaterThanOrEqual(1);
-      expect(home.troops[weak]).toBeLessThan(4);
       expect(home.placeReadyAt).toEqual({});
     }
     expect(defeats).toBeGreaterThan(15);
+    // Un grand groupe battu : les pertes ordinaires seraient d'au moins la moitié.
+    const big = party({ [weak]: size });
+    const full = lossesFor(big, 1, false);
+    const sent = ok(atTier4({ [weak]: size }, 3), hunt(far, big), T0);
+    const home = advance(sent, T0 + farOffer.durationMs).state;
+    const lost = size - home.troops[weak];
+    expect(lost).toBeLessThanOrEqual(Math.ceil((full[weak] * BALANCE.hunt.preyLossPercent) / 100));
+    expect(home.troops[weak]).toBeGreaterThan(size / 2);
   });
 
   it("rappel avant la proie : retour dix fois plus rapide, énergie rendue, tout le monde rentre", () => {

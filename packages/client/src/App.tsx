@@ -117,8 +117,8 @@ const ALARM_FLASH_MS = 6000;
 type View = "cell" | "map" | "rivals" | "research";
 
 /** Position de chaque emplacement sur la lame, en pourcentage : huit autour, le Noyau au centre. */
-/** Les touchers comptent dans la production affichée pendant une minute. */
-const TAP_WINDOW_MS = 60_000;
+/** Les touchers comptent dans la production affichée tant qu'on touche ; 10 s sans toucher, on repart de zéro. */
+const TAP_IDLE_MS = 10_000;
 /** Le chiffre reste en gras tant qu'on touche (un toucher de moins de deux secondes). */
 const TAP_BOLD_MS = 2_000;
 
@@ -355,7 +355,10 @@ export function App({
     if (gained <= 0) return;
     // Les touchers de la dernière minute s'ajoutent à la production affichée.
     const at = Date.now();
-    setTaps((list) => [...list.filter((entry) => entry.at > at - TAP_WINDOW_MS), { at, gained }]);
+    setTaps((list) => {
+      const last = list.at(-1)?.at ?? 0;
+      return [...(at - last > TAP_IDLE_MS ? [] : list), { at, gained }];
+    });
   };
 
   /** Un prix dépasse la réserve : on referme ce qui est ouvert et on montre la Vacuole. */
@@ -562,8 +565,8 @@ export function App({
         {counters.map((id) => {
           // Ce que les touchers de la dernière minute ont rapporté, en plus de la production.
           const wall = Date.now();
-          const recent =
-            id === "sugar" ? taps.filter((entry) => entry.at > wall - TAP_WINDOW_MS) : [];
+          const latest = taps.at(-1)?.at ?? 0;
+          const recent = id === "sugar" && wall - latest <= TAP_IDLE_MS ? taps : [];
           const tapped = recent.reduce((sum, entry) => sum + entry.gained, 0);
           const lastTap = recent.at(-1)?.at ?? 0;
           const tapping = wall - lastTap < TAP_BOLD_MS;

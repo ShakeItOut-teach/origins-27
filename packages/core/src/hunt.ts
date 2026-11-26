@@ -82,6 +82,16 @@ export function lossesFor(party: Party, chance: number, won: boolean): Record<Tr
   return takeLosses(party, percent, true);
 }
 
+/** Les mêmes pertes, réduites à ce pourcentage (arrondi en dessous). */
+function scaleLosses(
+  losses: Readonly<Record<TroopId, number>>,
+  percent: number,
+): Record<TroopId, number> {
+  const kept = { ...losses };
+  for (const id of TROOP_IDS) kept[id] = Math.floor((losses[id] * percent) / 100);
+  return kept;
+}
+
 /**
  * La part qu'un camp perd dans un combat contre un organisme : `base` % à force égale, moins
  * quand il est plus fort que l'autre, davantage quand il est plus faible. Bornée.
@@ -217,7 +227,12 @@ export function resolveHunt(state: PlayerState, hunt: Hunt, at: number, struck: 
   const chance = struck ? strikeChance(base) : unattendedChance(base);
   const rng = createRng(state.rngState);
   const won = rng.int(100) < chance;
-  const losses = spared(state, lossesFor(hunt.party, base, won));
+  const full = lossesFor(hunt.party, base, won);
+  // Les proies se chassent pour leurs protéines : on y perd dix fois moins de cellules qu'à la
+  // guerre. Les prédateurs (identifiants « p: ») gardent leurs pertes entières.
+  const prey = !hunt.prey.startsWith("p:");
+  const scaled = prey ? scaleLosses(full, BALANCE.hunt.preyLossPercent) : full;
+  const losses = spared(state, scaled);
   const event: GameEvent = { type: "huntResolved", at, won, struck, losses };
   return {
     state: { ...state, rngState: rng.state, hunt: { ...hunt, outcome: { won, struck, losses } } },

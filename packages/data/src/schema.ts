@@ -293,6 +293,8 @@ export const BalanceSchema = z.strictObject({
     /** À partir de ces chances, toucher rend la victoire certaine ; en dessous, il les double. */
     certainFromPercent: z.number().int().min(1).max(100),
     /** Points de chance en moins quand le joueur laisse le sort décider sans toucher la proie. */
+    /** Part des pertes ordinaires subie à la chasse aux proies (les prédateurs gardent les leurs). */
+    preyLossPercent: z.number().int().min(0).max(100),
     unattendedPenaltyPercent: z.number().int().min(0).max(50),
     /** Du plus proche au plus loin. */
     bands: z

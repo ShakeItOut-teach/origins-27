@@ -491,6 +491,7 @@ export const BALANCE: Balance = BalanceSchema.parse({
     strikeWindowSeconds: 8,
     certainFromPercent: 25,
     unattendedPenaltyPercent: 10,
+    preyLossPercent: 10,
     bands: [
       { energy: 1, seconds: 60, power: 6, proteins: 5, restSeconds: 180 },
       { energy: 2, seconds: 180, power: 25, proteins: 25, restSeconds: 600 },
