@@ -2506,7 +2506,7 @@ p.season-next {
 }
 
 .chest-stage {
-  --chest-tone: var(--algae);
+  --chest-tone: var(--plate-verdigris);
 
   display: grid;
   justify-items: center;
@@ -2518,11 +2518,11 @@ p.season-next {
 
 .chest-stage.is-challenge,
 .chest-stage.is-league {
-  --chest-tone: var(--iodine);
+  --chest-tone: var(--plate-gamboge);
 }
 
 .chest-stage.is-leviathan {
-  --chest-tone: var(--eosin);
+  --chest-tone: var(--plate-madder);
 }
 
 .chest-title {
@@ -2538,7 +2538,7 @@ p.season-next {
   border: 0;
   background: transparent;
   cursor: pointer;
-  animation: chest-wait 1.6s ease-in-out infinite;
+  animation: spore-breathe 2.4s ease-in-out infinite;
 }
 
 .chest-box:disabled {
@@ -2552,54 +2552,120 @@ p.season-next {
   overflow: visible;
 }
 
-.chest-body,
-.chest-lid path {
+/* Le coffre est un champignon gravé, avec le relief de la planche noire. */
+.spore-chest .spore-shadow {
+  fill: #000;
+  opacity: 0.55;
+}
+
+.spore-ground {
+  fill: none;
+  stroke: var(--bone);
+  stroke-width: 1.4;
+  opacity: 0.6;
+}
+
+.spore-ground-hatch line,
+.spore-hatch line {
+  stroke: var(--ink);
+  stroke-width: 0.9;
+}
+
+.spore-ground-hatch line {
+  stroke: var(--bone);
+  opacity: 0.45;
+}
+
+.spore-stem {
   fill: var(--paper-deep);
+  stroke: var(--ink);
+  stroke-width: 2.2;
+}
+
+.spore-ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+
+.spore-glint {
+  fill: none;
+  stroke: var(--bone);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.spore-wash {
+  fill: var(--chest-tone);
+  opacity: 0.6;
+  mix-blend-mode: multiply;
+}
+
+.spore-cap-paper {
+  fill: var(--paper);
+}
+
+/* Le contour, posé en dernier par-dessus le lavis et les hachures. */
+.spore-cap-body {
+  fill: none;
   stroke: var(--ink);
   stroke-width: 2.5;
 }
 
-.chest-strap {
-  fill: var(--chest-tone);
+.spore-wart {
+  fill: var(--bone);
   stroke: var(--ink);
-  stroke-width: 2;
+  stroke-width: 1.2;
 }
 
-.chest-label {
-  fill: var(--paper);
+.spore-gills line {
+  stroke: var(--bone);
+  stroke-width: 1;
+  opacity: 0.8;
+}
+
+.spore-veil {
+  fill: var(--paper-deep);
   stroke: var(--ink);
-  stroke-width: 1.5;
+  stroke-width: 1.6;
+  transition:
+    opacity 0.35s ease-out,
+    transform 0.5s ease-in;
 }
 
-.chest-lock {
-  fill: var(--iodine);
-  stroke: var(--ink);
-  stroke-width: 2;
+.spore-cap {
+  transform-box: view-box;
+  transform-origin: 80px 100px;
+  transition: transform 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
 }
 
-.chest-inside {
-  fill: var(--ink);
+.chest-stage.is-open .spore-cap {
+  transform: translateY(-12px) scale(1.1, 0.94);
 }
 
-.chest-lid {
-  transform-box: fill-box;
-  transform-origin: 8% 100%;
-  transition: transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
-}
-
-.chest-stage.is-open .chest-lid {
-  transform: translateY(-20px) rotate(-14deg);
-}
-
-.chest-rays line {
-  stroke: var(--iodine);
-  stroke-width: 3;
-  stroke-linecap: round;
+.chest-stage.is-open .spore-veil {
   opacity: 0;
+  transform: translateY(14px);
 }
 
-.chest-stage.is-open .chest-rays line {
-  animation: chest-rays 0.9s ease-out 0.15s both;
+/* Une spore : un grain couleur d'os cerné d'encre, visible sur la planche comme sur le chapeau. */
+.spore {
+  fill: var(--bone);
+  stroke: var(--ink);
+  stroke-width: 0.8;
+  opacity: 0;
+  /* Chaque grain grossit autour de son propre centre. */
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.spore:nth-child(3n) {
+  fill: var(--chest-tone);
+}
+
+.chest-stage.is-open .spore {
+  animation: spore-fly 2.2s ease-out var(--spore-delay) both;
 }
 
 .chest-hint {
@@ -2638,38 +2704,30 @@ p.season-next {
   width: 100%;
 }
 
-@keyframes chest-wait {
+@keyframes spore-breathe {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: scale(1);
   }
 
-  8% {
-    transform: rotate(-3deg);
-  }
-
-  16% {
-    transform: rotate(3deg);
-  }
-
-  24% {
-    transform: rotate(0deg);
+  50% {
+    transform: scale(1.035, 0.98);
   }
 }
 
-@keyframes chest-rays {
+@keyframes spore-fly {
   0% {
     opacity: 0;
-    stroke-dasharray: 0 80;
+    transform: translate(0, 0) scale(0.4);
   }
 
-  40% {
+  15% {
     opacity: 1;
   }
 
   100% {
-    opacity: 0.35;
-    stroke-dasharray: 80 0;
+    opacity: 0;
+    transform: translate(var(--spore-dx), var(--spore-dy)) scale(1);
   }
 }
 
@@ -2683,15 +2741,12 @@ p.season-next {
 @media (prefers-reduced-motion: reduce) {
   .chest-box,
   .chest-items li,
-  .chest-stage.is-open .chest-rays line {
+  .chest-stage.is-open .spore {
     animation: none;
   }
 
-  .chest-stage.is-open .chest-rays line {
-    opacity: 0.35;
-  }
-
-  .chest-lid {
+  .spore-cap,
+  .spore-veil {
     transition: none;
   }
 }

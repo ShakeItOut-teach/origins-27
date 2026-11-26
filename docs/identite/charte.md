@@ -149,6 +149,14 @@ noire, tout a du volume, comme une gravure éclairée de côté :
 Le relief ne vaut que sur la planche noire. Sur le papier (boutons, fiches, pages), il n'y a
 pas d'ombre : le double filet suffit.
 
+**Le coffre est un champignon** (demande du propriétaire, 26/11/2026), gravé avec le relief de
+la planche noire : chapeau d'amanite tacheté, lavis de la teinte du coffre (vert-de-gris,
+gomme-gutte, garance), hachures et bord ombré à droite, reflet couleur d'os à gauche, pied
+annelé sur une motte hachurée, ombre portée. Fermé, un voile cache les lamelles et le champignon
+respire. Touché, le chapeau se soulève, le voile tombe et une gerbe de spores (grains couleur
+d'os cernés d'encre) s'échappe des lamelles. Sans animation si le joueur l'a demandé
+(`packages/client/src/ui/SporeChest.tsx`).
+
 **Un pictogramme dit ce que fait la chose**, pour qu'on le retienne (demande du propriétaire,
 26/11/2026). Il ne montre pas l'organite tel qu'il est, mais son rôle :
 

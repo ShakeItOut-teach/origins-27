@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { formatAmount, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { EnergyIcon, ResourceIcon } from "./icons";
+import { SporeChest } from "./SporeChest";
 
 /** Ce qu'un coffre contient : ressources en millionièmes d'unité, énergie et accélérateurs en unités. */
 export interface ChestLoot {
@@ -31,8 +32,8 @@ interface Props {
 }
 
 /**
- * Un coffre à ouvrir : une boîte de naturaliste, fermée. Le joueur la touche, le couvercle se
- * lève, et ce qu'elle contenait en sort. Ce n'est que de l'affichage : le contenu est fixé par
+ * Un coffre à ouvrir : un champignon, son voile fermé. Le joueur le touche, le chapeau se
+ * soulève, les spores s'échappent, et ce qu'il contenait en sort. Ce n'est que de l'affichage : le contenu est fixé par
  * le moteur avant l'ouverture.
  */
 export function ChestOverlay({ lang, title, tone, waiting, onOpen, onNext, onClose }: Props) {
@@ -103,30 +104,7 @@ export function ChestOverlay({ lang, title, tone, waiting, onOpen, onNext, onClo
           data-testid="chest-box"
           onClick={open}
         >
-          <svg viewBox="0 0 160 130" aria-hidden="true">
-            <g className="chest-rays">
-              {[-60, -36, -12, 12, 36, 60].map((angle) => (
-                <line
-                  key={angle}
-                  x1="80"
-                  y1="56"
-                  x2={80 + Math.sin((angle * Math.PI) / 180) * 64}
-                  y2={56 - Math.cos((angle * Math.PI) / 180) * 64}
-                />
-              ))}
-            </g>
-            <rect className="chest-inside" x="26" y="52" width="108" height="16" rx="3" />
-            <g className="chest-lid">
-              <path d="M22 62 L22 46 Q22 28 40 28 L120 28 Q138 28 138 46 L138 62 Z" />
-              <rect className="chest-strap" x="44" y="28" width="12" height="34" />
-              <rect className="chest-strap" x="104" y="28" width="12" height="34" />
-            </g>
-            <rect className="chest-body" x="22" y="62" width="116" height="52" rx="6" />
-            <rect className="chest-strap" x="44" y="62" width="12" height="52" />
-            <rect className="chest-strap" x="104" y="62" width="12" height="52" />
-            <rect className="chest-label" x="64" y="82" width="32" height="18" rx="2" />
-            <circle className="chest-lock" cx="80" cy="66" r="7" />
-          </svg>
+          <SporeChest />
         </button>
         {loot === null ? (
           <p className="chest-hint" data-testid="chest-hint">
