@@ -36,6 +36,7 @@ async function main() {
     week: 0,
     contest: 0,
     seenAt: Date.now() - 60_000,
+    family: "predation",
   };
   const calls = [];
   const states = new Map();
@@ -60,8 +61,11 @@ async function main() {
     donner_avis: () => true,
     lire_planches: () => [{ season: 1, name: "Protomonas originis" }],
     statistiques: () => (guardian ? { joueurs: 3 } : null),
-    lire_vitrines: () => [BOB_CARD],
+    lire_foule: () => ({ cards: [BOB_CARD], taken: { "d:1:1:5": "2000" } }),
     montrer_vitrine: () => null,
+    prendre_gisement: () => null,
+    noter_refus: () => null,
+    statistiques_ocean: () => (guardian ? { humains: 2 } : null),
   };
   const builder = (table) => {
     const filters = {};
@@ -178,8 +182,9 @@ async function main() {
   );
 
   check(
-    "etat : la foule des autres humains accompagne l'état",
-    visit.body.state?.crowd?.cards?.[0]?.name === "Bobus maximus",
+    "etat : la foule des autres humains accompagne l'état, avec les prises des gisements",
+    visit.body.state?.crowd?.cards?.[0]?.name === "Bobus maximus" &&
+      visit.body.state.crowd.taken?.["d:1:1:5"] === 2000,
     visit.body.state?.crowd,
   );
   const shown = rpcCall("montrer_vitrine");
@@ -193,7 +198,7 @@ async function main() {
       !JSON.stringify(shown.p_carte).includes("joueur-1"),
     shown,
   );
-  const reads = calls.filter(([n]) => n === "lire_vitrines").length;
+  const reads = calls.filter(([n]) => n === "lire_foule").length;
 
   const plain = await post("etat", {});
   await Promise.all(waiting);
@@ -218,8 +223,26 @@ async function main() {
 
   check(
     "les vitrines ne sont lues qu'une fois par minute",
-    calls.filter(([n]) => n === "lire_vitrines").length === reads,
+    calls.filter(([n]) => n === "lire_foule").length === reads,
     reads,
+  );
+
+  const locked = await post("ordre", {
+    orderId: "00000000-0000-4000-8000-000000000002",
+    order: { type: "build", organelle: "mitochondrion" },
+  });
+  await Promise.all(waiting);
+  check(
+    "ordre refusé par les règles : son motif est compté",
+    locked.status === 200 &&
+      locked.body.outcome?.ok === false &&
+      rpcCall("noter_refus")?.p_code === locked.body.outcome.error,
+    { locked: locked.body, refus: rpcCall("noter_refus") },
+  );
+  check(
+    "un ordre qui ne récolte rien ne vide aucun gisement",
+    !calls.some(([n]) => n === "prendre_gisement"),
+    calls.map(([n]) => n),
   );
 
   const bad = await post("ordre", { n: 1 });
@@ -254,7 +277,11 @@ async function main() {
   check("stats pour un compte ordinaire : 403", closed.status === 403, closed);
   guardian = true;
   const open = await post("stats", {});
-  check("stats pour un gardien : 200", open.status === 200 && open.body.stats?.joueurs === 3, open);
+  check(
+    "stats pour un gardien : 200, avec le monde partagé",
+    open.status === 200 && open.body.stats?.joueurs === 3 && open.body.stats.ocean?.humains === 2,
+    open,
+  );
 
   const unsure = await post("supprimer", {});
   check(

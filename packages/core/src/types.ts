@@ -233,11 +233,18 @@ export interface HumanCard {
   readonly contest: number;
   /** L'instant de sa dernière visite. */
   readonly seenAt: number;
+  /** Sa famille de gènes la plus travaillée ; `null` tant qu'il n'a aucun gène. */
+  readonly family: GeneFamily | null;
 }
 
 /** Les autres humains de la saison, tels que le serveur les connaît. */
 export interface Crowd {
   readonly cards: readonly HumanCard[];
+  /**
+   * Ce que les humains ont pris dans chaque gisement (le joueur compris), en millionièmes
+   * d'unité. Absent : personne n'a rien pris.
+   */
+  readonly taken?: Readonly<Record<string, number>>;
 }
 
 export interface PlayerState {

@@ -9,6 +9,7 @@ import {
   visiblePlaces,
 } from "@o27/core";
 import { describe, expect, it } from "vitest";
+import { describeTake } from "./community";
 import { createMemoryRepository } from "./memory";
 import { handleOrder, handleState } from "./service";
 import type { Repository, ServerDeps } from "./service";
@@ -305,11 +306,14 @@ describe("océan et alliances", () => {
       .filter((entry) => entry.zone === 0 && entry.endsAt - time.now > 3_600_000)
       .sort((one, other) => cellDistance(home, one) - cellDistance(home, other))[0];
     if (deposit === undefined) throw new Error("gisement attendu");
-    const gathered = await handleOrder(deps, ALICE, {
-      orderId: id(63),
-      order: { type: "gather", deposit: deposit.id },
-    });
+    const gatherBody = { orderId: id(63), order: { type: "gather", deposit: deposit.id } };
+    const gathered = await handleOrder(deps, ALICE, gatherBody);
     expect(gathered).toMatchObject({ status: "done", outcome: { ok: true } });
+    // Ce qui est chargé est noté pour les autres humains, une seule fois.
+    const take = describeTake(gatherBody, gathered);
+    expect(take?.deposit).toBe(deposit.id);
+    expect(take?.amount).toBeGreaterThan(0);
+    expect(describeTake(gatherBody, await handleOrder(deps, ALICE, gatherBody))).toBeNull();
     const [neighbour] = oceanRivals(given.state);
     if (neighbour === undefined) throw new Error("voisin attendu");
     const spied = await handleOrder(deps, ALICE, {
@@ -425,6 +429,7 @@ describe("le même océan : le serveur calcule avec les autres humains", () => {
       week: 0,
       contest: 0,
       seenAt: START,
+      family: null,
     };
     const shared: ServerDeps = { ...deps, crowd: () => Promise.resolve({ cards: [bobCard] }) };
     const reply = await handleState(shared, ALICE);

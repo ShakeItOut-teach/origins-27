@@ -4,12 +4,19 @@ import {
   DAY_MS,
   advance,
   applyOrder,
+  cellDistance,
   contestBoard,
   createPlayer,
+  depositLeft,
+  gatherOffer,
+  gazette,
   deserializeState,
   humanCard,
   humanCount,
+  oceanDeposits,
   oceanRivals,
+  othersTaken,
+  playerCell,
   ranking,
   readCrowd,
   rivalName,
@@ -20,6 +27,7 @@ import type { HumanCard, PlayerState } from "./index";
 
 const SEASON = 1_800_000_000_000;
 const WORLD = { worldSeed: 27, slot: 4 };
+const HOUR = 3_600_000;
 
 function player(day: number, patch: Partial<PlayerState> = {}): PlayerState {
   const now = SEASON + (day - 1) * DAY_MS + 3_600_000;
@@ -37,6 +45,7 @@ function card(slot: number, power: number, patch: Partial<HumanCard> = {}): Huma
     week: 0,
     contest: 0,
     seenAt: SEASON,
+    family: null,
     ...patch,
   };
 }
@@ -49,7 +58,18 @@ describe("la vitrine : ce que les autres humains voient d'un joueur", () => {
     expect(shown.seenAt).toBe(state.now);
     expect(shown.scores.power).toBe(ranking(state, "power").mine.score);
     expect(Object.keys(shown).sort()).toEqual(
-      ["contest", "hue", "name", "scores", "seenAt", "slot", "tier", "week", "zone"].sort(),
+      [
+        "contest",
+        "family",
+        "hue",
+        "name",
+        "scores",
+        "seenAt",
+        "slot",
+        "tier",
+        "week",
+        "zone",
+      ].sort(),
     );
   });
 
@@ -134,5 +154,78 @@ describe("le même océan : un humain prend la place d'un organisme simulé", ()
     const again = deserializeState(serializeState(state));
     expect(again.crowd).toBeUndefined();
     expect(serializeState(again)).toBe(serializeState(state));
+  });
+});
+
+describe("les gisements vraiment partagés", () => {
+  it("ce que les autres humains ont pris n'est plus là pour le joueur", () => {
+    const base = player(12, { tier: BALANCE.ocean.tier });
+    const home = playerCell(base);
+    const deposit = oceanDeposits(27, base.now)
+      .filter((entry) => entry.zone === 0 && !entry.steady && entry.endsAt - base.now > HOUR)
+      .sort((one, other) => cellDistance(home, one) - cellDistance(home, other))[0];
+    expect(deposit).toBeDefined();
+    if (deposit === undefined) return;
+    const alone = depositLeft(deposit, base.taken, base.now);
+    expect(alone).toBeGreaterThan(0);
+
+    const half = Math.floor(alone / 2);
+    const some = withCrowd(base, { cards: [], taken: { [deposit.id]: half } });
+    expect(othersTaken(some, deposit.id)).toBe(half);
+    expect(depositLeft(deposit, base.taken, base.now, othersTaken(some, deposit.id))).toBe(
+      alone - half,
+    );
+
+    const emptied = withCrowd(base, { cards: [], taken: { [deposit.id]: deposit.total } });
+    expect(gatherOffer(emptied, deposit, emptied.now).loot).toBe(0);
+    expect(applyOrder(emptied, { type: "gather", deposit: deposit.id }, emptied.now)).toEqual({
+      ok: false,
+      error: "depleted",
+    });
+  });
+
+  it("la part du joueur lui-même n'est pas comptée deux fois", () => {
+    const base = { ...player(12, { tier: BALANCE.ocean.tier }), taken: { "d:1:1:5": 300 } };
+    const shared = withCrowd(base, { cards: [], taken: { "d:1:1:5": 1000 } });
+    expect(othersTaken(shared, "d:1:1:5")).toBe(700);
+    expect(othersTaken(withCrowd(base, { cards: [], taken: { "d:1:1:5": 200 } }), "d:1:1:5")).toBe(
+      0,
+    );
+  });
+
+  it("relit les prises venues de la base, et écarte ce qui n'est pas un gisement", () => {
+    const crowd = readCrowd({ cards: [], taken: { "d:1:-2:3": "1500", autre: 4, "d:0:0:1": -1 } });
+    expect(crowd.taken).toEqual({ "d:1:-2:3": 1500 });
+  });
+});
+
+describe("la part des familles de gènes chez les humains", () => {
+  it("n'est publiée qu'à partir de trois humains qui ont des gènes", () => {
+    const base = player(14, { tier: 9 });
+    const two = withCrowd(base, {
+      cards: [card(11, 1, { family: "predation" }), card(12, 1, { family: "mobility" })],
+    });
+    expect(gazette(two).families).toBeNull();
+    const three = withCrowd(base, {
+      cards: [
+        card(11, 1, { family: "predation" }),
+        card(12, 1, { family: "predation" }),
+        card(13, 1, { family: "mobility" }),
+        card(14, 1, { family: "resilience" }),
+      ],
+    });
+    // Le joueur n'a aucun gène : il n'est pas compté.
+    expect(gazette(three).families).toEqual({
+      metabolism: 0,
+      predation: 50,
+      mobility: 25,
+      resilience: 25,
+    });
+  });
+
+  it("une vitrine d'avant les familles compte comme sans gène", () => {
+    const old: Record<string, unknown> = { ...card(11, 1, { family: "predation" }) };
+    delete old.family;
+    expect(readCrowd([old]).cards[0]?.family).toBeNull();
   });
 });

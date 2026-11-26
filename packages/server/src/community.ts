@@ -85,6 +85,8 @@ export interface OrderRecord {
   readonly tier: number;
   readonly type: OrderType;
   readonly ok: boolean;
+  /** Le motif du refus ; `null` pour un ordre accepté. */
+  readonly error: string | null;
 }
 
 /** Ce que le serveur note d'un ordre traité. Rien, si la demande n'a pas abouti. */
@@ -104,7 +106,28 @@ export function describeOrder(
     tier: reply.state.tier,
     type: parsed.data.order.type,
     ok: reply.outcome.ok,
+    error: reply.outcome.ok ? null : reply.outcome.error,
   };
+}
+
+/** Ce qu'un humain vient de charger dans un gisement partagé. */
+export interface TakeRecord {
+  readonly deposit: string;
+  /** En millionièmes d'unité. */
+  readonly amount: number;
+}
+
+/**
+ * Une récolte acceptée vide un peu le gisement pour tous les humains : le serveur note ce qui
+ * est parti. Rien pour tout autre ordre, ni pour un ordre rejoué (déjà noté la première fois).
+ */
+export function describeTake(body: unknown, reply: OrderReply): TakeRecord | null {
+  if (reply.status !== "done" || !reply.outcome.ok || reply.replayed === true) return null;
+  const parsed = OrderRequestSchema.safeParse(body);
+  if (!parsed.success || parsed.data.order.type !== "gather") return null;
+  const expedition = reply.state.expedition;
+  if (expedition === null || expedition.place !== parsed.data.order.deposit) return null;
+  return { deposit: expedition.place, amount: expedition.loot };
 }
 
 /** Un avis de joueur, tel qu'il est gardé. */

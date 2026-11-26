@@ -2,6 +2,7 @@ import {
   ZONE_COUNT,
   capacity,
   depositLeft,
+  othersTaken,
   depthAt,
   eventCovers,
   findEvent,
@@ -218,7 +219,9 @@ export function WorldView(props: Props) {
       x: deposit.x,
       y: deposit.y,
       kind: deposit.kind,
-      fill: depositLeft(deposit, state.taken, state.now) / deposit.total,
+      fill:
+        depositLeft(deposit, state.taken, state.now, othersTaken(state, deposit.id)) /
+        deposit.total,
       reachable: deposit.zone <= state.zone,
     })),
     predators: predators.map((predator) => ({
@@ -693,7 +696,7 @@ function DepositSheet(props: {
   const { state, deposit, lang, onClose, onOrder } = props;
   const t = (key: TextKey): string => translate(lang, key);
   const offer = gatherOffer(state, deposit, state.now);
-  const left = depositLeft(deposit, state.taken, state.now);
+  const left = depositLeft(deposit, state.taken, state.now, othersTaken(state, deposit.id));
   const trip = state.expedition;
   const mine = trip !== null && trip.place === deposit.id ? trip : null;
   const room = capacity(state, offer.resource) - state.resources[offer.resource];

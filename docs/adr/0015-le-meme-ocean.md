@@ -41,3 +41,6 @@ combattre (`docs/specs/2026-11-26-monde-partage-etape-1-design.md`). Le moteur d
   l'étape 3.
 - Les mémoires de calcul (`ranking`, concours, océan) prennent en compte l'empreinte de la foule
   (`crowdStamp`).
+- La foule porte aussi `taken` : ce que les humains ont pris dans chaque gisement (table
+  `prises`, sans colonne joueur). `depositLeft` en retire la part des autres (`othersTaken`).
+  Un humain peut charger un peu trop pendant la minute où la foule n'est pas relue : accepté.

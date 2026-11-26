@@ -1,10 +1,11 @@
 import { MICRO, gazette } from "@o27/core";
 import type { Gazette, GazetteNews, PlayerState, RankRow } from "@o27/core";
-import { FOSSIL_AGES, SEASON_DAYS } from "@o27/data";
+import { FOSSIL_AGES, GENE_FAMILIES, SEASON_DAYS } from "@o27/data";
 import type { TextKey } from "@o27/data";
 import { useState } from "react";
 import { DISCORD_URL } from "../game/config";
 import { formatAmount, translate } from "../game/text";
+import { isVisible } from "../game/unlock";
 import type { Lang } from "../game/text";
 import { bannerLabel } from "./AllianceSheet";
 import { SheetFrame } from "./SheetFrame";
@@ -31,6 +32,14 @@ function newsText(lang: Lang, news: GazetteNews): string {
   }
 }
 
+/** « Prédation 40 % · Mobilité 30 % · … », de la plus répandue à la plus rare. */
+function familiesText(lang: Lang, shares: NonNullable<Gazette["families"]>): string {
+  return [...GENE_FAMILIES]
+    .sort((one, other) => shares[other] - shares[one])
+    .map((family) => `${translate(lang, `family.${family}.name`)} ${String(shares[family])} %`)
+    .join(" · ");
+}
+
 function rowName(lang: Lang, row: RankRow): string {
   return row.me ? translate(lang, "gazette.you") : row.name;
 }
@@ -47,6 +56,9 @@ export function gazetteText(lang: Lang, paper: Gazette): string {
   ];
   if (paper.leading !== null) {
     lines.push(`${t("gazette.leading")} : ${bannerLabel(lang, paper.leading.banner)}`);
+  }
+  if (paper.families !== null) {
+    lines.push(`${t("gazette.families")} : ${familiesText(lang, paper.families)}`);
   }
   lines.push(
     `${t("gazette.fossil")} : ${t(`fossil.${paper.fossil}.name`)} (${t("gazette.ago").replace("{n}", String(FOSSIL_AGES[paper.fossil]))}). ${t(`fossil.${paper.fossil}.fact`)}`,
@@ -156,6 +168,15 @@ export function GazetteSheet({ state, lang, onClose }: Props) {
               <li key={`${news.kind}-${String(index)}`}>{newsText(lang, news)}</li>
             ))}
           </ul>
+        </>
+      )}
+
+      {paper.families !== null && isVisible("genome", state.tier) && (
+        <>
+          <h3 className="sheet-title">{t("gazette.families")}</h3>
+          <p className="sheet-role" data-testid="gazette-families">
+            {familiesText(lang, paper.families)}
+          </p>
         </>
       )}
 

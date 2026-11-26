@@ -65,7 +65,13 @@ export interface ServerDeps {
 }
 
 export type OrderReply =
-  | { readonly status: "done"; readonly outcome: Outcome; readonly state: PlayerState }
+  | {
+      readonly status: "done";
+      readonly outcome: Outcome;
+      readonly state: PlayerState;
+      /** Ordre déjà traité : on renvoie le premier résultat, sans rien refaire ni renoter. */
+      readonly replayed?: true;
+    }
   /** La demande n'a pas la forme attendue. */
   | { readonly status: "invalid" }
   /** La saison n'a pas commencé. */
@@ -126,7 +132,9 @@ export async function handleOrder(
     const loaded = await loadOrCreate(deps, playerId, clock);
 
     const already = await deps.repo.findOutcome(playerId, orderId);
-    if (already !== null) return { status: "done", outcome: already, state: loaded.state };
+    if (already !== null) {
+      return { status: "done", outcome: already, state: loaded.state, replayed: true };
+    }
 
     // L'horloge du serveur peut reculer d'un rien ; le jeu, jamais.
     const now = Math.max(clock, loaded.state.now);

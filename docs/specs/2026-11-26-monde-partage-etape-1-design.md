@@ -71,3 +71,18 @@ simulé partout où l'océan est compté. Un badge dit qu'il est humain. Aucun c
 | 4     | Écran : badge humain dans les classements, le concours et l'océan ; compteur ; textes FR/EN.   |
 | 5     | Mesures : humains dans les statistiques du gardien ; ordres refusés pour `human`.              |
 | 6     | Deuxième morceau : gisements partagés et part des familles de gènes.                           |
+
+## Deuxième morceau (livré le 26/11/2026)
+
+- **Gisements vraiment partagés.** Quand un humain récolte un gisement, le serveur note la
+  quantité (table `prises`, sans dire qui l'a prise). La foule envoyée au moteur porte ces
+  prises : ce que les autres humains ont pris n'est plus là pour personne. Lecture comprise
+  dans la même requête que les vitrines (`lire_foule`), une fois par minute au plus.
+- **Familles de gènes chez les humains.** Chaque vitrine porte la famille la plus travaillée.
+  La Gazette publie leur part dès que **trois humains au moins** ont des gènes (en dessous,
+  la part désignerait presque chaque joueur). Aucun effet sur les règles pour l'instant : c'est
+  une information. En faire un ressort (une famille rare mieux récompensée, par exemple) est une
+  décision d'équilibrage à prendre quand il y aura des chiffres.
+- **Mesures pour le gardien** : espèces humaines de la saison et des dernières 24 h, puissance
+  moyenne et maximale, familles, total pris dans les gisements, et **les ordres refusés par
+  motif** sur sept jours (`usage_refus`), dont `human` : les tentatives d'attaquer un joueur.

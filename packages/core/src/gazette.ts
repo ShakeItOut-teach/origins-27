@@ -3,7 +3,7 @@
  * joueur : tout le reste se lit dans les classements, les bannières et les événements.
  */
 import { BALANCE, FOSSIL_IDS, SEASON_DAYS } from "@o27/data";
-import type { BannerId, FossilId, ZoneEventKind } from "@o27/data";
+import type { BannerId, FossilId, GeneFamily, ZoneEventKind } from "@o27/data";
 import { bannerList } from "./alliance";
 import type { BannerRow } from "./alliance";
 import { oceanEvents } from "./events";
@@ -13,6 +13,7 @@ import { createRng } from "./rng";
 import { DAY_MS } from "./types";
 import type { PlayerState } from "./types";
 import { seasonDay } from "./unlock";
+import { humanFamilies } from "./vitrine";
 
 export type GazetteNews =
   | { readonly kind: "zoneOpens"; readonly zone: number }
@@ -37,6 +38,8 @@ export interface Gazette {
   readonly wins: number;
   readonly losses: number;
   readonly fossil: FossilId;
+  /** La part de chaque famille de gènes chez les espèces humaines ; `null` s'il y en a trop peu. */
+  readonly families: Readonly<Record<GeneFamily, number>> | null;
 }
 
 let fossilSeed = -1;
@@ -111,5 +114,6 @@ export function gazette(state: PlayerState): Gazette {
     wins: mine.wins,
     losses: mine.losses,
     fossil: fossilOfDay(state.worldSeed, day),
+    families: humanFamilies(state),
   };
 }

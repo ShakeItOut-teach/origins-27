@@ -13,6 +13,7 @@ export {
   createMemoryCommunity,
   dayOf,
   describeOrder,
+  describeTake,
   describeVisit,
   handleFeedback,
 } from "./community";
@@ -22,6 +23,7 @@ export type {
   FeedbackRecord,
   FeedbackReply,
   OrderRecord,
+  TakeRecord,
   VisitRecord,
 } from "./community";
 // Le monde partagé : la vitrine d'un joueur, et la relecture des vitrines venues de la base.

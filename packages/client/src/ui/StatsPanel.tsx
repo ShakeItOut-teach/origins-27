@@ -1,6 +1,6 @@
 import type { TextKey } from "@o27/data";
 import type { GameStats, Share } from "../game/community";
-import { formatDuration, translate } from "../game/text";
+import { formatAmount, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
 
 interface Props {
@@ -9,12 +9,12 @@ interface Props {
 }
 
 function percent(part: number, whole: number): string {
-  return whole > 0 ? `${String(Math.round((part * 100) / whole))} %` : "–";
+  return whole > 0 ? `${String(Math.round((part * 100) / whole))} %` : "â€“";
 }
 
 /**
- * Les statistiques du jeu, pour un gardien : qui vient, qui revient, où en sont les joueurs,
- * ce qui est joué, d'où ils arrivent, et leurs avis. Que des totaux.
+ * Les statistiques du jeu, pour un gardien : qui vient, qui revient, oÃ¹ en sont les joueurs,
+ * ce qui est jouÃ©, d'oÃ¹ ils arrivent, et leurs avis. Que des totaux.
  */
 export function StatsPanel({ stats, lang }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
@@ -107,7 +107,7 @@ export function StatsPanel({ stats, lang }: Props) {
                   <td>{day.active}</td>
                   <td>{day.visits}</td>
                   <td>{day.orders}</td>
-                  <td>{day.seconds > 0 ? formatDuration(day.seconds * 1000) : "–"}</td>
+                  <td>{day.seconds > 0 ? formatDuration(day.seconds * 1000) : "â€“"}</td>
                 </tr>
               ))}
             </tbody>
@@ -132,6 +132,55 @@ export function StatsPanel({ stats, lang }: Props) {
         </section>
       )}
 
+      {stats.ocean !== null && (
+        <section data-testid="stats-ocean">
+          <h3 className="sheet-title">{t("stats.ocean.title")}</h3>
+          <ul className="stat-list">
+            <li>
+              <span>{t("stats.ocean.humans")}</span>
+              <strong>{stats.ocean.humans}</strong>
+              <small>{t("stats.ocean.active").replace("{n}", String(stats.ocean.active24h))}</small>
+            </li>
+            <li>
+              <span>{t("stats.ocean.power")}</span>
+              <strong>{stats.ocean.averagePower}</strong>
+              <small>{t("stats.ocean.top").replace("{n}", String(stats.ocean.topPower))}</small>
+            </li>
+            <li>
+              <span>{t("stats.ocean.taken")}</span>
+              <strong>{formatAmount(stats.ocean.taken, lang)}</strong>
+              <small />
+            </li>
+            {stats.ocean.families.map((family) => (
+              <li key={family.name}>
+                <span>
+                  {family.name === "?"
+                    ? t("stats.ocean.noGenes")
+                    : t(`family.${family.name}.name` as TextKey)}
+                </span>
+                <strong>{family.players}</strong>
+                <small>{percent(family.players, stats.ocean?.humans ?? 0)}</small>
+              </li>
+            ))}
+          </ul>
+          {stats.ocean.refusals.length > 0 && (
+            <>
+              <h3 className="sheet-title">{t("stats.refusals.title")}</h3>
+              <p className="account-note">{t("stats.refusals.text")}</p>
+              <ul className="stat-list" data-testid="stats-refusals">
+                {stats.ocean.refusals.map((refusal) => (
+                  <li key={refusal.code}>
+                    <span>{refusal.code}</span>
+                    <strong>{refusal.count}</strong>
+                    <small />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+
       {shareList("stats.sources.title", stats.sources, "stats-sources")}
       {shareList("stats.devices.title", stats.devices, "stats-devices")}
       {shareList("stats.languages.title", stats.languages, "stats-languages")}
@@ -146,7 +195,7 @@ export function StatsPanel({ stats, lang }: Props) {
               .replace("{n}", String(stats.feedback.count))
               .replace(
                 "{m}",
-                stats.feedback.average === null ? "–" : String(stats.feedback.average),
+                stats.feedback.average === null ? "â€“" : String(stats.feedback.average),
               )}
           </p>
         )}
@@ -154,11 +203,11 @@ export function StatsPanel({ stats, lang }: Props) {
           {stats.feedback.latest.map((entry, index) => (
             <li key={`${entry.day}-${String(index)}`}>
               <small>
-                {entry.rating !== null && `${"★".repeat(entry.rating)} · `}
+                {entry.rating !== null && `${"â˜…".repeat(entry.rating)} Â· `}
                 {t("stats.feedback.row")
                   .replace("{d}", String(entry.seasonDay))
                   .replace("{t}", String(entry.tier))}
-                {entry.lang !== "" && ` · ${entry.lang}`}
+                {entry.lang !== "" && ` Â· ${entry.lang}`}
               </small>
               {entry.text !== "" && <span>{entry.text}</span>}
             </li>

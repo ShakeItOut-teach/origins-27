@@ -15,6 +15,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   dayOf,
   describeOrder,
+  describeTake,
   describeVisit,
   handleFeedback,
   handleOrder,
@@ -67,8 +68,9 @@ const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY")
 });
 
 /**
- * Les vitrines de la saison, gardées une minute en mémoire : une seule lecture de la base par
- * minute, quel que soit le nombre de joueurs. Si la lecture échoue, le jeu continue sans elles.
+ * La foule de la saison (vitrines des humains et prises dans les gisements), gardée une minute
+ * en mémoire : une seule lecture de la base par minute, quel que soit le nombre de joueurs. Si
+ * la lecture échoue, le jeu continue sans elle.
  */
 const CROWD_MS = 60_000;
 let crowdCache: { season: number; at: number; cards: unknown } | null = null;
@@ -78,7 +80,7 @@ async function seasonCrowd(season: number): Promise<ReturnType<typeof readCrowd>
   if (crowdCache !== null && crowdCache.season === season && now - crowdCache.at < CROWD_MS) {
     return readCrowd(crowdCache.cards);
   }
-  const { data, error } = await admin.rpc("lire_vitrines", { p_saison: season });
+  const { data, error } = await admin.rpc("lire_foule", { p_saison: season });
   if (error !== null) {
     console.error(error);
     return readCrowd([]);
@@ -164,7 +166,24 @@ Deno.serve(async (request) => {
     }
     // Seul un gardien reçoit des chiffres.
     if (data === null) return json(403, { error: "gardien" });
-    return json(200, { stats: data });
+    // Le monde partagé de la saison en cours ; s'il manque, le reste des chiffres suffit.
+    const { data: season } = await admin
+      .from("saisons")
+      .select("id")
+      .lte("debut", new Date().toISOString())
+      .order("debut", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const ocean =
+      season === null
+        ? null
+        : await admin.rpc("statistiques_ocean", {
+            p_joueur: playerId,
+            p_saison: season.id,
+            p_aujourdhui: dayOf(Date.now()),
+          });
+    if (ocean?.error) console.error(ocean.error);
+    return json(200, { stats: { ...data, ocean: ocean?.data ?? null } });
   }
 
   const { data: season, error: seasonError } = await admin
@@ -262,6 +281,19 @@ Deno.serve(async (request) => {
       const record =
         reply.status === "done" ? describeOrder(playerId, reply.state.now, body, reply) : null;
       if (reply.status === "done") showCard(playerId, Number(season.id), reply.state);
+      const take = describeTake(body, reply);
+      if (take !== null) {
+        later(
+          admin.rpc("prendre_gisement", {
+            p_saison: season.id,
+            p_gisement: take.deposit,
+            p_quantite: take.amount,
+          }),
+        );
+      }
+      if (record?.error) {
+        later(admin.rpc("noter_refus", { p_jour: record.day, p_code: record.error }));
+      }
       if (record !== null) {
         later(
           admin.rpc("noter_ordre", {

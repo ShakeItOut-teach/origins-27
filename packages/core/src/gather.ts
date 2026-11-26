@@ -5,6 +5,7 @@
 import { BALANCE, PLACE_RESOURCE } from "@o27/data";
 import type { ResourceId } from "@o27/data";
 import { bloomPercent, eventDeposits, findEventDeposit, oceanEvents } from "./events";
+import { othersTaken } from "./crowd";
 import { cellDistance, depositLeft, findDeposit, oceanDeposits, playerCell } from "./ocean";
 import type { Deposit } from "./ocean";
 import { modifierPercent, travelMs } from "./stats";
@@ -46,7 +47,7 @@ export function gatherOffer(state: PlayerState, deposit: Deposit, at: number): G
     // Appareil de Golgi, évolutions de récolte et efflorescence grossissent le chargement.
     loot: Math.min(
       Math.floor((deposit.load * (100 + modifierPercent(state, "gather") + bloom)) / 100),
-      depositLeft(deposit, state.taken, at),
+      depositLeft(deposit, state.taken, at, othersTaken(state, deposit.id)),
     ),
     energy: data.energy,
     durationMs: travelMs(

@@ -302,21 +302,22 @@ export function findDeposit(worldSeed: number, id: string, at: number): Deposit 
 }
 
 /**
- * Ce qu'il reste dans un gisement pour ce joueur : les autres organismes le vident peu à peu,
- * et ce que le joueur a déjà pris n'y est plus.
+ * Ce qu'il reste dans un gisement pour ce joueur : les organismes simulés le vident peu à peu,
+ * et ce que le joueur et les autres humains (`others`) ont déjà pris n'y est plus.
  */
 export function depositLeft(
   deposit: Deposit,
   taken: Readonly<Record<string, number>>,
   at: number,
+  others = 0,
 ): number {
-  const mine = taken[deposit.id] ?? 0;
+  const mine = (taken[deposit.id] ?? 0) + others;
   if (deposit.steady) return Math.max(0, deposit.total - mine);
   const life = deposit.endsAt - deposit.startsAt;
   const remaining = Math.max(0, Math.min(life, deposit.endsAt - at));
   // En millièmes d'unité pendant le calcul : le produit reste un entier exact.
   const shared = Math.floor((Math.floor(deposit.total / 1000) * remaining) / life) * 1000;
-  return Math.max(0, shared - (taken[deposit.id] ?? 0));
+  return Math.max(0, shared - mine);
 }
 
 export interface MigrateOffer {

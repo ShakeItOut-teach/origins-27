@@ -469,6 +469,90 @@ begin
 end;
 $$;
 
+-- 7 ter. Gisements partagés, motifs de refus, statistiques du monde partagé.
+reset role;
+do $$
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+  bob constant uuid := '00000000-0000-4000-8000-00000000000b';
+  saison bigint;
+  foule jsonb;
+  stats jsonb;
+begin
+  select id into strict saison from public.saisons order by debut desc limit 1;
+  perform public.prendre_gisement(saison, 'd:3:-2:17', 1000000);
+  perform public.prendre_gisement(saison, 'd:3:-2:17', 500000);
+  perform public.prendre_gisement(saison, 'd:0:0:18', 20);
+  foule := public.lire_foule(saison);
+  if (foule -> 'taken' ->> 'd:3:-2:17')::bigint <> 1500000 then
+    raise exception 'ECHEC : les prises d''un gisement ne s''additionnent pas : %', foule;
+  end if;
+  if jsonb_array_length(foule -> 'cards') <> 2 then
+    raise exception 'ECHEC : la foule n''a pas les vitrines de la saison : %', foule;
+  end if;
+  begin
+    perform public.prendre_gisement(saison, 'pas un gisement', 1);
+    raise exception 'ECHEC : un identifiant de gisement invalide est accepté';
+  exception when check_violation then null;
+  end;
+
+  perform public.noter_refus('2027-01-11', 'human');
+  perform public.noter_refus('2027-01-11', 'human');
+  perform public.noter_refus('2027-01-11', 'depleted');
+
+  if public.statistiques_ocean(bob, saison, '2027-01-11') is not null then
+    raise exception 'ECHEC : un joueur ordinaire lit les statistiques du monde partagé';
+  end if;
+  insert into public.gardiens (joueur) values (bob) on conflict do nothing;
+  stats := public.statistiques_ocean(bob, saison, '2027-01-11');
+  if (stats ->> 'humains')::integer <> 2 or (stats ->> 'prises')::bigint <> 1500020 then
+    raise exception 'ECHEC : statistiques du monde partagé fausses : %', stats;
+  end if;
+  if stats -> 'refus' -> 0 ->> 'code' <> 'human' or (stats -> 'refus' -> 0 ->> 'nombre')::integer <> 2 then
+    raise exception 'ECHEC : les refus ne sont pas comptés par motif : %', stats;
+  end if;
+  if stats::text like '%00000000-0000-4000-8000%' then
+    raise exception 'ECHEC : les statistiques contiennent un identifiant de joueur';
+  end if;
+  delete from public.gardiens where joueur = bob;
+end;
+$$;
+
+set local role authenticated;
+do $$
+declare
+  nom text;
+begin
+  foreach nom in array array['prises', 'usage_refus'] loop
+    begin
+      execute format('select count(*) from public.%I', nom);
+      raise exception 'ECHEC : un joueur lit la table %', nom;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  begin
+    perform public.lire_foule(1);
+    raise exception 'ECHEC : un joueur lit la foule sans passer par le serveur';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.prendre_gisement(1, 'd:0:0:1', 1);
+    raise exception 'ECHEC : un joueur vide lui-même un gisement';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.noter_refus('2027-01-11', 'x');
+    raise exception 'ECHEC : un joueur note lui-même un refus';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.statistiques_ocean('00000000-0000-4000-8000-00000000000a', 1, '2027-01-11');
+    raise exception 'ECHEC : un joueur appelle les statistiques du monde partagé';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
 -- 8. Suppression d'un compte : tout ce qui est au joueur s'en va ; son avis reste, sans lui.
 reset role;
 do $$

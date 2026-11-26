@@ -216,6 +216,7 @@ describe("dialogue avec le serveur", () => {
       week: 0,
       contest: 0,
       seenAt: START,
+      family: null,
     };
     const shared = { ...state, crowd: { cards: [card, { slot: "x" }] } };
     const { fetchLike } = fakeFetch(() => [200, { state: shared, absence }]);

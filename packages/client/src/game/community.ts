@@ -62,6 +62,35 @@ export interface GameStats {
       readonly lang: string;
     }[];
   };
+  /** Le monde partagé de la saison en cours ; `null` si le serveur ne l'a pas donné. */
+  readonly ocean: OceanStats | null;
+}
+
+export interface OceanStats {
+  /** Espèces humaines de la saison, et celles venues ces dernières 24 heures. */
+  readonly humans: number;
+  readonly active24h: number;
+  readonly averagePower: number;
+  readonly topPower: number;
+  /** Famille de gènes la plus travaillée par chaque humain (« ? » : aucun gène). */
+  readonly families: readonly Share[];
+  /** Ce que les humains ont pris dans les gisements, en millionièmes d'unité. */
+  readonly taken: number;
+  /** Pourquoi les ordres sont refusés, sur sept jours. */
+  readonly refusals: readonly { readonly code: string; readonly count: number }[];
+}
+
+function readOcean(value: unknown): OceanStats | null {
+  if (!isRecord(value)) return null;
+  return {
+    humans: num(value.humains),
+    active24h: num(value.actifs24h),
+    averagePower: num(value.puissanceMoyenne),
+    topPower: num(value.puissanceMax),
+    families: shares(value.familles),
+    taken: num(value.prises),
+    refusals: rows(value.refus).map((row) => ({ code: text(row.code), count: num(row.nombre) })),
+  };
 }
 
 export interface Community {
@@ -160,6 +189,7 @@ export function readStats(payload: unknown): GameStats | null {
         lang: text(row.langue),
       })),
     },
+    ocean: readOcean(stats.ocean),
   };
 }
 

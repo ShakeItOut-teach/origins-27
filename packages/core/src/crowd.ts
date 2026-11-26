@@ -3,13 +3,15 @@
  * l'organisme simulé qui occupait la sienne (monde partagé, étape 1).
  * La foule est une entrée du calcul, donnée par le serveur : le moteur reste pur.
  */
-import { RANKING_IDS } from "@o27/data";
+import { GENE_FAMILIES, RANKING_IDS } from "@o27/data";
 import type { RankingId } from "@o27/data";
 import type { Crowd, HumanCard, PlayerState } from "./types";
 
 /** Au-delà, la foule reçue est tronquée : l'océan n'a que 500 places. */
 const MAX_CARDS = 1000;
 const NAME_MAX = 60;
+const MAX_TAKEN = 5000;
+const DEPOSIT_ID = /^d:-?\d{1,4}:-?\d{1,4}:\d{1,9}$/;
 
 const NONE: ReadonlyMap<number, HumanCard> = new Map();
 
@@ -62,6 +64,8 @@ function isCount(value: unknown): value is number {
 function readCard(raw: unknown): HumanCard | null {
   if (!isRecord(raw)) return null;
   const { slot, name, hue, tier, zone, scores, week, contest, seenAt } = raw;
+  // Une vitrine d'avant les familles n'en a pas : elle compte comme sans gène.
+  const family = GENE_FAMILIES.find((entry) => entry === raw.family) ?? null;
   if (
     !isCount(slot) ||
     typeof name !== "string" ||
@@ -94,7 +98,23 @@ function readCard(raw: unknown): HumanCard | null {
     week,
     contest,
     seenAt,
+    family,
   };
+}
+
+function readTaken(raw: unknown): Readonly<Record<string, number>> | null {
+  if (!isRecord(raw)) return null;
+  const taken: Record<string, number> = {};
+  let count = 0;
+  for (const [id, amount] of Object.entries(raw)) {
+    if (count >= MAX_TAKEN) break;
+    // Un nombre venu de la base peut arriver en texte (bigint).
+    const value = typeof amount === "string" ? Number(amount) : amount;
+    if (!DEPOSIT_ID.test(id) || !isCount(value)) continue;
+    taken[id] = value;
+    count += 1;
+  }
+  return count === 0 ? null : taken;
 }
 
 /**
@@ -111,7 +131,18 @@ export function readCrowd(raw: unknown): Crowd {
     const known = bySlot.get(card.slot);
     if (known === undefined || known.seenAt < card.seenAt) bySlot.set(card.slot, card);
   }
-  return { cards: [...bySlot.values()].sort((one, other) => one.slot - other.slot) };
+  const cards = [...bySlot.values()].sort((one, other) => one.slot - other.slot);
+  const taken = isRecord(raw) ? readTaken(raw.taken) : null;
+  return taken === null ? { cards } : { cards, taken };
+}
+
+/**
+ * Ce que les autres humains ont pris dans un gisement : le total connu du serveur, moins la
+ * part du joueur lui-même.
+ */
+export function othersTaken(state: PlayerState, depositId: string): number {
+  const all = state.crowd?.taken?.[depositId] ?? 0;
+  return Math.max(0, all - (state.taken[depositId] ?? 0));
 }
 
 /** Le même état, avec cette foule. */
