@@ -194,6 +194,12 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
               .lineTo(offshore[index] ?? 0, offshore[index + 1] ?? 0);
           }
           graphics.stroke({ color: light, alpha: 0.5, width: 1 });
+          // Le relief : la terre sort de l'eau et porte son ombre sur la mer, à l'opposé de
+          // la lumière (qui vient d'en haut à gauche).
+          const lift = land * cell * 0.05;
+          graphics
+            .poly(coast(0.985).map((value, index) => value + lift * (index % 2 === 0 ? 0.8 : 1)))
+            .fill({ color: 0x000000, alpha: 0.6 });
           // La terre : du papier cerné d'encre, qui porte la forêt originelle, son lac, ses prairies.
           graphics
             .poly(coast(0.97))

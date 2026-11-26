@@ -172,6 +172,11 @@ export function drawLand(
       g.circle(foot.x, foot.y, Math.max(1, size * 0.55)).fill({ color: forest, alpha: 0.85 });
       continue;
     }
+    // Le relief : l'ombre de l'arbre sur le sol, à sa droite.
+    g.ellipse(foot.x + size * 0.55, foot.y + size * 0.95, size * 0.6, size * 0.18).fill({
+      color: ink,
+      alpha: 0.22,
+    });
     g.moveTo(foot.x, foot.y + size * 0.9)
       .lineTo(foot.x, foot.y)
       .stroke({ color: ink, alpha: 0.9, width: Math.max(1, size * 0.12) });

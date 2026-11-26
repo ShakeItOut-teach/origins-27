@@ -309,7 +309,10 @@ export function drawPredator(
   const angle = seed * Math.PI * 2 + Math.sin(t * 0.5 + seed * 20) * 0.2;
   const line = Math.max(1, size * 0.08);
   const sway = Math.sin(t * 2 + seed * 10);
-  g.circle(spot.x, spot.y, size * 1.5).fill({ color: blood, alpha: alpha * 0.07 });
+  // Le relief : l'ombre portée du chasseur, allongée comme lui, à l'opposé de la lumière.
+  g.poly(
+    ellipse({ x: spot.x + size * 0.2, y: spot.y + size * 0.26 }, size * 1.25, size * 0.55, angle),
+  ).fill({ color: 0x000000, alpha: alpha * 0.5 });
 
   if (level === 0) {
     // Ottoia : un ver annelé qui ondule, sa trompe épineuse projetée en avant.
@@ -424,6 +427,15 @@ export function drawLeviathan(
   }
   const angle = seed * Math.PI * 2 + Math.sin(t * 0.3 + seed * 20) * 0.12;
   const line = Math.max(1, size * 0.05);
+  // Le relief : une grande ombre sous la bête, à l'opposé de la lumière.
+  g.poly(
+    ellipse(
+      { x: spot.x - size * 0.3 + size * 0.22, y: spot.y + size * 0.3 },
+      size * 2.1,
+      size * 0.75,
+      angle,
+    ),
+  ).fill({ color: 0x000000, alpha: alpha * 0.5 });
   // La coquille : un long cône, pointe en arrière, cerclé de cloisons.
   const tip = turned(spot, angle, -size * 2.1, 0);
   const upper = turned(spot, angle, size * 0.7, -size * 0.5);
