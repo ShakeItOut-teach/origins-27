@@ -3835,3 +3835,258 @@ body.trial {
     opacity: 1;
   }
 }
+
+/*
+ * Les écrans de papier : les rivaux, la recherche et les rapports sont des pages d'atlas.
+ * Un numéro de planche, un titre en capitales, un double filet ; puis des lignes de sommaire
+ * séparées par un filet fin, jamais des boîtes empilées (docs/identite/charte.md, « Page »).
+ */
+.page-head {
+  display: grid;
+  gap: 2px;
+  padding-bottom: var(--space-2);
+  border-bottom: 3px double var(--ink);
+}
+
+.page-plate {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.page-title {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(26px, 8vw, 34px);
+  line-height: 1.05;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.page-note,
+.research-body p.page-plate {
+  margin: 0;
+}
+
+.page-note {
+  color: var(--ink-soft);
+  font-style: italic;
+  font-size: 15px;
+}
+
+/* Les rivaux — la défense en tête de page, comme une cote sur une planche. */
+.defense {
+  gap: var(--space-1);
+  padding: 0 0 var(--space-3);
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: none;
+}
+
+.defense-figure {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.defense .defense-figure strong {
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.defense .is-safe,
+.defense .is-exposed {
+  margin: 0 0 var(--space-2);
+  font-style: italic;
+}
+
+/* Le sommaire des voisins : vignette gravée, rang, nom, points de conduite, garde. */
+.rival-list {
+  gap: 0;
+  border-top: 1px solid var(--ink);
+}
+
+.rival {
+  grid-template-columns: auto 1fr auto;
+  gap: 0 var(--space-3);
+  min-height: 68px;
+  padding: var(--space-2) 0;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+}
+
+.rival:active {
+  background: var(--paper-deep);
+}
+
+.rival-vignette {
+  grid-row: 1 / 3;
+  width: 48px;
+  height: 48px;
+}
+
+.rival-vignette-plate {
+  fill: var(--plate);
+}
+
+.rival-vignette-ring {
+  fill: none;
+  stroke: var(--bone);
+  stroke-width: 0.6;
+  stroke-dasharray: 0.6 2.2;
+}
+
+.rival-name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Les points de conduite mènent l'œil du nom au chiffre. */
+.rival-name::after,
+.evolution-head strong::after,
+.research .tech-head strong::after {
+  flex: 1;
+  min-width: var(--space-3);
+  border-bottom: 2px dotted var(--ink-soft);
+  content: "";
+  transform: translateY(-4px);
+}
+
+.rival-number {
+  flex: none;
+  width: 2.6em;
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.rival-state {
+  padding-left: calc(2.6em * 12 / 13 + var(--space-2));
+}
+
+.rival.is-target .rival-name {
+  color: var(--iodine);
+}
+
+/* La recherche — plus de cadre autour de la page : le papier suffit. */
+.research-body {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: none;
+}
+
+.research .branch {
+  gap: 0;
+}
+
+/* Un intertitre de branche : petites capitales entre deux filets. */
+.research .branch h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 var(--space-1);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.research .branch h3::before,
+.research .branch h3::after {
+  flex: 1;
+  border-top: 1px solid var(--ink);
+  content: "";
+}
+
+.research .evolution {
+  padding: var(--space-2) 0;
+  border: 0;
+  border-bottom: 1px solid var(--grid);
+  border-radius: 0;
+}
+
+.research .evolution.is-favoured {
+  padding-left: var(--space-3);
+  border-left: 3px double var(--algae);
+}
+
+.evolution-head,
+.research .tech-head {
+  gap: var(--space-2);
+}
+
+.evolution-head strong,
+.research .tech-head strong {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: 17px;
+}
+
+/* Les rapports — un journal de bord : un signe dans la marge dit l'issue avant les mots. */
+.journal {
+  border-top: 3px double var(--ink);
+}
+
+.journal-row,
+.journal-row.is-lost,
+.journal-row.is-harvest {
+  position: relative;
+  padding: var(--space-2) 0 var(--space-2) 28px;
+  border-left: 0;
+}
+
+/* Gagné : un disque plein. Perdu : un losange vide. Récolte : un anneau. */
+.journal-row::before {
+  position: absolute;
+  top: 15px;
+  left: 6px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--algae);
+  border-radius: 50%;
+  background: var(--algae);
+  content: "";
+}
+
+.journal-row.is-lost::before {
+  border-color: var(--eosin);
+  border-radius: 0;
+  background: none;
+  transform: rotate(45deg);
+}
+
+.journal-row.is-harvest::before {
+  border-color: var(--iodine);
+  background: none;
+}
+
+.journal-head strong {
+  font-size: 16px;
+}
+
+.journal-row.is-lost .journal-head strong {
+  color: var(--eosin);
+}

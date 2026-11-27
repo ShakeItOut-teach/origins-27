@@ -132,6 +132,8 @@ export const en = {
   "unlock.5.title": "You are not alone in the drop",
   "unlock.5.text": "Rivals live around you. Spy on them, attack them, and protect yourself.",
   "view.rivals": "Rivals",
+  "page.plate": "Plate {n}",
+  "rivals.list": "Your neighbours, nearest first.",
   "label.guard": "Guard",
   "label.loot": "To take",
   "label.yourDefense": "Your defence",

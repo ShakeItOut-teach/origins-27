@@ -8,6 +8,7 @@ import { DrillPanel } from "./DrillPanel";
 import { EvolutionPanel } from "./EvolutionPanel";
 import { GenesPanel } from "./GenesPanel";
 import { OrganelleIcon } from "./icons";
+import { PageHead } from "./PageHead";
 
 interface Props {
   readonly state: PlayerState;
@@ -64,7 +65,10 @@ export function ResearchView({
         </div>
       )}
       <div className="research-body" data-testid={`research-${part}`}>
-        <h2 className="research-title">{t(`research.title.${part}`)}</h2>
+        <PageHead
+          plate={t("page.plate").replace("{n}", "IV")}
+          title={t(`research.title.${part}`)}
+        />
         {part === "cell" && (
           <>
             <button

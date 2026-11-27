@@ -131,6 +131,8 @@ export const fr = {
   "unlock.5.text":
     "Des rivaux vivent autour de vous. Espionnez-les, attaquez-les, et protégez-vous.",
   "view.rivals": "Les rivaux",
+  "page.plate": "Planche {n}",
+  "rivals.list": "Vos voisins, du plus proche au plus lointain.",
   "label.guard": "Garde",
   "label.loot": "À prendre",
   "label.yourDefense": "Votre défense",

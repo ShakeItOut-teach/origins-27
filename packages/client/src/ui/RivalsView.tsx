@@ -28,6 +28,8 @@ import { formatAmount, formatAway, formatDepth, formatDuration, translate } from
 import type { Lang } from "../game/text";
 import { bannerTag } from "./AllianceSheet";
 import { EnergyIcon, ResourceIcon, TroopIcon } from "./icons";
+import { PageHead } from "./PageHead";
+import { RivalVignette } from "./RivalVignette";
 
 interface Props {
   readonly state: PlayerState;
@@ -40,6 +42,9 @@ interface Props {
 function guardRange(guard: number): { low: number; high: number } {
   return { low: Math.max(1, Math.floor(guard * 0.7)), high: Math.ceil(guard * 1.3) };
 }
+
+/** Le rang d'un rival dans la liste, en chiffres romains comme dans un sommaire. */
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
 
 /** Les rivaux : six voisins à espionner et à attaquer, et l'état de sa propre défense. */
 export function RivalsView({ state, lang, onOrder }: Props) {
@@ -61,9 +66,10 @@ export function RivalsView({ state, lang, onOrder }: Props) {
 
   return (
     <section className="rivals" data-testid="rivals">
+      <PageHead plate={t("page.plate").replace("{n}", "III")} title={t("view.rivals")} />
       <div className="defense" data-testid="defense">
-        <p>
-          {t("label.yourDefense")} <strong>{defensePower(state)}</strong>
+        <p className="defense-figure">
+          <span>{t("label.yourDefense")}</span> <strong>{defensePower(state)}</strong>
         </p>
         <p
           className={shieldLeft > 0 || isNewcomer(state) ? "is-safe" : "is-exposed"}
@@ -141,8 +147,9 @@ export function RivalsView({ state, lang, onOrder }: Props) {
         </div>
       </div>
 
+      <p className="page-note">{t("rivals.list")}</p>
       <ul className="rival-list">
-        {rivals.map((rival) => {
+        {rivals.map((rival, index) => {
           const offer = raidOffer(state, rival, state.now);
           const spiedFor = (state.spiedUntil[rival.id] ?? 0) - state.now;
           const knowsGuard = spyReveal(spiedLevel(state, rival.id)).power;
@@ -159,12 +166,11 @@ export function RivalsView({ state, lang, onOrder }: Props) {
                   setSelected(rival.id);
                 }}
               >
-                <span
-                  className="rival-dot"
-                  style={{ background: `hsl(${String(rival.hue)} 50% 45%)` }}
-                  aria-hidden="true"
-                />
+                <RivalVignette hue={rival.hue} seed={rival.id} />
                 <span className="rival-name">
+                  <span className="rival-number" aria-hidden="true">
+                    {ROMAN[index] ?? String(index + 1)}
+                  </span>
                   {rival.name}
                   {rival.human && (
                     <span className="human-tag" data-testid="human-tag">
