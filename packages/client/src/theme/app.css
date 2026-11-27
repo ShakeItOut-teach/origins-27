@@ -4090,3 +4090,19 @@ body.trial {
 .journal-row.is-lost .journal-head strong {
   color: var(--eosin);
 }
+
+/*
+ * Le bandeau du haut (compte, jour, mots, langue) : une marge de papier, fermée par un filet
+ * fin. Quand la page défile, elle passe dessous au lieu de se lire à travers les boutons.
+ */
+.page::before {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 4;
+  height: calc(max(var(--space-2), env(safe-area-inset-top)) + var(--touch) + var(--space-1));
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper);
+  content: "";
+}
