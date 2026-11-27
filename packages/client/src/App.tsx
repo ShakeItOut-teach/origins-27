@@ -47,6 +47,7 @@ import type {
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
 import { GainFlights } from "./ui/GainFlights";
+import { TitlePage } from "./ui/TitlePage";
 import type { Account } from "./game/api";
 import type { Community } from "./game/community";
 import type { Installer } from "./game/visit";
@@ -253,6 +254,9 @@ export function App({
   const [selected, setSelected] = useState<OrganelleId | null>(null);
   const [reveal, setReveal] = useState<number | null>(null);
   const [touched, setTouched] = useState(state.counters.harvests > 0);
+  // Une partie neuve s'ouvre sur la page de titre ; « Naître » la lève et fait naître la cellule.
+  const [titlePage, setTitlePage] = useState(state.counters.harvests === 0);
+  const [newborn, setNewborn] = useState(false);
   const [taps, setTaps] = useState<readonly { readonly at: number; readonly gained: number }[]>([]);
   const [fullFlash, setFullFlash] = useState(0);
 
@@ -791,7 +795,20 @@ export function App({
         />
       )}
 
-      <section className="lens" hidden={onMap || onRivals || onResearch}>
+      {titlePage && state.counters.harvests === 0 && (
+        <TitlePage
+          lang={lang}
+          onStart={() => {
+            setTitlePage(false);
+            setNewborn(true);
+          }}
+        />
+      )}
+
+      <section
+        className={`lens${newborn ? " is-newborn" : ""}`}
+        hidden={onMap || onRivals || onResearch}
+      >
         <CellCanvas scene={scene} label={t("label.cell")} onTap={tap} />
         <span className="scale-bar" aria-hidden="true">
           10 µm

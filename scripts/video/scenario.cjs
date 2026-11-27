@@ -20,14 +20,18 @@ const PLANS = [
   },
   {
     kind: "game",
-    ms: 6400,
+    ms: 7400,
     start: "fresh",
     caption: "Vous naissez bactérie.",
     legend: "Fig. 1. — Jour 1. Une cellule, rien d'autre.",
-    // Vingt-six touches : assez pour que la cellule propose de grandir.
-    steps: Array.from({ length: 26 }, (_, index) => tap(700 + index * 170, ".lens-canvas")),
+    // « Naître » sur la page de titre, puis vingt-six touches : assez pour que la cellule
+    // propose de grandir.
+    steps: [
+      tap(500, '[data-testid="opening-start"]'),
+      ...Array.from({ length: 26 }, (_, index) => tap(2200 + index * 150, ".lens-canvas")),
+    ],
     still: "jour-1",
-    stillAt: 5900,
+    stillAt: 6900,
   },
   {
     kind: "game",

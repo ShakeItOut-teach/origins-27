@@ -220,6 +220,10 @@ une ressource peut-être payante.
   la ressource : hexagone, brique, grain rond. Un grain pour une miette, neuf au plus. La
   production, elle, monte sans bruit (`packages/client/src/ui/GainFlights.tsx`).
 - Un niveau qui change fait sursauter son étiquette, une fois.
+- **Le premier écran** d'une partie neuve est la page de titre de l'atlas : la planche noire,
+  le titre, la promesse en une phrase, et **un seul geste**, « Naître ». La page se lève et la
+  cellule naît d'un point, en une seconde et demie. Rien d'autre à lire ni à toucher ; un
+  joueur qui a déjà joué ne la revoit pas (`packages/client/src/ui/TitlePage.tsx`).
 - Un retour dure moins d'une seconde et ne bloque jamais le geste suivant.
 - « Réduire les animations » coupe tout mouvement de l'interface ; la cellule reste dessinée, immobile.
 

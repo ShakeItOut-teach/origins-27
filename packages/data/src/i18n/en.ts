@@ -424,6 +424,10 @@ export const en = {
   "action.close": "Close",
 
   "hint.tap": "Tap the cell",
+  "opening.text":
+    "You are born a bacterium in a primeval ocean. Twenty-seven days to walk out of the water.",
+  "opening.start": "Be born",
+  "opening.note": "Free. A few minutes a day.",
   "state.full": "Store full",
   "state.building": "Building",
   "label.level": "Level",

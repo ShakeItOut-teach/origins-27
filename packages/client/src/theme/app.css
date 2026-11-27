@@ -3729,3 +3729,109 @@ body.trial {
     display: none;
   }
 }
+
+/*
+ * Le premier écran d'une partie neuve : la page de titre de l'atlas, puis la cellule qui naît.
+ * Une phrase, un geste (docs/identite/charte.md, « Le premier écran »).
+ */
+.opening {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: max(var(--space-5), env(safe-area-inset-top)) var(--space-5)
+    max(var(--space-5), env(safe-area-inset-bottom));
+  background: var(--paper);
+  text-align: center;
+  animation: fade 0.5s ease-out;
+}
+
+.opening-head {
+  position: absolute;
+  top: max(var(--space-4), env(safe-area-inset-top));
+  right: var(--space-5);
+  left: var(--space-5);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: var(--space-2);
+  border-bottom: 3px double var(--ink);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.opening-head span + span {
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+}
+
+.opening-cell {
+  width: min(58vw, 34vh, 280px);
+  height: auto;
+  border-radius: 50%;
+  box-shadow: var(--shadow-big);
+  animation: birth 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.opening-title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-title);
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.opening-title span:first-child {
+  font-size: clamp(44px, 14vw, 64px);
+  letter-spacing: 0.1em;
+}
+
+.opening-title span + span {
+  font-size: clamp(30px, 10vw, 44px);
+  letter-spacing: 0.22em;
+}
+
+.opening-text {
+  max-width: 22em;
+  font-style: italic;
+  font-size: 19px;
+  line-height: 1.35;
+}
+
+.opening .button {
+  min-width: 200px;
+  min-height: 56px;
+  margin-top: var(--space-2);
+  font-size: 20px;
+}
+
+.opening-note {
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+/* La naissance : la cellule part d'un point et prend sa place. */
+.lens.is-newborn {
+  animation: birth 1.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes birth {
+  from {
+    opacity: 0;
+    transform: scale(0.06);
+  }
+
+  60% {
+    opacity: 1;
+  }
+}

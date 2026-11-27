@@ -429,6 +429,10 @@ export const fr = {
   "action.close": "Fermer",
 
   "hint.tap": "Touchez la cellule",
+  "opening.text":
+    "Vous naissez bactérie dans un océan primitif. Vingt-sept jours pour sortir de l’eau.",
+  "opening.start": "Naître",
+  "opening.note": "Gratuit. Quelques minutes par jour.",
   "state.full": "Réserve pleine",
   "state.building": "En construction",
   "label.level": "Niveau",
