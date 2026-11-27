@@ -58,37 +58,55 @@ function fill(text: string, values: Readonly<Record<string, string>>): string {
   return text.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole);
 }
 
-/** Le nom d'un camp, ou « vous ». */
-function who(lang: Lang, name: string, me: boolean): string {
-  return me ? translate(lang, "feed.you") : name;
+/**
+ * La phrase d'une attaque du fil. Trois façons de la dire : vue d'un allié (les deux noms),
+ * vue de la cible (« vous attaque »), vue de l'attaquant (« vous attaquez »).
+ */
+export function attackLine(lang: Lang, attack: FeedAttack, now: number): string {
+  const t = (key: TextKey): string => translate(lang, key);
+  const who = attack.mine ? "Mine" : attack.aimed ? "You" : "";
+  const values = {
+    a: attack.attackerName,
+    d: attack.defenderName,
+    t: formatDuration(Math.max(0, attack.resolveAt - now)),
+  };
+  switch (attack.status) {
+    case "pending": {
+      const step = attack.resolveAt > now ? "pending" : "landing";
+      return fill(t(`feed.${step}${who}` as TextKey), values);
+    }
+    case "resolved": {
+      const won = attack.summary?.attackerWon === true;
+      // Le joueur lui-même : les mêmes mots que son journal.
+      if (attack.mine) {
+        return t(won ? "reports.raid.won" : "reports.raid.lost").replace("{name}", values.d);
+      }
+      if (attack.aimed) {
+        return t(won ? "reports.defense.lost" : "reports.defense.won").replace("{name}", values.a);
+      }
+      return fill(t(won ? "feed.won" : "feed.lost"), values);
+    }
+    case "bounced":
+      return fill(t(`feed.bounced${who}` as TextKey), values);
+    case "cancelled":
+      return fill(t(`feed.cancelled${who}` as TextKey), values);
+  }
 }
 
-/** La phrase d'une attaque du fil. */
-export function attackLine(lang: Lang, attack: FeedAttack, now: number): string {
-  const a = who(lang, attack.attackerName, attack.mine);
-  const d = who(lang, attack.defenderName, attack.aimed);
-  switch (attack.status) {
-    case "pending":
-      return attack.resolveAt > now
-        ? fill(translate(lang, "feed.pending"), {
-            a,
-            d,
-            t: formatDuration(attack.resolveAt - now),
-          })
-        : fill(translate(lang, "feed.landing"), { a, d });
-    case "resolved":
-      return fill(
-        translate(lang, attack.summary?.attackerWon === true ? "feed.won" : "feed.lost"),
-        {
-          a,
-          d,
-        },
-      );
-    case "bounced":
-      return fill(translate(lang, "feed.bounced"), { a, d });
-    case "cancelled":
-      return fill(translate(lang, "feed.cancelled"), { a, d });
-  }
+/** La phrase d'un espionnage du fil. */
+function spyLine(lang: Lang, spy: Feeds["spies"][number]): string {
+  const key: TextKey = spy.mine
+    ? spy.success
+      ? "feed.spyMine"
+      : "feed.spyMineFailed"
+    : spy.aimed
+      ? spy.success
+        ? "feed.spyYou"
+        : "feed.spyYouFailed"
+      : spy.success
+        ? "feed.spySuccess"
+        : "feed.spyFailed";
+  return fill(translate(lang, key), { a: spy.spyName, d: spy.targetName });
 }
 
 /** Le côté du joueur dans ce combat : le sien, ou celui de son banc. */
@@ -282,12 +300,7 @@ export function FeedsPanel({ state, lang, feeds, onRefresh, onOrder, onOpenBattl
             data-testid="feed-spy"
           >
             <div className="journal-head">
-              <strong>
-                {fill(t(spy.success ? "feed.spySuccess" : "feed.spyFailed"), {
-                  a: who(lang, spy.spyName, spy.mine),
-                  d: who(lang, spy.targetName, spy.aimed),
-                })}
-              </strong>
+              <strong>{spyLine(lang, spy)}</strong>
               <span className="journal-time">
                 {t("reports.ago").replace("{t}", formatAway(state.now - spy.at, lang))}
               </span>

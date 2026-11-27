@@ -1062,7 +1062,6 @@ export const fr = {
   "feed.empty": "Rien ces trois derniers jours.",
   "feed.loading": "Lecture des fils…",
   "feed.offline": "Les fils viendront avec le serveur.",
-  "feed.you": "vous",
   "feed.pending": "{a} attaque {d} · combat dans {t}",
   "feed.landing": "{a} attaque {d} · combat en cours",
   "feed.won": "{a} a pillé {d}",
@@ -1096,6 +1095,18 @@ export const fr = {
   "stats.fights.spies": "Espionnages réussis",
   "stats.fights.spiesRow": "sur {n}",
   "label.defense": "Défense",
+  "feed.pendingYou": "{a} vous attaque · combat dans {t}",
+  "feed.landingYou": "{a} vous attaque · combat en cours",
+  "feed.bouncedYou": "Vous étiez à l’abri : {a} est reparti",
+  "feed.cancelledYou": "{a} a rappelé son attaque contre vous",
+  "feed.pendingMine": "Vous attaquez {d} · combat dans {t}",
+  "feed.landingMine": "Vous attaquez {d} · combat en cours",
+  "feed.bouncedMine": "{d} était à l’abri : vos cellules sont reparties",
+  "feed.cancelledMine": "Vous avez rappelé votre attaque contre {d}",
+  "feed.spyMine": "Vous avez espionné {d}",
+  "feed.spyMineFailed": "{d} a déjoué votre espion",
+  "feed.spyYou": "{a} vous a espionné",
+  "feed.spyYouFailed": "Vous avez déjoué l’espion de {a}",
 } as const;
 
 export type TextKey = keyof typeof fr;

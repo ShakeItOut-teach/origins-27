@@ -476,7 +476,7 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
                 {t("action.strikeRaid")}
               </button>
             )}
-            {undecided && !face && (
+            {undecided && !face && state.now < mine.arrivesAt && (
               <button
                 type="button"
                 className="button button-quiet"
