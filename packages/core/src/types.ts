@@ -98,6 +98,61 @@ export interface Report {
   readonly lost: number;
   /** Cellules filles perdues. */
   readonly troops: number;
+  /** Le détail du combat (attaques et défenses) ; absent des rapports plus anciens. */
+  readonly battle?: Battle;
+}
+
+/** Une sorte de cellule fille engagée dans un combat. */
+export interface BattleTroop {
+  readonly troop: TroopId;
+  readonly count: number;
+  /** Ce que vaut une cellule : son attaque (ou sa défense), double si elle est du bon type. */
+  readonly each: number;
+  /** Du bon type contre la cible : sa force est multipliée. */
+  readonly strong: boolean;
+  readonly lost: number;
+}
+
+/**
+ * Ce qui s'ajoute (ou se retranche) à la force d'un camp, en plus de ses cellules :
+ * garde d'un organisme, anoxie, bonus d'attaque ou de défense, bulle touchée, Paroi, renforts.
+ */
+export type BattleLineKey =
+  | "guard"
+  | "weakened"
+  | "attackBonus"
+  | "strike"
+  | "rivalAttack"
+  | "wall"
+  | "defenseBonus"
+  | "reinforcements";
+
+export interface BattleLine {
+  readonly key: BattleLineKey;
+  /** Ce que la ligne ajoute à la force du camp (négatif quand elle l'affaiblit). */
+  readonly value: number;
+  /** Le pourcentage qui l'explique, quand il y en a un (bonus, bulle, anoxie) ; sinon 0. */
+  readonly percent: number;
+}
+
+export interface BattleSide {
+  readonly troops: readonly BattleTroop[];
+  readonly lines: readonly BattleLine[];
+  /** La force du camp : somme de ses cellules et de ses lignes. */
+  readonly total: number;
+  /** Part de ses cellules perdues, en % ; `null` pour un organisme simulé (rien n'est compté). */
+  readonly lossPercent: number | null;
+}
+
+/** Le détail d'un combat, pour la page du rapport : qui avait quoi, et pourquoi l'un l'a emporté. */
+export interface Battle {
+  /** Le joueur était l'attaquant, ou le défenseur. */
+  readonly mine: "attacker" | "defender";
+  readonly attacker: BattleSide;
+  readonly defender: BattleSide;
+  readonly attackerWon: boolean;
+  /** Le tempérament de la cible (les cellules du bon type comptent double) ; `null` en défense. */
+  readonly kind: PreyKind | null;
 }
 
 /** Les combats du jour, pour la Gazette. */
@@ -193,6 +248,8 @@ export interface Raid {
     readonly won: boolean;
     readonly struck: boolean;
     readonly losses: Readonly<Record<TroopId, number>>;
+    /** Le détail du combat, pour le rapport ; absent d'une attaque partie avant les rapports détaillés. */
+    readonly battle?: Battle;
   } | null;
   readonly cancelled: boolean;
 }
@@ -459,6 +516,7 @@ export type GameEvent =
       readonly won: boolean;
       readonly struck: boolean;
       readonly losses: Readonly<Record<TroopId, number>>;
+      readonly battle: Battle;
     }
   | {
       readonly type: "raidReturned";
@@ -470,6 +528,7 @@ export type GameEvent =
       readonly lost: number;
       readonly losses: number;
       readonly cancelled: boolean;
+      readonly battle?: Battle;
     }
   /** Un rival a attaqué le joueur et a été repoussé. */
   | { readonly type: "migrated"; readonly at: number; readonly zone: number }
@@ -576,6 +635,7 @@ export type GameEvent =
       readonly rival: string;
       /** Cellules filles perdues en défendant. */
       readonly troopsLost: number;
+      readonly battle: Battle;
     }
   /** Un rival a attaqué le joueur et a pris une part de ses réserves. */
   | {
@@ -586,6 +646,7 @@ export type GameEvent =
       readonly bricks: number;
       readonly proteins: number;
       readonly troopsLost: number;
+      readonly battle: Battle;
     };
 
 export type OrderErrorCode =

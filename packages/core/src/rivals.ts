@@ -7,13 +7,14 @@ import { BALANCE, ORGANELLE_IDS, PREY_KINDS, TROOP_IDS } from "@o27/data";
 import type { BannerId, PreyKind, TroopId } from "@o27/data";
 import { allianceTechLevel, bannerOf } from "./banners";
 import { crowdStamp, humansBySlot } from "./crowd";
+import { attackTroops, defenseTroops, line, side } from "./battle";
 import { anoxiaAt } from "./events";
 import { combatLossPercent, partyOf, partyPower, partySize, spared, takeLosses } from "./hunt";
 import { modifierPercent, travelMs } from "./stats";
 import { createRng } from "./rng";
 import type { Rng } from "./rng";
 import { MICRO } from "./types";
-import type { GameEvent, PlayerState, Raid, Step } from "./types";
+import type { Battle, GameEvent, PlayerState, Raid, Step } from "./types";
 import { seasonDay } from "./unlock";
 import { cellDistance, oceanOrganisms, organismHue, playerCell } from "./ocean";
 import type { OceanOrganism } from "./ocean";
@@ -332,16 +333,80 @@ export function raidWins(force: number, guard: number): boolean {
   return force > guard;
 }
 
-/** Défense du joueur : ses cellules à la maison, plus sa Paroi. Jamais nulle. */
-export function defensePower(state: PlayerState): number {
-  let total = 1;
+/** Les morceaux de la défense du joueur : ses cellules, sa membrane et sa Paroi, ses bonus. */
+export function defenseParts(state: PlayerState): {
+  readonly cells: number;
+  readonly wall: number;
+  readonly bonusPercent: number;
+  readonly total: number;
+} {
+  let cells = 0;
   // Chaque sorte de cellule fille défend plus ou moins bien.
-  for (const id of TROOP_IDS) total += state.troops[id] * BALANCE.troops[id].defense;
+  for (const id of TROOP_IDS) cells += state.troops[id] * BALANCE.troops[id].defense;
+  // La membrane compte pour 1 : une défense n'est jamais nulle.
+  let wall = 1;
   for (const id of ORGANELLE_IDS) {
     const effect = BALANCE.organelles[id].effect;
-    if (effect.kind === "defense") total += effect.perLevel * state.organelles[id];
+    if (effect.kind === "defense") wall += effect.perLevel * state.organelles[id];
   }
-  return Math.floor((total * (100 + modifierPercent(state, "defense"))) / 100);
+  const bonusPercent = modifierPercent(state, "defense");
+  return {
+    cells,
+    wall,
+    bonusPercent,
+    total: Math.floor(((cells + wall) * (100 + bonusPercent)) / 100),
+  };
+}
+
+/** Défense du joueur : ses cellules à la maison, plus sa Paroi. Jamais nulle. */
+export function defensePower(state: PlayerState): number {
+  return defenseParts(state).total;
+}
+
+/** La garde que l'attaque a affrontée, morceau par morceau : garde, anoxie, bonus d'attaque. */
+function guardSide(state: PlayerState, raid: Raid): Battle["defender"] {
+  const rival = oceanRivals(state).find((entry) => entry.id === raid.rival);
+  if (rival === undefined) return side([], [line("guard", raid.power)], null);
+  const full = rivalStats(rival, seasonDay(state, raid.startedAt)).guard;
+  const anoxia = BALANCE.events.anoxia.guardPercent;
+  const weakened = rivalWeakened(state, rival, raid.startedAt)
+    ? Math.max(1, Math.floor((full * (100 + anoxia)) / 100))
+    : full;
+  return side(
+    [],
+    [
+      line("guard", full),
+      line("weakened", weakened - full, anoxia),
+      // Les bonus d'attaque du joueur reviennent à affaiblir la garde qu'il affronte.
+      line("attackBonus", raid.power - weakened, modifierPercent(state, "attack")),
+    ],
+    null,
+  );
+}
+
+/** Le détail d'une attaque du joueur contre un organisme, pour le rapport. */
+export function raidBattle(
+  state: PlayerState,
+  raid: Raid,
+  struck: boolean,
+  losses: Readonly<Record<TroopId, number>>,
+  lossPercent: number,
+): Battle {
+  const cells = partyPower(raid.party, raid.kind);
+  const force = raidForce(raid.party, raid.kind, struck);
+  const attacker = side(
+    attackTroops(raid.party, raid.kind, losses),
+    [line("strike", force - cells, BALANCE.rivals.raid.strikeAttackPercent)],
+    lossPercent,
+  );
+  const defender = guardSide(state, raid);
+  return {
+    mine: "attacker",
+    attacker,
+    defender,
+    attackerWon: raidWins(attacker.total, defender.total),
+    kind: raid.kind,
+  };
 }
 
 /**
@@ -353,9 +418,10 @@ export function resolveRaid(state: PlayerState, raid: Raid, at: number, struck: 
   const won = raidWins(force, raid.power);
   const percent = combatLossPercent(BALANCE.rivals.combat.attackerLossPercent, force, raid.power);
   const losses = spared(state, takeLosses(raid.party, percent, true));
+  const battle = raidBattle(state, raid, struck, losses, percent);
   return {
-    state: { ...state, raid: { ...raid, outcome: { won, struck, losses } } },
-    events: [{ type: "raidResolved", at, won, struck, losses }],
+    state: { ...state, raid: { ...raid, outcome: { won, struck, losses, battle } } },
+    events: [{ type: "raidResolved", at, won, struck, losses, battle }],
   };
 }
 
@@ -451,6 +517,7 @@ export function raidBack(
         lost,
         losses: partySize(losses),
         cancelled: raid.cancelled,
+        ...(raid.outcome?.battle === undefined ? {} : { battle: raid.outcome.battle }),
       },
     ],
   };
@@ -590,17 +657,28 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
   const attacker = rivals[rng.int(rivals.length)];
   if (attacker === undefined) return { state: { ...state, nextRaidAt: null }, events: [] };
   const attack = rivalStats(attacker, seasonDay(state, at)).attack;
-  const defense = defensePower(state) + reinforcements(state, at);
+  const parts = defenseParts(state);
+  const helpers = reinforcements(state, at);
+  const defense = parts.total + helpers;
   const counters = { ...state.counters, rivalFights: state.counters.rivalFights + 1 };
   // La défense perd aussi des cellules, d'autant moins qu'elle était forte.
-  const defenders = spared(
-    state,
-    takeLosses(
-      state.troops,
-      combatLossPercent(BALANCE.rivals.combat.defenderLossPercent, defense, attack),
-      false,
+  const lossPercent = combatLossPercent(BALANCE.rivals.combat.defenderLossPercent, defense, attack);
+  const defenders = spared(state, takeLosses(state.troops, lossPercent, false));
+  const battle: Battle = {
+    mine: "defender",
+    attacker: side([], [line("rivalAttack", attack)], null),
+    defender: side(
+      defenseTroops(state.troops, defenders),
+      [
+        line("wall", parts.wall),
+        line("defenseBonus", parts.total - parts.cells - parts.wall, parts.bonusPercent),
+        line("reinforcements", helpers),
+      ],
+      lossPercent,
     ),
-  );
+    attackerWon: defense < attack,
+    kind: null,
+  };
   const troops: Record<TroopId, number> = { ...state.troops };
   for (const id of TROOP_IDS) troops[id] -= defenders[id];
   const troopsLost = partySize(defenders);
@@ -614,7 +692,7 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
         counters: { ...counters, attacksRepelled: counters.attacksRepelled + 1 },
         nextRaidAt: at + nextDelay(state, at),
       },
-      events: [{ type: "attackRepelled", at, rival: attacker.id, troopsLost }],
+      events: [{ type: "attackRepelled", at, rival: attacker.id, troopsLost, battle }],
     };
   }
 
@@ -635,6 +713,7 @@ export function resolveIncoming(state: PlayerState, at: number): Step {
     bricks,
     proteins,
     troopsLost,
+    battle,
   };
   return {
     state: {

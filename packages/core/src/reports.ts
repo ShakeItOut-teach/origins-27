@@ -53,6 +53,7 @@ function reportOf(event: GameEvent): Report | null {
       proteins: event.gained.proteins,
       lost: event.lost,
       troops: event.losses,
+      ...(event.battle === undefined ? {} : { battle: event.battle }),
     };
   }
   if (event.type === "attackRepelled") {
@@ -63,6 +64,7 @@ function reportOf(event: GameEvent): Report | null {
       won: true,
       who: event.rival,
       troops: event.troopsLost,
+      battle: event.battle,
     };
   }
   if (event.type === "attackSuffered") {
@@ -76,6 +78,7 @@ function reportOf(event: GameEvent): Report | null {
       bricks: event.bricks,
       proteins: event.proteins,
       troops: event.troopsLost,
+      battle: event.battle,
     };
   }
   if (event.type === "leviathanRepelled") {

@@ -1,8 +1,15 @@
 export { createRng } from "./rng";
+export { battleAdvice } from "./battle";
+export type { BattleAdvice } from "./battle";
 export type { Rng } from "./rng";
 export { MICRO, DAY_MS } from "./types";
 export type {
   Alliance,
+  Battle,
+  BattleLine,
+  BattleLineKey,
+  BattleSide,
+  BattleTroop,
   Companion,
   Construction,
   Crowd,

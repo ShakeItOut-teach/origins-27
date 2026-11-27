@@ -1,5 +1,5 @@
 import { rivalName } from "@o27/core";
-import type { PlayerState, Report } from "@o27/core";
+import type { Battle, PlayerState, Report } from "@o27/core";
 import type { TextKey } from "@o27/data";
 import { useState } from "react";
 import { formatAmount, formatAway, translate } from "../game/text";
@@ -40,14 +40,22 @@ function isTaken(report: Report): boolean {
   return !report.won && (report.kind === "defense" || report.kind === "leviathan");
 }
 
+/** Un rapport qui porte le détail de son combat : il s'ouvre en page entière. */
+export type BattleReport = Report & { readonly battle: Battle };
+
+export function hasBattle(report: Report): report is BattleReport {
+  return report.battle !== undefined;
+}
+
 interface Props {
   readonly state: PlayerState;
   readonly lang: Lang;
   readonly onClose: () => void;
+  readonly onOpenBattle: (report: BattleReport) => void;
 }
 
 /** Le journal : attaques envoyées et subies, chasses, récoltes, du plus récent au plus ancien. */
-export function JournalSheet({ state, lang, onClose }: Props) {
+export function JournalSheet({ state, lang, onClose, onOpenBattle }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const [tab, setTab] = useState<Tab>("all");
   const shown = state.reports.filter((report) =>
@@ -125,6 +133,18 @@ export function JournalSheet({ state, lang, onClose }: Props) {
                   </span>
                 )}
               </p>
+              {hasBattle(report) && (
+                <button
+                  type="button"
+                  className="link-button journal-battle"
+                  data-testid="journal-battle"
+                  onClick={() => {
+                    onOpenBattle(report);
+                  }}
+                >
+                  {t("battle.open")} →
+                </button>
+              )}
             </li>
           );
         })}

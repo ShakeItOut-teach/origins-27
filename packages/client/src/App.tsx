@@ -70,7 +70,9 @@ import { AllianceSheet, bannerLabel, bannerTag } from "./ui/AllianceSheet";
 import { ApexSheet, MuseumSheet } from "./ui/ApexSheets";
 import { EventsSheet } from "./ui/EventsSheet";
 import { GazetteSheet } from "./ui/GazetteSheet";
-import { JournalSheet } from "./ui/JournalSheet";
+import { BattleSheet } from "./ui/BattleSheet";
+import { JournalSheet, hasBattle } from "./ui/JournalSheet";
+import type { BattleReport } from "./ui/JournalSheet";
 import { EnergyIcon, OrganelleIcon, ResourceIcon } from "./ui/icons";
 import { MapView } from "./ui/MapView";
 import { CalendarSheet, openingName } from "./ui/CalendarSheet";
@@ -168,11 +170,13 @@ export function App({
   const [researchPart, setResearchPart] = useState<ResearchPart>("cell");
   /** Résultat de la dernière attaque rentrée, et dernière attaque subie. */
   const [raidNote, setRaidNote] = useState<{
+    at: number;
     won: boolean;
     gained: Readonly<Record<ResourceId, number>>;
     losses: number;
   } | null>(null);
   const [attackNote, setAttackNote] = useState<{
+    at: number;
     rival: string;
     repelled: boolean;
     sugar: number;
@@ -190,6 +194,8 @@ export function App({
   const [allianceOpen, setAllianceOpen] = useState(false);
   const [gazetteOpen, setGazetteOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
+  /** Le rapport de combat ouvert en page entière. */
+  const [battle, setBattle] = useState<BattleReport | null>(null);
   const [contestOpen, setContestOpen] = useState(false);
   const [crisisOpen, setCrisisOpen] = useState(false);
   const [apexOpen, setApexOpen] = useState(false);
@@ -291,10 +297,16 @@ export function App({
             setStarved((count) => count + dead);
           }
           if (event.type === "raidReturned" && !event.cancelled) {
-            setRaidNote({ won: event.won, gained: event.gained, losses: event.losses });
+            setRaidNote({
+              at: event.at,
+              won: event.won,
+              gained: event.gained,
+              losses: event.losses,
+            });
           }
           if (event.type === "attackRepelled") {
             setAttackNote({
+              at: event.at,
               rival: event.rival,
               repelled: true,
               sugar: 0,
@@ -305,6 +317,7 @@ export function App({
           }
           if (event.type === "attackSuffered") {
             setAttackNote({
+              at: event.at,
               rival: event.rival,
               repelled: false,
               sugar: event.sugar,
@@ -441,6 +454,14 @@ export function App({
     threat.strikesAt - state.now <= BALANCE.rivals.incoming.warningMinutes * 60_000;
   const alarm = warning !== null || strikeSoon || state.now - hitAt < ALARM_FLASH_MS;
   const newReports = state.reports.filter((report) => report.at > reportsSeen).length;
+  /** Le rapport détaillé du combat qu'une note vient d'annoncer, s'il est dans le journal. */
+  const noteBattle = (at: number): BattleReport | null =>
+    state.reports.find(
+      (report): report is BattleReport =>
+        report.at === at &&
+        (report.kind === "raid" || report.kind === "defense") &&
+        hasBattle(report),
+    ) ?? null;
   const contest = show("contest") ? contestBoard(state) : null;
   const crisis = show("crisis") ? crisisOf(state) : null;
   const allianceToDo =
@@ -1045,6 +1066,17 @@ export function App({
           onClose={() => {
             setJournalOpen(false);
           }}
+          onOpenBattle={setBattle}
+        />
+      )}
+      {battle !== null && (
+        <BattleSheet
+          state={state}
+          lang={lang}
+          report={battle}
+          onClose={() => {
+            setBattle(null);
+          }}
         />
       )}
       {show("zoneEvents") && (
@@ -1341,6 +1373,19 @@ export function App({
               {t("hunt.losses")} : {raidNote.losses}
             </span>
           </span>
+          {noteBattle(raidNote.at) !== null && (
+            <button
+              type="button"
+              className="link-button"
+              data-testid="raid-note-report"
+              onClick={() => {
+                setBattle(noteBattle(raidNote.at));
+                setRaidNote(null);
+              }}
+            >
+              {t("battle.open")} →
+            </button>
+          )}
           <button
             type="button"
             className="close"
@@ -1385,6 +1430,19 @@ export function App({
                 {t("hunt.losses")} : {attackNote.troopsLost}
               </span>
             </span>
+          )}
+          {noteBattle(attackNote.at) !== null && (
+            <button
+              type="button"
+              className="link-button"
+              data-testid="attack-note-report"
+              onClick={() => {
+                setBattle(noteBattle(attackNote.at));
+                setAttackNote(null);
+              }}
+            >
+              {t("battle.open")} →
+            </button>
           )}
           <button
             type="button"

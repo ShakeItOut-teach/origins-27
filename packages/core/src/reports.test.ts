@@ -20,11 +20,29 @@ import {
   playerCell,
   serializeState,
 } from "./index";
-import type { OrderErrorCode, PlayerState, Report, ZoneEvent } from "./index";
+import type { Battle, OrderErrorCode, PlayerState, Report, ZoneEvent } from "./index";
 import { cellTroubles } from "./events";
 import { trackReports } from "./reports";
 
 const HOUR = 3_600_000;
+/** Une défense repoussée, détaillée : une cellule et la membrane contre une attaque de 1. */
+const REPELLED: Battle = {
+  mine: "defender",
+  attacker: {
+    troops: [],
+    lines: [{ key: "rivalAttack", value: 1, percent: 0 }],
+    total: 1,
+    lossPercent: null,
+  },
+  defender: {
+    troops: [{ troop: "hunter", count: 1, each: 1, strong: false, lost: 0 }],
+    lines: [{ key: "wall", value: 1, percent: 0 }],
+    total: 2,
+    lossPercent: 8,
+  },
+  attackerWon: false,
+  kind: null,
+};
 const MINUTE = 60_000;
 const SEASON = 1_800_000_000_000;
 const OPEN = SEASON + 8 * DAY_MS;
@@ -302,7 +320,13 @@ describe("le journal des rapports", () => {
     expect(state.reports).toContainEqual(fight);
     for (let index = 1; index <= 60; index++) {
       state = trackReports(state, [
-        { type: "attackRepelled", at: NOW + HOUR + index * MINUTE, rival: "o:7", troopsLost: 0 },
+        {
+          type: "attackRepelled",
+          at: NOW + HOUR + index * MINUTE,
+          rival: "o:7",
+          troopsLost: 0,
+          battle: REPELLED,
+        },
       ]);
     }
     expect(state.reports).toHaveLength(REPORTS_KEPT);

@@ -21,6 +21,11 @@ import type { CounterId, MutationId, OrganelleId, ResourceId, TraitId, TroopId }
 import { createRng } from "./rng";
 import type {
   Alliance,
+  Battle,
+  BattleLine,
+  BattleLineKey,
+  BattleSide,
+  BattleTroop,
   DailyRecord,
   Report,
   RewardChest,
@@ -231,6 +236,7 @@ export function serializeState(state: PlayerState): string {
       proteins: report.proteins,
       lost: report.lost,
       troops: report.troops,
+      ...(report.battle === undefined ? {} : { battle: writeBattle(report.battle) }),
     })),
     seed: state.seed,
     rngState: state.rngState,
@@ -334,6 +340,9 @@ export function serializeState(state: PlayerState): string {
                     won: state.raid.outcome.won,
                     struck: state.raid.outcome.struck,
                     losses: pick(TROOP_IDS, state.raid.outcome.losses),
+                    ...(state.raid.outcome.battle === undefined
+                      ? {}
+                      : { battle: writeBattle(state.raid.outcome.battle) }),
                   },
             cancelled: state.raid.cancelled,
           },
@@ -570,8 +579,95 @@ function readReports(value: unknown): Report[] {
     ) {
       throw new TypeError("sauvegarde invalide : rapport");
     }
-    return { at, kind, won, who, sugar, bricks, proteins, lost, troops };
+    const report: Report = { at, kind, won, who, sugar, bricks, proteins, lost, troops };
+    return entry.battle === undefined ? report : { ...report, battle: readBattle(entry.battle) };
   });
+}
+
+/** Le détail d'un combat, dans un ordre de clés fixe. */
+function writeBattle(battle: Battle): Battle {
+  const writeSide = (entry: BattleSide): BattleSide => ({
+    troops: entry.troops.map((troop) => ({
+      troop: troop.troop,
+      count: troop.count,
+      each: troop.each,
+      strong: troop.strong,
+      lost: troop.lost,
+    })),
+    lines: entry.lines.map((item) => ({ key: item.key, value: item.value, percent: item.percent })),
+    total: entry.total,
+    lossPercent: entry.lossPercent,
+  });
+  return {
+    mine: battle.mine,
+    attacker: writeSide(battle.attacker),
+    defender: writeSide(battle.defender),
+    attackerWon: battle.attackerWon,
+    kind: battle.kind,
+  };
+}
+
+const BATTLE_LINES: readonly BattleLineKey[] = [
+  "guard",
+  "weakened",
+  "attackBonus",
+  "strike",
+  "rivalAttack",
+  "wall",
+  "defenseBonus",
+  "reinforcements",
+];
+
+function isInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value);
+}
+
+function readBattle(value: unknown): Battle {
+  const bad = (): never => {
+    throw new TypeError("sauvegarde invalide : détail du combat");
+  };
+  const readTroop = (entry: unknown): BattleTroop => {
+    if (!isRecord(entry)) return bad();
+    const troop = TROOP_IDS.find((id) => id === entry.troop);
+    const { count, each, strong, lost } = entry;
+    if (troop === undefined || !isCount(count) || !isCount(each) || !isCount(lost)) return bad();
+    if (typeof strong !== "boolean") return bad();
+    return { troop, count, each, strong, lost };
+  };
+  const readLine = (entry: unknown): BattleLine => {
+    if (!isRecord(entry)) return bad();
+    const key = BATTLE_LINES.find((id) => id === entry.key);
+    const { value: amount, percent } = entry;
+    if (key === undefined || !isInteger(amount) || !isInteger(percent)) return bad();
+    return { key, value: amount, percent };
+  };
+  const readSide = (entry: unknown): BattleSide => {
+    if (!isRecord(entry) || !Array.isArray(entry.troops) || !Array.isArray(entry.lines)) {
+      return bad();
+    }
+    const { total, lossPercent } = entry;
+    if (!isInteger(total) || (lossPercent !== null && !isCount(lossPercent))) return bad();
+    return {
+      troops: entry.troops.map(readTroop),
+      lines: entry.lines.map(readLine),
+      total,
+      lossPercent,
+    };
+  };
+  if (!isRecord(value)) return bad();
+  const { mine, attackerWon } = value;
+  const kind = value.kind === null ? null : PREY_KINDS.find((id) => id === value.kind);
+  if ((mine !== "attacker" && mine !== "defender") || typeof attackerWon !== "boolean") {
+    return bad();
+  }
+  if (kind === undefined) return bad();
+  return {
+    mine,
+    attacker: readSide(value.attacker),
+    defender: readSide(value.defender),
+    attackerWon,
+    kind,
+  };
 }
 
 function readExpedition(value: unknown): Expedition | null {
@@ -708,6 +804,7 @@ function readRaid(value: unknown): Raid | null {
       won: outcome.won,
       struck: outcome.struck,
       losses: readCounts(TROOP_IDS, outcome.losses, RANK_2),
+      ...(outcome.battle === undefined ? {} : { battle: readBattle(outcome.battle) }),
     };
   }
   return {

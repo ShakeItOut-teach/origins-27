@@ -82,9 +82,36 @@ Repris du bilan (partie 4.1) :
 - **Plafond de pillage** par semaine de saison ;
 - **Nuit et absence** : le **bouclier de nuit** et le **mode absence** existent déjà et
   protègent aussi des humains ;
-- **Trajet** : une attaque entre humains met au moins quelques heures ; on décidera du chiffre
-  avec le bouclier de nuit, qui couvre déjà le sommeil ;
+- **Trajet et protection** : le propriétaire juge suffisante l'heure de protection qui suit une
+  attaque subie (`BALANCE.rivals.incoming.shieldHours`), avec le bouclier de nuit et le mode
+  absence. Pas de trajet minimal de plusieurs heures (27/11/2026) ;
 - **Classement à part** des points gagnés contre des humains.
+
+## 3 bis. Ce que le propriétaire a ajouté (27/11/2026)
+
+> « Il peut y avoir ensuite une redirection dans un chat d'alliance spécifique, qui a attaqué qui
+> et qui a espionné dans un autre. Ce qui rend le groupe plus soudé de voir que quelqu'un se fait
+> attaquer et peut le défendre. »
+
+- **Deux fils d'alliance, tenus par le jeu** (pas de texte libre) : le fil des **attaques** (qui a
+  attaqué qui, l'issue, un lien vers le rapport) et le fil des **espionnages** (qui a espionné
+  qui, réussi ou non). Chaque humain du banc les lit ; une attaque en cours contre un allié y
+  apparaît avant d'arriver.
+- **Défendre un allié** : depuis le fil, un humain du banc peut envoyer des cellules filles
+  renforcer la défense d'un allié attaqué. Elles comptent dans la ligne « Renforts » du rapport,
+  au nom de chacun.
+
+> « Les rapports de défense ou d'attaque n'expliquent rien. Je veux voir les puissances, les %
+> d'attaque de chacun, les détails des troupes, leurs attaques respectives et ce qui fait que l'un
+> ou l'autre a gagné. Une vraie page dédiée. »
+
+- **Livré le 27/11/2026** : la page « Rapport de combat ». Elle s'ouvre depuis le journal et
+  depuis la note d'une attaque. Pour chaque camp : sa force, sa part du total, chaque sorte de
+  cellule (nombre, valeur d'une cellule, total, part, pertes), ce qui s'ajoute (garde, anoxie,
+  bonus d'attaque ou de défense, bulle touchée, membrane et Paroi, renforts). Puis la clé du
+  combat : l'écart, ce qui manquait, et combien de cellules du meilleur type l'auraient comblé.
+  Le moteur garde ce détail dans le rapport (`Report.battle`, `battleAdvice`) ; un combat entre
+  deux humains utilisera la même forme, avec les cellules des deux camps.
 
 ## 4. Les notifications
 
@@ -102,5 +129,7 @@ côtés, part des attaques arrêtées par un garde-fou (`human`, `tooWeak`, `too
 
 1. Les pertes des deux côtés et la Sentinelle (contre les organismes simulés d'abord).
 2. Les Chimiorécepteurs, les Éclaireuses, les rapports d'espionnage par niveau.
-3. L'attaque entre humains : file des attaques sur le serveur, résolution à l'arrivée, garde-fous.
+3. L'attaque entre humains : file des attaques sur le serveur, résolution à l'arrivée, garde-fous,
+   rapport détaillé pour les deux joueurs, fils d'alliance (attaques, espionnages) et renforts
+   envoyés par les alliés humains.
 4. Les notifications push.

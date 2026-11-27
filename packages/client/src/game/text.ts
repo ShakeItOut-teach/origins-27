@@ -42,6 +42,11 @@ export function formatAmount(micro: number, lang: Lang): string {
   return Math.floor(micro / MICRO).toLocaleString(lang === "fr" ? "fr-FR" : "en-GB");
 }
 
+/** Un nombre entier (une force, un nombre de cellules), écrit à la façon de la langue. */
+export function formatCount(value: number, lang: Lang): string {
+  return Math.round(value).toLocaleString(lang === "fr" ? "fr-FR" : "en-GB");
+}
+
 /** Une production par seconde, avec une décimale. */
 export function formatRate(microPerMs: number, lang: Lang): string {
   const perSecond = (microPerMs * 1000) / MICRO;

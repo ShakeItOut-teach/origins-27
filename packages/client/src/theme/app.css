@@ -2499,6 +2499,209 @@ p.season-next {
   gap: 4px;
 }
 
+.link-button.journal-battle {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0;
+  font-size: 14px;
+}
+
+/* Le rapport de combat, en page entière */
+.battle-verdict {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3);
+  border-left: 4px solid var(--algae);
+  background: var(--paper-deep);
+}
+
+.battle-verdict.is-lost {
+  border-left-color: var(--eosin);
+}
+
+.battle-verdict strong {
+  font-family: var(--font-title);
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.battle-verdict.is-won strong {
+  color: var(--verdigris);
+}
+
+.battle-verdict.is-lost strong {
+  color: var(--madder);
+}
+
+.battle-key,
+.battle-side,
+.battle-rules {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.battle-key h3,
+.battle-side h3,
+.battle-rules h3 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.battle-key p,
+.battle-rules p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.battle-key p:first-of-type {
+  font-size: 16px;
+}
+
+.battle-tip {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--prussian);
+  color: var(--prussian);
+  font-weight: 600;
+}
+
+.battle-scale {
+  display: flex;
+  height: 14px;
+  margin-top: var(--space-4);
+  border: var(--line);
+  background: var(--prussian);
+}
+
+.battle-scale-attack {
+  background: var(--madder);
+}
+
+.battle-scale-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-number);
+  font-size: 13px;
+}
+
+.battle-scale-legend span:first-child {
+  color: var(--madder);
+}
+
+.battle-scale-legend span:last-child {
+  color: var(--prussian);
+  text-align: right;
+}
+
+.battle-side {
+  padding: var(--space-3);
+  border: 1px solid var(--rule);
+}
+
+.battle-side.is-mine {
+  border: var(--line);
+}
+
+.battle-side h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.battle-total {
+  font-family: var(--font-number);
+  font-size: 20px;
+}
+
+.battle-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.battle-table th {
+  padding: var(--space-1) 0 var(--space-1) var(--space-2);
+  border-bottom: var(--line);
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.battle-table td {
+  padding: var(--space-1) 0 var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-number);
+  text-align: right;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.battle-table th:first-child,
+.battle-table td:first-child {
+  padding-left: 0;
+  font-family: var(--font-text);
+  text-align: left;
+  white-space: normal;
+}
+
+.battle-table small {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.battle-table td.is-lost {
+  color: var(--madder);
+}
+
+.battle-strong {
+  color: var(--verdigris);
+  font-family: var(--font-number);
+  font-weight: 600;
+}
+
+.battle-lines {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.battle-lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.battle-lines li span:last-child {
+  font-family: var(--font-number);
+}
+
+.battle-note,
+.battle-losses {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.battle-losses {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.battle-rules {
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
 /* Le coffre à ouvrir */
 .chest-veil {
   z-index: 40;
