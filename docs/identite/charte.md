@@ -214,6 +214,13 @@ une ressource peut-être payante.
 
 - La cellule respire, les cils ondulent, le cytoplasme tourne lentement : c'est une planche **vivante**.
 - Une apparition dure 0,2 à 0,35 s. Rien ne rebondit, rien ne clignote.
+- **Tout geste a une réponse** (demande du propriétaire, 27/11/2026 : « la vie et les retours »).
+  Quand une ressource monte d'un coup (un toucher, un coffre, une récolte, un butin), des grains
+  partent de l'endroit touché et volent jusqu'au compteur, qui sursaute. Le grain a le signe de
+  la ressource : hexagone, brique, grain rond. Un grain pour une miette, neuf au plus. La
+  production, elle, monte sans bruit (`packages/client/src/ui/GainFlights.tsx`).
+- Un niveau qui change fait sursauter son étiquette, une fois.
+- Un retour dure moins d'une seconde et ne bloque jamais le geste suivant.
 - « Réduire les animations » coupe tout mouvement de l'interface ; la cellule reste dessinée, immobile.
 
 ## 9. Ton des textes

@@ -46,6 +46,7 @@ import type {
 } from "@o27/data";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
+import { GainFlights } from "./ui/GainFlights";
 import type { Account } from "./game/api";
 import type { Community } from "./game/community";
 import type { Installer } from "./game/visit";
@@ -584,6 +585,14 @@ export function App({
           }}
         />
       )}
+      {/* La vie de l'écran : un gain soudain envoie des grains jusqu'à son compteur. */}
+      <GainFlights
+        resources={state.resources}
+        now={state.now}
+        rateOf={(id) =>
+          crisisRate(state, productionRate(state, id)) - (id === "sugar" ? upkeepRate(state) : 0)
+        }
+      />
       <header className="counters">
         {counters.map((id) => {
           // Ce que les touchers de la dernière minute ont rapporté, en plus de la production.
@@ -818,6 +827,8 @@ export function App({
                 {/* Le niveau se lit d'un coup d'œil, sur chaque organite. */}
                 {level > 0 && !building && (
                   <span
+                    // Un niveau qui change remonte l'étiquette : elle sursaute.
+                    key={level}
                     className="slot-level"
                     data-testid={id === "nucleus" ? "nucleus-level" : `slot-level-${id}`}
                   >
