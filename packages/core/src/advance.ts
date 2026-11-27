@@ -2,6 +2,7 @@
 import { ensureAlliance } from "./alliance";
 import { allianceDue } from "./banners";
 import { trackDaily } from "./daily";
+import { awaitsDuel, bounceRaid, escortBack, escortDue, holdMs } from "./escort";
 import { apexDue, apexLand } from "./apex";
 import { earnChest } from "./chests";
 import { contestStep } from "./contest";
@@ -249,13 +250,15 @@ function settle(state: PlayerState, now: number): PlayerState {
   const spies = spiesAt(state, now);
   const resting = Object.entries(state.placeReadyAt).filter(([, readyAt]) => readyAt > now);
   const spied = Object.entries(state.spiedUntil).filter(([, until]) => until > now);
+  const intel = Object.entries(state.intel).filter(([id]) => (state.spiedUntil[id] ?? 0) > now);
   const levels = Object.entries(state.spyLevels).filter(
     ([id]) => (state.spiedUntil[id] ?? 0) > now,
   );
   const pruned =
     resting.length !== Object.keys(state.placeReadyAt).length ||
     spied.length !== Object.keys(state.spiedUntil).length ||
-    levels.length !== Object.keys(state.spyLevels).length;
+    levels.length !== Object.keys(state.spyLevels).length ||
+    intel.length !== Object.keys(state.intel).length;
   if (
     energy.energy === state.energy &&
     energy.energyAt === state.energyAt &&
@@ -272,6 +275,7 @@ function settle(state: PlayerState, now: number): PlayerState {
     placeReadyAt: Object.fromEntries(resting),
     spiedUntil: Object.fromEntries(spied),
     spyLevels: Object.fromEntries(levels),
+    intel: Object.fromEntries(intel),
   };
 }
 
@@ -294,7 +298,10 @@ export function advance(state: PlayerState, now: number): Step {
     const birth = training?.nextAt ?? never;
     const tripEnd = expedition?.returnsAt ?? never;
     const huntAt = sortieDue(hunt);
-    const raidAt = sortieDue(raid);
+    // Contre un humain, le combat est rendu par le serveur : on ne l'attend pas sans fin.
+    const raidAt = raid !== null && awaitsDuel(raid) ? raid.returnsAt + holdMs() : sortieDue(raid);
+    const escort = current.escort;
+    const escortAt = escortDue(escort);
     const attackAt = current.nextRaidAt ?? never;
     // Chaque minuit de saison est un événement : les quêtes changent, et un palier qui
     // attendait son jour s'ouvre à cet instant précis, pas « quand le joueur revient ».
@@ -314,6 +321,7 @@ export function advance(state: PlayerState, now: number): Step {
       tripEnd,
       huntAt,
       raidAt,
+      escortAt,
       attackAt,
       midnight,
       hunger,
@@ -372,7 +380,11 @@ export function advance(state: PlayerState, now: number): Step {
               bricks: capacity(ready, "bricks") - ready.resources.bricks,
               proteins: capacity(ready, "proteins") - ready.resources.proteins,
             })
-          : resolveRaid(ready, raid, at, false);
+          : awaitsDuel(raid)
+            ? bounceRaid(ready, raid, at)
+            : resolveRaid(ready, raid, at, false);
+    } else if (escort !== null && escortAt === at) {
+      step = escortBack(ready, escort, at);
     } else if (attackAt === at) {
       step = resolveIncoming(ready, at);
     } else if (apexAt === at) {

@@ -1,6 +1,11 @@
 import {
   MICRO,
+  attacksToday,
+  awaitsDuel,
   defensePower,
+  humanTarget,
+  modifierPercent,
+  versusBlock,
   foePower,
   isAlly,
   partyOf,
@@ -20,10 +25,11 @@ import {
   spyCapacity,
   spyReveal,
 } from "@o27/core";
-import type { PlayerState, Rival } from "@o27/core";
+import type { HumanIntel, OrderErrorCode, PlayerState, Rival } from "@o27/core";
 import { BALANCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
 import type { Order, TextKey, TroopId } from "@o27/data";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { formatAmount, formatAway, formatDepth, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { bannerTag } from "./AllianceSheet";
@@ -34,6 +40,8 @@ import { RivalVignette } from "./RivalVignette";
 interface Props {
   readonly state: PlayerState;
   readonly lang: Lang;
+  /** Les attaques d'autres humains en route vers le joueur, lues dans le fil. */
+  readonly incoming?: ReactNode;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
   readonly onOrder: (order: Order) => boolean;
 }
@@ -47,7 +55,7 @@ function guardRange(guard: number): { low: number; high: number } {
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
 
 /** Les rivaux : six voisins à espionner et à attaquer, et l'état de sa propre défense. */
-export function RivalsView({ state, lang, onOrder }: Props) {
+export function RivalsView({ state, lang, onOrder, incoming }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const [selected, setSelected] = useState<string | null>(null);
   const rivals = nearRivals(state);
@@ -71,6 +79,7 @@ export function RivalsView({ state, lang, onOrder }: Props) {
         <p className="defense-figure">
           <span>{t("label.yourDefense")}</span> <strong>{defensePower(state)}</strong>
         </p>
+        {incoming}
         <p
           className={shieldLeft > 0 || isNewcomer(state) ? "is-safe" : "is-exposed"}
           data-testid="shield"
@@ -156,6 +165,14 @@ export function RivalsView({ state, lang, onOrder }: Props) {
           const closedFor = (state.placeReadyAt[rival.id] ?? 0) - state.now;
           const mine = raid !== null && raid.rival === rival.id ? raid : null;
           const range = guardRange(offer.guard);
+          const intel = rival.human ? state.intel[rival.id] : undefined;
+          const guardText = rival.human
+            ? intel !== undefined && intel.defense > 0
+              ? String(intel.defense)
+              : "?"
+            : knowsGuard
+              ? String(offer.guard)
+              : `${String(range.low)}–${String(range.high)}`;
           return (
             <li key={rival.id}>
               <button
@@ -179,10 +196,7 @@ export function RivalsView({ state, lang, onOrder }: Props) {
                   )}
                 </span>
                 <span className="rival-guard">
-                  {t("label.guard")}{" "}
-                  <strong>
-                    {knowsGuard ? offer.guard : `${String(range.low)}–${String(range.high)}`}
-                  </strong>
+                  {t(rival.human ? "label.defense" : "label.guard")} <strong>{guardText}</strong>
                 </span>
                 <span className="rival-state">
                   {mine !== null
@@ -248,20 +262,45 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
       .replace("{a}", String(force))
       .replace("{b}", String(foe))})`;
   const revealAt = BALANCE.rivals.spy.reveal;
+  // Entre humains, les bonus d'attaque s'ajoutent à l'attaque ; la défense ne bouge pas.
+  const attackPercent = modifierPercent(state, "attack");
+  const humanVerdict = (force: number, defense: number): string => {
+    const total = Math.floor((force * (100 + attackPercent)) / 100);
+    return `${t(raidWins(total, defense) ? "label.raidWins" : "label.raidLoses")} (${t(
+      "label.forces",
+    )
+      .replace("{a}", String(total))
+      .replace("{b}", String(defense))})`;
+  };
 
   const ally = isAlly(state, rival);
-  // Un allié ou une autre espèce humaine : on ne l'espionne pas et on ne l'attaque pas.
-  const peaceful = ally || rival.human;
+  // Un allié : on ne l'espionne pas et on ne l'attaque pas. Une autre espèce humaine, si, sous
+  // les garde-fous que le moteur juge sur sa vitrine (et le serveur sur sa vraie partie).
+  const peaceful = ally;
+  const target = rival.human ? humanTarget(state, rival) : null;
+  const intel: HumanIntel | undefined = rival.human ? state.intel[rival.id] : undefined;
+  // Le garde-fou qui arrête l'attaque contre une espèce humaine, dit en clair.
+  const humanBlock =
+    target === null
+      ? rival.human
+        ? t("state.human")
+        : null
+      : versusText(t, lang, state, target.shield, versusBlock(state, target));
   let blocked: string | null = null;
-  if (rival.human) blocked = t("state.human");
-  else if (ally) blocked = t("state.ally");
+  if (ally) blocked = t("state.ally");
+  else if (humanBlock !== null) blocked = humanBlock;
   else if ((raid !== null && mine === null) || state.hunt !== null) blocked = t("state.oneSortie");
   else if (closedFor > 0) blocked = `${t("state.rivalClosed")} ${formatAway(closedFor, lang)}`;
   else if (partySize(state.troops) === 0) blocked = t("state.noTroops");
   else if (state.energy < offer.energy) blocked = t("state.noEnergy");
 
   const undecided = mine !== null && !mine.cancelled && mine.outcome === null;
-  const face = undecided && state.now >= mine.arrivesAt;
+  // Contre un humain, la fenêtre du combat se ferme à l'heure du combat ; puis le serveur joue.
+  const face =
+    undecided &&
+    state.now >= mine.arrivesAt &&
+    (mine.versus === undefined || (state.now < mine.resolveAt && mine.struck !== true));
+  const waiting = mine !== null && awaitsDuel(mine) && state.now >= mine.resolveAt;
 
   return (
     <div className="veil veil-bottom" onClick={onClose}>
@@ -288,15 +327,17 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
           </button>
         </div>
 
-        <div className="costs" hidden={rival.human}>
-          <span className="cost">
-            {t("label.guard")}{" "}
-            {spied
-              ? offer.guard
-              : t("label.range")
-                  .replace("{a}", String(range.low))
-                  .replace("{b}", String(range.high))}
-          </span>
+        <div className="costs">
+          {!rival.human && (
+            <span className="cost">
+              {t("label.guard")}{" "}
+              {spied
+                ? offer.guard
+                : t("label.range")
+                    .replace("{a}", String(range.low))
+                    .replace("{b}", String(range.high))}
+            </span>
+          )}
           <span className="cost cost-time">{formatDuration(offer.durationMs)}</span>
           <span className={`cost${state.energy < offer.energy ? " is-missing" : ""}`}>
             <EnergyIcon />
@@ -317,9 +358,20 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
           </p>
         )}
         {rival.human && (
-          <p className="sheet-level" data-testid="rival-human">
-            <span className="human-tag">{t("label.human")}</span>
-          </p>
+          <>
+            <p className="sheet-level" data-testid="rival-human">
+              <span className="human-tag">{t("label.human")}</span>
+            </p>
+            {!ally && (
+              <p className="sheet-role" data-testid="rival-versus">
+                {t("versus.rules")}{" "}
+                {target !== null &&
+                  t("versus.today")
+                    .replace("{n}", String(attacksToday(state, target.slot)))
+                    .replace("{max}", String(BALANCE.rivals.versus.perTargetPerDay))}
+              </p>
+            )}
+          </>
         )}
         {offer.weakened && !peaceful && (
           <p className="sheet-building is-warning" data-testid="rival-weakened">
@@ -327,7 +379,10 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
           </p>
         )}
 
-        {!peaceful && level > 0 && (
+        {!peaceful && level > 0 && rival.human && intel !== undefined && (
+          <HumanReport state={state} lang={lang} intel={intel} />
+        )}
+        {!peaceful && level > 0 && !rival.human && (
           <div className="spy-report" data-testid="rival-report" data-level={level}>
             <p className="sheet-kicker">{t("spy.level").replace("{n}", String(level))}</p>
             {reveal.total && (
@@ -405,8 +460,9 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
         {mine !== null ? (
           <>
             <p className="sheet-building" data-testid="rival-status">
-              {face ? t("state.fighting") : undecided ? t("state.away") : t("state.returning")} ·{" "}
-              {formatDuration(mine.returnsAt - state.now)}
+              {waiting
+                ? t("versus.waiting")
+                : `${face ? t("state.fighting") : undecided ? t("state.away") : t("state.returning")} · ${formatDuration(mine.returnsAt - state.now)}`}
             </p>
             {face && (
               <button
@@ -468,7 +524,25 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
                     </div>
                   ))}
                 </div>
-                {spied ? (
+                {rival.human ? (
+                  intel !== undefined && intel.defense > 0 ? (
+                    <div className="chance" data-testid="rival-chance">
+                      <p>
+                        {t("label.raidChance")} :{" "}
+                        <strong>{humanVerdict(away, intel.defense)}</strong>
+                      </p>
+                      <p data-testid="rival-chance-there">
+                        {t("label.raidChanceThere")} :{" "}
+                        <strong>{humanVerdict(there, intel.defense)}</strong>
+                      </p>
+                      <small className="chance-sure">{t("label.strikeBonus")}</small>
+                    </div>
+                  ) : (
+                    <p className="sheet-building" data-testid="rival-blind">
+                      {t("spy.needPower").replace("{n}", String(revealAt.power))}
+                    </p>
+                  )
+                ) : spied ? (
                   <div className="chance" data-testid="rival-chance">
                     <p>
                       {t("label.raidChance")} : <strong>{verdict(away)}</strong>
@@ -510,6 +584,90 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Pourquoi on ne peut pas attaquer cette espèce humaine, en clair ; `null` si rien ne l'empêche. */
+function versusText(
+  t: (key: TextKey) => string,
+  lang: Lang,
+  state: PlayerState,
+  shield: number,
+  code: OrderErrorCode | null,
+): string | null {
+  if (code === null) return null;
+  if (code === "newcomer") return t("versus.newcomer");
+  if (code === "tooWeak") return t("versus.tooWeak");
+  if (code === "tooOften") {
+    return t("versus.tooOften").replace("{n}", String(BALANCE.rivals.versus.perTargetPerDay));
+  }
+  if (code === "shielded") {
+    return t("versus.shielded").replace("{t}", formatAway(shield - state.now, lang));
+  }
+  return t("state.human");
+}
+
+/** Le rapport d'espionnage d'une espèce humaine : une photo de sa partie, au niveau atteint. */
+function HumanReport({
+  state,
+  lang,
+  intel,
+}: {
+  readonly state: PlayerState;
+  readonly lang: Lang;
+  readonly intel: HumanIntel;
+}) {
+  const t = (key: TextKey): string => translate(lang, key);
+  const reveal = spyReveal(intel.level);
+  return (
+    <div className="spy-report" data-testid="rival-report" data-level={intel.level}>
+      <p className="sheet-kicker">{t("spy.level").replace("{n}", String(intel.level))}</p>
+      {reveal.total && (
+        <p className="sheet-role" data-testid="rival-total">
+          {t("spy.total").replace("{n}", formatAmount(intel.total, lang))}
+        </p>
+      )}
+      {reveal.available && (
+        <p className="costs" data-testid="rival-loot">
+          <span className="cost">{t("label.loot")}</span>
+          {(["sugar", "bricks", "proteins"] as const).map((id) => (
+            <span key={id} className="cost cost-gain">
+              <ResourceIcon id={id} />
+              {formatAmount(intel[id], lang)}
+            </span>
+          ))}
+        </p>
+      )}
+      {reveal.power && (
+        <p className="sheet-role" data-testid="rival-defense">
+          {t("versus.defense").replace("{n}", String(intel.defense))}
+        </p>
+      )}
+      {reveal.troopsMargin !== null && (
+        <p className="sheet-role" data-testid="rival-troops">
+          {intel.troops !== null
+            ? TROOP_IDS.filter((id) => (intel.troops?.[id] ?? 0) > 0)
+                .map((id) => `${String(intel.troops?.[id] ?? 0)} ${t(`troop.${id}.name`)}`)
+                .join(" · ")
+            : t("spy.troops")
+                .replace("{a}", String(intel.troopsLow))
+                .replace("{b}", String(intel.troopsHigh))}
+        </p>
+      )}
+      {reveal.everything && (
+        <p className="sheet-role" data-testid="rival-shield">
+          {intel.shieldUntil > state.now
+            ? t("versus.shieldUntil").replace(
+                "{t}",
+                formatAway(intel.shieldUntil - state.now, lang),
+              )
+            : t("versus.open")}
+        </p>
+      )}
+      {intel.level < BALANCE.rivals.spy.reveal.everything && (
+        <p className="account-note">{t("spy.better")}</p>
+      )}
     </div>
   );
 }

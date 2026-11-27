@@ -13,6 +13,11 @@ interface Props {
   readonly lang: Lang;
   readonly report: Report & { readonly battle: Battle };
   readonly onClose: () => void;
+  /**
+   * Un combat entre deux autres humains (lu dans le fil d'alliance) : les noms des deux camps,
+   * et le titre. Sans eux, le joueur est l'un des deux camps.
+   */
+  readonly names?: { readonly attacker: string; readonly defender: string; readonly title: string };
 }
 
 /** Remplace chaque {clé} d'un texte par sa valeur. */
@@ -21,7 +26,7 @@ function fill(text: string, values: Readonly<Record<string, string>>): string {
 }
 
 /** Le rapport d'un combat, en entier : les deux camps, leurs forces, et la clé de l'issue. */
-export function BattleSheet({ state, lang, report, onClose }: Props) {
+export function BattleSheet({ state, lang, report, onClose, names }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const n = (value: number): string => formatCount(value, lang);
   const battle = report.battle;
@@ -78,7 +83,7 @@ export function BattleSheet({ state, lang, report, onClose }: Props) {
         <strong data-testid="battle-outcome">
           {advice.won ? t("battle.won") : t("battle.lost")}
         </strong>
-        <span>{reportTitle(lang, state, report)}</span>
+        <span>{names?.title ?? reportTitle(lang, state, report)}</span>
         <span className="journal-time">
           {t("reports.ago").replace("{t}", formatAway(state.now - report.at, lang))}
         </span>
@@ -117,7 +122,7 @@ export function BattleSheet({ state, lang, report, onClose }: Props) {
             <h3>
               <span>
                 {t(id === "attacker" ? "battle.attack" : "battle.defense")} ·{" "}
-                {mine ? t("battle.you") : foeName}
+                {names !== undefined ? names[id] : mine ? t("battle.you") : foeName}
               </span>
               <span className="battle-total">{n(side.total)}</span>
             </h3>
@@ -173,8 +178,11 @@ export function BattleSheet({ state, lang, report, onClose }: Props) {
                   const start = index === 0 && side.troops.length === 0;
                   const sign = start ? "" : entry.value < 0 ? "−" : "+";
                   return (
-                    <li key={entry.key} data-testid={`battle-line-${entry.key}`}>
-                      <span>{lineLabel(t, entry)}</span>
+                    <li
+                      key={`${entry.key}-${String(index)}`}
+                      data-testid={`battle-line-${entry.key}`}
+                    >
+                      <span>{lineLabel(t, entry, id)}</span>
                       <span>
                         {sign}
                         {n(Math.abs(entry.value))}
@@ -252,7 +260,17 @@ function lossText(
   return planned > lost ? `${text} ${fill(t("battle.spared"), { k: n(planned - lost) })}` : text;
 }
 
-function lineLabel(t: (key: TextKey) => string, entry: BattleLine): string {
+function lineLabel(
+  t: (key: TextKey) => string,
+  entry: BattleLine,
+  side: "attacker" | "defender",
+): string {
   const percent = String(Math.abs(entry.percent));
+  // Les renforts d'un allié humain, à son nom.
+  if (entry.name !== undefined) return t("battle.line.ally").replace("{name}", entry.name);
+  // Entre humains, les bonus d'attaque s'ajoutent à l'attaque au lieu d'affaiblir une garde.
+  if (entry.key === "attackBonus" && side === "attacker") {
+    return t("battle.line.attackBonusOwn").replace("{p}", percent);
+  }
   return t(`battle.line.${entry.key}`).replace("{p}", percent);
 }

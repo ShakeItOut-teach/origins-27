@@ -31,13 +31,14 @@ function card(slot: number, banner: BannerId | null, given = 0): HumanCard {
     hue: 10,
     tier: 9,
     zone: 1,
-    scores: { power: 1, cell: 1, troops: 0, loot: 0, defense: 0 },
+    scores: { power: 1, cell: 1, troops: 0, loot: 0, defense: 0, duel: 0 },
     week: 0,
     contest: 0,
     seenAt: SEASON,
     family: null,
     banner,
     given,
+    shield: 0,
   };
 }
 

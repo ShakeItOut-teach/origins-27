@@ -4,6 +4,7 @@
 //   POST /jeu/reprendre → après connexion à un compte, y amène la partie anonyme { ancien }
 //   POST /jeu/avis      → garde l'avis du joueur { rating, text, lang }
 //   POST /jeu/musee     → les planches du Muséum du joueur
+//   POST /jeu/fils      → les fils d'alliance du joueur : attaques et espionnages de son banc
 //   POST /jeu/stats     → les statistiques du jeu, pour un gardien seulement
 //   POST /jeu/supprimer → supprime le compte du joueur et tout ce qui est à lui { confirm }
 // À chaque visite et à chaque ordre, le serveur note aussi de quoi mesurer l'audience, et met à
@@ -183,7 +184,19 @@ Deno.serve(async (request) => {
             p_aujourdhui: dayOf(Date.now()),
           });
     if (ocean?.error) console.error(ocean.error);
-    return json(200, { stats: { ...data, ocean: ocean?.data ?? null } });
+    // Les combats entre humains de la saison ; s'ils manquent, le reste suffit.
+    const fights =
+      season === null
+        ? null
+        : await admin.rpc("statistiques_combats", {
+            p_joueur: playerId,
+            p_saison: season.id,
+            p_aujourdhui: dayOf(Date.now()),
+          });
+    if (fights?.error) console.error(fights.error);
+    return json(200, {
+      stats: { ...data, ocean: ocean?.data ?? null, combats: fights?.data ?? null },
+    });
   }
 
   const { data: season, error: seasonError } = await admin
@@ -199,7 +212,92 @@ Deno.serve(async (request) => {
   }
   if (season === null) return json(403, { status: "closed" });
 
+  if (path.endsWith("/fils")) {
+    const { data, error } = await admin.rpc("lire_fils", {
+      p_joueur: playerId,
+      p_saison: season.id,
+      p_maintenant: Date.now(),
+    });
+    if (error !== null) {
+      console.error(error);
+      return json(500, { error: "server" });
+    }
+    return json(200, data ?? { attacks: [], spies: [] });
+  }
+
+  /** Une fonction de la base qui doit réussir : son erreur remonte. */
+  async function call(name: string, args: Record<string, unknown>): Promise<unknown> {
+    const { data, error } = await admin.rpc(name, args);
+    if (error !== null) throw error;
+    return data;
+  }
+
+  // La file des combats entre humains (monde partagé, étape 3).
+  const war = {
+    async ownerOf(slot: number) {
+      const owner = await call("place_de", { p_saison: season.id, p_place: slot });
+      return typeof owner === "string" ? owner : null;
+    },
+    async syncRaid(record: { attacker: string }) {
+      await call("noter_attaque", {
+        p_saison: season.id,
+        p_attaquant: record.attacker,
+        p_attaque: record,
+      });
+    },
+    async syncEscort(record: { helper: string }) {
+      await call("noter_renfort", { p_aidant: record.helper, p_renfort: record });
+    },
+    async findAttack(id: string) {
+      const found = (await call("trouver_attaque", { p_attaque: id })) as {
+        slot: number;
+        resolveAt: number;
+      } | null;
+      return found === null
+        ? null
+        : { slot: Number(found.slot), resolveAt: Number(found.resolveAt) };
+    },
+    async dueAttacks(now: number, player: string, limit: number) {
+      const rows = (await call("attaques_dues", {
+        p_saison: season.id,
+        p_maintenant: now,
+        p_joueur: player,
+        p_limite: limit,
+      })) as { id: string; attacker: string; defender: string; resolveAt: number }[] | null;
+      return (rows ?? []).map((row) => ({ ...row, resolveAt: Number(row.resolveAt) }));
+    },
+    async escortsOf(attack: string) {
+      const ids = (await call("renforts_de", { p_attaque: attack })) as string[] | null;
+      return ids ?? [];
+    },
+    async settle(settlement: {
+      attack: string;
+      writes: readonly { playerId: string; expectedVersion: number; state: string }[];
+      summary: unknown;
+      battle: unknown;
+    }) {
+      const done = await call("regler_attaque", {
+        p_attaque: settlement.attack,
+        p_ecritures: settlement.writes.map((entry) => ({
+          joueur: entry.playerId,
+          version: entry.expectedVersion,
+          etat: JSON.parse(entry.state),
+        })),
+        p_resultat: settlement.summary,
+        p_detail: settlement.battle,
+      });
+      return done === true;
+    },
+    async recordSpy(record: unknown) {
+      await call("noter_espionnage", { p_saison: season.id, p_espionnage: record });
+    },
+  };
+
   const deps = {
+    war,
+    log: (error: unknown) => {
+      console.error(error);
+    },
     clock: () => Date.now(),
     newSeed: () => crypto.getRandomValues(new Uint32Array(1))[0],
     seasonStart: Date.parse(season.debut),

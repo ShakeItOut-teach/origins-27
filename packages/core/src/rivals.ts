@@ -45,8 +45,8 @@ export interface Rival {
   /** Sa bannière ; `null` pour un voisin de la goutte, avant l'océan. */
   readonly banner: BannerId | null;
   /**
-   * Un vrai joueur tient cette place : on voit son nom, mais on ne l'espionne pas et on ne
-   * l'attaque pas (pas de combat entre humains à l'étape 1 du monde partagé).
+   * Un vrai joueur tient cette place. On l'espionne et on l'attaque sous garde-fous (monde
+   * partagé, étape 3) : le combat se joue chez le serveur, qui lit les deux parties.
    */
   readonly human: boolean;
 }
@@ -166,7 +166,8 @@ export function oceanRivals(state: PlayerState): readonly Rival[] {
     found.push(
       human === undefined
         ? simulated
-        : { ...simulated, name: human.name, hue: human.hue, human: true },
+        : // Un humain porte sa vraie bannière : c'est elle qui dit s'il est un allié.
+          { ...simulated, name: human.name, hue: human.hue, banner: human.banner, human: true },
     );
   }
   found.sort((one, other) => one.distance - other.distance || (one.id < other.id ? -1 : 1));

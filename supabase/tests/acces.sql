@@ -557,6 +557,209 @@ begin
 end;
 $$;
 
+-- 7 quater. Combats entre humains : la file des attaques, les renforts, les espionnages, les
+-- fils d'alliance. Le serveur seul y touche ; un combat s'écrit d'un seul coup ou pas du tout.
+reset role;
+insert into auth.users (id) values ('00000000-0000-4000-8000-0000000000f1');
+
+do $$
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+  bob constant uuid := '00000000-0000-4000-8000-00000000000b';
+  fred constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  saison bigint;
+  maintenant bigint := (extract(epoch from now()) * 1000)::bigint;
+  attaque uuid;
+  version_a integer;
+  version_b integer;
+  fils jsonb;
+  stats jsonb;
+begin
+  select id into strict saison from public.saisons order by debut desc limit 1;
+  -- Alice tient la place 3, Bob la place 5 (sous la bannière « tox ») : vitrines de 7 bis et 7 ter.
+  perform public.noter_attaque(saison, alice, jsonb_build_object(
+    'attackerSlot', 3, 'attackerName', 'Alicia', 'attackerBanner', 'aby',
+    'defenderSlot', 5, 'defenderName', 'Bobus', 'defenderBanner', 'tox',
+    'party', '{"hunter":4}'::jsonb, 'startedAt', maintenant, 'arrivesAt', maintenant + 1000,
+    'resolveAt', maintenant + 2000, 'cancelled', false));
+  -- Rejouée, la même attaque ne se dédouble pas.
+  perform public.noter_attaque(saison, alice, jsonb_build_object(
+    'attackerSlot', 3, 'attackerName', 'Alicia', 'defenderSlot', 5, 'defenderName', 'Bobus',
+    'startedAt', maintenant, 'arrivesAt', maintenant + 1000, 'resolveAt', maintenant + 2000));
+  -- Une place que personne ne tient : rien n'entre dans la file.
+  perform public.noter_attaque(saison, alice, jsonb_build_object(
+    'attackerSlot', 3, 'defenderSlot', 999, 'startedAt', maintenant + 1,
+    'arrivesAt', maintenant + 2, 'resolveAt', maintenant + 3));
+  if (select count(*) from public.attaques) <> 1 then
+    raise exception 'ECHEC : % attaques dans la file au lieu de 1', (select count(*) from public.attaques);
+  end if;
+  select id into strict attaque from public.attaques;
+  if (select defenseur from public.attaques where id = attaque) <> bob then
+    raise exception 'ECHEC : le défenseur n''est pas le joueur de la place visée';
+  end if;
+  if public.place_de(saison, 5) <> bob then
+    raise exception 'ECHEC : place_de ne trouve pas le joueur d''une place';
+  end if;
+  if (public.trouver_attaque(attaque) ->> 'slot')::integer <> 5 then
+    raise exception 'ECHEC : trouver_attaque ne dit pas la place visée';
+  end if;
+  if jsonb_array_length(public.attaques_dues(saison, maintenant + 1999, alice, 5)) <> 0 then
+    raise exception 'ECHEC : une attaque est jouée avant l''heure du combat';
+  end if;
+  if public.attaques_dues(saison, maintenant + 2000, fred, 5) -> 0 ->> 'id' <> attaque::text then
+    raise exception 'ECHEC : une attaque à l''heure du combat n''est pas proposée';
+  end if;
+
+  -- Renforts : Fred peut venir ; l'attaquant, non ; une mauvaise place, non.
+  perform public.noter_renfort(fred, jsonb_build_object(
+    'attack', attaque, 'slot', 5, 'helperName', 'Fredus', 'party', '{"hunter":2}'::jsonb,
+    'arrivesAt', maintenant + 500));
+  perform public.noter_renfort(alice, jsonb_build_object(
+    'attack', attaque, 'slot', 5, 'helperName', 'Alicia', 'arrivesAt', maintenant + 500));
+  perform public.noter_renfort(bob, jsonb_build_object(
+    'attack', attaque, 'slot', 4, 'helperName', 'Bobus', 'arrivesAt', maintenant + 500));
+  if public.renforts_de(attaque) <> jsonb_build_array(fred) then
+    raise exception 'ECHEC : renforts faux : %', public.renforts_de(attaque);
+  end if;
+
+  -- Le combat : une version périmée, et rien n'est écrit.
+  select version into strict version_a from public.etats_joueur where joueur = alice;
+  select version into strict version_b from public.etats_joueur where joueur = bob;
+  if public.regler_attaque(attaque, jsonb_build_array(
+    jsonb_build_object('joueur', alice, 'version', version_a, 'etat', '{"duel":"a"}'::jsonb),
+    jsonb_build_object('joueur', bob, 'version', version_b + 7, 'etat', '{"duel":"b"}'::jsonb)
+  ), '{"fought":true,"attackerWon":true}', '{"mine":"attacker"}') then
+    raise exception 'ECHEC : un combat s''est écrit malgré une version périmée';
+  end if;
+  if (select version from public.etats_joueur where joueur = alice) <> version_a
+    or (select etat from public.attaques where id = attaque) <> 'en_route' then
+    raise exception 'ECHEC : un combat refusé a quand même écrit une partie';
+  end if;
+  if not public.regler_attaque(attaque, jsonb_build_array(
+    jsonb_build_object('joueur', alice, 'version', version_a, 'etat', '{"duel":"a"}'::jsonb),
+    jsonb_build_object('joueur', bob, 'version', version_b, 'etat', '{"duel":"b"}'::jsonb)
+  ), '{"fought":true,"attackerWon":true,"attackerLost":2,"defenderLost":3,"helpers":1,"loot":40}',
+    '{"mine":"attacker"}') then
+    raise exception 'ECHEC : un combat juste est refusé';
+  end if;
+  if (select etat ->> 'duel' from public.etats_joueur where joueur = bob) <> 'b'
+    or (select version from public.etats_joueur where joueur = bob) <> version_b + 1
+    or (select etat from public.attaques where id = attaque) <> 'resolue' then
+    raise exception 'ECHEC : le combat n''est pas écrit dans les deux parties';
+  end if;
+  if public.regler_attaque(attaque, '[]', '{"fought":true}', null) then
+    raise exception 'ECHEC : le même combat a été joué deux fois';
+  end if;
+  if public.trouver_attaque(attaque) is not null then
+    raise exception 'ECHEC : une attaque jouée attend encore des renforts';
+  end if;
+
+  -- Une attaque rappelée : close sans combat.
+  perform public.noter_attaque(saison, alice, jsonb_build_object(
+    'attackerSlot', 3, 'defenderSlot', 5, 'startedAt', maintenant + 10,
+    'arrivesAt', maintenant + 20, 'resolveAt', maintenant + 30, 'cancelled', false));
+  perform public.noter_attaque(saison, alice, jsonb_build_object(
+    'attackerSlot', 3, 'defenderSlot', 5, 'startedAt', maintenant + 10,
+    'arrivesAt', maintenant + 20, 'resolveAt', maintenant + 30, 'cancelled', true));
+  if (select etat from public.attaques where depart = maintenant + 10) <> 'annulee' then
+    raise exception 'ECHEC : une attaque rappelée attend encore son combat';
+  end if;
+
+  -- L'espionnage, et les fils : Bob (bannière « tox ») voit l'attaque et l'espionnage.
+  perform public.noter_espionnage(saison, jsonb_build_object(
+    'spy', alice, 'target', bob, 'spySlot', 3, 'targetSlot', 5, 'spyName', 'Alicia',
+    'targetName', 'Bobus', 'spyBanner', 'aby', 'targetBanner', 'tox', 'success', false,
+    'at', maintenant));
+  fils := public.lire_fils(bob, saison, maintenant);
+  if jsonb_array_length(fils -> 'attacks') <> 2 or jsonb_array_length(fils -> 'spies') <> 1 then
+    raise exception 'ECHEC : les fils de Bob sont faux : %', fils;
+  end if;
+  if not (fils -> 'spies' -> 0 ->> 'aimed')::boolean
+    or (fils -> 'spies' -> 0 ->> 'success')::boolean then
+    raise exception 'ECHEC : Bob ne voit pas qu''on l''a espionné sans succès : %', fils;
+  end if;
+  if fils::text like '%00000000-0000-4000-8000-00000000000%' then
+    raise exception 'ECHEC : un fil d''alliance contient un identifiant de joueur';
+  end if;
+  -- Fred n'est d'aucun banc et n'a rien fait de visible : il ne voit rien.
+  fils := public.lire_fils(fred, saison, maintenant);
+  if jsonb_array_length(fils -> 'attacks') <> 0 or jsonb_array_length(fils -> 'spies') <> 0 then
+    raise exception 'ECHEC : un joueur hors du banc lit ses fils : %', fils;
+  end if;
+
+  -- Les mesures du gardien : des totaux, rien d'autre.
+  if public.statistiques_combats(bob, saison, current_date) is not null then
+    raise exception 'ECHEC : un joueur ordinaire lit les statistiques des combats';
+  end if;
+  insert into public.gardiens (joueur) values (bob) on conflict do nothing;
+  stats := public.statistiques_combats(bob, saison, current_date);
+  if (stats ->> 'attaques')::integer <> 2 or (stats ->> 'espionnages')::integer <> 1
+    or (stats -> 'jours' -> 0 ->> 'victoires')::integer <> 1
+    or (stats -> 'jours' -> 0 ->> 'rappels')::integer <> 1 then
+    raise exception 'ECHEC : statistiques des combats fausses : %', stats;
+  end if;
+  if stats::text like '%00000000-0000-4000-8000%' then
+    raise exception 'ECHEC : les statistiques des combats contiennent un identifiant de joueur';
+  end if;
+  delete from public.gardiens where joueur = bob;
+end;
+$$;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-00000000000a","role":"authenticated"}';
+do $$
+declare
+  nom text;
+begin
+  foreach nom in array array['attaques', 'renforts', 'espionnages'] loop
+    begin
+      execute format('select count(*) from public.%I', nom);
+      raise exception 'ECHEC : un joueur lit la table %', nom;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  begin
+    insert into public.attaques (saison, attaquant, defenseur, place_attaquant, place_defenseur,
+      nom_attaquant, nom_defenseur, troupes, depart, arrivee, combat)
+    values (1, '00000000-0000-4000-8000-00000000000a', '00000000-0000-4000-8000-00000000000b',
+      3, 5, 'a', 'b', '{}', 1, 2, 3);
+    raise exception 'ECHEC : un joueur inscrit lui-même une attaque';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.lire_fils('00000000-0000-4000-8000-00000000000b', 1, 0);
+    raise exception 'ECHEC : un joueur lit les fils d''un autre sans passer par le serveur';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.regler_attaque(gen_random_uuid(), '[]', null, null);
+    raise exception 'ECHEC : un joueur joue lui-même un combat';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.noter_attaque(1, '00000000-0000-4000-8000-00000000000a', '{}');
+    raise exception 'ECHEC : un joueur écrit lui-même dans la file des attaques';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.statistiques_combats('00000000-0000-4000-8000-00000000000a', 1, current_date);
+    raise exception 'ECHEC : un joueur appelle les statistiques des combats';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
+set local role anon;
+do $$
+begin
+  begin
+    perform public.attaques_dues(1, 0, '00000000-0000-4000-8000-00000000000a', 1);
+    raise exception 'ECHEC : un visiteur lit la file des attaques';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
 -- 8. Suppression d'un compte : tout ce qui est au joueur s'en va ; son avis reste, sans lui.
 reset role;
 do $$
@@ -570,7 +773,9 @@ begin
     or exists (select 1 from public.planches p where p.joueur = alice)
     or exists (select 1 from public.sauvegardes s where s.joueur = alice)
     or exists (select 1 from public.gardiens g where g.joueur = alice)
-    or exists (select 1 from public.vitrines v where v.joueur = alice) then
+    or exists (select 1 from public.vitrines v where v.joueur = alice)
+    or exists (select 1 from public.attaques a where a.attaquant = alice or a.defenseur = alice)
+    or exists (select 1 from public.espionnages e where e.espion = alice or e.cible = alice) then
     raise exception 'ECHEC : il reste des données du joueur après la suppression de son compte';
   end if;
   if (select count(*) from public.avis a where a.joueur is null) <> 2 then

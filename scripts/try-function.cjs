@@ -66,7 +66,20 @@ async function main() {
     prendre_gisement: () => null,
     noter_refus: () => null,
     statistiques_ocean: () => (guardian ? { humains: 2 } : null),
+    // Les combats entre humains.
+    attaques_dues: () => due.splice(0),
+    place_de: () => null,
+    noter_attaque: () => null,
+    noter_renfort: () => null,
+    trouver_attaque: () => null,
+    renforts_de: () => [],
+    regler_attaque: () => true,
+    noter_espionnage: () => null,
+    lire_fils: () => ({ attacks: [{ id: "a-1", status: "en_route" }], spies: [] }),
+    statistiques_combats: () => (guardian ? { attaques: 1 } : null),
   };
+  // Une attaque arrivée à l'heure du combat, dont le défenseur n'existe plus.
+  const due = [{ id: "attaque-1", attacker: "joueur-1", defender: "joueur-parti", resolveAt: 1 }];
   const builder = (table) => {
     const filters = {};
     const api = {
@@ -199,6 +212,21 @@ async function main() {
     shown,
   );
   const reads = calls.filter(([n]) => n === "lire_foule").length;
+  const asked = rpcCall("attaques_dues");
+  check(
+    "etat : les attaques arrivées à l'heure du combat sont cherchées, celles du joueur d'abord",
+    asked?.p_joueur === "joueur-1" && asked.p_saison === 1 && asked.p_limite > 0,
+    asked,
+  );
+  const closedFight = rpcCall("regler_attaque");
+  check(
+    "etat : une attaque dont un joueur a disparu est close, sans combat ni écriture",
+    closedFight?.p_attaque === "attaque-1" &&
+      closedFight.p_resultat === null &&
+      Array.isArray(closedFight.p_ecritures) &&
+      closedFight.p_ecritures.length === 0,
+    closedFight,
+  );
 
   const plain = await post("etat", {});
   await Promise.all(waiting);
@@ -245,6 +273,35 @@ async function main() {
     calls.map(([n]) => n),
   );
 
+  const help = await post("ordre", {
+    orderId: "00000000-0000-4000-8000-000000000003",
+    order: {
+      type: "reinforceAlly",
+      attack: "00000000-0000-4000-8000-0000000000aa",
+      slot: 41,
+      party: { hunter: 1, armored: 0, swift: 0 },
+    },
+  });
+  await Promise.all(waiting);
+  check(
+    "renforts : le serveur cherche l'attaque visée dans la file",
+    help.status === 200 &&
+      help.body.outcome?.ok === false &&
+      rpcCall("trouver_attaque")?.p_attaque === "00000000-0000-4000-8000-0000000000aa",
+    { help: help.body, cherche: rpcCall("trouver_attaque") },
+  );
+
+  const feeds = await post("fils", {});
+  check(
+    "fils : 200, les attaques et les espionnages du banc du joueur",
+    feeds.status === 200 &&
+      feeds.body.attacks?.[0]?.id === "a-1" &&
+      Array.isArray(feeds.body.spies) &&
+      rpcCall("lire_fils")?.p_joueur === "joueur-1" &&
+      typeof rpcCall("lire_fils")?.p_maintenant === "number",
+    feeds,
+  );
+
   const bad = await post("ordre", { n: 1 });
   check("ordre mal formé : 400", bad.status === 400, bad);
 
@@ -279,7 +336,10 @@ async function main() {
   const open = await post("stats", {});
   check(
     "stats pour un gardien : 200, avec le monde partagé",
-    open.status === 200 && open.body.stats?.joueurs === 3 && open.body.stats.ocean?.humains === 2,
+    open.status === 200 &&
+      open.body.stats?.joueurs === 3 &&
+      open.body.stats.ocean?.humains === 2 &&
+      open.body.stats.combats?.attaques === 1,
     open,
   );
 

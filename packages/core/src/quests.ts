@@ -164,6 +164,9 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
     case "chestOpened":
     case "raidSent":
     case "raidCancelled":
+    case "raidBounced":
+    case "escortSent":
+    case "escortReturned":
     case "raidResolved":
     case "attackRepelled":
     case "attackSuffered":

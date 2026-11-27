@@ -33,7 +33,11 @@ export function cellPower(state: PlayerState): number {
 export function troopPower(state: PlayerState): number {
   let weight = 0;
   for (const id of TROOP_IDS) {
-    const count = state.troops[id] + (state.hunt?.party[id] ?? 0) + (state.raid?.party[id] ?? 0);
+    const count =
+      state.troops[id] +
+      (state.hunt?.party[id] ?? 0) +
+      (state.raid?.party[id] ?? 0) +
+      (state.escort?.party[id] ?? 0);
     // Une cellule vaut la moyenne de ce qu'elle apporte à l'attaque et à la défense.
     weight += count * (BALANCE.troops[id].power + BALANCE.troops[id].defense);
   }
@@ -57,6 +61,8 @@ export function playerScore(state: PlayerState, category: RankingId): number {
       return state.counters.lootTaken;
     case "defense":
       return state.counters.attacksRepelled;
+    case "duel":
+      return state.counters.duelPoints;
   }
 }
 
@@ -156,6 +162,9 @@ export function organismScore(
       return Math.floor(
         (along(data.median.defense, last) * lean(data.spread.defense) * habits.defender) / 10_000,
       );
+    // Les organismes simulés ne se battent pas contre les humains : ce classement est le leur.
+    case "duel":
+      return 0;
   }
 }
 

@@ -17,6 +17,7 @@ export function reportTitle(lang: Lang, state: PlayerState, report: Report): str
   switch (report.kind) {
     case "raid":
     case "defense":
+    case "escort":
       return t(`reports.${report.kind}.${outcome}`).replace(
         "{name}",
         rivalName(state, report.who) || t("reports.someone"),

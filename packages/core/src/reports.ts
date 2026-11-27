@@ -81,6 +81,18 @@ function reportOf(event: GameEvent): Report | null {
       battle: event.battle,
     };
   }
+  if (event.type === "escortReturned") {
+    if (!event.fought) return null;
+    return {
+      ...EMPTY,
+      at: event.at,
+      kind: "escort",
+      won: event.held,
+      who: `o:${String(event.slot)}`,
+      troops: event.losses,
+      ...(event.battle === undefined ? {} : { battle: event.battle }),
+    };
+  }
   if (event.type === "leviathanRepelled") {
     return { ...EMPTY, at: event.at, kind: "leviathan", won: true, who: event.event };
   }

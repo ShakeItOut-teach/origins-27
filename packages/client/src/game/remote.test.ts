@@ -212,13 +212,14 @@ describe("dialogue avec le serveur", () => {
       hue: 10,
       tier: 3,
       zone: 0,
-      scores: { power: 1, cell: 1, troops: 0, loot: 0, defense: 0 },
+      scores: { power: 1, cell: 1, troops: 0, loot: 0, defense: 0, duel: 0 },
       week: 0,
       contest: 0,
       seenAt: START,
       family: null,
       banner: null,
       given: 0,
+      shield: 0,
     };
     const shared = { ...state, crowd: { cards: [card, { slot: "x" }] } };
     const { fetchLike } = fakeFetch(() => [200, { state: shared, absence }]);

@@ -49,6 +49,8 @@ import {
 } from "./rivals";
 import { MICRO } from "./types";
 import { spyOn } from "./spy";
+import { countAttack, humanTarget, reinforceAlly, spyHuman, versusBlock } from "./versus";
+import type { VersusContext } from "./versus";
 import { drawMutationOffer, mutationPool, orderTier, seasonDay } from "./unlock";
 import { ZONE_COUNT, cellIn, migrateOffer, playerCell } from "./ocean";
 import type { PreyOffer } from "./world";
@@ -503,11 +505,12 @@ function buyMutation(state: PlayerState): Outcome {
   };
 }
 
-function spyRival(state: PlayerState, rivalId: string): Outcome {
+function spyRival(state: PlayerState, rivalId: string, context?: VersusContext): Outcome {
   const rival = reachableRivals(state).find((entry) => entry.id === rivalId);
   if (rival === undefined) return { error: "unknownRival" };
   if (isAlly(state, rival)) return { error: "ally" };
-  if (rival.human) return { error: "human" };
+  // Une espèce humaine : le serveur donne sa vraie partie, l'appareil prévoit.
+  if (rival.human) return spyHuman(state, rival, context?.opponent);
   return spyOn(state, rival, seasonDay(state, state.now));
 }
 
@@ -515,12 +518,19 @@ function sendRaid(
   state: PlayerState,
   rivalId: string,
   party: Readonly<Record<TroopId, number>>,
+  context?: VersusContext,
 ): Outcome {
   if (state.hunt !== null || state.raid !== null) return { error: "busy" };
   const rival = reachableRivals(state).find((entry) => entry.id === rivalId);
   if (rival === undefined) return { error: "unknownRival" };
   if (isAlly(state, rival)) return { error: "ally" };
-  if (rival.human) return { error: "human" };
+  // Contre une espèce humaine : les garde-fous, jugés sur sa vraie partie quand le serveur l'a.
+  const target = rival.human ? humanTarget(state, rival, context?.opponent) : null;
+  if (rival.human) {
+    if (target === null) return { error: "human" };
+    const block = versusBlock(state, target);
+    if (block !== null) return { error: block };
+  }
   if ((state.placeReadyAt[rivalId] ?? 0) > state.now) return { error: "rivalClosed" };
   if (partySize(party) === 0 || TROOP_IDS.some((id) => party[id] > state.troops[id])) {
     return { error: "noTroops" };
@@ -532,10 +542,11 @@ function sendRaid(
   const returnsAt = state.now + offer.durationMs;
   const troops = { ...state.troops };
   for (const id of TROOP_IDS) troops[id] -= party[id];
+  const sent = target === null ? state : countAttack(state, target.slot);
   return {
     state: {
       // Qui attaque n'est plus protégé.
-      ...dropShield(state, state.now),
+      ...dropShield(sent, sent.now),
       energy: state.energy - offer.energy,
       troops,
       raid: {
@@ -554,6 +565,10 @@ function sendRaid(
         returnsAt,
         outcome: null,
         cancelled: false,
+        // Contre un humain, ni garde ni butin connus d'avance : le serveur jouera le combat.
+        ...(target === null
+          ? {}
+          : { versus: target.slot, power: 0, sugar: 0, bricks: 0, proteins: 0 }),
       },
     },
     events: [{ type: "raidSent", at: state.now, rival: rivalId, arrivesAt, returnsAt }],
@@ -566,6 +581,11 @@ function strikeRaid(state: PlayerState): Outcome {
   if (raid === null || raid.cancelled) return { error: "noRaid" };
   if (raid.outcome !== null) return { error: "tooLate" };
   if (state.now < raid.arrivesAt) return { error: "notFighting" };
+  // Contre un humain : la bulle attrapée renforcera l'attaque quand le serveur jouera le combat.
+  if (raid.versus !== undefined) {
+    if (raid.struck === true || state.now >= raid.resolveAt) return { error: "tooLate" };
+    return { state: { ...state, raid: { ...raid, struck: true } }, events: [] };
+  }
   return resolveRaid(state, raid, state.now, true);
 }
 
@@ -645,7 +665,7 @@ function claimQuest(state: PlayerState, index: number): Outcome {
   return openChest(state, index, state.now);
 }
 
-function execute(state: PlayerState, order: Order): Outcome {
+function execute(state: PlayerState, order: Order, context?: VersusContext): Outcome {
   switch (order.type) {
     case "harvest":
       return harvest(state, order.taps);
@@ -674,9 +694,11 @@ function execute(state: PlayerState, order: Order): Outcome {
     case "claimQuest":
       return claimQuest(state, order.index);
     case "spyRival":
-      return spyRival(state, order.rival);
+      return spyRival(state, order.rival, context);
     case "sendRaid":
-      return sendRaid(state, order.rival, order.party);
+      return sendRaid(state, order.rival, order.party, context);
+    case "reinforceAlly":
+      return reinforceAlly(state, order.attack, order.slot, order.party, context);
     case "strikeRaid":
       return strikeRaid(state);
     case "cancelRaid":
@@ -727,12 +749,18 @@ function execute(state: PlayerState, order: Order): Outcome {
 /**
  * Applique un ordre à l'instant `now`.
  * L'état reçu n'est jamais modifié. En cas de refus, rien ne change.
+ * `context` : ce que seul le serveur sait d'un autre humain (sa partie, l'attaque visée).
  */
-export function applyOrder(state: PlayerState, order: Order, now: number): OrderResult {
+export function applyOrder(
+  state: PlayerState,
+  order: Order,
+  now: number,
+  context?: VersusContext,
+): OrderResult {
   if (!Number.isSafeInteger(now) || now < state.now) return { ok: false, error: "timeBackwards" };
   const before = advance(state, now);
   if (orderTier(order.type) > before.state.tier) return { ok: false, error: "locked" };
-  const outcome = execute(before.state, order);
+  const outcome = execute(before.state, order, context);
   if ("error" in outcome) return { ok: false, error: outcome.error };
   // Une expédition rappelée tout près de la cellule peut rentrer dans la même milliseconde.
   const after = advance(

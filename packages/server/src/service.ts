@@ -15,6 +15,8 @@ import {
 } from "@o27/core";
 import type { AbsenceSummary, Crowd, GameEvent, OrderErrorCode, PlayerState } from "@o27/core";
 import { OrderRequestSchema } from "@o27/data";
+import { afterCommit, contextFor, settleDue } from "./war";
+import type { WarRepository } from "./war";
 
 /** Ce qu'un ordre a donné. Enregistré tel quel : le rejouer renvoie la même chose. */
 export type Outcome =
@@ -62,6 +64,10 @@ export interface ServerDeps {
    * organismes simulés.
    */
   readonly crowd?: () => Promise<Crowd>;
+  /** La file des combats entre humains. Sans elle, on n'attaque ni n'espionne un humain. */
+  readonly war?: WarRepository;
+  /** Où écrire une panne qui ne doit pas arrêter le jeu (le journal du serveur). */
+  readonly log?: (error: unknown) => void;
 }
 
 export type OrderReply =
@@ -116,6 +122,32 @@ async function loadOrCreateAlone(deps: ServerDeps, playerId: string, now: number
   return { state: createPlayer(deps.newSeed(), deps.seasonStart, now, world), version: 0 };
 }
 
+/**
+ * Les combats entre humains arrivés à leur heure, joués avant de lire la partie. Une panne de
+ * la file n'empêche jamais de jouer : on l'écrit dans le journal du serveur, et on continue.
+ */
+async function settleFirst(deps: ServerDeps, playerId: string): Promise<void> {
+  try {
+    await settleDue(deps.repo, deps.war, playerId, deps.clock(), deps.crowd);
+  } catch (error) {
+    deps.log?.(error);
+  }
+}
+
+async function follow(
+  deps: ServerDeps,
+  playerId: string,
+  state: PlayerState,
+  events: readonly GameEvent[],
+  targetId: string | null,
+): Promise<void> {
+  try {
+    await afterCommit(deps.war, playerId, state, events, targetId);
+  } catch (error) {
+    deps.log?.(error);
+  }
+}
+
 /** Applique un ordre pour un joueur déjà identifié. `body` vient du client : rien n'y est sûr. */
 export async function handleOrder(
   deps: ServerDeps,
@@ -125,6 +157,7 @@ export async function handleOrder(
   const parsed = OrderRequestSchema.safeParse(body);
   if (!parsed.success) return { status: "invalid" };
   const { orderId, order } = parsed.data;
+  await settleFirst(deps, playerId);
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     const clock = deps.clock();
@@ -139,7 +172,9 @@ export async function handleOrder(
     // L'horloge du serveur peut reculer d'un rien ; le jeu, jamais.
     const now = Math.max(clock, loaded.state.now);
     const step = advance(loaded.state, now);
-    const result = applyOrder(step.state, order, now);
+    // Contre un autre humain : sa vraie partie, ou l'attaque visée, lues par le serveur.
+    const aimed = await contextFor(deps.repo, deps.war, step.state, order);
+    const result = applyOrder(step.state, order, now, aimed.context);
     const state = result.ok ? result.state : step.state;
     const outcome: Outcome = result.ok
       ? { ok: true, events: [...step.events, ...result.events] }
@@ -151,13 +186,17 @@ export async function handleOrder(
       state: serializeState(state),
       order: { id: orderId, outcome },
     });
-    if (written) return { status: "done", outcome, state };
+    if (written) {
+      await follow(deps, playerId, state, result.ok ? result.events : [], aimed.targetId);
+      return { status: "done", outcome, state };
+    }
   }
   return { status: "busy" };
 }
 
 /** Renvoie l'état à jour. Crée le joueur à sa première visite. */
 export async function handleState(deps: ServerDeps, playerId: string): Promise<StateReply> {
+  await settleFirst(deps, playerId);
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     const clock = deps.clock();
     if (clock < deps.seasonStart) return { status: "closed" };
@@ -172,6 +211,7 @@ export async function handleState(deps: ServerDeps, playerId: string): Promise<S
       order: null,
     });
     if (written) {
+      await follow(deps, playerId, step.state, [], null);
       return {
         status: "done",
         state: step.state,

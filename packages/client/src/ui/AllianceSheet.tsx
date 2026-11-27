@@ -14,6 +14,7 @@ import {
   techThreshold,
 } from "@o27/core";
 import type { PlayerState } from "@o27/core";
+import type { ReactNode } from "react";
 import { ALLIANCE_BRANCHES, ALLIANCE_SHOP_IDS, ALLIANCE_TECH_IDS, BALANCE } from "@o27/data";
 import type { AllianceShopId, AllianceTechId, BannerId, Order, TextKey } from "@o27/data";
 import { DISCORD_URL } from "../game/config";
@@ -65,6 +66,8 @@ interface Props {
   readonly state: PlayerState;
   readonly lang: Lang;
   readonly onClose: () => void;
+  /** Les fils d'alliance (attaques et espionnages du banc), lus par l'écran principal. */
+  readonly children?: ReactNode;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
   readonly onOrder: (order: Order) => boolean;
 }
@@ -73,7 +76,7 @@ interface Props {
  * L'alliance du joueur : sa bannière, ce qu'il y apporte, les technologies communes, l'entraide,
  * le cadeau du jour, la boutique, et les cinq autres bannières.
  */
-export function AllianceSheet({ state, lang, onClose, onOrder }: Props) {
+export function AllianceSheet({ state, lang, onClose, onOrder, children }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const alliance = state.alliance;
   const view = allianceView(state);
@@ -110,6 +113,7 @@ export function AllianceSheet({ state, lang, onClose, onOrder }: Props) {
           </button>
         </div>
         <p className="sheet-role">{t("alliance.text")}</p>
+        {children}
         <dl className="alliance-stats" data-testid="alliance-stats">
           <div>
             <dt>{t("label.level")}</dt>

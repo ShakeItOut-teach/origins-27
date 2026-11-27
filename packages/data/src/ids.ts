@@ -204,7 +204,15 @@ export const REWARD_CHEST_KINDS = [
 export type RewardChestKind = (typeof REWARD_CHEST_KINDS)[number];
 
 /** Les sortes de rapports du journal. */
-export const REPORT_KINDS = ["raid", "defense", "hunt", "harvest", "leviathan", "famine"] as const;
+export const REPORT_KINDS = [
+  "raid",
+  "defense",
+  "hunt",
+  "harvest",
+  "leviathan",
+  "famine",
+  "escort",
+] as const;
 export type ReportKind = (typeof REPORT_KINDS)[number];
 
 /** Les quatre familles de gènes. Trois gènes d'une même famille ouvrent une lignée. */
@@ -222,6 +230,8 @@ export const COUNTER_IDS = [
   "leagueEntered",
   "lootTaken",
   "attacksRepelled",
+  /** Les cellules adverses détruites dans les combats entre humains (classement à part). */
+  "duelPoints",
 ] as const;
 export type CounterId = (typeof COUNTER_IDS)[number];
 
@@ -266,6 +276,7 @@ export const ORDER_TYPES = [
   "setAutoHarvest",
   "leaveWater",
   "unqueue",
+  "reinforceAlly",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 
@@ -362,7 +373,7 @@ export const QUEST_IDS = [
 export type QuestId = (typeof QUEST_IDS)[number];
 
 /** Les classements : puissance totale, cellule seule, troupes seules, butin pillé, attaques repoussées. */
-export const RANKING_IDS = ["power", "cell", "troops", "loot", "defense"] as const;
+export const RANKING_IDS = ["power", "cell", "troops", "loot", "defense", "duel"] as const;
 export type RankingId = (typeof RANKING_IDS)[number];
 
 /** Ce qu'un coffre peut contenir. */

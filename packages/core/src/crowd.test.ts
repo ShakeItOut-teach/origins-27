@@ -41,13 +41,14 @@ function card(slot: number, power: number, patch: Partial<HumanCard> = {}): Huma
     hue: 120,
     tier: 9,
     zone: 1,
-    scores: { power, cell: power, troops: 0, loot: 0, defense: 0 },
+    scores: { power, cell: power, troops: 0, loot: 0, defense: 0, duel: 0 },
     week: 0,
     contest: 0,
     seenAt: SEASON,
     family: null,
     banner: null,
     given: 0,
+    shield: 0,
     ...patch,
   };
 }
@@ -69,6 +70,7 @@ describe("la vitrine : ce que les autres humains voient d'un joueur", () => {
         "name",
         "scores",
         "seenAt",
+        "shield",
         "slot",
         "tier",
         "week",
@@ -138,7 +140,7 @@ describe("le même océan : un humain prend la place d'un organisme simulé", ()
     expect(board?.rows[0]).toMatchObject({ name: "Humanus 11", human: true });
   });
 
-  it("dans l'océan : on voit son nom, et le serveur refuse de l'espionner ou de l'attaquer", () => {
+  it("dans l'océan : on voit son nom ; on l'espionne, et les garde-fous jugent l'attaque", () => {
     const plain = player(12, { tier: BALANCE.ocean.tier });
     const base = { ...plain, organelles: { ...plain.organelles, receptor: 3 }, spies: 6 };
     const target = oceanRivals(base)[0];
@@ -149,8 +151,19 @@ describe("le même océan : un humain prend la place d'un organisme simulé", ()
     const seen = oceanRivals(shared).find((rival) => rival.id === target.id);
     expect(seen).toMatchObject({ name: "Humanus " + String(slot), human: true });
     expect(rivalName(shared, target.id)).toBe("Humanus " + String(slot));
+    // Sur l'appareil, la sonde part ; c'est le serveur qui rendra le vrai rapport.
     const spy = applyOrder(shared, { type: "spyRival", rival: target.id }, shared.now);
-    expect(spy).toEqual({ ok: false, error: "human" });
+    expect(spy.ok).toBe(true);
+    // Une espèce bien moins puissante que la sienne : on ne l'attaque pas.
+    const party = { ...base.troops, hunter: 1 };
+    const strong = withCrowd(
+      { ...shared, troops: { ...base.troops, hunter: 50 } },
+      shared.crowd ?? { cards: [] },
+    );
+    expect(applyOrder(strong, { type: "sendRaid", rival: target.id, party }, shared.now)).toEqual({
+      ok: false,
+      error: "tooWeak",
+    });
     expect(applyOrder(base, { type: "spyRival", rival: target.id }, base.now).ok).toBe(true);
   });
 

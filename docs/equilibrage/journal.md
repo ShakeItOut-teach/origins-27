@@ -639,3 +639,34 @@ zone éclairée n'ont donc pas le temps d'atteindre la terre ferme (ils étaient
 veut que plus d'organismes deviennent APEX, c'est ce rythme (`apex.perDay`) qu'il faut régler.
 
 **Mesure :** les 493 tests passent sans retouche, dont les cibles des robots joueurs.
+
+## 2026-11-27 — Les garde-fous des combats entre humains
+
+**Intention :** qu'un humain puisse attaquer et espionner un autre humain sans que les plus
+forts écrasent les débutants ou s'acharnent sur une même cible (bilan des jeux comparables,
+partie 4.1 ; conception du monde partagé, étape 3, partie 3). Aucun hasard : la plus forte des
+deux forces l'emporte, et chaque camp perd d'autant moins qu'il était fort (mêmes pertes que
+contre les organismes simulés, `BALANCE.rivals.combat`).
+
+**Changement :** nouveau bloc `BALANCE.rivals.versus` dans `packages/data/src/balance.ts` :
+
+| Chiffre             | Valeur | Ce qu'il règle                                                                                                              |
+| ------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `tier`              | 6      | pas d'attaque contre un humain avant le palier 6 (ni par lui)                                                               |
+| `minPowerPercent`   | 50     | on n'attaque pas un humain qui a moins de la moitié de sa puissance                                                         |
+| `perTargetPerDay`   | 3      | trois attaques par jour de saison, au plus, contre la même cible                                                            |
+| `weeklyLootPercent` | 50     | par semaine de saison, un humain ne perd pas plus de la moitié de sa réserve de chaque ressource au profit d'autres humains |
+| `holdHours`         | 12     | une attaque ou des renforts dont le serveur n'a rien dit rentrent sans combat                                               |
+
+Pas de trajet minimal de plusieurs heures (décision du propriétaire, 27/11/2026) : l'heure de
+protection qui suit un pillage (`incoming.shieldHours`), le bouclier de nuit et le mode absent
+protègent aussi des humains. Les renforts d'un allié arrivent en un aller simple (la moitié
+du trajet compté par pas, comme une attaque).
+
+**Mesure avant :** aucune (pas de combat entre humains).
+
+**Mesure après :** pas encore mesurée sur de vrais joueurs. Le gardien voit désormais, jour
+par jour sur une semaine : attaques envoyées, combats, victoires de l'attaque, rebonds (cible à
+l'abri), rappels, pertes moyennes des deux côtés, renforts venus à temps, butin, espionnages
+réussis ; et, dans les refus par motif, les attaques arrêtées par un garde-fou (`newcomer`,
+`tooWeak`, `tooOften`, `shielded`). À relire après une semaine de jeu.

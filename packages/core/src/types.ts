@@ -133,6 +133,8 @@ export interface BattleLine {
   readonly value: number;
   /** Le pourcentage qui l'explique, quand il y en a un (bonus, bulle, anoxie) ; sinon 0. */
   readonly percent: number;
+  /** Pour les renforts d'un allié humain : le nom de son espèce. */
+  readonly name?: string;
 }
 
 export interface BattleSide {
@@ -252,6 +254,63 @@ export interface Raid {
     readonly battle?: Battle;
   } | null;
   readonly cancelled: boolean;
+  /**
+   * Une attaque contre un autre humain : sa place dans l'océan. Le combat a lieu chez le
+   * serveur, qui lit les deux parties ; le moteur attend son résultat.
+   */
+  readonly versus?: number;
+  /** Contre un humain : le joueur a attrapé la bulle pendant la fenêtre du combat. */
+  readonly struck?: boolean;
+}
+
+/** Des cellules filles parties défendre un allié humain attaqué. */
+export interface Escort {
+  /** Le numéro de l'attaque dans la file du serveur. */
+  readonly attack: string;
+  /** La place de l'allié dans l'océan. */
+  readonly slot: number;
+  readonly party: Readonly<Record<TroopId, number>>;
+  readonly startedAt: number;
+  /** Elles comptent dans la défense si elles arrivent avant le combat. */
+  readonly arrivesAt: number;
+  /** Fixé par le serveur après le combat ; `null` tant qu'il n'a pas eu lieu. */
+  readonly returnsAt: number | null;
+  readonly losses: Readonly<Record<TroopId, number>>;
+  readonly battle?: Battle;
+  /** L'allié a tenu. */
+  readonly held: boolean;
+}
+
+/** Les combats entre humains du joueur : pour les garde-fous. */
+export interface Duels {
+  /** Le jour de saison des compteurs `targets`. */
+  readonly day: number;
+  /** Attaques envoyées ce jour-là, par place visée. */
+  readonly targets: Readonly<Record<string, number>>;
+  /** La semaine de saison du compteur `lost` (1 = la première). */
+  readonly week: number;
+  /** Ce que d'autres humains lui ont pris cette semaine, en millionièmes d'unité. */
+  readonly lost: Readonly<Record<ResourceId, number>>;
+}
+
+/** Ce que l'espionnage d'un humain a appris : une photo de sa partie, au niveau du rapport. */
+export interface HumanIntel {
+  readonly at: number;
+  readonly level: number;
+  /** Le total de ses ressources, en millionièmes d'unité. */
+  readonly total: number;
+  /** Ce qu'une attaque peut emporter (protéines : la part prenable), en millionièmes. */
+  readonly sugar: number;
+  readonly bricks: number;
+  readonly proteins: number;
+  /** Sa défense ; 0 si le niveau ne la révèle pas. */
+  readonly defense: number;
+  /** Ses cellules à la maison : bornes basse et haute (égales au plus haut niveau). */
+  readonly troopsLow: number;
+  readonly troopsHigh: number;
+  /** Au plus haut niveau : ses cellules exactes, par type, et la fin de sa protection. */
+  readonly troops: Readonly<Record<TroopId, number>> | null;
+  readonly shieldUntil: number;
 }
 
 export interface Quest {
@@ -296,6 +355,8 @@ export interface HumanCard {
   readonly banner: BannerId | null;
   /** Ce qu'il a versé à son alliance (ses points d'alliance). */
   readonly given: number;
+  /** Il est à l'abri des attaques jusqu'à cet instant (bouclier, mode absent, nuit) ; 0 sinon. */
+  readonly shield: number;
 }
 
 /** Les autres humains de la saison, tels que le serveur les connaît. */
@@ -375,6 +436,11 @@ export interface PlayerState {
   /** Quêtes du jour ; `null` tant que le joueur n'y a pas droit. */
   readonly quests: DailyQuests | null;
   readonly raid: Raid | null;
+  /** Des cellules parties défendre un allié humain ; `null` sinon. */
+  readonly escort: Escort | null;
+  readonly duels: Duels;
+  /** Les humains espionnés : ce que le rapport a appris, jusqu'à ce qu'il expire. */
+  readonly intel: Readonly<Record<string, HumanIntel>>;
   /** Rivaux espionnés : pour chacun, l'instant où le renseignement expire. */
   readonly spiedUntil: Readonly<Record<string, number>>;
   /** Rivaux espionnés : pour chacun, le niveau des Récepteurs qui l'ont espionné. */
@@ -510,6 +576,25 @@ export type GameEvent =
       readonly returnsAt: number;
     }
   | { readonly type: "raidCancelled"; readonly at: number; readonly returnsAt: number }
+  /** La cible humaine était à l'abri à l'arrivée : le groupe rentre sans combattre. */
+  | { readonly type: "raidBounced"; readonly at: number; readonly rival: string }
+  | {
+      readonly type: "escortSent";
+      readonly at: number;
+      readonly attack: string;
+      readonly slot: number;
+      readonly arrivesAt: number;
+    }
+  | {
+      readonly type: "escortReturned";
+      readonly at: number;
+      readonly slot: number;
+      /** L'allié a tenu ; faux s'il a été pillé, ou si les renforts n'ont pas combattu. */
+      readonly held: boolean;
+      readonly fought: boolean;
+      readonly losses: number;
+      readonly battle?: Battle;
+    }
   | {
       readonly type: "raidResolved";
       readonly at: number;
@@ -701,8 +786,20 @@ export type OrderErrorCode =
   | "ally"
   /** Plus aucune sonde dans les Récepteurs : il faut attendre qu'une se forme. */
   | "noSpies"
-  /** Un vrai joueur tient cette place : pas de combat entre humains pour l'instant. */
+  /** Un vrai joueur tient cette place, et il manque de quoi juger l'attaque (ancien client). */
   | "human"
+  /** Une espèce humaine encore protégée : avant le palier 6, on ne l'attaque pas. */
+  | "newcomer"
+  /** Une espèce humaine qui n'a pas la moitié de votre puissance. */
+  | "tooWeak"
+  /** Déjà trois attaques aujourd'hui contre cette espèce. */
+  | "tooOften"
+  /** L'espèce visée est à l'abri (bouclier, mode absent, nuit). */
+  | "shielded"
+  /** Cette attaque n'existe pas, ou elle a déjà eu lieu. */
+  | "noAttack"
+  /** On ne renforce qu'une espèce humaine de sa propre bannière. */
+  | "notAlly"
   | "noAlliance"
   | "sameAlliance"
   | "donationsDone"

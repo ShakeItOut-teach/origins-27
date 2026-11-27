@@ -574,6 +574,20 @@ export const BALANCE: Balance = BalanceSchema.parse({
       warningMinutes: 10,
     },
     away: { hours: 72, restHours: 24 },
+    /**
+     * Les combats entre humains (monde partagé, étape 3). Pas de débutant (palier 6), pas de
+     * cible deux fois plus faible, trois attaques par jour au plus contre la même, et un
+     * plafond de pillage : par semaine de saison, un humain ne perd pas plus de cette part de
+     * sa réserve de chaque ressource au profit d'autres humains. Une attaque ou des renforts
+     * dont le serveur n'a rien dit après `holdHours` rentrent sans combat.
+     */
+    versus: {
+      tier: 6,
+      minPowerPercent: 50,
+      perTargetPerDay: 3,
+      weeklyLootPercent: 50,
+      holdHours: 12,
+    },
     night: { hours: 8, changeHours: 24 },
   },
   ocean: {

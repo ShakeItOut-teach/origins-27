@@ -28,3 +28,15 @@ export type {
 } from "./community";
 // Le monde partagé : la vitrine d'un joueur, et la relecture des vitrines venues de la base.
 export { humanCard, readCrowd } from "@o27/core";
+// Les combats entre humains : la file des attaques, des renforts et des espionnages.
+export { afterCommit, contextFor, settleDue } from "./war";
+export type {
+  AttackRow,
+  EscortRecord,
+  RaidRecord,
+  Settlement,
+  SpyRecord,
+  WarRepository,
+} from "./war";
+export { createMemoryWar } from "./memory";
+export type { MemoryWar } from "./memory";

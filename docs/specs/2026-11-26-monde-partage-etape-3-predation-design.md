@@ -132,4 +132,12 @@ côtés, part des attaques arrêtées par un garde-fou (`human`, `tooWeak`, `too
 3. L'attaque entre humains : file des attaques sur le serveur, résolution à l'arrivée, garde-fous,
    rapport détaillé pour les deux joueurs, fils d'alliance (attaques, espionnages) et renforts
    envoyés par les alliés humains.
+   **Livré le 27/11/2026.** L'appareil prévoit avec la vitrine de la cible ; le serveur lit sa
+   vraie partie et fait foi. L'attaque entre dans une file (`attaques`) ; à l'heure du combat, la
+   première visite d'un joueur la joue avec le moteur (`resolveDuel`) et écrit d'un seul coup les
+   parties de l'attaquant, du défenseur et des alliés venus en renfort. La bulle attrapée pendant
+   la fenêtre du combat compte toujours. Les deux fils (`/jeu/fils`) se lisent dans la fiche de
+   l'alliance, avec le bouton « Défendre » ; une attaque en route contre le joueur s'affiche aussi
+   sur l'écran des rivaux. Classement à part : « Duels » (cellules humaines détruites). Chiffres :
+   `BALANCE.rivals.versus`, journal d'équilibrage du 27/11/2026.
 4. Les notifications push.

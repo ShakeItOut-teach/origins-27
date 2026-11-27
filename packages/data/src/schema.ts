@@ -415,6 +415,13 @@ export const BalanceSchema = z.strictObject({
     }),
     /** Mode absent : une longue protection, puis un délai avant de pouvoir la reprendre. */
     away: z.strictObject({ hours: positiveInt, restHours: positiveInt }),
+    versus: z.strictObject({
+      tier: positiveInt,
+      minPowerPercent: z.number().int().min(0).max(100),
+      perTargetPerDay: positiveInt,
+      weeklyLootPercent: z.number().int().min(1).max(100),
+      holdHours: positiveInt,
+    }),
     /** Bouclier de nuit : sa durée chaque jour, et le délai avant de pouvoir changer d'heure. */
     night: z.strictObject({ hours: z.number().int().min(1).max(23), changeHours: positiveInt }),
   }),
@@ -888,6 +895,16 @@ export const OrderSchema = z.discriminatedUnion("type", [
     party: PartySchema,
   }),
   z.strictObject({ type: z.literal("strikeRaid") }),
+  /**
+   * Envoyer des cellules filles défendre un allié humain attaqué : l'attaque (son numéro dans la
+   * file du serveur) et la place de l'allié dans l'océan.
+   */
+  z.strictObject({
+    type: z.literal("reinforceAlly"),
+    attack: z.uuid(),
+    slot: z.number().int().min(0).max(9999),
+    party: PartySchema,
+  }),
   z.strictObject({ type: z.literal("cancelRaid") }),
   /** Exprimer le niveau suivant d'une évolution, dans le Noyau. */
   z.strictObject({ type: z.literal("research"), evolution: z.enum(EVOLUTION_IDS) }),

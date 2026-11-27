@@ -27,6 +27,9 @@ import type {
   BattleSide,
   BattleTroop,
   DailyRecord,
+  Duels,
+  Escort,
+  HumanIntel,
   Report,
   RewardChest,
   Companion,
@@ -80,6 +83,9 @@ export function createPlayer(
     taken: {},
     quests: null,
     raid: null,
+    escort: null,
+    duels: { day: 0, targets: {}, week: 0, lost: fill(RESOURCE_IDS, 0) },
+    intel: {},
     spiedUntil: {},
     spyLevels: {},
     spies: 0,
@@ -345,7 +351,43 @@ export function serializeState(state: PlayerState): string {
                       : { battle: writeBattle(state.raid.outcome.battle) }),
                   },
             cancelled: state.raid.cancelled,
+            ...(state.raid.versus === undefined ? {} : { versus: state.raid.versus }),
+            ...(state.raid.struck === true ? { struck: true } : {}),
           },
+    escort:
+      state.escort === null
+        ? null
+        : {
+            attack: state.escort.attack,
+            slot: state.escort.slot,
+            party: pick(TROOP_IDS, state.escort.party),
+            startedAt: state.escort.startedAt,
+            arrivesAt: state.escort.arrivesAt,
+            returnsAt: state.escort.returnsAt,
+            losses: pick(TROOP_IDS, state.escort.losses),
+            ...(state.escort.battle === undefined
+              ? {}
+              : { battle: writeBattle(state.escort.battle) }),
+            held: state.escort.held,
+          },
+    duels: {
+      day: state.duels.day,
+      targets: Object.fromEntries(
+        Object.keys(state.duels.targets)
+          .sort()
+          .map((id) => [id, state.duels.targets[id]]),
+      ),
+      week: state.duels.week,
+      lost: pick(RESOURCE_IDS, state.duels.lost),
+    },
+    intel: Object.fromEntries(
+      Object.keys(state.intel)
+        .sort()
+        .flatMap((id) => {
+          const entry = state.intel[id];
+          return entry === undefined ? [] : [[id, writeIntel(entry)]];
+        }),
+    ),
     spiedUntil: Object.fromEntries(
       Object.keys(state.spiedUntil)
         .sort()
@@ -594,7 +636,12 @@ function writeBattle(battle: Battle): Battle {
       strong: troop.strong,
       lost: troop.lost,
     })),
-    lines: entry.lines.map((item) => ({ key: item.key, value: item.value, percent: item.percent })),
+    lines: entry.lines.map((item) => ({
+      key: item.key,
+      value: item.value,
+      percent: item.percent,
+      ...(item.name === undefined ? {} : { name: item.name }),
+    })),
     total: entry.total,
     lossPercent: entry.lossPercent,
   });
@@ -622,6 +669,15 @@ function isInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value);
 }
 
+/** Relit le détail d'un combat venu d'ailleurs (le fil d'alliance) ; `null` s'il est mal formé. */
+export function parseBattle(value: unknown): Battle | null {
+  try {
+    return readBattle(value);
+  } catch {
+    return null;
+  }
+}
+
 function readBattle(value: unknown): Battle {
   const bad = (): never => {
     throw new TypeError("sauvegarde invalide : détail du combat");
@@ -639,7 +695,10 @@ function readBattle(value: unknown): Battle {
     const key = BATTLE_LINES.find((id) => id === entry.key);
     const { value: amount, percent } = entry;
     if (key === undefined || !isInteger(amount) || !isInteger(percent)) return bad();
-    return { key, value: amount, percent };
+    const { name } = entry;
+    if (name === undefined) return { key, value: amount, percent };
+    if (typeof name !== "string" || name.length > 60) return bad();
+    return { key, value: amount, percent, name };
   };
   const readSide = (entry: unknown): BattleSide => {
     if (!isRecord(entry) || !Array.isArray(entry.troops) || !Array.isArray(entry.lines)) {
@@ -767,6 +826,101 @@ function readHunt(value: unknown): Hunt | null {
   };
 }
 
+function readEscort(value: unknown): Escort | null {
+  if (value === null || value === undefined) return null;
+  if (!isRecord(value)) throw new TypeError("sauvegarde invalide : renforts");
+  const { attack, slot, startedAt, arrivesAt, returnsAt, held } = value;
+  if (
+    typeof attack !== "string" ||
+    attack.length > 64 ||
+    !isCount(slot) ||
+    !isCount(startedAt) ||
+    !isCount(arrivesAt) ||
+    (returnsAt !== null && !isCount(returnsAt)) ||
+    typeof held !== "boolean"
+  ) {
+    throw new TypeError("sauvegarde invalide : renforts");
+  }
+  return {
+    attack,
+    slot,
+    party: readCounts(TROOP_IDS, value.party, RANK_2),
+    startedAt,
+    arrivesAt,
+    returnsAt,
+    losses: readCounts(TROOP_IDS, value.losses, RANK_2),
+    ...(value.battle === undefined ? {} : { battle: readBattle(value.battle) }),
+    held,
+  };
+}
+
+function readDuels(value: unknown): Duels {
+  if (!isRecord(value) || !isCount(value.day) || !isCount(value.week)) {
+    return { day: 0, targets: {}, week: 0, lost: fill(RESOURCE_IDS, 0) };
+  }
+  return {
+    day: value.day,
+    targets: isRecord(value.targets)
+      ? Object.fromEntries(
+          Object.entries(value.targets).flatMap(([slot, count]) =>
+            /^\d{1,4}$/.test(slot) && isCount(count) ? [[slot, count] as const] : [],
+          ),
+        )
+      : {},
+    week: value.week,
+    lost: readCounts(RESOURCE_IDS, value.lost),
+  };
+}
+
+function writeIntel(intel: HumanIntel): HumanIntel {
+  return {
+    at: intel.at,
+    level: intel.level,
+    total: intel.total,
+    sugar: intel.sugar,
+    bricks: intel.bricks,
+    proteins: intel.proteins,
+    defense: intel.defense,
+    troopsLow: intel.troopsLow,
+    troopsHigh: intel.troopsHigh,
+    troops:
+      intel.troops === null
+        ? null
+        : (Object.fromEntries(TROOP_IDS.map((id) => [id, intel.troops?.[id] ?? 0])) as Record<
+            TroopId,
+            number
+          >),
+    shieldUntil: intel.shieldUntil,
+  };
+}
+
+function readIntel(value: unknown): Record<string, HumanIntel> {
+  if (!isRecord(value)) return {};
+  const found: Record<string, HumanIntel> = {};
+  for (const [id, entry] of Object.entries(value)) {
+    if (!PLACE_ID.test(id) || !isRecord(entry)) continue;
+    const numbers = ["at", "level", "total", "sugar", "bricks", "proteins", "defense"] as const;
+    const more = ["troopsLow", "troopsHigh", "shieldUntil"] as const;
+    if (![...numbers, ...more].every((key) => isCount(entry[key]))) continue;
+    const count = (key: (typeof numbers)[number] | (typeof more)[number]): number =>
+      entry[key] as number;
+    found[id] = {
+      at: count("at"),
+      level: count("level"),
+      total: count("total"),
+      sugar: count("sugar"),
+      bricks: count("bricks"),
+      proteins: count("proteins"),
+      defense: count("defense"),
+      troopsLow: count("troopsLow"),
+      troopsHigh: count("troopsHigh"),
+      troops: entry.troops === null ? null : readCounts(TROOP_IDS, entry.troops, RANK_2),
+      shieldUntil: count("shieldUntil"),
+    };
+  }
+  return found;
+}
+
 function readRaid(value: unknown): Raid | null {
   if (value === null) return null;
   if (!isRecord(value)) throw new TypeError("sauvegarde invalide : attaque");
@@ -823,6 +977,8 @@ function readRaid(value: unknown): Raid | null {
     returnsAt,
     outcome: result,
     cancelled,
+    ...(isCount(value.versus) ? { versus: value.versus } : {}),
+    ...(value.struck === true ? { struck: true } : {}),
   };
 }
 
@@ -926,6 +1082,10 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     taken: version < 6 ? {} : readPlaceTimes(raw.taken),
     // Avant les rivaux : ni attaque en cours, ni espionnage, ni protection.
     raid: version < 5 ? null : readRaid(raw.raid),
+    // Avant les combats entre humains : personne en renfort, rien de compté, rien d'espionné.
+    escort: readEscort(raw.escort),
+    duels: readDuels(raw.duels),
+    intel: readIntel(raw.intel),
     spiedUntil: version < 5 ? {} : readPlaceTimes(raw.spiedUntil),
     // Avant les Récepteurs : aucune sonde, et chaque rapport passé vaut le premier niveau.
     spyLevels: raw.spyLevels === undefined ? {} : readPlaceTimes(raw.spyLevels),
@@ -970,7 +1130,7 @@ export function deserializeState(text: string, world?: WorldPlace): PlayerState 
     counters: readCounts<CounterId>(
       COUNTER_IDS,
       raw.counters,
-      version < 7 ? ["lootTaken", "attacksRepelled"] : [],
+      version < 7 ? ["lootTaken", "attacksRepelled", "duelPoints"] : ["duelPoints"],
     ),
     tier,
     tapBudgetAt,

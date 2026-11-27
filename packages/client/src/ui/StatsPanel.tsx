@@ -1,5 +1,5 @@
 import type { TextKey } from "@o27/data";
-import type { GameStats, Share } from "../game/community";
+import type { GameStats, Share, FightStats } from "../game/community";
 import { formatAmount, formatDuration, translate } from "../game/text";
 import type { Lang } from "../game/text";
 
@@ -195,6 +195,8 @@ export function StatsPanel({ stats, lang }: Props) {
         </section>
       )}
 
+      {stats.fights !== null && <FightsList t={t} fights={stats.fights} />}
+
       {shareList("stats.sources.title", stats.sources, "stats-sources")}
       {shareList("stats.devices.title", stats.devices, "stats-devices")}
       {shareList("stats.languages.title", stats.languages, "stats-languages")}
@@ -229,5 +231,81 @@ export function StatsPanel({ stats, lang }: Props) {
         </ul>
       </section>
     </div>
+  );
+}
+
+/** Les combats entre humains, sur la semaine : ce qu'il faut pour juger les garde-fous. */
+function FightsList({
+  t,
+  fights,
+}: {
+  readonly t: (key: TextKey) => string;
+  readonly fights: FightStats;
+}) {
+  const sum = (pick: (day: FightStats["days"][number]) => number): number =>
+    fights.days.reduce((total, day) => total + pick(day), 0);
+  const fought = sum((day) => day.fights);
+  const average = (pick: (day: FightStats["days"][number]) => number): string => {
+    if (fought === 0) return "0";
+    const weighted = fights.days.reduce((total, day) => total + pick(day) * day.fights, 0);
+    return String(Math.round((10 * weighted) / fought) / 10);
+  };
+  const spies = fights.spyDays.reduce((total, day) => total + day.spies, 0);
+  const succeeded = fights.spyDays.reduce((total, day) => total + day.succeeded, 0);
+  return (
+    <section data-testid="stats-fights">
+      <h3 className="sheet-title">{t("stats.fights.title")}</h3>
+      <ul className="stat-list">
+        <li>
+          <span>{t("stats.fights.attacks")}</span>
+          <strong>{sum((day) => day.attacks)}</strong>
+          <small>{t("stats.fights.season").replace("{n}", String(fights.attacks))}</small>
+        </li>
+        <li>
+          <span>{t("stats.fights.wins")}</span>
+          <strong>{sum((day) => day.wins)}</strong>
+          <small>{t("stats.fights.of").replace("{n}", String(fought))}</small>
+        </li>
+        <li>
+          <span>{t("stats.fights.losses")}</span>
+          <strong>{average((day) => day.attackerLoss)}</strong>
+          <small>
+            {t("stats.fights.lossesRow")
+              .replace(
+                "{a}",
+                average((day) => day.attackerLoss),
+              )
+              .replace(
+                "{d}",
+                average((day) => day.defenderLoss),
+              )}
+          </small>
+        </li>
+        <li>
+          <span>{t("stats.fights.other")}</span>
+          <strong>{sum((day) => day.bounced + day.recalled)}</strong>
+          <small>
+            {t("stats.fights.otherRow")
+              .replace("{b}", String(sum((day) => day.bounced)))
+              .replace("{r}", String(sum((day) => day.recalled)))}
+          </small>
+        </li>
+        <li>
+          <span>{t("stats.fights.helpers")}</span>
+          <strong>{sum((day) => day.helpers)}</strong>
+          <small />
+        </li>
+        <li>
+          <span>{t("stats.fights.loot")}</span>
+          <strong>{sum((day) => day.loot)}</strong>
+          <small />
+        </li>
+        <li>
+          <span>{t("stats.fights.spies")}</span>
+          <strong>{succeeded}</strong>
+          <small>{t("stats.fights.spiesRow").replace("{n}", String(spies))}</small>
+        </li>
+      </ul>
+    </section>
   );
 }

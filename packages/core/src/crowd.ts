@@ -33,7 +33,9 @@ function refresh(state: PlayerState): void {
   const map = new Map<number, HumanCard>();
   for (const card of crowd.cards) if (card.slot !== state.slot) map.set(card.slot, card);
   lastMap = map;
-  lastStamp = [...map.values()].map((card) => `${String(card.slot)}@${String(card.seenAt)}`).join();
+  lastStamp = [...map.values()]
+    .map((card) => `${String(card.slot)}@${String(card.seenAt)}${card.banner ?? ""}`)
+    .join();
 }
 
 /** Les autres humains, par place. Le joueur lui-même n'y est jamais. */
@@ -69,6 +71,8 @@ function readCard(raw: unknown): HumanCard | null {
   // Une vitrine d'avant les bancs n'a ni bannière ni contribution.
   const banner = BANNER_IDS.find((entry) => entry === raw.banner) ?? null;
   const given = isCount(raw.given) ? raw.given : 0;
+  // Une vitrine d'avant les combats entre humains ne dit pas jusqu'à quand il est à l'abri.
+  const shield = isCount(raw.shield) ? raw.shield : 0;
   if (
     !isCount(slot) ||
     typeof name !== "string" ||
@@ -87,7 +91,8 @@ function readCard(raw: unknown): HumanCard | null {
   }
   const read: Partial<Record<RankingId, number>> = {};
   for (const id of RANKING_IDS) {
-    const value = scores[id];
+    // Le classement des combats entre humains est venu après : une vieille vitrine y a 0.
+    const value = id === "duel" && scores[id] === undefined ? 0 : scores[id];
     if (!isCount(value)) return null;
     read[id] = value;
   }
@@ -104,6 +109,7 @@ function readCard(raw: unknown): HumanCard | null {
     family,
     banner,
     given,
+    shield,
   };
 }
 

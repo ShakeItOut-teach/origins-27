@@ -10,6 +10,7 @@ import {
   MICRO,
   advance,
   applyOrder,
+  awaitsDuel,
   createPlayer,
   deserializeState,
   serializeState,
@@ -24,6 +25,19 @@ const SAVE_EVERY_MS = 5000;
 /** Les touchers sont regroupés et envoyés au plus une fois par ce délai. */
 const TAP_FLUSH_MS = 800;
 const RETRY_MS = 3000;
+/**
+ * Un combat entre humains se joue chez le serveur : passé son heure, l'appareil lui redemande
+ * l'état au plus une fois par ce délai, jusqu'à recevoir le résultat.
+ */
+const DUEL_POLL_MS = 15_000;
+
+/** Le joueur attend-il le serveur : un combat contre un humain, ou des renforts partis ? */
+export function awaitsServer(state: PlayerState, now: number): boolean {
+  const raid = state.raid;
+  if (raid !== null && awaitsDuel(raid) && now >= raid.resolveAt) return true;
+  const escort = state.escort;
+  return escort !== null && escort.returnsAt === null && now >= escort.arrivesAt;
+}
 /** Nombre maximal de touchers dans un seul ordre (limite du schéma). */
 const MAX_TAPS_PER_ORDER = 100;
 /** En dessous de cette durée, on ne parle pas d'absence. */
@@ -99,6 +113,7 @@ export function createStore(deps: StoreDeps): GameStore {
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let inFlight = false;
   let stopped = false;
+  let lastDuelPoll = 0;
   const queue: { readonly id: string; readonly order: Order }[] = [];
   const listeners = new Set<() => void>();
   const eventListeners = new Set<(events: readonly GameEvent[]) => void>();
@@ -224,6 +239,11 @@ export function createStore(deps: StoreDeps): GameStore {
           }
         }
         commit(step.state, step.events, step.events.length > 0);
+        const at = now();
+        if (remote !== undefined && awaitsServer(state, at) && at - lastDuelPoll >= DUEL_POLL_MS) {
+          lastDuelPoll = at;
+          sync();
+        }
       };
       tick();
       sync();

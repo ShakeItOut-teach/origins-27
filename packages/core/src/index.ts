@@ -14,6 +14,9 @@ export type {
   Construction,
   Crowd,
   HumanCard,
+  HumanIntel,
+  Escort,
+  Duels,
   DailyRecord,
   Report,
   RewardChest,
@@ -234,3 +237,26 @@ export type { Energy, Offer, Place, Point, Prey, PreyOffer } from "./world";
 export { receptorLevel, rivalReceptors, spiedLevel, spiesAt, spyCapacity, spyReveal } from "./spy";
 export type { SpyReveal } from "./spy";
 export { nucleusCap, nucleusPercent } from "./stats";
+// Les combats entre humains : garde-fous, espionnage, renforts, et le combat joué par le serveur.
+export {
+  attacksToday,
+  duelsAt,
+  escortTrip,
+  humanTarget,
+  intelOf,
+  lootable,
+  releaseEscort,
+  resolveDuel,
+  slotOf,
+  versusBlock,
+} from "./versus";
+export type {
+  DuelInput,
+  DuelResult,
+  DuelSummary,
+  HumanTarget,
+  PendingAttack,
+  VersusContext,
+} from "./versus";
+export { awaitsDuel } from "./escort";
+export { parseBattle } from "./player";

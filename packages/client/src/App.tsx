@@ -91,6 +91,8 @@ import { RankingSheet } from "./ui/RankingSheet";
 import { RaidBubble } from "./ui/RaidBubble";
 import { ResearchView } from "./ui/ResearchView";
 import { RivalsView } from "./ui/RivalsView";
+import { FeedsPanel, IncomingAttacks, useFeeds } from "./ui/FeedsPanel";
+import type { feedReport } from "./ui/FeedsPanel";
 import { CrisisSheet, SpeciesSheet } from "./ui/SeasonSheets";
 import { TroopPanel } from "./ui/TroopPanel";
 
@@ -198,6 +200,8 @@ export function App({
   const [journalOpen, setJournalOpen] = useState(false);
   /** Le rapport de combat ouvert en page entière. */
   const [battle, setBattle] = useState<BattleReport | null>(null);
+  /** Un combat entre deux autres humains, ouvert depuis le fil : les noms des deux camps. */
+  const [battleNames, setBattleNames] = useState<ReturnType<typeof feedReport>["names"]>(undefined);
   const [contestOpen, setContestOpen] = useState(false);
   const [crisisOpen, setCrisisOpen] = useState(false);
   const [apexOpen, setApexOpen] = useState(false);
@@ -423,6 +427,11 @@ export function App({
 
   const onMap = view === "map" && show("map");
   const onRivals = view === "rivals" && show("rivals");
+  // Les fils d'alliance : lus quand on regarde l'alliance, ou les rivaux depuis l'océan.
+  const { feeds, refresh: refreshFeeds } = useFeeds(
+    community,
+    (allianceOpen && show("alliances")) || (onRivals && state.tier >= BALANCE.ocean.tier),
+  );
   // L'onglet Recherche range tout ce qui fait évoluer l'organisme : il existe dès qu'une
   // rubrique est ouverte, et s'ouvre sur la première si celle que l'on regardait n'existe pas.
   const parts = researchParts(state.tier);
@@ -773,7 +782,12 @@ export function App({
       )}
 
       {onRivals && (
-        <RivalsView state={state} lang={lang} onOrder={(order) => store.send(order).ok} />
+        <RivalsView
+          state={state}
+          lang={lang}
+          onOrder={(order) => store.send(order).ok}
+          incoming={<IncomingAttacks state={state} lang={lang} feeds={feeds} />}
+        />
       )}
 
       {onResearch && (
@@ -1102,8 +1116,10 @@ export function App({
           state={state}
           lang={lang}
           report={battle}
+          {...(battleNames === undefined ? {} : { names: battleNames })}
           onClose={() => {
             setBattle(null);
+            setBattleNames(undefined);
           }}
         />
       )}
@@ -1146,7 +1162,19 @@ export function App({
             present({ kind: "gift" });
             return true;
           }}
-        />
+        >
+          <FeedsPanel
+            state={state}
+            lang={lang}
+            feeds={feeds}
+            onRefresh={refreshFeeds}
+            onOrder={(order) => store.send(order).ok}
+            onOpenBattle={(opened) => {
+              setBattle(opened.report);
+              setBattleNames(opened.names);
+            }}
+          />
+        </AllianceSheet>
       )}
       {show("speciesSheet") && (
         <button

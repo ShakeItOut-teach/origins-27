@@ -426,13 +426,14 @@ describe("le même océan : le serveur calcule avec les autres humains", () => {
       hue: 30,
       tier: 3,
       zone: 0,
-      scores: { power: 999_999, cell: 999_999, troops: 0, loot: 0, defense: 0 },
+      scores: { power: 999_999, cell: 999_999, troops: 0, loot: 0, defense: 0, duel: 0 },
       week: 0,
       contest: 0,
       seenAt: START,
       family: null,
       banner: null,
       given: 0,
+      shield: 0,
     };
     const shared: ServerDeps = { ...deps, crowd: () => Promise.resolve({ cards: [bobCard] }) };
     const reply = await handleState(shared, ALICE);

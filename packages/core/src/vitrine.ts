@@ -9,6 +9,7 @@ import { humansBySlot } from "./crowd";
 import { familyGenes } from "./genes";
 import { organismHue } from "./ocean";
 import { playerScore } from "./power";
+import { protectedUntil } from "./rivals";
 import { speciesOf } from "./species";
 import type { HumanCard, PlayerState } from "./types";
 
@@ -42,6 +43,7 @@ export function humanCard(state: PlayerState): HumanCard {
     family: topFamily(state),
     banner: state.alliance?.banner ?? null,
     given: state.alliance?.points ?? 0,
+    shield: protectedUntil(state, state.now),
   };
 }
 
