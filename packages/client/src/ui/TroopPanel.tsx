@@ -9,8 +9,9 @@ import {
   upkeepRate,
 } from "@o27/core";
 import type { PlayerState } from "@o27/core";
+import { useState } from "react";
 import { BALANCE, STRONG_AGAINST, TROOP_IDS } from "@o27/data";
-import type { Order, TextKey } from "@o27/data";
+import type { Order, TextKey, TroopId } from "@o27/data";
 import { formatAmount, formatDuration, formatRate, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { PreyIcon, ResourceIcon, TroopIcon } from "./icons";
@@ -25,8 +26,8 @@ interface Props {
   readonly onGenes: () => void;
 }
 
-/** On fait naître les cellules filles une par une, par dix, ou autant que possible. */
-const BATCHES = [1, 10] as const;
+/** Le plus grand nombre qu'un ordre accepte (la borne du schéma : elle refuse l'absurde). */
+const MOST = 1_000_000;
 
 /**
  * Dans le Centrosome : les cellules filles qu'on a, ce qu'elles coûtent à nourrir, et de quoi
@@ -44,6 +45,8 @@ export function TroopPanel({ state, lang, onOrder, onResearch, onGenes }: Props)
   const shown = TROOP_IDS.filter((id) => BALANCE.troops[id].tier <= state.tier);
   // La première cellule fille encore fermée porte l'explication du chemin à suivre.
   const firstLocked = shown.find((id) => !troopUnlocked(state, id));
+  // Le nombre que le joueur écrit pour chaque sorte de cellule fille.
+  const [typed, setTyped] = useState<Partial<Record<TroopId, string>>>({});
 
   return (
     <div className="troops" data-testid="troops">
@@ -125,30 +128,78 @@ export function TroopPanel({ state, lang, onOrder, onResearch, onGenes }: Props)
                 </>
               )}
             </span>
+            {/* Une par une, le nombre qu'on écrit, ou autant que possible : jamais de plafond. */}
             <span className="train-buttons">
-              {[...BATCHES, maxTrainable(state, id)].map((count, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  className="step"
-                  aria-label={`${t("action.train")} : ${String(count)} × ${t(`troop.${id}.name`)}`}
-                  disabled={locked || count < 1 || poor(count) || training !== null}
-                  data-testid={
-                    index === BATCHES.length
-                      ? `train-${id}-max`
-                      : count === 1
-                        ? `train-${id}`
-                        : `train-${id}-${String(count)}`
-                  }
-                  onClick={() => {
-                    onOrder({ type: "trainTroop", troop: id, count });
-                  }}
-                >
-                  {index === BATCHES.length
-                    ? t("action.trainMax").replace("{n}", String(count))
-                    : `+${String(count)}`}
-                </button>
-              ))}
+              {(() => {
+                const most = maxTrainable(state, id);
+                const raw = typed[id] ?? "";
+                const chosen = /^\d{1,7}$/.test(raw) ? Number(raw) : 0;
+                const off = locked || training !== null;
+                const name = t(`troop.${id}.name`);
+                const train = (count: number): void => {
+                  onOrder({ type: "trainTroop", troop: id, count });
+                };
+                return (
+                  <>
+                    <button
+                      type="button"
+                      className="step"
+                      aria-label={`${t("action.train")} : 1 × ${name}`}
+                      disabled={off || poor(1)}
+                      data-testid={`train-${id}`}
+                      onClick={() => {
+                        train(1);
+                      }}
+                    >
+                      +1
+                    </button>
+                    <span className="train-count">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={7}
+                        id={`train-count-${id}`}
+                        className="train-count-field"
+                        aria-label={`${t("action.trainCount")} : ${name}`}
+                        placeholder={t("action.trainCountShort")}
+                        value={raw}
+                        disabled={off}
+                        data-testid={`train-${id}-count`}
+                        onChange={(event) => {
+                          const digits = event.target.value.replace(/\D/g, "").slice(0, 7);
+                          setTyped({ ...typed, [id]: digits });
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="step"
+                        aria-label={`${t("action.train")} : ${String(chosen)} × ${name}`}
+                        disabled={off || chosen < 1 || chosen > MOST || poor(chosen)}
+                        data-testid={`train-${id}-chosen`}
+                        onClick={() => {
+                          train(chosen);
+                          setTyped({ ...typed, [id]: "" });
+                        }}
+                      >
+                        {t("action.trainGo")}
+                      </button>
+                    </span>
+                    <button
+                      type="button"
+                      className="step"
+                      aria-label={`${t("action.train")} : ${String(most)} × ${name}`}
+                      disabled={off || most < 1 || poor(most)}
+                      data-testid={`train-${id}-max`}
+                      onClick={() => {
+                        train(most);
+                      }}
+                    >
+                      {t("action.trainMax").replace("{n}", String(most))}
+                    </button>
+                  </>
+                );
+              })()}
             </span>
           </div>
         );
