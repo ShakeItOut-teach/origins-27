@@ -1092,4 +1092,129 @@ export const en = {
   "feed.spyMineFailed": "{d} foiled your spy",
   "feed.spyYou": "{a} spied on you",
   "feed.spyYouFailed": "You foiled {a}’s spy",
+  "guide.open": "The guide",
+  "guide.title": "The guide",
+  "guide.text": "Everything your cell has discovered, in the order it appeared.",
+  "guide.new": "New",
+  "guide.count": "{n} to discover",
+  "guide.show": "Show me",
+  "guide.next": "Next",
+  "guide.done": "Got it",
+  "guide.skip": "Skip all",
+  "guide.build.title": "Building",
+  "guide.build.text":
+    "Tap an empty slot around the Nucleus: an organelle is built there. The {o:mitochondrion} makes {r:sugar} on its own, the {o:vacuole} keeps your stores, the {o:cilia} gather more when you tap the cell. Building takes time: the timer shows it.",
+  "guide.production.title": "Your production",
+  "guide.production.text":
+    "The green number under each store says how much you earn per minute, even when you are not playing. Tapping the cell adds a little: the number grows while you tap.",
+  "guide.upgrade.title": "Upgrading, and the Nucleus",
+  "guide.upgrade.text":
+    "Tap an organelle you have built to raise it one level: it makes, keeps or gathers more. The Nucleus, in the centre, rules the cell: no organelle rises above it. Raise it first; it also adds a little to everything.",
+  "guide.bricks.title": "A second resource",
+  "guide.bricks.text":
+    "Your second resource: {r:bricks}. Bigger organelles need it. The {o:ribosome} makes it: build it so you never run short.",
+  "guide.mutations.title": "Mutations",
+  "guide.mutations.text":
+    "From time to time, your cell offers you three mutations. Pick one: it gives you an edge for the whole season, and changes how your creature looks.",
+  "guide.map.title": "The drop",
+  "guide.map.text":
+    "The “Drop” tab shows the places around your cell. Tap a place to send an expedition there: it brings back resources when it returns.",
+  "guide.energy.title": "Energy",
+  "guide.energy.text":
+    "Each expedition costs energy. It refills on its own: one unit every 20 minutes, up to 10.",
+  "guide.troops.title": "Daughter cells",
+  "guide.troops.text":
+    "Build the {o:nursery}: it gives birth to daughter cells. They hunt, attack and defend your cell. There is no limit to how many, but each one feeds on your stores.",
+  "guide.hunt.title": "Hunting",
+  "guide.hunt.text":
+    "In the drop, tap a prey and send your daughter cells: hunting brings back {r:proteins}, which pay for mutations. During the fight, tap the bubble to help.",
+  "guide.quests.title": "Daily quests",
+  "guide.quests.text": "Every day, a few small tasks. Each one you complete gives a chest.",
+  "guide.chests.title": "Chests",
+  "guide.chests.text":
+    "Your rewards arrive in chests. Tap “Chests to open” to open them: resources, energy, boosts.",
+  "guide.autoHarvest.title": "Automatic gathering",
+  "guide.autoHarvest.text":
+    "Your expeditions can set off again on their own to the nearest place, as long as there is energy and room in your stores. Turn it on from the drop.",
+  "guide.buildQueue.title": "The build queue",
+  "guide.buildQueue.text":
+    "Start several upgrades in a row: they wait in a queue and start on their own, one after the other. Handy when you do not play often.",
+  "guide.rivals.title": "Rivals",
+  "guide.rivals.text":
+    "The “Rivals” tab shows your neighbours. Attack them to take their stores. No luck: your attack must be stronger than their guard. Cells of the right type count double.",
+  "guide.spy.title": "Spying",
+  "guide.spy.text":
+    "Build the {o:receptor}: their probes spy on a rival and reveal its stores, then its guard and troops. The higher your {o:receptor}, the sharper the report. If theirs are higher, the probe is lost.",
+  "guide.defense.title": "Your defence",
+  "guide.defense.text":
+    "Rivals will attack you too. Your daughter cells at home and your {o:wall} defend you: a defence at least equal to the attack repels it. After an attack, you are protected for an hour.",
+  "guide.protections.title": "Night and away",
+  "guide.protections.text":
+    "Set your night: every day, 8 hours without attacks. Away mode protects you for three days. Careful: attacking ends your protection.",
+  "guide.reports.title": "Battle reports",
+  "guide.reports.text":
+    "Every attack and every defence has its report: each side's strength, its cells, its losses, and what made the difference. Open “Reports”, then “See the report”.",
+  "guide.ocean.title": "The ocean",
+  "guide.ocean.text":
+    "In the drop, “See the ocean” shows the season's 500 organisms, from the abyss to the shore. Higher up, everything is richer, and better guarded. Real players wear a badge.",
+  "guide.deposits.title": "Deposits",
+  "guide.deposits.text":
+    "The ocean's deposits belong to every player: they empty as people draw from them, then refill. Get there early.",
+  "guide.migration.title": "Migrating",
+  "guide.migration.text":
+    "When a higher zone opens, your cell can move up into it: more riches, but stronger neighbours.",
+  "guide.calendar.title": "The calendar",
+  "guide.calendar.text":
+    "From now on everything opens on a fixed date, for everyone at once. The calendar says what is coming and when, up to day 27.",
+  "guide.power.title": "Power",
+  "guide.power.text":
+    "One number sums up your strength: organelles, daughter cells, genes. It ranks you among all the organisms of the ocean.",
+  "guide.ranking.title": "Rankings and leagues",
+  "guide.ranking.text":
+    "Six rankings: power, cell, troops, raiders, defence and duels between humans. Your league rewards you every midnight according to your rank.",
+  "guide.contest.title": "The weekly contest",
+  "guide.contest.text":
+    "Each week, a theme. Every organism is ranked on its progress that week; the top fifty win a chest.",
+  "guide.predators.title": "Predators",
+  "guide.predators.text":
+    "Great hunters roam the ocean. They are hard to beat, but pay well. Later, you can tame one.",
+  "guide.evolutions.title": "Evolutions",
+  "guide.evolutions.text":
+    "The Nucleus expresses evolutions: lasting bonuses for your cell. They change every season. Find them in the Research tab.",
+  "guide.genome.title": "Genes",
+  "guide.genome.text":
+    "Each mutation belongs to a family. Two genes from the same family open a rank 2 daughter cell. Three genes: a lineage, and its edge.",
+  "guide.rank2.title": "Rank 2 cells",
+  "guide.rank2.text":
+    "Stronger than the first ones, they open with your genes. Give birth to them in the {o:nursery}.",
+  "guide.companion.title": "The companion",
+  "guide.companion.text":
+    "Tame a predator of the ocean. Share your genes with it: it grows, and its shape depends on what you give it.",
+  "guide.militaryResearch.title": "Military research",
+  "guide.militaryResearch.text":
+    "Small powers for all your daughter cells: more strength, fewer losses. Each level costs twice the one before.",
+  "guide.events.title": "Events",
+  "guide.events.text":
+    "Eruptions, blooms, oxygen-free zones, and the Leviathan: they shake the ocean for a few hours. Some bring riches, others threaten.",
+  "guide.alliances.title": "Alliances",
+  "guide.alliances.text":
+    "Six banners, and one has recruited you. Pour points into its technologies, ask for help, help your allies. The real players of your banner form your bench: the alliance feeds say who attacks whom, and you can defend an ally.",
+  "guide.gazette.title": "The Gazette",
+  "guide.gazette.text":
+    "Every day, the Gazette tells what happened in the ocean. Copy it to share on Discord.",
+  "guide.higherRanks.title": "Higher ranks",
+  "guide.higherRanks.text":
+    "Three genes from the same family open its rank 3 daughter cell: nine times stronger than a rank 1 cell.",
+  "guide.species.title": "Your species",
+  "guide.species.text":
+    "Your species now has a name. It comes from what you made of your cell: its genes, its zone, its banner.",
+  "guide.crisis.title": "The crisis",
+  "guide.crisis.text":
+    "A great extinction threatens the ocean. The highest ranked will lose the most. Two genes of the right family halve its effect.",
+  "guide.apex.title": "The race to APEX",
+  "guide.apex.text":
+    "To end the season, your lineage must leave the water, from the sunlit zone and with a high enough Nucleus. It is long and costly: the first to arrive get the best rewards.",
+  "guide.museum.title": "The Museum",
+  "guide.museum.text":
+    "At the end of the season, your species enters the Museum, as it is that day. Your plates stay from one season to the next.",
 } as const satisfies Record<TextKey, string>;

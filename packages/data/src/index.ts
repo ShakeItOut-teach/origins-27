@@ -2,6 +2,8 @@ export * from "./ids";
 export * from "./schema";
 export { BALANCE } from "./balance";
 export { UNLOCKS, MAX_RELEASED_TIER, FIRST_ATTACKABLE_TIER } from "./unlocks";
+export { GUIDE_SKIPPED, GUIDE_STEPS, GUIDE_STEP_TIERS, GUIDE_TARGETS } from "./guide";
+export type { GuideStep, GuideTarget } from "./guide";
 export { fr } from "./i18n/fr";
 export type { TextKey } from "./i18n/fr";
 export { en } from "./i18n/en";

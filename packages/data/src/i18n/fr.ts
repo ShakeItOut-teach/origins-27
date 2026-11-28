@@ -1107,6 +1107,131 @@ export const fr = {
   "feed.spyMineFailed": "{d} a déjoué votre espion",
   "feed.spyYou": "{a} vous a espionné",
   "feed.spyYouFailed": "Vous avez déjoué l’espion de {a}",
+  "guide.open": "Le guide",
+  "guide.title": "Le guide",
+  "guide.text": "Tout ce que votre cellule a découvert, dans l’ordre où c’est apparu.",
+  "guide.new": "Nouveau",
+  "guide.count": "{n} à découvrir",
+  "guide.show": "Me montrer",
+  "guide.next": "Suivant",
+  "guide.done": "Compris",
+  "guide.skip": "Tout passer",
+  "guide.build.title": "Construire",
+  "guide.build.text":
+    "Touchez un emplacement vide autour du Noyau : un organite s’y construit. Chacun a son rôle : {o:mitochondrion} produit sans vous, {o:vacuole} garde vos réserves, et avec {o:cilia}, chaque toucher sur la cellule rapporte davantage. Un chantier prend du temps : le minuteur le montre.",
+  "guide.production.title": "Votre production",
+  "guide.production.text":
+    "Le chiffre vert sous chaque réserve dit combien vous gagnez par minute, même quand vous ne jouez pas. Toucher la cellule en ajoute un peu : le chiffre grossit tant que vous touchez.",
+  "guide.upgrade.title": "Améliorer, et le Noyau",
+  "guide.upgrade.text":
+    "Touchez un organite déjà construit pour le monter d’un niveau : il produit, garde ou récolte davantage. Le Noyau, au centre, commande la cellule : aucun organite ne monte plus haut que lui. Montez-le d’abord, il donne aussi un peu à tout.",
+  "guide.bricks.title": "Une deuxième ressource",
+  "guide.bricks.text":
+    "Votre deuxième ressource : {r:bricks}. Les organites plus grands en demandent. L’organite {o:ribosome} la fabrique : construisez-le pour ne pas en manquer.",
+  "guide.mutations.title": "Les mutations",
+  "guide.mutations.text":
+    "De temps en temps, votre cellule vous propose trois mutations. Choisissez-en une : elle vous donne un avantage pour toute la saison, et change l’apparence de votre créature.",
+  "guide.map.title": "La goutte",
+  "guide.map.text":
+    "L’onglet « La goutte » montre les lieux autour de votre cellule. Touchez un lieu pour y envoyer une expédition : elle rapporte des ressources à son retour.",
+  "guide.energy.title": "L’énergie",
+  "guide.energy.text":
+    "Chaque expédition coûte de l’énergie. Elle se recharge toute seule : une unité toutes les 20 minutes, jusqu’à 10.",
+  "guide.troops.title": "Les cellules filles",
+  "guide.troops.text":
+    "Construisez l’organite {o:nursery} : il fait naître des cellules filles. Elles chassent, attaquent et défendent votre cellule. Leur nombre n’a pas de limite, mais chacune se nourrit sur vos réserves.",
+  "guide.hunt.title": "La chasse",
+  "guide.hunt.text":
+    "Dans la goutte, touchez une proie et envoyez vos cellules filles : la chasse rapporte la ressource {r:proteins}, qui paie les mutations. Pendant le combat, touchez la bulle pour aider.",
+  "guide.quests.title": "Les quêtes du jour",
+  "guide.quests.text": "Chaque jour, quelques petites tâches. Chacune réussie donne un coffre.",
+  "guide.chests.title": "Les coffres",
+  "guide.chests.text":
+    "Vos récompenses arrivent dans des coffres. Touchez « Coffres à ouvrir » pour les ouvrir : ressources, énergie, accélérateurs.",
+  "guide.autoHarvest.title": "La récolte automatique",
+  "guide.autoHarvest.text":
+    "Vos expéditions peuvent repartir toutes seules vers le lieu le plus proche, tant qu’il reste de l’énergie et de la place en réserve. Activez-la depuis la goutte.",
+  "guide.buildQueue.title": "La file de chantiers",
+  "guide.buildQueue.text":
+    "Lancez plusieurs améliorations d’affilée : elles attendent en file et démarrent toutes seules l’une après l’autre. Pratique quand vous vous connectez peu.",
+  "guide.rivals.title": "Les rivaux",
+  "guide.rivals.text":
+    "L’onglet « Les rivaux » montre vos voisins. Attaquez-les pour prendre leurs réserves. Aucun hasard : votre attaque doit être plus forte que leur garde. Les cellules du bon type comptent double.",
+  "guide.spy.title": "L’espionnage",
+  "guide.spy.text":
+    "Construisez l’organite {o:receptor} : ses sondes espionnent un rival et révèlent ses réserves, puis sa garde et ses troupes. Plus il est haut, plus le rapport est précis. Si celui du rival est plus haut, la sonde est perdue.",
+  "guide.defense.title": "Votre défense",
+  "guide.defense.text":
+    "Les rivaux vous attaqueront aussi. Vos cellules filles restées à la maison et l’organite {o:wall} vous défendent : une défense au moins égale à l’attaque la repousse. Après une attaque subie, vous êtes protégé une heure.",
+  "guide.protections.title": "La nuit et l’absence",
+  "guide.protections.text":
+    "Réglez votre nuit : chaque jour, 8 heures sans attaque. Le mode absent vous protège trois jours. Attention : attaquer met fin à la protection.",
+  "guide.reports.title": "Les rapports de combat",
+  "guide.reports.text":
+    "Chaque attaque et chaque défense a son rapport : la force de chaque camp, ses cellules, ses pertes, et ce qui a fait la différence. Ouvrez « Rapports », puis « Voir le rapport ».",
+  "guide.ocean.title": "L’océan",
+  "guide.ocean.text":
+    "Dans la goutte, « Voir l’océan » montre les 500 organismes de la saison, des abysses jusqu’au rivage. Plus haut, tout est plus riche, et mieux gardé. Les vrais joueurs portent un badge.",
+  "guide.deposits.title": "Les gisements",
+  "guide.deposits.text":
+    "Les gisements de l’océan sont à tous les joueurs : ils se vident quand on y puise, puis se remplissent. Arrivez tôt.",
+  "guide.migration.title": "Migrer",
+  "guide.migration.text":
+    "Quand une zone plus haute s’ouvre, votre cellule peut y monter : plus de richesses, mais des voisins plus forts.",
+  "guide.calendar.title": "Le calendrier",
+  "guide.calendar.text":
+    "Désormais tout s’ouvre à date fixe, pour tous en même temps. Le calendrier dit ce qui arrive et quand, jusqu’au 27e jour.",
+  "guide.power.title": "La puissance",
+  "guide.power.text":
+    "Un seul nombre résume votre force : organites, cellules filles, gènes. Il vous classe parmi tous les organismes de l’océan.",
+  "guide.ranking.title": "Classements et ligues",
+  "guide.ranking.text":
+    "Six classements : puissance, cellule, troupes, pillards, défense et duels entre humains. Votre ligue vous récompense chaque minuit selon votre rang.",
+  "guide.contest.title": "Le concours de la semaine",
+  "guide.contest.text":
+    "Chaque semaine, un thème. Tous les organismes sont classés sur leur progrès de la semaine ; les cinquante premiers gagnent un coffre.",
+  "guide.predators.title": "Les prédateurs",
+  "guide.predators.text":
+    "De grands chasseurs rôdent dans l’océan. Ils sont durs à battre, mais rapportent gros. Plus tard, vous pourrez en apprivoiser un.",
+  "guide.evolutions.title": "Les évolutions",
+  "guide.evolutions.text":
+    "Le Noyau exprime des évolutions : des bonus durables pour votre cellule. Elles changent à chaque saison. Retrouvez-les dans l’onglet Recherche.",
+  "guide.genome.title": "Les gènes",
+  "guide.genome.text":
+    "Chaque mutation appartient à une famille. Deux gènes d’une même famille ouvrent une cellule fille de rang 2. Trois gènes : une lignée, et son avantage.",
+  "guide.rank2.title": "Les cellules de rang 2",
+  "guide.rank2.text":
+    "Plus fortes que les premières, elles s’ouvrent avec vos gènes. Faites-les naître dans l’organite {o:nursery}.",
+  "guide.companion.title": "Le compagnon",
+  "guide.companion.text":
+    "Apprivoisez un prédateur de l’océan. Partagez-lui vos gènes : il grandit, et sa forme dépend de ce que vous lui donnez.",
+  "guide.militaryResearch.title": "La recherche militaire",
+  "guide.militaryResearch.text":
+    "De petits pouvoirs pour toutes vos cellules filles : plus de force, moins de pertes. Chaque niveau coûte le double du précédent.",
+  "guide.events.title": "Les événements",
+  "guide.events.text":
+    "Éruptions, efflorescences, zones sans oxygène, et le Léviathan : ils secouent l’océan pendant quelques heures. Certains enrichissent, d’autres menacent.",
+  "guide.alliances.title": "Les alliances",
+  "guide.alliances.text":
+    "Six bannières, et l’une vous a recruté. Versez des points dans ses technologies, demandez de l’aide, aidez vos alliés. Les vrais joueurs de votre bannière forment votre banc : les fils d’alliance disent qui attaque qui, et vous pouvez défendre un allié.",
+  "guide.gazette.title": "La Gazette",
+  "guide.gazette.text":
+    "Chaque jour, la Gazette raconte ce qui s’est passé dans l’océan. Copiez-la pour la partager sur Discord.",
+  "guide.higherRanks.title": "Les rangs supérieurs",
+  "guide.higherRanks.text":
+    "Trois gènes d’une même famille ouvrent sa cellule fille de rang 3 : neuf fois plus forte qu’une cellule de rang 1.",
+  "guide.species.title": "Votre espèce",
+  "guide.species.text":
+    "Votre espèce a maintenant un nom. Il vient de ce que vous avez fait de votre cellule : ses gènes, sa zone, sa bannière.",
+  "guide.crisis.title": "La crise",
+  "guide.crisis.text":
+    "Une grande extinction menace l’océan. Les mieux classés y perdront le plus. Deux gènes de la bonne famille en divisent l’effet par deux.",
+  "guide.apex.title": "La course à l’APEX",
+  "guide.apex.text":
+    "Pour finir la saison, votre lignée doit sortir des eaux, depuis la zone éclairée et avec un Noyau assez haut. C’est long et cher : les premiers arrivés sont les mieux récompensés.",
+  "guide.museum.title": "Le Muséum",
+  "guide.museum.text":
+    "À la fin de la saison, votre espèce entre au Muséum, telle qu’elle est ce jour-là. Vos planches restent d’une saison à l’autre.",
 } as const;
 
 export type TextKey = keyof typeof fr;

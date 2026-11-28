@@ -44,7 +44,7 @@ import type {
   ResourceId,
   TextKey,
 } from "@o27/data";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { CellCanvas } from "./cell/CellCanvas";
 import { GainFlights } from "./ui/GainFlights";
 import { TitlePage } from "./ui/TitlePage";
@@ -95,6 +95,9 @@ import { FeedsPanel, IncomingAttacks, useFeeds } from "./ui/FeedsPanel";
 import type { feedReport } from "./ui/FeedsPanel";
 import { CrisisSheet, SpeciesSheet } from "./ui/SeasonSheets";
 import { TroopPanel } from "./ui/TroopPanel";
+import { GuideCard, GuideSheet } from "./ui/GuidePanel";
+import { pendingGuide, readGuideSeen, saveGuideSeen } from "./game/guide";
+import type { GuideTarget } from "@o27/data";
 
 interface Props {
   readonly store: GameStore;
@@ -254,6 +257,11 @@ export function App({
     losses: number;
   } | null>(null);
   const state = useSyncExternalStore(store.subscribe, store.getState);
+  /** Les fiches du guide déjà lues sur cet appareil, la page « Le guide », et la pause du guide. */
+  const [guideSeen, setGuideSeen] = useState(() => readGuideSeen(window.localStorage, state.tier));
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [guidePaused, setGuidePaused] = useState(false);
+  const guideSawSheet = useRef(false);
   const t = (key: TextKey): string => translate(lang, key);
   const [selected, setSelected] = useState<OrganelleId | null>(null);
   const [reveal, setReveal] = useState<number | null>(null);
@@ -443,6 +451,124 @@ export function App({
     setResearchPart(next);
     setView("research");
   };
+  // Le guide des nouveautés : une fiche par chose apparue, quand rien d'autre n'est ouvert.
+  const sheetOpen =
+    accountOpen ||
+    questsOpen ||
+    rankingOpen ||
+    calendarOpen ||
+    eventsOpen ||
+    allianceOpen ||
+    gazetteOpen ||
+    journalOpen ||
+    battle !== null ||
+    contestOpen ||
+    crisisOpen ||
+    apexOpen ||
+    advancedOpen ||
+    museumOpen ||
+    speciesOpen ||
+    lexiconOpen ||
+    guideOpen ||
+    opening !== null ||
+    tamed ||
+    landed !== null ||
+    enlisted !== null ||
+    evolved !== null;
+  // Après « Me montrer », le guide attend : que la fiche ouverte se referme, ou vingt secondes.
+  const looking = sheetOpen || selected !== null;
+  useEffect(() => {
+    if (!guidePaused) return;
+    if (looking) {
+      guideSawSheet.current = true;
+      return;
+    }
+    const timer = window.setTimeout(
+      () => {
+        setGuidePaused(false);
+      },
+      guideSawSheet.current ? 1500 : 20_000,
+    );
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [guidePaused, looking]);
+  const guidePending = pendingGuide(state.tier, guideSeen);
+  const guideStep =
+    quiet && !choosing && !titlePage && !sheetOpen && !guidePaused ? guidePending[0] : undefined;
+  const markGuide = (ids: readonly string[]): void => {
+    const next = new Set(guideSeen);
+    for (const id of ids) next.add(id);
+    saveGuideSeen(window.localStorage, next);
+    setGuideSeen(next);
+  };
+  /** « Me montrer » : on emmène le joueur là où se trouve la nouveauté. */
+  const guideGo = (target: GuideTarget): void => {
+    setGuideOpen(false);
+    switch (target) {
+      case "cell":
+      case "map":
+      case "rivals":
+        setSelected(null);
+        setView(target);
+        return;
+      case "nucleus":
+      case "nursery":
+      case "receptor":
+      case "wall":
+        setView("cell");
+        setSelected(target);
+        return;
+      case "quests":
+        setQuestsOpen(true);
+        return;
+      case "ranking":
+        setRankingOpen(true);
+        return;
+      case "contest":
+        setContestOpen(true);
+        return;
+      case "calendar":
+        setCalendarOpen(true);
+        return;
+      case "events":
+        setEventsOpen(true);
+        return;
+      case "alliance":
+        setAllianceOpen(true);
+        return;
+      case "gazette":
+        setGazetteOpen(true);
+        return;
+      case "journal":
+        setJournalOpen(true);
+        return;
+      case "species":
+        setSpeciesOpen(true);
+        return;
+      case "crisis":
+        setCrisisOpen(true);
+        return;
+      case "apex":
+        setApexOpen(true);
+        return;
+      case "museum":
+        setMuseumOpen(true);
+        return;
+      case "research:cell":
+        openResearch("cell");
+        return;
+      case "research:troops":
+        openResearch("troops");
+        return;
+      case "research:genes":
+        openResearch("genes");
+        return;
+      case "research:companion":
+        openResearch("companion");
+        return;
+    }
+  };
   const views: View[] = ["cell", "map"];
   if (show("rivals")) views.push("rivals");
   if (parts.length > 0) views.push("research");
@@ -555,6 +681,29 @@ export function App({
       >
         Aa
       </button>
+      {show("buildSlots") && (
+        <button
+          type="button"
+          className="lang guide-open"
+          aria-label={t("guide.open")}
+          data-testid="guide-open"
+          onClick={() => {
+            setGuideOpen(true);
+          }}
+        >
+          ?
+        </button>
+      )}
+      {guideOpen && (
+        <GuideSheet
+          t={t}
+          tier={state.tier}
+          onShow={guideGo}
+          onClose={() => {
+            setGuideOpen(false);
+          }}
+        />
+      )}
       {(lexiconOpen || (!termsAsked && state.tier >= 1 && absence === null && reveal === null)) && (
         <LexiconSheet
           lang={lang}
@@ -1668,6 +1817,28 @@ export function App({
             </button>
           </div>
         </div>
+      )}
+
+      {guideStep !== undefined && (
+        <GuideCard
+          key={guideStep.id}
+          t={t}
+          step={guideStep}
+          count={guidePending.length}
+          onShow={(target) => {
+            markGuide([guideStep.id]);
+            // Le guide attend que le joueur ait regardé avant de montrer la fiche suivante.
+            guideSawSheet.current = false;
+            setGuidePaused(true);
+            guideGo(target);
+          }}
+          onNext={() => {
+            markGuide([guideStep.id]);
+          }}
+          onSkip={() => {
+            markGuide(guidePending.map((step) => step.id));
+          }}
+        />
       )}
 
       {choosing && (
