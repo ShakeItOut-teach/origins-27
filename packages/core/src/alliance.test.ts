@@ -363,22 +363,34 @@ describe("l'entraide, le cadeau et la boutique", () => {
     expect(helpRequests(advance(night, OPEN + 2 * DAY_MS + 60_000).state)).toBe(RULES.help.start);
   });
 
-  it("les alliés raccourcissent un chantier, une seule fois", () => {
+  it("dans une alliance, l'aide part toute seule au lancement d'un chantier, une seule fois", () => {
     const state = player();
     expect(refusal(state, { type: "askHelp" })).toBe("noConstruction");
-    const building = ok(state, { type: "upgrade", organelle: "nursery" });
-    const left = (building.construction?.endsAt ?? 0) - building.now;
-    expect(building.construction?.helped).toBe(false);
-    const step = applyOrder(building, { type: "askHelp" }, building.now);
-    if (!step.ok) throw new Error("aide refusée");
+    const step = applyOrder(state, { type: "upgrade", organelle: "nursery" }, NOW);
+    if (!step.ok) throw new Error("chantier refusé");
+    const started = step.events.find((event) => event.type === "constructionStarted");
+    if (started?.type !== "constructionStarted") throw new Error("chantier attendu");
+    const left = started.endsAt - NOW;
     const saved = Math.floor((left * RULES.help.buildPercent) / 100);
-    expect(step.events).toContainEqual({ type: "buildHelped", at: building.now, savedMs: saved });
-    expect(step.state.construction).toMatchObject({
-      endsAt: (building.construction?.endsAt ?? 0) - saved,
-      helped: true,
-    });
+    expect(step.events).toContainEqual({ type: "buildHelped", at: NOW, savedMs: saved });
+    expect(step.state.construction).toMatchObject({ endsAt: started.endsAt - saved, helped: true });
+    // Le bouton n'a plus rien à faire : l'aide est déjà venue.
     expect(refusal(step.state, { type: "askHelp" })).toBe("alreadyHelped");
     expect(deserializeState(serializeState(step.state))).toEqual(step.state);
+  });
+
+  it("le chantier suivant de la file reçoit lui aussi l'aide, à l'instant où il démarre", () => {
+    const state = player();
+    const first = applyOrder(state, { type: "upgrade", organelle: "nursery" }, NOW);
+    if (!first.ok) throw new Error("chantier refusé");
+    const queued = applyOrder(first.state, { type: "upgrade", organelle: "vacuole" }, NOW);
+    if (!queued.ok) throw new Error("file refusée");
+    const endsAt = queued.state.construction?.endsAt ?? 0;
+    const later = advance(queued.state, endsAt + 1);
+    const helped = later.events.filter((event) => event.type === "buildHelped");
+    expect(helped).toHaveLength(1);
+    expect(helped[0]?.at).toBe(endsAt);
+    expect(later.state.construction?.helped).toBe(true);
   });
 
   it("un cadeau par jour, plus gros quand l'alliance monte", () => {

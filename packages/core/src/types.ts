@@ -65,6 +65,8 @@ export interface Alliance {
   /** La technologie où les membres versent leurs points ; `null` quand tout est au maximum. */
   readonly recommended: AllianceTechId | null;
   readonly syncedAt: number;
+  /** Le candidat pour qui le joueur a voté (sa place) ; absent s'il n'a pas voté. */
+  readonly vote?: number;
 }
 
 /** Un coffre de récompense qui attend d'être ouvert. */
@@ -367,6 +369,18 @@ export interface Crowd {
    * d'unité. Absent : personne n'a rien pris.
    */
   readonly taken?: Readonly<Record<string, number>>;
+  /** Chefs, guerres et voix des bannières ; absente : aucun chef, aucune guerre. */
+  readonly politics?: Politics;
+}
+
+/** La politique des bannières, telle que le serveur la connaît. */
+export interface Politics {
+  /** Le chef de chaque bannière (sa place), quand il y en a un. */
+  readonly leaders: Readonly<Partial<Record<BannerId, number>>>;
+  /** Les guerres déclarées : la bannière qui déclare, puis celle qui est visée. */
+  readonly wars: readonly (readonly [BannerId, BannerId])[];
+  /** Les voix reçues par chaque candidat (sa place), bannière par bannière. */
+  readonly votes: Readonly<Partial<Record<BannerId, Readonly<Record<string, number>>>>>;
 }
 
 export interface PlayerState {
@@ -651,6 +665,9 @@ export type GameEvent =
   | { readonly type: "alliesHelped"; readonly at: number; readonly count: number }
   /** Les alliés ont raccourci le chantier en cours. */
   | { readonly type: "buildHelped"; readonly at: number; readonly savedMs: number }
+  | { readonly type: "leaderVoted"; readonly at: number; readonly slot: number }
+  | { readonly type: "warDeclared"; readonly at: number; readonly banner: BannerId }
+  | { readonly type: "peaceMade"; readonly at: number; readonly banner: BannerId }
   | {
       readonly type: "allianceGift";
       readonly at: number;
@@ -800,6 +817,12 @@ export type OrderErrorCode =
   | "noAttack"
   /** On ne renforce qu'une espèce humaine de sa propre bannière. */
   | "notAlly"
+  /** Le vote du chef n'est pas encore ouvert. */
+  | "voteClosed"
+  /** Seul le chef de la bannière déclare la guerre ou fait la paix. */
+  | "notLeader"
+  | "alreadyAtWar"
+  | "notAtWar"
   | "noAlliance"
   | "sameAlliance"
   | "donationsDone"

@@ -56,6 +56,12 @@ de ce fichier, pour les outils). Aucune couleur n'est écrite ailleurs.
 Règles :
 
 - **Une teinte, un rôle.** Le bleu de Prusse ne sert pas à décorer ; la garance ne sert pas à un bouton.
+- **Alliés, neutres, ennemis** (demande du propriétaire, 28/11/2026) : bleu, blanc, rouge. Les
+  jetons `--ally` (bleu de Prusse), `--neutral` (os) et `--enemy` (garance) renvoient aux teintes
+  ci-dessus ; sur la planche noire, `--plate-ally`, `--plate-neutral`, `--plate-enemy`. Dans les
+  listes, une pastille devant le nom : rond plein (allié), rond d'os cerné d'encre (neutre),
+  losange (ennemi). Sur l'océan, un cerne autour de l'organisme, double pour l'ennemi.
+  C'est le seul emploi décoratif permis du bleu et de la garance : ils disent qui est qui.
 - Sur la gomme-gutte, le texte est à l'encre (contraste 7,6). Sur le bleu de Prusse et la
   garance, il est couleur papier (7,0 et 4,9).
 - Sur le papier foncé, la garance et le vert-de-gris ne passent plus (4,2 et 4,3) : texte à l'encre.

@@ -20,6 +20,8 @@ import {
   receptorLevel,
   rivalStats,
   seasonDay,
+  slotOf,
+  slotRelation,
   spiedLevel,
   spiesAt,
   spyCapacity,
@@ -35,6 +37,7 @@ import type { Lang } from "../game/text";
 import { bannerTag } from "./AllianceSheet";
 import { EnergyIcon, ResourceIcon, TroopIcon } from "./icons";
 import { PageHead } from "./PageHead";
+import { RelationMark } from "./RelationMark";
 import { RivalVignette } from "./RivalVignette";
 
 interface Props {
@@ -185,6 +188,7 @@ export function RivalsView({ state, lang, onOrder, incoming }: Props) {
               >
                 <RivalVignette hue={rival.hue} seed={rival.id} />
                 <span className="rival-name">
+                  <RelationMark relation={relationOf(state, rival.id)} lang={lang} />
                   <span className="rival-number" aria-hidden="true">
                     {ROMAN[index] ?? String(index + 1)}
                   </span>
@@ -319,6 +323,7 @@ export function RivalSheet({ state, rival, lang, onClose, onOrder }: SheetProps)
               {state.alliance !== null && rival.banner !== null && (
                 <small className="banner-tag">{bannerTag(rival.banner)} </small>
               )}
+              <RelationMark relation={relationOf(state, rival.id)} lang={lang} />
               {rival.name}
             </h2>
           </div>
@@ -670,4 +675,10 @@ function HumanReport({
       )}
     </div>
   );
+}
+
+/** Allié, neutre ou ennemi : d'après la bannière de l'organisme (ou de l'humain) à cette place. */
+function relationOf(state: PlayerState, rivalId: string) {
+  const slot = slotOf(rivalId);
+  return slot === null ? null : slotRelation(state, slot);
 }

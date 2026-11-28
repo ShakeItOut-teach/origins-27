@@ -825,6 +825,17 @@ export const BALANCE: Balance = BalanceSchema.parse({
   buildQueue: { tier: 4, size: 3 },
   alliance: {
     tier: 9,
+    /**
+     * Le chef de bannière : élu par les espèces humaines du banc. Le vote s'ouvre deux jours
+     * après l'ouverture des alliances ; le chef déclare la guerre et fait la paix.
+     */
+    leader: { voteAfterDays: 2 },
+    /**
+     * La discussion d'alliance, en texte libre, entre humains du banc seulement. Des messages
+     * courts, quelques-uns par minute, gardés une semaine ; un message signalé par plusieurs
+     * membres est masqué.
+     */
+    chat: { maxLength: 280, perMinute: 3, keepDays: 7, hideAfterReports: 2 },
     memberBonusPercent: 5,
     nearCells: 30,
     freeHours: 24,

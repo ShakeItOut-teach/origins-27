@@ -1,4 +1,4 @@
-import { humanCount, leagueOf, leagueRewardFor, ranking } from "@o27/core";
+import { humanCount, leagueOf, leagueRewardFor, ranking, bannerRelation } from "@o27/core";
 import type { PlayerState, RankRow } from "@o27/core";
 import { RANKING_IDS, RESOURCE_IDS } from "@o27/data";
 import type { RankingId, TextKey } from "@o27/data";
@@ -7,6 +7,7 @@ import { formatAmount, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { ResourceIcon } from "./icons";
 import { SheetFrame } from "./SheetFrame";
+import { RelationMark } from "./RelationMark";
 
 interface Props {
   readonly state: PlayerState;
@@ -82,6 +83,7 @@ export function RankingSheet({ state, lang, onClose }: Props) {
           >
             <span className="rank-place">{row.rank}</span>
             <span className="rank-name">
+              <RelationMark relation={bannerRelation(state, row.banner)} lang={lang} />
               {row.me ? t("label.you") : row.name}
               {row.human && !row.me && (
                 <span className="human-tag" data-testid="human-tag">

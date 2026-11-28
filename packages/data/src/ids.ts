@@ -277,6 +277,9 @@ export const ORDER_TYPES = [
   "leaveWater",
   "unqueue",
   "reinforceAlly",
+  "voteLeader",
+  "declareWar",
+  "makePeace",
 ] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
 

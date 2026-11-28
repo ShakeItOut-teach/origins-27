@@ -297,14 +297,26 @@ function askHelp(state: PlayerState): Outcome {
   const construction = state.construction;
   if (construction === null) return { error: "noConstruction" };
   if (construction.helped) return { error: "alreadyHelped" };
-  const left = Math.max(0, construction.endsAt - state.now);
+  return autoHelp(state, state.now);
+}
+
+/**
+ * Dans une alliance, la demande d'aide part toute seule dès qu'un chantier démarre (demande du
+ * propriétaire du 28/11/2026) : le temps qu'il reste raccourcit, une fois par chantier.
+ */
+export function autoHelp(state: PlayerState, at: number): Step {
+  const construction = state.construction;
+  if (state.alliance === null || construction === null || construction.helped) {
+    return { state, events: [] };
+  }
+  const left = Math.max(0, construction.endsAt - at);
   const savedMs = Math.floor((left * RULES.help.buildPercent) / 100);
   return {
     state: {
       ...state,
       construction: { ...construction, endsAt: construction.endsAt - savedMs, helped: true },
     },
-    events: [{ type: "buildHelped", at: state.now, savedMs }],
+    events: [{ type: "buildHelped", at, savedMs }],
   };
 }
 

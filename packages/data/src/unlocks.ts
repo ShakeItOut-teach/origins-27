@@ -92,6 +92,9 @@ export const UNLOCKS: readonly Unlock[] = z.array(UnlockSchema).parse([
       "claimGift",
       "buyAlliance",
       "reinforceAlly",
+      "voteLeader",
+      "declareWar",
+      "makePeace",
     ],
   },
   {

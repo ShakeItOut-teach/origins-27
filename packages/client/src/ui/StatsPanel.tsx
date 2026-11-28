@@ -196,6 +196,37 @@ export function StatsPanel({ stats, lang }: Props) {
       )}
 
       {stats.fights !== null && <FightsList t={t} fights={stats.fights} />}
+      {stats.alliances !== null && (
+        <section data-testid="stats-alliances">
+          <h3 className="sheet-title">{t("stats.alliances.title")}</h3>
+          <ul className="stat-list">
+            <li>
+              <span>{t("stats.alliances.messages")}</span>
+              <strong>{stats.alliances.messages}</strong>
+              <small />
+            </li>
+            <li>
+              <span>{t("stats.alliances.reported")}</span>
+              <strong>{stats.alliances.reported}</strong>
+              <small>
+                {t("stats.alliances.hidden").replace("{n}", String(stats.alliances.hidden))}
+              </small>
+            </li>
+            <li>
+              <span>{t("stats.alliances.voters")}</span>
+              <strong>{stats.alliances.voters}</strong>
+              <small>
+                {t("stats.alliances.leaders").replace("{n}", String(stats.alliances.leaders))}
+              </small>
+            </li>
+            <li>
+              <span>{t("stats.alliances.wars")}</span>
+              <strong>{stats.alliances.wars}</strong>
+              <small />
+            </li>
+          </ul>
+        </section>
+      )}
 
       {shareList("stats.sources.title", stats.sources, "stats-sources")}
       {shareList("stats.devices.title", stats.devices, "stats-devices")}

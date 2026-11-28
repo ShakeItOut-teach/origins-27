@@ -5,7 +5,8 @@
  * plus ou moins vite selon leur ambition.
  */
 import { BALANCE, ORGANELLE_IDS, SEASON_DAYS, TROOP_IDS } from "@o27/data";
-import type { RankingId, ResourceId } from "@o27/data";
+import type { BannerId, RankingId, ResourceId } from "@o27/data";
+import { bannerOf } from "./banners";
 import { earnChest } from "./chests";
 import { crowdStamp, humansBySlot } from "./crowd";
 import { evolutionLevels } from "./evolutions";
@@ -178,6 +179,8 @@ export interface RankRow {
   readonly me: boolean;
   /** Un vrai joueur (le joueur lui-même compris), et non un organisme simulé. */
   readonly human: boolean;
+  /** Sa bannière, pour dire s'il est allié, neutre ou ennemi ; `null` s'il n'en a pas. */
+  readonly banner: BannerId | null;
 }
 
 export interface Ranking {
@@ -193,6 +196,7 @@ interface Other {
   readonly hue: number;
   readonly score: number;
   readonly human: boolean;
+  readonly banner: BannerId | null;
 }
 
 let others: readonly Other[] = [];
@@ -209,25 +213,26 @@ export function ranking(state: PlayerState, category: RankingId): Ranking {
       // Un vrai joueur prend la place de l'organisme simulé : son nom, son score.
       const human = humans.get(slot);
       if (human !== undefined) {
-        const { name, hue } = human;
-        found.push({ slot, name, hue, score: human.scores[category], human: true });
+        const { name, hue, banner } = human;
+        found.push({ slot, name, hue, score: human.scores[category], human: true, banner });
         continue;
       }
       const { name, hue } = organismProfile(state.worldSeed, slot);
       const score = organismScore(state.worldSeed, slot, day, category);
-      found.push({ slot, name, hue, score, human: false });
+      found.push({ slot, name, hue, score, human: false, banner: bannerOf(state.worldSeed, slot) });
     }
     found.sort((one, other) => other.score - one.score || one.slot - other.slot);
     others = found;
     othersKey = key;
   }
   const score = playerScore(state, category);
+  const own = state.alliance?.banner ?? null;
   // À score égal, le joueur passe devant : il ne perd jamais une place sur une égalité.
   const ahead = others.filter((entry) => entry.score > score).length;
   const rows: RankRow[] = [];
   others.forEach((entry, index) => {
     if (index === ahead) {
-      rows.push({ rank: ahead + 1, name: "", hue: 0, score, me: true, human: true });
+      rows.push({ rank: ahead + 1, name: "", hue: 0, score, me: true, human: true, banner: own });
     }
     rows.push({
       rank: index < ahead ? index + 1 : index + 2,
@@ -236,9 +241,18 @@ export function ranking(state: PlayerState, category: RankingId): Ranking {
       score: entry.score,
       me: false,
       human: entry.human,
+      banner: entry.banner,
     });
   });
-  const mine: RankRow = { rank: ahead + 1, name: "", hue: 0, score, me: true, human: true };
+  const mine: RankRow = {
+    rank: ahead + 1,
+    name: "",
+    hue: 0,
+    score,
+    me: true,
+    human: true,
+    banner: own,
+  };
   if (ahead >= others.length) rows.push(mine);
   return { rows, mine };
 }

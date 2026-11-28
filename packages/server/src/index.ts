@@ -40,3 +40,8 @@ export type {
 } from "./war";
 export { createMemoryWar } from "./memory";
 export type { MemoryWar } from "./memory";
+// La politique des bannières (chef, guerres) et la discussion d'alliance.
+export { recordPolitics } from "./politics";
+export type { PoliticsRepository } from "./politics";
+export { CHAT_LIMITS, cleanMessage, createMemoryChat, handleChat } from "./chat";
+export type { ChatMessage, ChatReply, ChatRepository } from "./chat";

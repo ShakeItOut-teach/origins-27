@@ -33,6 +33,8 @@ export interface OceanScene {
     readonly hue: number;
     /** À portée, à portée mais refermé pour l'instant, ou plus haut que le joueur. */
     readonly tone: "reach" | "closed" | "above";
+    /** Allié, neutre ou ennemi de l'alliance du joueur ; `null` sans alliance. */
+    readonly relation: "ally" | "neutral" | "enemy" | null;
   }[];
   readonly deposits: readonly {
     readonly x: number;
@@ -326,6 +328,24 @@ export function OceanCanvas({ scene }: { readonly scene: OceanScene }) {
               t,
               grain(organism.x, organism.y),
             );
+            // L'alliance : un cerne bleu (allié), blanc (neutre) ou rouge (ennemi). L'ennemi a
+            // un cerne double, pour qu'on le distingue aussi sans les couleurs.
+            if (organism.relation !== null) {
+              const color = PLATE[organism.relation];
+              const ring = radius * 1.45 + 1.5;
+              // Le cerne reste lisible même sur un organisme lointain, qui est pâli.
+              const strong = organism.relation !== "neutral";
+              graphics.circle(point.x, point.y, ring).stroke({
+                color,
+                alpha: strong ? 0.95 : 0.55,
+                width: strong ? 1.8 : 0.9,
+              });
+              if (organism.relation === "enemy") {
+                graphics
+                  .circle(point.x, point.y, ring + 3)
+                  .stroke({ color, alpha: 0.95, width: 1.2 });
+              }
+            }
           }
 
           const home = at(current.home.x, current.home.y);

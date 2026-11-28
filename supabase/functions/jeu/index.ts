@@ -5,6 +5,7 @@
 //   POST /jeu/avis      → garde l'avis du joueur { rating, text, lang }
 //   POST /jeu/musee     → les planches du Muséum du joueur
 //   POST /jeu/fils      → les fils d'alliance du joueur : attaques et espionnages de son banc
+//   POST /jeu/discussion → la discussion de son banc : lire, écrire { texte }, signaler { signaler }
 //   POST /jeu/stats     → les statistiques du jeu, pour un gardien seulement
 //   POST /jeu/supprimer → supprime le compte du joueur et tout ce qui est à lui { confirm }
 // À chaque visite et à chaque ordre, le serveur note aussi de quoi mesurer l'audience, et met à
@@ -14,6 +15,7 @@
 // `../_shared/server.js` est fabriqué par `pnpm server:bundle` avant le déploiement.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  CHAT_LIMITS,
   dayOf,
   describeOrder,
   describeTake,
@@ -21,6 +23,7 @@ import {
   handleFeedback,
   handleOrder,
   handleState,
+  handleChat,
   humanCard,
   readCrowd,
 } from "../_shared/server.js";
@@ -194,8 +197,19 @@ Deno.serve(async (request) => {
             p_aujourdhui: dayOf(Date.now()),
           });
     if (fights?.error) console.error(fights.error);
+    // Les alliances : discussion, votes, guerres (que des totaux).
+    const allied =
+      season === null
+        ? null
+        : await admin.rpc("statistiques_alliances", { p_joueur: playerId, p_saison: season.id });
+    if (allied?.error) console.error(allied.error);
     return json(200, {
-      stats: { ...data, ocean: ocean?.data ?? null, combats: fights?.data ?? null },
+      stats: {
+        ...data,
+        ocean: ocean?.data ?? null,
+        combats: fights?.data ?? null,
+        alliances: allied?.data ?? null,
+      },
     });
   }
 
@@ -223,6 +237,55 @@ Deno.serve(async (request) => {
       return json(500, { error: "server" });
     }
     return json(200, data ?? { attacks: [], spies: [] });
+  }
+
+  if (path.endsWith("/discussion")) {
+    const body: unknown = await request.json().catch(() => null);
+    try {
+      const reply = await handleChat(
+        {
+          async read(player: string) {
+            const { data, error } = await admin.rpc("lire_messages", {
+              p_saison: season.id,
+              p_joueur: player,
+              p_palier: CHAT_LIMITS.tier,
+              p_jours: CHAT_LIMITS.keepDays,
+            });
+            if (error !== null) throw error;
+            return data;
+          },
+          async write(player: string, text: string) {
+            const { data, error } = await admin.rpc("ecrire_message", {
+              p_saison: season.id,
+              p_joueur: player,
+              p_texte: text,
+              p_palier: CHAT_LIMITS.tier,
+              p_par_minute: CHAT_LIMITS.perMinute,
+              p_jours: CHAT_LIMITS.keepDays,
+            });
+            if (error !== null) throw error;
+            return data === "ok" ? "done" : data === "trop" ? "tooMany" : "noBench";
+          },
+          async report(player: string, id: number) {
+            const { data, error } = await admin.rpc("signaler_message", {
+              p_saison: season.id,
+              p_joueur: player,
+              p_message: id,
+              p_masquer_apres: CHAT_LIMITS.hideAfterReports,
+            });
+            if (error !== null) throw error;
+            return data === true;
+          },
+        },
+        playerId,
+        body,
+      );
+      const codes = { done: 200, closed: 403, invalid: 400, tooMany: 429 } as const;
+      return json(codes[reply.status], reply);
+    } catch (error) {
+      console.error(error);
+      return json(500, { error: "server" });
+    }
   }
 
   /** Une fonction de la base qui doit réussir : son erreur remonte. */
@@ -293,8 +356,36 @@ Deno.serve(async (request) => {
     },
   };
 
+  // La politique des bannières : votes et guerres. La foule en mémoire est oubliée aussitôt,
+  // pour que chacun voie le nouveau chef ou la nouvelle guerre à sa prochaine visite.
+  const politics = {
+    async vote(player: string, slot: number) {
+      await call("voter_chef", { p_saison: season.id, p_joueur: player, p_place: slot });
+      crowdCache = null;
+    },
+    async declareWar(player: string, banner: string) {
+      await call("declarer_guerre", {
+        p_saison: season.id,
+        p_joueur: player,
+        p_ennemie: banner,
+        p_guerre: true,
+      });
+      crowdCache = null;
+    },
+    async makePeace(player: string, banner: string) {
+      await call("declarer_guerre", {
+        p_saison: season.id,
+        p_joueur: player,
+        p_ennemie: banner,
+        p_guerre: false,
+      });
+      crowdCache = null;
+    },
+  };
+
   const deps = {
     war,
+    politics,
     log: (error: unknown) => {
       console.error(error);
     },

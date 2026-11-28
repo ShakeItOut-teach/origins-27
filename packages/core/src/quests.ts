@@ -123,6 +123,9 @@ function gain(state: PlayerState, id: QuestId, event: GameEvent): number {
     case "allianceDonated":
     case "alliesHelped":
     case "buildHelped":
+    case "leaderVoted":
+    case "warDeclared":
+    case "peaceMade":
     case "allianceGift":
     case "allianceBought":
     case "leviathanStruck":

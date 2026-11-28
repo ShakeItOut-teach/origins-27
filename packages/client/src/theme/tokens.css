@@ -29,6 +29,15 @@
   --plate-verdigris: #8dbfaf;
   --plate-moss: #b9c48a;
 
+  /* Alliés, neutres, ennemis (demande du propriétaire du 28/11/2026) : bleu, blanc, rouge.
+     Sur le papier, le blanc est l'os cerné d'encre ; sur la planche noire, l'os seul. */
+  --ally: var(--prussian);
+  --neutral: var(--bone);
+  --enemy: var(--madder);
+  --plate-ally: var(--plate-prussian);
+  --plate-neutral: var(--bone);
+  --plate-enemy: var(--plate-madder);
+
   /* Anciens noms, gardés pour le code déjà écrit. Le code neuf emploie les noms ci-dessus. */
   --grid: var(--rule);
   --eosin: var(--madder);

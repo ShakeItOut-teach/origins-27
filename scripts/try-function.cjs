@@ -77,8 +77,22 @@ async function main() {
     noter_espionnage: () => null,
     lire_fils: () => ({ attacks: [{ id: "a-1", status: "en_route" }], spies: [] }),
     statistiques_combats: () => (guardian ? { attaques: 1 } : null),
+    // La politique des bannières et la discussion d'alliance.
+    voter_chef: () => true,
+    declarer_guerre: () => true,
+    statistiques_alliances: () => (guardian ? { messages7j: 2 } : null),
+    lire_messages: () => (bench ? chat.map((text, index) => ({ id: index + 1, text })) : null),
+    ecrire_message(a) {
+      if (!bench) return "banc";
+      if (chat.length >= 2) return "trop";
+      chat.push(a.p_texte);
+      return "ok";
+    },
+    signaler_message: () => true,
   };
   // Une attaque arrivée à l'heure du combat, dont le défenseur n'existe plus.
+  let bench = true;
+  const chat = [];
   const due = [{ id: "attaque-1", attacker: "joueur-1", defender: "joueur-parti", resolveAt: 1 }];
   const builder = (table) => {
     const filters = {};
@@ -302,6 +316,32 @@ async function main() {
     feeds,
   );
 
+  const written = await post("discussion", { texte: "  Bravo   connard !  " });
+  check(
+    "discussion : le message est nettoyé avant d'entrer en base (espaces, grossièretés)",
+    written.status === 200 &&
+      rpcCall("ecrire_message")?.p_texte === "Bravo •••••• !" &&
+      rpcCall("ecrire_message")?.p_par_minute > 0 &&
+      written.body.messages?.[0]?.text === "Bravo •••••• !",
+    { written: written.body, base: rpcCall("ecrire_message") },
+  );
+  const empty2 = await post("discussion", { texte: "   " });
+  check("discussion : un message vide est refusé (400)", empty2.status === 400, empty2);
+  const odd = await post("discussion", { texte: "x", autre: 1 });
+  check("discussion : une demande mal formée est refusée (400)", odd.status === 400, odd);
+  await post("discussion", { texte: "deux" });
+  const flood = await post("discussion", { texte: "trois" });
+  check("discussion : au-delà du rythme permis, 429", flood.status === 429, flood);
+  const flagged = await post("discussion", { signaler: 1 });
+  check(
+    "discussion : signaler un message passe par la base",
+    flagged.status === 200 && rpcCall("signaler_message")?.p_message === 1,
+    flagged,
+  );
+  bench = false;
+  const alone = await post("discussion", {});
+  check("discussion : sans banc, 403", alone.status === 403, alone);
+
   const bad = await post("ordre", { n: 1 });
   check("ordre mal formé : 400", bad.status === 400, bad);
 
@@ -339,7 +379,8 @@ async function main() {
     open.status === 200 &&
       open.body.stats?.joueurs === 3 &&
       open.body.stats.ocean?.humains === 2 &&
-      open.body.stats.combats?.attaques === 1,
+      open.body.stats.combats?.attaques === 1 &&
+      open.body.stats.alliances?.messages7j === 2,
     open,
   );
 

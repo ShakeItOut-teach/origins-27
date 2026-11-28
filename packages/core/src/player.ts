@@ -210,6 +210,7 @@ export function serializeState(state: PlayerState): string {
             tech: pick(ALLIANCE_TECH_IDS, state.alliance.tech),
             recommended: state.alliance.recommended,
             syncedAt: state.alliance.syncedAt,
+            ...(state.alliance.vote === undefined ? {} : { vote: state.alliance.vote }),
           },
     daily: { day: state.daily.day, wins: state.daily.wins, losses: state.daily.losses },
     boosts: state.boosts,
@@ -566,6 +567,8 @@ function readAlliance(value: unknown): Alliance | null {
     tech: readCounts(ALLIANCE_TECH_IDS, value.tech),
     recommended,
     syncedAt,
+    // Avant le vote du chef : aucun vote.
+    ...(isCount(value.vote) ? { vote: value.vote } : {}),
   };
 }
 

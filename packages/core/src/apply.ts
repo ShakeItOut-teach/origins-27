@@ -12,7 +12,8 @@ import type {
   TroopId,
 } from "@o27/data";
 import { advance } from "./advance";
-import { allianceOrder } from "./alliance";
+import { allianceOrder, autoHelp } from "./alliance";
+import { declareWar, makePeace, voteLeader } from "./politics";
 import { leaveWater } from "./apex";
 import { openReward } from "./chests";
 import { drillOffer } from "./drills";
@@ -699,6 +700,12 @@ function execute(state: PlayerState, order: Order, context?: VersusContext): Out
       return sendRaid(state, order.rival, order.party, context);
     case "reinforceAlly":
       return reinforceAlly(state, order.attack, order.slot, order.party, context);
+    case "voteLeader":
+      return voteLeader(state, order.slot);
+    case "declareWar":
+      return declareWar(state, order.banner);
+    case "makePeace":
+      return makePeace(state, order.banner);
     case "strikeRaid":
       return strikeRaid(state);
     case "cancelRaid":
@@ -760,8 +767,11 @@ export function applyOrder(
   if (!Number.isSafeInteger(now) || now < state.now) return { ok: false, error: "timeBackwards" };
   const before = advance(state, now);
   if (orderTier(order.type) > before.state.tier) return { ok: false, error: "locked" };
-  const outcome = execute(before.state, order, context);
-  if ("error" in outcome) return { ok: false, error: outcome.error };
+  const executed = execute(before.state, order, context);
+  if ("error" in executed) return { ok: false, error: executed.error };
+  // Un chantier lancé dans une alliance : l'aide part toute seule.
+  const helped = autoHelp(executed.state, now);
+  const outcome = { state: helped.state, events: [...executed.events, ...helped.events] };
   // Une expédition rappelée tout près de la cellule peut rentrer dans la même milliseconde.
   const after = advance(
     trackReports(

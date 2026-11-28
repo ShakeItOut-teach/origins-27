@@ -17,6 +17,8 @@ import type { AbsenceSummary, Crowd, GameEvent, OrderErrorCode, PlayerState } fr
 import { OrderRequestSchema } from "@o27/data";
 import { afterCommit, contextFor, settleDue } from "./war";
 import type { WarRepository } from "./war";
+import { recordPolitics } from "./politics";
+import type { PoliticsRepository } from "./politics";
 
 /** Ce qu'un ordre a donné. Enregistré tel quel : le rejouer renvoie la même chose. */
 export type Outcome =
@@ -66,6 +68,8 @@ export interface ServerDeps {
   readonly crowd?: () => Promise<Crowd>;
   /** La file des combats entre humains. Sans elle, on n'attaque ni n'espionne un humain. */
   readonly war?: WarRepository;
+  /** Chefs, votes et guerres des bannières. Sans elle, rien n'est gardé. */
+  readonly politics?: PoliticsRepository;
   /** Où écrire une panne qui ne doit pas arrêter le jeu (le journal du serveur). */
   readonly log?: (error: unknown) => void;
 }
@@ -143,6 +147,7 @@ async function follow(
 ): Promise<void> {
   try {
     await afterCommit(deps.war, playerId, state, events, targetId);
+    await recordPolitics(deps.politics, playerId, events);
   } catch (error) {
     deps.log?.(error);
   }

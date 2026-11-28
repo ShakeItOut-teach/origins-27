@@ -1,5 +1,5 @@
 /** Faire passer le temps : production passive, fin des chantiers, retour des expéditions, paliers. */
-import { ensureAlliance } from "./alliance";
+import { autoHelp, ensureAlliance } from "./alliance";
 import { allianceDue } from "./banners";
 import { trackDaily } from "./daily";
 import { awaitsDuel, bounceRaid, escortBack, escortDue, holdMs } from "./escort";
@@ -399,7 +399,10 @@ export function advance(state: PlayerState, now: number): Step {
     events.push(...step.events);
     const tiers = evaluateTier(step.state, at);
     events.push(...tiers.events);
-    const joined = ensureAlliance(tiers.state, at);
+    const enlisted = ensureAlliance(tiers.state, at);
+    events.push(...enlisted.events);
+    // Un chantier qui démarre dans une alliance : l'aide part toute seule.
+    const joined = autoHelp(enlisted.state, at);
     events.push(...joined.events);
     // Le concours de la semaine : on y entre, et chaque semaine qui s'achève est jugée à minuit.
     const allied = contestStep(joined.state, at);

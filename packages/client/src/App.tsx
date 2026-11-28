@@ -92,6 +92,8 @@ import { RaidBubble } from "./ui/RaidBubble";
 import { ResearchView } from "./ui/ResearchView";
 import { RivalsView } from "./ui/RivalsView";
 import { FeedsPanel, IncomingAttacks, useFeeds } from "./ui/FeedsPanel";
+import { ChatPanel } from "./ui/ChatPanel";
+import { PoliticsPanel } from "./ui/PoliticsPanel";
 import type { feedReport } from "./ui/FeedsPanel";
 import { CrisisSheet, SpeciesSheet } from "./ui/SeasonSheets";
 import { TroopPanel } from "./ui/TroopPanel";
@@ -1315,6 +1317,10 @@ export function App({
               present({ kind: "gift" });
               return true;
             }}
+            politics={
+              <PoliticsPanel state={state} lang={lang} onOrder={(order) => store.send(order).ok} />
+            }
+            chat={<ChatPanel lang={lang} community={community} now={state.now} />}
           >
             <FeedsPanel
               state={state}

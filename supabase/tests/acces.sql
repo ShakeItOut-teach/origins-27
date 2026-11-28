@@ -760,6 +760,184 @@ begin
 end;
 $$;
 
+-- 7 quinquies. Politique des bannières et discussion d'alliance : le chef élu par le banc, la
+-- guerre déclarée par lui seul, une discussion qui ne sort pas du banc, avec ses garde-fous.
+reset role;
+do $$
+declare
+  alice constant uuid := '00000000-0000-4000-8000-00000000000a';
+  bob constant uuid := '00000000-0000-4000-8000-00000000000b';
+  fred constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  saison bigint;
+  foule jsonb;
+  lus jsonb;
+  stats jsonb;
+  message bigint;
+begin
+  select id into strict saison from public.saisons order by debut desc limit 1;
+  -- Alice (place 3) et Bob (place 5) sous « tox » ; Fred (place 7) sous « aby ».
+  perform public.montrer_vitrine(alice, saison, 3, '{"slot":3,"name":"Alicia","banner":"tox","tier":9}');
+  perform public.montrer_vitrine(bob, saison, 5, '{"slot":5,"name":"Bobus","banner":"tox","tier":9}');
+  perform public.montrer_vitrine(fred, saison, 7, '{"slot":7,"name":"Fredus","banner":"aby","tier":9}');
+
+  -- Le vote : un membre vote pour un membre de son banc, ou pour lui-même.
+  if not public.voter_chef(saison, alice, 5) then
+    raise exception 'ECHEC : un vote pour un membre du banc est refusé';
+  end if;
+  if public.chef_de(saison, 'tox') <> 5 then
+    raise exception 'ECHEC : le seul candidat qui a une voix n''est pas chef';
+  end if;
+  if public.voter_chef(saison, fred, 5) then
+    raise exception 'ECHEC : un joueur vote pour le chef d''une autre bannière';
+  end if;
+  -- Alice change d'avis et vote pour elle-même : égalité, la plus petite place l'emporte.
+  perform public.voter_chef(saison, alice, 3);
+  perform public.voter_chef(saison, bob, 5);
+  if public.chef_de(saison, 'tox') <> 3 then
+    raise exception 'ECHEC : à égalité, la plus petite place n''est pas cheffe';
+  end if;
+  perform public.voter_chef(saison, bob, 3);
+  if (select count(*) from public.votes_chef) <> 2 then
+    raise exception 'ECHEC : un vote changé s''est dédoublé';
+  end if;
+
+  -- La guerre : seul le chef la déclare, et seul lui fait la paix.
+  if public.declarer_guerre(saison, bob, 'aby', true) then
+    raise exception 'ECHEC : un membre qui n''est pas chef déclare la guerre';
+  end if;
+  if not public.declarer_guerre(saison, alice, 'aby', true) then
+    raise exception 'ECHEC : la cheffe ne peut pas déclarer la guerre';
+  end if;
+  if public.declarer_guerre(saison, alice, 'tox', true) then
+    raise exception 'ECHEC : une bannière se déclare la guerre à elle-même';
+  end if;
+  foule := public.lire_foule(saison);
+  if foule -> 'politics' -> 'wars' <> '[["tox","aby"]]'::jsonb
+    or (foule -> 'politics' -> 'leaders' ->> 'tox')::integer <> 3
+    or (foule -> 'politics' -> 'votes' -> 'tox' ->> '3')::integer <> 2 then
+    raise exception 'ECHEC : la politique de la foule est fausse : %', foule -> 'politics';
+  end if;
+  if (foule -> 'politics')::text like '%00000000-0000-4000-8000%' then
+    raise exception 'ECHEC : la politique dit à quels comptes appartiennent les voix';
+  end if;
+  perform public.declarer_guerre(saison, alice, 'aby', false);
+  if exists (select 1 from public.guerres) then
+    raise exception 'ECHEC : la paix n''a pas mis fin à la guerre';
+  end if;
+
+  -- La discussion : seulement dans son banc, quelques messages par minute.
+  if public.ecrire_message(saison, alice, 'On tient la ligne', 9, 2, 7) <> 'ok' then
+    raise exception 'ECHEC : un membre ne peut pas écrire à son banc';
+  end if;
+  perform public.ecrire_message(saison, alice, 'Deuxième', 9, 2, 7);
+  if public.ecrire_message(saison, alice, 'Troisième', 9, 2, 7) <> 'trop' then
+    raise exception 'ECHEC : le rythme des messages n''est pas limité';
+  end if;
+  if public.ecrire_message(saison, fred, 'Bonjour', 10, 2, 7) <> 'banc' then
+    raise exception 'ECHEC : un joueur sous le palier des alliances écrit';
+  end if;
+  if public.ecrire_message(saison, '00000000-0000-4000-8000-00000000000e', 'x', 9, 2, 7) <> 'banc' then
+    raise exception 'ECHEC : un joueur sans vitrine écrit';
+  end if;
+  lus := public.lire_messages(saison, bob, 9, 7);
+  if jsonb_array_length(lus) <> 2 or lus -> 0 ->> 'text' <> 'On tient la ligne'
+    or (lus -> 0 ->> 'mine')::boolean then
+    raise exception 'ECHEC : Bob ne lit pas la discussion de son banc : %', lus;
+  end if;
+  if lus::text like '%00000000-0000-4000-8000%' then
+    raise exception 'ECHEC : la discussion dit à quel compte appartient un message';
+  end if;
+  if jsonb_array_length(public.lire_messages(saison, fred, 9, 7)) <> 0 then
+    raise exception 'ECHEC : un message est sorti de son banc';
+  end if;
+  if public.lire_messages(saison, '00000000-0000-4000-8000-00000000000e', 9, 7) is not null then
+    raise exception 'ECHEC : un joueur sans banc lit une discussion';
+  end if;
+
+  -- Signaler : pas son propre message, pas celui d'un autre banc ; masqué après assez de voix.
+  message := (lus -> 0 ->> 'id')::bigint;
+  if public.signaler_message(saison, alice, message, 1) then
+    raise exception 'ECHEC : on signale son propre message';
+  end if;
+  if public.signaler_message(saison, fred, message, 1) then
+    raise exception 'ECHEC : on signale le message d''un autre banc';
+  end if;
+  if not public.signaler_message(saison, bob, message, 1) then
+    raise exception 'ECHEC : un membre ne peut pas signaler';
+  end if;
+  if jsonb_array_length(public.lire_messages(saison, alice, 9, 7)) <> 1 then
+    raise exception 'ECHEC : un message signalé n''est pas masqué';
+  end if;
+
+  -- Une semaine plus tard, les messages s'effacent à la prochaine écriture.
+  update public.messages_alliance set cree_le = now() - interval '8 days';
+  perform public.ecrire_message(saison, bob, 'Nouveau', 9, 2, 7);
+  if (select count(*) from public.messages_alliance) <> 1 then
+    raise exception 'ECHEC : les messages de plus d''une semaine ne sont pas effacés';
+  end if;
+
+  -- Le gardien : des totaux seulement.
+  if public.statistiques_alliances(bob, saison) is not null then
+    raise exception 'ECHEC : un joueur ordinaire lit les statistiques des alliances';
+  end if;
+  insert into public.gardiens (joueur) values (bob) on conflict do nothing;
+  stats := public.statistiques_alliances(bob, saison);
+  if (stats ->> 'votants')::integer <> 2 or (stats ->> 'messages7j')::integer <> 1
+    or (stats ->> 'guerres')::integer <> 0 then
+    raise exception 'ECHEC : statistiques des alliances fausses : %', stats;
+  end if;
+  delete from public.gardiens where joueur = bob;
+end;
+$$;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-00000000000a","role":"authenticated"}';
+do $$
+declare
+  nom text;
+begin
+  foreach nom in array array['votes_chef', 'guerres', 'messages_alliance', 'signalements_messages'] loop
+    begin
+      execute format('select count(*) from public.%I', nom);
+      raise exception 'ECHEC : un joueur lit la table %', nom;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  begin
+    insert into public.messages_alliance (saison, banniere, auteur, place, nom, texte)
+    values (1, 'tox', '00000000-0000-4000-8000-00000000000a', 3, 'a', 'sans filtre');
+    raise exception 'ECHEC : un joueur écrit un message sans passer par le serveur';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.lire_messages(1, '00000000-0000-4000-8000-00000000000b', 9, 7);
+    raise exception 'ECHEC : un joueur lit la discussion sans passer par le serveur';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.declarer_guerre(1, '00000000-0000-4000-8000-00000000000a', 'aby', true);
+    raise exception 'ECHEC : un joueur déclare la guerre sans passer par le serveur';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.voter_chef(1, '00000000-0000-4000-8000-00000000000a', 3);
+    raise exception 'ECHEC : un joueur vote sans passer par le serveur';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
+set local role anon;
+do $$
+begin
+  begin
+    perform public.ecrire_message(1, '00000000-0000-4000-8000-00000000000a', 'x', 9, 2, 7);
+    raise exception 'ECHEC : un visiteur écrit dans une discussion';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
 -- 8. Suppression d'un compte : tout ce qui est au joueur s'en va ; son avis reste, sans lui.
 reset role;
 do $$
@@ -775,7 +953,9 @@ begin
     or exists (select 1 from public.gardiens g where g.joueur = alice)
     or exists (select 1 from public.vitrines v where v.joueur = alice)
     or exists (select 1 from public.attaques a where a.attaquant = alice or a.defenseur = alice)
-    or exists (select 1 from public.espionnages e where e.espion = alice or e.cible = alice) then
+    or exists (select 1 from public.espionnages e where e.espion = alice or e.cible = alice)
+    or exists (select 1 from public.votes_chef v where v.votant = alice)
+    or exists (select 1 from public.messages_alliance m where m.auteur = alice) then
     raise exception 'ECHEC : il reste des données du joueur après la suppression de son compte';
   end if;
   if (select count(*) from public.avis a where a.joueur is null) <> 2 then

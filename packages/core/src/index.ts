@@ -15,6 +15,7 @@ export type {
   Crowd,
   HumanCard,
   HumanIntel,
+  Politics,
   Escort,
   Duels,
   DailyRecord,
@@ -260,3 +261,21 @@ export type {
 } from "./versus";
 export { awaitsDuel } from "./escort";
 export { parseBattle } from "./player";
+// La politique des bannières : alliés, neutres, ennemis ; chef élu ; guerres.
+export {
+  atWar,
+  bannerRelation,
+  candidates,
+  declaredWar,
+  enemiesOf,
+  isLeader,
+  leaderOf,
+  politicsOf,
+  slotBanner,
+  slotRelation,
+  voteOpensAt,
+  votesFor,
+} from "./politics";
+export type { Relation } from "./politics";
+export { autoHelp } from "./alliance";
+export { readPolitics } from "./crowd";

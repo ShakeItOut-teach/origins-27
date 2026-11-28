@@ -5,7 +5,7 @@
  */
 import { BANNER_IDS, GENE_FAMILIES, RANKING_IDS } from "@o27/data";
 import type { BannerId, RankingId } from "@o27/data";
-import type { Crowd, HumanCard, PlayerState } from "./types";
+import type { Crowd, HumanCard, PlayerState, Politics } from "./types";
 
 /** Au-delà, la foule reçue est tronquée : l'océan n'a que 500 places. */
 const MAX_CARDS = 1000;
@@ -128,6 +128,47 @@ function readTaken(raw: unknown): Readonly<Record<string, number>> | null {
   return count === 0 ? null : taken;
 }
 
+function isBannerId(value: unknown): value is BannerId {
+  return BANNER_IDS.some((banner) => banner === value);
+}
+
+function isSlot(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value < 10_000;
+}
+
+/** Relit la politique venue du serveur. Ce qui n'en a pas la forme est écarté. */
+export function readPolitics(raw: unknown): Politics | null {
+  if (!isRecord(raw)) return null;
+  const leaders: Partial<Record<BannerId, number>> = {};
+  if (isRecord(raw.leaders)) {
+    for (const [banner, slot] of Object.entries(raw.leaders)) {
+      const value = typeof slot === "string" ? Number(slot) : slot;
+      if (isBannerId(banner) && isSlot(value)) leaders[banner] = value;
+    }
+  }
+  const wars: [BannerId, BannerId][] = [];
+  if (Array.isArray(raw.wars)) {
+    for (const entry of raw.wars.slice(0, 60)) {
+      if (!Array.isArray(entry)) continue;
+      const [from, to] = entry as unknown[];
+      if (isBannerId(from) && isBannerId(to) && from !== to) wars.push([from, to]);
+    }
+  }
+  const votes: Partial<Record<BannerId, Record<string, number>>> = {};
+  if (isRecord(raw.votes)) {
+    for (const [banner, tally] of Object.entries(raw.votes)) {
+      if (!isBannerId(banner) || !isRecord(tally)) continue;
+      const counts: Record<string, number> = {};
+      for (const [slot, count] of Object.entries(tally)) {
+        const value = typeof count === "string" ? Number(count) : count;
+        if (/^\d{1,4}$/.test(slot) && isSlot(value)) counts[slot] = value;
+      }
+      votes[banner] = counts;
+    }
+  }
+  return { leaders, wars, votes };
+}
+
 /**
  * Relit une foule venue du réseau ou de la base. Une vitrine mal formée est ignorée, sans faire
  * échouer les autres ; une place en double garde la vitrine la plus récente.
@@ -144,7 +185,13 @@ export function readCrowd(raw: unknown): Crowd {
   }
   const cards = [...bySlot.values()].sort((one, other) => one.slot - other.slot);
   const taken = isRecord(raw) ? readTaken(raw.taken) : null;
-  return taken === null ? { cards } : { cards, taken };
+  // La politique des bannières : chefs, guerres, voix.
+  const politics = isRecord(raw) ? readPolitics(raw.politics) : null;
+  return {
+    cards,
+    ...(taken === null ? {} : { taken }),
+    ...(politics === null ? {} : { politics }),
+  };
 }
 
 /**

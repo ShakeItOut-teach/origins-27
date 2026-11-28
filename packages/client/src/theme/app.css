@@ -4292,4 +4292,130 @@ body.trial {
     flex: none;
     width: 100%;
   }
+ * Alliés, neutres, ennemis : une pastille devant le nom. La couleur ne suffit pas (charte,
+ * « deux états diffèrent aussi par la forme ») : rond plein pour l'allié, rond vide pour le
+ * neutre, losange pour l'ennemi.
+ */
+.relation {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-right: var(--space-1);
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--neutral);
+  vertical-align: 0;
+}
+.relation.is-ally {
+  border-color: var(--ally);
+  background: var(--ally);
+}
+.relation.is-enemy {
+  border-color: var(--enemy);
+  border-radius: 0;
+  background: var(--enemy);
+  transform: rotate(45deg) scale(0.85);
+}
+.relation-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-1) 0 var(--space-2);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.relation-legend > span {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Le chef et les guerres. */
+.politics-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 44px;
+  border-bottom: 1px solid var(--rule);
+}
+.politics-row.is-mine {
+  font-weight: 600;
+}
+.politics-row .politics-name {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+.politics-row .politics-votes {
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 13px;
+}
+.war-line {
+  color: var(--enemy);
+}
+
+/* La discussion d'alliance. */
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 320px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.chat-line {
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.chat-line.is-mine {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--ally);
+}
+.chat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.chat-text {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+.chat-form {
+  display: flex;
+  gap: var(--space-2);
+}
+.chat-form textarea {
+  flex: 1;
+  min-height: 44px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+.chat-count {
+  color: var(--ink-soft);
+  font-family: var(--font-number);
+  font-size: 12px;
+  text-align: right;
+}
+.politics-list {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
 }

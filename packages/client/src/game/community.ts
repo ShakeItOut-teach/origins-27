@@ -67,6 +67,61 @@ export interface GameStats {
   readonly ocean: OceanStats | null;
   /** Les combats entre humains de la saison ; `null` si le serveur ne les a pas donnés. */
   readonly fights: FightStats | null;
+  /** Les alliances : discussion, votes, guerres ; `null` si le serveur ne les a pas donnés. */
+  readonly alliances: AllianceStats | null;
+}
+
+export interface AllianceStats {
+  readonly messages: number;
+  readonly reported: number;
+  readonly hidden: number;
+  readonly voters: number;
+  readonly leaders: number;
+  readonly wars: number;
+}
+
+function readAlliances(value: unknown): AllianceStats | null {
+  if (!isRecord(value)) return null;
+  return {
+    messages: num(value.messages7j),
+    reported: num(value.signales),
+    hidden: num(value.masques),
+    voters: num(value.votants),
+    leaders: num(value.chefs),
+    wars: num(value.guerres),
+  };
+}
+
+/** Un message de la discussion d'alliance. */
+export interface ChatLine {
+  readonly id: number;
+  readonly slot: number;
+  readonly name: string;
+  readonly text: string;
+  readonly at: number;
+  readonly mine: boolean;
+  readonly reported: boolean;
+}
+
+/** Ce que répond la discussion : les messages, ou pourquoi elle refuse. */
+export type ChatResult =
+  | { readonly status: "done" | "closed"; readonly messages: readonly ChatLine[] }
+  | { readonly status: "invalid" | "tooMany" | "failed" };
+
+/** Relit les messages envoyés par le serveur ; une ligne mal formée est écartée. */
+export function readChat(payload: unknown): readonly ChatLine[] {
+  if (!isRecord(payload)) return [];
+  return rows(payload.messages)
+    .filter((row) => typeof row.id === "number" && typeof row.text === "string")
+    .map((row) => ({
+      id: num(row.id),
+      slot: num(row.slot),
+      name: text(row.name),
+      text: text(row.text),
+      at: num(row.at),
+      mine: row.mine === true,
+      reported: row.reported === true,
+    }));
 }
 
 /** Les combats entre humains : jour par jour, sur la dernière semaine. */
@@ -267,6 +322,10 @@ export interface Community {
   readonly deleteAccount: () => Promise<boolean>;
   /** Les fils d'alliance du joueur ; `null` si le serveur ne répond pas. */
   readonly feeds: () => Promise<Feeds | null>;
+  /** La discussion d'alliance : lire (`{}`), écrire (`{ texte }`), signaler (`{ signaler }`). */
+  readonly chat: (
+    request: Readonly<{ texte: string } | { signaler: number } | Record<string, never>>,
+  ) => Promise<ChatResult>;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -357,6 +416,7 @@ export function readStats(payload: unknown): GameStats | null {
     },
     ocean: readOcean(stats.ocean),
     fights: readFights(stats.combats),
+    alliances: readAlliances(stats.alliances),
   };
 }
 
@@ -398,6 +458,18 @@ export function createCommunity(
         return response.ok ? readFeeds(await response.json()) : null;
       } catch {
         return null;
+      }
+    },
+    async chat(request) {
+      try {
+        const response = await call("discussion", request);
+        if (response.status === 400) return { status: "invalid" };
+        if (response.status === 429) return { status: "tooMany" };
+        if (response.status === 403) return { status: "closed", messages: [] };
+        if (!response.ok) return { status: "failed" };
+        return { status: "done", messages: readChat(await response.json()) };
+      } catch {
+        return { status: "failed" };
       }
     },
     async deleteAccount() {

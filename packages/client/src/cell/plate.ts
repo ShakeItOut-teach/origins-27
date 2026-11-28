@@ -18,6 +18,10 @@ export const PLATE = {
   verdigris: 0x8dbfaf,
   madder: 0xd98ba6,
   moss: 0xb9c48a,
+  // Alliés, neutres, ennemis (`--plate-ally`, `--plate-neutral`, `--plate-enemy`).
+  ally: 0x8fb4cf,
+  neutral: 0xf1ebdd,
+  enemy: 0xd98ba6,
   // Sur la terre ferme, qui est en papier, on retrouve les teintes du papier.
   /** La forêt : le vert-de-gris (`--verdigris`). */
   forest: 0x356b5e,

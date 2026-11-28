@@ -2,6 +2,7 @@ import {
   allianceLevel,
   allianceToday,
   allianceView,
+  bannerRelation,
   bannerList,
   benchOf,
   benchPoints,
@@ -21,6 +22,7 @@ import { DISCORD_URL } from "../game/config";
 import { formatAmount, formatCountdown, translate } from "../game/text";
 import type { Lang } from "../game/text";
 import { ResourceIcon } from "./icons";
+import { RelationMark } from "./RelationMark";
 
 const RULES = BALANCE.alliance;
 
@@ -68,6 +70,10 @@ interface Props {
   readonly onClose: () => void;
   /** Les fils d'alliance (attaques et espionnages du banc), lus par l'écran principal. */
   readonly children?: ReactNode;
+  /** Le chef de la bannière et les guerres. */
+  readonly politics?: ReactNode;
+  /** La discussion du banc. */
+  readonly chat?: ReactNode;
   /** Envoie un ordre ; renvoie vrai s'il a été accepté. */
   readonly onOrder: (order: Order) => boolean;
 }
@@ -76,7 +82,7 @@ interface Props {
  * L'alliance du joueur : sa bannière, ce qu'il y apporte, les technologies communes, l'entraide,
  * le cadeau du jour, la boutique, et les cinq autres bannières.
  */
-export function AllianceSheet({ state, lang, onClose, onOrder, children }: Props) {
+export function AllianceSheet({ state, lang, onClose, onOrder, children, politics, chat }: Props) {
   const t = (key: TextKey): string => translate(lang, key);
   const alliance = state.alliance;
   const view = allianceView(state);
@@ -175,20 +181,13 @@ export function AllianceSheet({ state, lang, onClose, onOrder, children }: Props
               ? t("state.noHelp")
               : t("action.helpAll").replace("{n}", String(requests))}
           </button>
-          {construction !== null && (
-            <button
-              type="button"
-              className="button button-small button-quiet"
-              disabled={construction.helped}
-              data-testid="alliance-ask"
-              onClick={() => {
-                onOrder({ type: "askHelp" });
-              }}
-            >
-              {construction.helped ? t("alliance.helped") : t("action.askHelp")}
-            </button>
-          )}
         </div>
+        {/* Dans une alliance, la demande d'aide part toute seule : plus de bouton. */}
+        {construction?.helped === true && (
+          <p className="sheet-building" data-testid="alliance-auto-help">
+            {t("alliance.autoHelp")}
+          </p>
+        )}
 
         {state.crowd !== undefined && (
           <section data-testid="alliance-bench">
@@ -207,6 +206,7 @@ export function AllianceSheet({ state, lang, onClose, onOrder, children }: Props
                     <li key={mate.slot} className="rank-row">
                       <span>{t("label.tierShort").replace("{n}", String(mate.tier))}</span>
                       <span className="rank-name">
+                        <RelationMark relation="ally" lang={lang} />
                         {mate.name}
                         <span className="human-tag">{t("label.human")}</span>
                       </span>
@@ -220,6 +220,9 @@ export function AllianceSheet({ state, lang, onClose, onOrder, children }: Props
             )}
           </section>
         )}
+
+        {politics}
+        {chat}
 
         <h3 className="sheet-title">{t("label.techs")}</h3>
         <p className="sheet-role" data-testid="alliance-donations">
@@ -352,7 +355,10 @@ export function AllianceSheet({ state, lang, onClose, onOrder, children }: Props
               data-testid={`banner-${row.banner}`}
             >
               <span className="banner-name">
-                <strong>{bannerLabel(lang, row.banner)}</strong>
+                <strong>
+                  <RelationMark relation={bannerRelation(state, row.banner)} lang={lang} />
+                  {bannerLabel(lang, row.banner)}
+                </strong>
                 <small>
                   {t("label.level")} {row.level} · {row.members} {t("label.members")} · {row.near}{" "}
                   {t("label.nearYou")}

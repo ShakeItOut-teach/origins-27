@@ -728,6 +728,13 @@ export const BalanceSchema = z.strictObject({
   /** Les alliances : six bannières, des technologies communes, de l'entraide. */
   alliance: z.strictObject({
     tier: positiveInt,
+    leader: z.strictObject({ voteAfterDays: nonNegativeInt }),
+    chat: z.strictObject({
+      maxLength: z.number().int().min(20).max(1000),
+      perMinute: positiveInt,
+      keepDays: positiveInt,
+      hideAfterReports: positiveInt,
+    }),
     /** Production en plus pour tout membre d'une alliance, en pourcentage. */
     memberBonusPercent: nonNegativeInt,
     /** La bannière la plus présente à cette distance recrute le joueur d'office. */
@@ -925,6 +932,14 @@ export const OrderSchema = z.discriminatedUnion("type", [
   }),
   /** Se ranger sous une bannière (ou en changer). */
   z.strictObject({ type: z.literal("joinAlliance"), banner: z.enum(BANNER_IDS) }),
+  /** Voter pour le chef de sa bannière : une espèce humaine du banc, ou soi-même (sa place). */
+  z.strictObject({
+    type: z.literal("voteLeader"),
+    slot: z.number().int().min(0).max(9999),
+  }),
+  /** Le chef déclare la guerre à une autre bannière, ou fait la paix avec elle. */
+  z.strictObject({ type: z.literal("declareWar"), banner: z.enum(BANNER_IDS) }),
+  z.strictObject({ type: z.literal("makePeace"), banner: z.enum(BANNER_IDS) }),
   /** Donner des ressources à une technologie de son alliance. */
   z.strictObject({ type: z.literal("donate"), tech: z.enum(ALLIANCE_TECH_IDS) }),
   /** Officier : choisir la technologie que l'alliance recommande. */
@@ -973,6 +988,17 @@ export type Order = z.infer<typeof OrderSchema>;
 /** Ce que le client envoie pour passer un ordre. L'identifiant sert à ne jamais le compter deux fois. */
 export const OrderRequestSchema = z.strictObject({ orderId: z.uuid(), order: OrderSchema });
 export type OrderRequest = z.infer<typeof OrderRequestSchema>;
+
+/**
+ * Une demande à la discussion d'alliance : écrire (`texte`), signaler un message (`signaler`),
+ * ou rien pour lire. La longueur exacte est jugée par le serveur, après nettoyage.
+ */
+export const ChatRequestSchema = z.union([
+  z.strictObject({ texte: z.string().max(4000) }),
+  z.strictObject({ signaler: z.number().int().positive().max(Number.MAX_SAFE_INTEGER) }),
+  z.strictObject({}),
+]);
+export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 
 /** Les sortes d'appareil que la mesure d'audience distingue. */
 export const DEVICE_KINDS = ["phone", "tablet", "desktop"] as const;

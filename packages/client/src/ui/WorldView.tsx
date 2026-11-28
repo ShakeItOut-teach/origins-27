@@ -20,6 +20,7 @@ import {
   seasonDay,
   visibleEvents,
   zoneOpenDay,
+  slotRelation,
 } from "@o27/core";
 import type { Deposit, PlayerState } from "@o27/core";
 import { BALANCE, RESOURCE_IDS } from "@o27/data";
@@ -157,6 +158,7 @@ export function WorldView(props: Props) {
       y: organism.y,
       hue: organism.hue,
       tone: reachable.has(id) ? (closed ? "closed" : "reach") : "above",
+      relation: slotRelation(state, organism.slot),
     });
   }
 
