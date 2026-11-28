@@ -4292,6 +4292,9 @@ body.trial {
     flex: none;
     width: 100%;
   }
+}
+
+/*
  * Alliés, neutres, ennemis : une pastille devant le nom. La couleur ne suffit pas (charte,
  * « deux états diffèrent aussi par la forme ») : rond plein pour l'allié, rond vide pour le
  * neutre, losange pour l'ennemi.

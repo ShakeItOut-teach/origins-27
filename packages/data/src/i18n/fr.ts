@@ -1213,7 +1213,7 @@ export const fr = {
     "Éruptions, efflorescences, zones sans oxygène, et le Léviathan : ils secouent l’océan pendant quelques heures. Certains enrichissent, d’autres menacent.",
   "guide.alliances.title": "Les alliances",
   "guide.alliances.text":
-    "Six bannières, et l’une vous a recruté. Versez des points dans ses technologies, demandez de l’aide, aidez vos alliés. Les vrais joueurs de votre bannière forment votre banc : les fils d’alliance disent qui attaque qui, et vous pouvez défendre un allié.",
+    "Six bannières, et l’une vous a recruté. Versez des points dans ses technologies et aidez vos alliés ; l’aide sur vos chantiers est demandée toute seule. Les vrais joueurs de votre bannière forment votre banc : les fils disent qui attaque qui, vous pouvez défendre un allié et discuter entre vous. Deux jours après l’ouverture, le banc élit un chef, qui peut déclarer la guerre à une autre bannière. Partout, les alliés sont en bleu, les neutres en blanc, les ennemis en rouge.",
   "guide.gazette.title": "La Gazette",
   "guide.gazette.text":
     "Chaque jour, la Gazette raconte ce qui s’est passé dans l’océan. Copiez-la pour la partager sur Discord.",

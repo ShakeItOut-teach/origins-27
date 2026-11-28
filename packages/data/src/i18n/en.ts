@@ -1198,7 +1198,7 @@ export const en = {
     "Eruptions, blooms, oxygen-free zones, and the Leviathan: they shake the ocean for a few hours. Some bring riches, others threaten.",
   "guide.alliances.title": "Alliances",
   "guide.alliances.text":
-    "Six banners, and one has recruited you. Pour points into its technologies, ask for help, help your allies. The real players of your banner form your bench: the alliance feeds say who attacks whom, and you can defend an ally.",
+    "Six banners, and one has recruited you. Pour points into its technologies and help your allies; help on your builds is asked for automatically. The real players of your banner form your bench: the feeds say who attacks whom, you can defend an ally and chat together. Two days after opening, the bench elects a leader, who can declare war on another banner. Everywhere, allies are blue, neutrals white, enemies red.",
   "guide.gazette.title": "The Gazette",
   "guide.gazette.text":
     "Every day, the Gazette tells what happened in the ocean. Copy it to share on Discord.",
