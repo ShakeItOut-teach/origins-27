@@ -910,6 +910,8 @@ export function App({
               data-testid={`view-${id}`}
               onClick={() => {
                 setView(id);
+                // On repart du haut : la cellule (ou la page) est de nouveau sous les yeux.
+                window.scrollTo(0, 0);
               }}
             >
               {t(`view.${id}`)}
@@ -921,390 +923,393 @@ export function App({
         </div>
       )}
 
-      {show("ranking") && (
-        <button
-          type="button"
-          className="quests-open ranking-open"
-          data-testid="ranking-open"
-          onClick={() => {
-            setRankingOpen(true);
-          }}
-        >
-          {t("label.power")} <strong>{totalPower(state)}</strong>
-          <span className="badge">
-            {t(
-              `league.${String(leagueOf(powerRank.mine.rank, powerRank.rows.length))}.name` as TextKey,
-            )}{" "}
-            · {powerRank.mine.rank}
-          </span>
-        </button>
-      )}
-      {show("ranking") && rankingOpen && (
-        <RankingSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setRankingOpen(false);
-          }}
-        />
-      )}
-      {evolved !== null && (
-        <div className="loss is-good" role="status" data-testid="evolution-note">
-          <strong>{t("evolution.done")}</strong>
-          <span>
-            {t(`evolution.${evolved.evolution}.name`)} · {t("label.level")} {evolved.level}
-          </span>
+      {/* Les accès : sous la cellule au téléphone, en bandeau à droite sur ordinateur. */}
+      <div className="hub">
+        {show("ranking") && (
           <button
             type="button"
-            className="close"
-            aria-label={t("action.close")}
+            className="quests-open ranking-open"
+            data-testid="ranking-open"
             onClick={() => {
-              setEvolved(null);
+              setRankingOpen(true);
             }}
           >
-            ×
-          </button>
-        </div>
-      )}
-      {starved > 0 && (
-        <div className="loss" role="status" data-testid="starve-note">
-          <strong>{t("starve.title")}</strong>
-          <span>
-            {t("starve.text")} : {starved}
-          </span>
-          <button
-            type="button"
-            className="close"
-            aria-label={t("action.close")}
-            onClick={() => {
-              setStarved(0);
-            }}
-          >
-            ×
-          </button>
-        </div>
-      )}
-      {quests !== null && (
-        <button
-          type="button"
-          className={`quests-open${chestsReady > 0 ? " has-chest" : ""}`}
-          data-testid="quests-open"
-          onClick={() => {
-            setQuestsOpen(true);
-          }}
-        >
-          {t("label.quests")} · {questsDone}/{quests.items.length}
-          {chestsReady > 0 && (
+            {t("label.power")} <strong>{totalPower(state)}</strong>
             <span className="badge">
-              {t("label.chestReady")} {chestsReady}
+              {t(
+                `league.${String(leagueOf(powerRank.mine.rank, powerRank.rows.length))}.name` as TextKey,
+              )}{" "}
+              · {powerRank.mine.rank}
             </span>
-          )}
-        </button>
-      )}
-      {quests !== null && questsOpen && (
-        <QuestSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setQuestsOpen(false);
-          }}
-          onOrder={(order) => {
-            // Un coffre ne s'ouvre pas d'un simple bouton : le joueur le touche lui-même.
-            if (order.type === "claimQuest") present({ kind: "quest", index: order.index });
-            else store.send(order);
-          }}
-        />
-      )}
-      {show("chests") && state.chests.length > 0 && (
-        <button
-          type="button"
-          className="quests-open chests-open has-chest"
-          data-testid="chests-open"
-          onClick={() => {
-            present({ kind: "reward" });
-          }}
-        >
-          {t("label.chests")}
-          <span className="badge">{state.chests.length}</span>
-        </button>
-      )}
-      {opening !== null && (
-        <ChestOverlay
-          key={openingCount}
-          lang={lang}
-          {...chestTitle()}
-          waiting={state.chests.length}
-          onOpen={openChest}
-          onNext={() => {
-            present({ kind: "reward" });
-          }}
-          onClose={() => {
-            setOpening(null);
-          }}
-        />
-      )}
-
-      {contest !== null && (
-        <button
-          type="button"
-          className="quests-open contest-open"
-          data-testid="contest-open"
-          onClick={() => {
-            setContestOpen(true);
-          }}
-        >
-          {t("label.contest")}
-          <span className="badge">
-            {t("contest.rank").replace("{n}", String(contest.mine.rank))} ·{" "}
-            {formatCountdown(contest.endsAt - state.now, lang)}
-          </span>
-        </button>
-      )}
-      {show("contest") && contestOpen && (
-        <ContestSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setContestOpen(false);
-          }}
-        />
-      )}
-      {contestRank !== null && (
-        <div className="loss is-good" role="status" data-testid="contest-note">
-          <strong>{t("contest.ended")}</strong>
-          <span>{t("contest.endedRank").replace("{n}", String(contestRank))}</span>
-          <button
-            type="button"
-            className="close"
-            aria-label={t("action.close")}
-            onClick={() => {
-              setContestRank(null);
-            }}
-          >
-            ×
           </button>
-        </div>
-      )}
-      {show("rivals") && (
-        <button
-          type="button"
-          className={`quests-open journal-open${newReports > 0 ? " has-chest" : ""}`}
-          data-testid="journal-open"
-          onClick={() => {
-            setJournalOpen(true);
-            // Tout ce qui est affiché est lu : l'appareil s'en souvient.
-            setReportsSeen(state.now);
-            window.localStorage.setItem(REPORTS_SEEN_KEY, String(state.now));
-          }}
-        >
-          {t("label.reports")}
-          {newReports > 0 && <span className="badge">{newReports}</span>}
-        </button>
-      )}
-      {show("rivals") && journalOpen && (
-        <JournalSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setJournalOpen(false);
-          }}
-          onOpenBattle={setBattle}
-        />
-      )}
-      {battle !== null && (
-        <BattleSheet
-          state={state}
-          lang={lang}
-          report={battle}
-          {...(battleNames === undefined ? {} : { names: battleNames })}
-          onClose={() => {
-            setBattle(null);
-            setBattleNames(undefined);
-          }}
-        />
-      )}
-      {show("zoneEvents") && (
-        <button
-          type="button"
-          className="quests-open events-open"
-          data-testid="events-list-open"
-          onClick={() => {
-            setEventsOpen(true);
-          }}
-        >
-          {t("label.events")}
-          <span className="badge">{eventCount}</span>
-        </button>
-      )}
-      {show("alliances") && state.alliance !== null && (
-        <button
-          type="button"
-          className={`quests-open alliance-open${allianceToDo > 0 ? " has-chest" : ""}`}
-          data-testid="alliance-open"
-          onClick={() => {
-            setAllianceOpen(true);
-          }}
-        >
-          {t("label.alliance")}
-          <span className="badge">{bannerTag(state.alliance.banner)}</span>
-        </button>
-      )}
-      {show("alliances") && allianceOpen && (
-        <AllianceSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setAllianceOpen(false);
-          }}
-          onOrder={(order) => {
-            // Le cadeau du jour s'ouvre comme un coffre : le joueur le touche lui-même.
-            if (order.type !== "claimGift") return store.send(order).ok;
-            present({ kind: "gift" });
-            return true;
-          }}
-        >
-          <FeedsPanel
+        )}
+        {show("ranking") && rankingOpen && (
+          <RankingSheet
             state={state}
             lang={lang}
-            feeds={feeds}
-            onRefresh={refreshFeeds}
-            onOrder={(order) => store.send(order).ok}
-            onOpenBattle={(opened) => {
-              setBattle(opened.report);
-              setBattleNames(opened.names);
+            onClose={() => {
+              setRankingOpen(false);
             }}
           />
-        </AllianceSheet>
-      )}
-      {show("speciesSheet") && (
-        <button
-          type="button"
-          className="quests-open species-open"
-          data-testid="species-open"
-          onClick={() => {
-            setSpeciesOpen(true);
-          }}
-        >
-          {t("label.species")}
-          <span className="badge species-badge">{speciesOf(state).name}</span>
-        </button>
-      )}
-      {show("speciesSheet") && speciesOpen && (
-        <SpeciesSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setSpeciesOpen(false);
-          }}
-        />
-      )}
-      {show("apexRace") && (
-        <button
-          type="button"
-          className={`quests-open apex-open${state.apex === null ? " has-chest" : ""}`}
-          data-testid="apex-open"
-          onClick={() => {
-            setApexOpen(true);
-          }}
-        >
-          {t("label.apex")}
-          {state.apex !== null && state.apex.place === 0 && (
-            <span className="badge">{formatCountdown(state.apex.endsAt - state.now, lang)}</span>
-          )}
-          {state.apex !== null && state.apex.place > 0 && (
-            <span className="badge">
-              {t("apex.place").replace("{n}", String(state.apex.place))}
+        )}
+        {evolved !== null && (
+          <div className="loss is-good" role="status" data-testid="evolution-note">
+            <strong>{t("evolution.done")}</strong>
+            <span>
+              {t(`evolution.${evolved.evolution}.name`)} · {t("label.level")} {evolved.level}
             </span>
-          )}
-        </button>
-      )}
-      {advancedOpen && (
-        <AdvancedSheet
-          state={state}
-          lang={lang}
-          showEvolutions={show("evolutions")}
-          showDrills={show("militaryResearch")}
-          onClose={() => {
-            setAdvancedOpen(false);
-          }}
-          onOpen={(id) => {
-            setAdvancedOpen(false);
-            setView("cell");
-            setSelected(id);
-          }}
-          onResearch={openResearch}
-        />
-      )}
-      {show("apexRace") && apexOpen && (
-        <ApexSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setApexOpen(false);
-          }}
-          onOrder={(order) => store.send(order).ok}
-          onOpenStore={openStore}
-        />
-      )}
-      {landed !== null && (
-        <div className="loss is-good" role="status" data-testid="apex-note">
-          <strong>{t("apex.done")}</strong>
-          <span>{t("apex.place").replace("{n}", String(landed))}</span>
+            <button
+              type="button"
+              className="close"
+              aria-label={t("action.close")}
+              onClick={() => {
+                setEvolved(null);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {starved > 0 && (
+          <div className="loss" role="status" data-testid="starve-note">
+            <strong>{t("starve.title")}</strong>
+            <span>
+              {t("starve.text")} : {starved}
+            </span>
+            <button
+              type="button"
+              className="close"
+              aria-label={t("action.close")}
+              onClick={() => {
+                setStarved(0);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {quests !== null && (
           <button
             type="button"
-            className="close"
-            aria-label={t("action.close")}
+            className={`quests-open${chestsReady > 0 ? " has-chest" : ""}`}
+            data-testid="quests-open"
             onClick={() => {
-              setLanded(null);
+              setQuestsOpen(true);
             }}
           >
-            ×
+            {t("label.quests")} · {questsDone}/{quests.items.length}
+            {chestsReady > 0 && (
+              <span className="badge">
+                {t("label.chestReady")} {chestsReady}
+              </span>
+            )}
           </button>
-        </div>
-      )}
-      {show("museum") && (
-        <button
-          type="button"
-          className="quests-open museum-open"
-          data-testid="museum-open"
-          onClick={() => {
-            setMuseumOpen(true);
-          }}
-        >
-          {t("label.museum")}
-        </button>
-      )}
-      {show("museum") && museumOpen && (
-        <MuseumSheet
-          state={state}
-          lang={lang}
-          loadPlates={community?.plates ?? null}
-          onClose={() => {
-            setMuseumOpen(false);
-          }}
-        />
-      )}
-      {show("gazette") && (
-        <button
-          type="button"
-          className="quests-open gazette-open"
-          data-testid="gazette-open"
-          onClick={() => {
-            setGazetteOpen(true);
-          }}
-        >
-          {t("label.gazette")}
-        </button>
-      )}
-      {show("gazette") && gazetteOpen && (
-        <GazetteSheet
-          state={state}
-          lang={lang}
-          onClose={() => {
-            setGazetteOpen(false);
-          }}
-        />
-      )}
+        )}
+        {quests !== null && questsOpen && (
+          <QuestSheet
+            state={state}
+            lang={lang}
+            onClose={() => {
+              setQuestsOpen(false);
+            }}
+            onOrder={(order) => {
+              // Un coffre ne s'ouvre pas d'un simple bouton : le joueur le touche lui-même.
+              if (order.type === "claimQuest") present({ kind: "quest", index: order.index });
+              else store.send(order);
+            }}
+          />
+        )}
+        {show("chests") && state.chests.length > 0 && (
+          <button
+            type="button"
+            className="quests-open chests-open has-chest"
+            data-testid="chests-open"
+            onClick={() => {
+              present({ kind: "reward" });
+            }}
+          >
+            {t("label.chests")}
+            <span className="badge">{state.chests.length}</span>
+          </button>
+        )}
+        {opening !== null && (
+          <ChestOverlay
+            key={openingCount}
+            lang={lang}
+            {...chestTitle()}
+            waiting={state.chests.length}
+            onOpen={openChest}
+            onNext={() => {
+              present({ kind: "reward" });
+            }}
+            onClose={() => {
+              setOpening(null);
+            }}
+          />
+        )}
+
+        {contest !== null && (
+          <button
+            type="button"
+            className="quests-open contest-open"
+            data-testid="contest-open"
+            onClick={() => {
+              setContestOpen(true);
+            }}
+          >
+            {t("label.contest")}
+            <span className="badge">
+              {t("contest.rank").replace("{n}", String(contest.mine.rank))} ·{" "}
+              {formatCountdown(contest.endsAt - state.now, lang)}
+            </span>
+          </button>
+        )}
+        {show("contest") && contestOpen && (
+          <ContestSheet
+            state={state}
+            lang={lang}
+            onClose={() => {
+              setContestOpen(false);
+            }}
+          />
+        )}
+        {contestRank !== null && (
+          <div className="loss is-good" role="status" data-testid="contest-note">
+            <strong>{t("contest.ended")}</strong>
+            <span>{t("contest.endedRank").replace("{n}", String(contestRank))}</span>
+            <button
+              type="button"
+              className="close"
+              aria-label={t("action.close")}
+              onClick={() => {
+                setContestRank(null);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {show("rivals") && (
+          <button
+            type="button"
+            className={`quests-open journal-open${newReports > 0 ? " has-chest" : ""}`}
+            data-testid="journal-open"
+            onClick={() => {
+              setJournalOpen(true);
+              // Tout ce qui est affiché est lu : l'appareil s'en souvient.
+              setReportsSeen(state.now);
+              window.localStorage.setItem(REPORTS_SEEN_KEY, String(state.now));
+            }}
+          >
+            {t("label.reports")}
+            {newReports > 0 && <span className="badge">{newReports}</span>}
+          </button>
+        )}
+        {show("rivals") && journalOpen && (
+          <JournalSheet
+            state={state}
+            lang={lang}
+            onClose={() => {
+              setJournalOpen(false);
+            }}
+            onOpenBattle={setBattle}
+          />
+        )}
+        {battle !== null && (
+          <BattleSheet
+            state={state}
+            lang={lang}
+            report={battle}
+            {...(battleNames === undefined ? {} : { names: battleNames })}
+            onClose={() => {
+              setBattle(null);
+              setBattleNames(undefined);
+            }}
+          />
+        )}
+        {show("zoneEvents") && (
+          <button
+            type="button"
+            className="quests-open events-open"
+            data-testid="events-list-open"
+            onClick={() => {
+              setEventsOpen(true);
+            }}
+          >
+            {t("label.events")}
+            <span className="badge">{eventCount}</span>
+          </button>
+        )}
+        {show("alliances") && state.alliance !== null && (
+          <button
+            type="button"
+            className={`quests-open alliance-open${allianceToDo > 0 ? " has-chest" : ""}`}
+            data-testid="alliance-open"
+            onClick={() => {
+              setAllianceOpen(true);
+            }}
+          >
+            {t("label.alliance")}
+            <span className="badge">{bannerTag(state.alliance.banner)}</span>
+          </button>
+        )}
+        {show("alliances") && allianceOpen && (
+          <AllianceSheet
+            state={state}
+            lang={lang}
+            onClose={() => {
+              setAllianceOpen(false);
+            }}
+            onOrder={(order) => {
+              // Le cadeau du jour s'ouvre comme un coffre : le joueur le touche lui-même.
+              if (order.type !== "claimGift") return store.send(order).ok;
+              present({ kind: "gift" });
+              return true;
+            }}
+          >
+            <FeedsPanel
+              state={state}
+              lang={lang}
+              feeds={feeds}
+              onRefresh={refreshFeeds}
+              onOrder={(order) => store.send(order).ok}
+              onOpenBattle={(opened) => {
+                setBattle(opened.report);
+                setBattleNames(opened.names);
+              }}
+            />
+          </AllianceSheet>
+        )}
+        {show("speciesSheet") && (
+          <button
+            type="button"
+            className="quests-open species-open"
+            data-testid="species-open"
+            onClick={() => {
+              setSpeciesOpen(true);
+            }}
+          >
+            {t("label.species")}
+            <span className="badge species-badge">{speciesOf(state).name}</span>
+          </button>
+        )}
+        {show("speciesSheet") && speciesOpen && (
+          <SpeciesSheet
+            state={state}
+            lang={lang}
+            onClose={() => {
+              setSpeciesOpen(false);
+            }}
+          />
+        )}
+        {show("apexRace") && (
+          <button
+            type="button"
+            className={`quests-open apex-open${state.apex === null ? " has-chest" : ""}`}
+            data-testid="apex-open"
+            onClick={() => {
+              setApexOpen(true);
+            }}
+          >
+            {t("label.apex")}
+            {state.apex !== null && state.apex.place === 0 && (
+              <span className="badge">{formatCountdown(state.apex.endsAt - state.now, lang)}</span>
+            )}
+            {state.apex !== null && state.apex.place > 0 && (
+              <span className="badge">
+                {t("apex.place").replace("{n}", String(state.apex.place))}
+              </span>
+            )}
+          </button>
+        )}
+        {advancedOpen && (
+          <AdvancedSheet
+            state={state}
+            lang={lang}
+            showEvolutions={show("evolutions")}
+            showDrills={show("militaryResearch")}
+            onClose={() => {
+              setAdvancedOpen(false);
+            }}
+            onOpen={(id) => {
+              setAdvancedOpen(false);
+              setView("cell");
+              setSelected(id);
+            }}
+            onResearch={openResearch}
+          />
+        )}
+        {show("apexRace") && apexOpen && (
+          <ApexSheet
+            state={state}
+            lang={lang}
+            onClose={() => {
+              setApexOpen(false);
+            }}
+            onOrder={(order) => store.send(order).ok}
+            onOpenStore={openStore}
+          />
+        )}
+        {landed !== null && (
+          <div className="loss is-good" role="status" data-testid="apex-note">
+            <strong>{t("apex.done")}</strong>
+            <span>{t("apex.place").replace("{n}", String(landed))}</span>
+            <button
+              type="button"
+              className="close"
+              aria-label={t("action.close")}
+              onClick={() => {
+                setLanded(null);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {show("museum") && (
+          <button
+            type="button"
+            className="quests-open museum-open"
+            data-testid="museum-open"
+            onClick={() => {
+              setMuseumOpen(true);
+            }}
+          >
+            {t("label.museum")}
+          </button>
+        )}
+        {show("museum") && museumOpen && (
+          <MuseumSheet
+            state={state}
+            lang={lang}
+            loadPlates={community?.plates ?? null}
+            onClose={() => {
+              setMuseumOpen(false);
+            }}
+          />
+        )}
+        {show("gazette") && (
+          <button
+            type="button"
+            className="quests-open gazette-open"
+            data-testid="gazette-open"
+            onClick={() => {
+              setGazetteOpen(true);
+            }}
+          >
+            {t("label.gazette")}
+          </button>
+        )}
+        {show("gazette") && gazetteOpen && (
+          <GazetteSheet
+            state={state}
+            lang={lang}
+            onClose={() => {
+              setGazetteOpen(false);
+            }}
+          />
+        )}
+      </div>
       {enlisted !== null && (
         <div className="loss is-good" role="status" data-testid="alliance-note">
           <strong>{enlisted.auto ? t("alliance.recruited") : t("alliance.joined")}</strong>

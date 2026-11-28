@@ -4106,3 +4106,111 @@ body.trial {
   background: var(--paper);
   content: "";
 }
+
+/*
+ * Une cellule fille tient sur trois lignes : qui elle est et combien on en a ; ce qu'elle
+ * coûte ; les boutons pour en faire naître. Les boutons ont leur propre ligne : placés à côté
+ * du nom, ils l'écrasaient jusqu'à l'écrire une lettre par ligne.
+ */
+.troops .troop-row .cost,
+.troops .train-buttons {
+  grid-column: 1 / -1;
+}
+
+.troops .train-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-self: stretch;
+}
+
+.troops .train-count {
+  flex: 1;
+  min-width: 0;
+}
+
+.troops .train-count-field {
+  flex: 1;
+  width: 0;
+  min-width: 56px;
+}
+
+.troops .troop-row + .troop-row {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--grid);
+}
+
+/*
+ * Les accès (puissance, quêtes, coffres, rapports…). Au téléphone, le conteneur ne se voit
+ * pas : les boutons restent à la suite, sous la cellule.
+ */
+.hub {
+  display: contents;
+}
+
+/*
+ * Sur un écran large, deux bandeaux verticaux encadrent la page et ne défilent pas : à gauche
+ * les vues (la cellule en premier : c'est le chemin sûr pour revenir au centre), à droite les
+ * accès. On s'y retrouve sans défiler (docs/identite/charte.md, « Bandeaux latéraux »).
+ */
+@media (min-width: 1100px) {
+  .page {
+    padding-right: 300px;
+    padding-left: 300px;
+  }
+
+  .views:not(.parts),
+  .hub {
+    position: fixed;
+    top: calc(max(var(--space-2), env(safe-area-inset-top)) + var(--touch) + var(--space-5));
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .views:not(.parts) {
+    left: var(--space-5);
+    width: 232px;
+  }
+
+  .views:not(.parts) .view {
+    flex: none;
+    min-height: 60px;
+    padding: 0 var(--space-4);
+    font-family: var(--font-title);
+    font-size: 19px;
+    letter-spacing: 0.04em;
+    text-align: left;
+  }
+
+  .views:not(.parts) .view + .view {
+    border-top: var(--line);
+    border-left: 0;
+  }
+
+  .hub {
+    right: var(--space-5);
+    bottom: var(--space-4);
+    gap: var(--space-2);
+    width: 252px;
+    /* La marge laisse la place du halo des boutons qui appellent. */
+    padding: 4px;
+    overflow-y: auto;
+  }
+
+  /* Une fiche ouverte depuis le bandeau passe devant tout le reste. */
+  .hub:has(.veil) {
+    z-index: 50;
+  }
+
+  .hub .quests-open {
+    flex: none;
+    justify-content: space-between;
+    width: 100%;
+    text-align: left;
+  }
+
+  .hub .loss {
+    flex: none;
+    width: 100%;
+  }
+}
